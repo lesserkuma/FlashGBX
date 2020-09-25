@@ -1,0 +1,77 @@
+{
+	"type":"AGB",
+	"names":[
+		"28F256L03B-DRV with 256L30B"
+	],
+	"flash_ids":[
+		[ 0x8A, 0x00, 0x15, 0x88 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x2000000,
+	"sector_size":[
+		[0x08000, 4],
+		[0x20000, 255]
+	],
+	"single_write_7FC0_to_7FFF":true,
+	"commands":{
+		"reset":[
+			[ 0, 0xFF ],
+			[ 0x200000, 0xFF ],
+			[ 0x400000, 0xFF ],
+			[ 0x600000, 0xFF ],
+			[ 0x800000, 0xFF ],
+			[ 0xA00000, 0xFF ],
+			[ 0xC00000, 0xFF ],
+			[ 0xE00000, 0xFF ],
+			[ 0x1000000, 0xFF ],
+			[ 0x1200000, 0xFF ],
+			[ 0x1400000, 0xFF ],
+			[ 0x1600000, 0xFF ],
+			[ 0x1800000, 0xFF ],
+			[ 0x1A00000, 0xFF ],
+			[ 0x1C00000, 0xFF ],
+			[ 0x1E00000, 0xFF ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x60 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ]
+		],
+		"buffer_write":[
+			[ "SA", 0x60 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xE8 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ],
+			[ null, null, null ]
+		],
+		"single_write":[
+			[ "PA", 0x40 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ]
+		]
+	}
+}

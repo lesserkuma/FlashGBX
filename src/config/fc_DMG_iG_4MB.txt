@@ -1,0 +1,53 @@
+{
+	"type":"DMG",
+	"names":[
+		"insideGadgets 4 MB, 128 KB SRAM/FRAM"
+	],
+	"flash_ids":[
+		[ 0x01, 0x01, 0x7E, 0x7E ]
+	],
+	"voltage":5,
+	"flash_size":0x400000,
+	"start_addr":0x4000,
+	"first_bank":0,
+	"write_pin":"WR",
+	"chip_erase_timeout":60,
+	"commands":{
+		"reset":[
+			[ 0x000, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x90 ]
+		],
+		"chip_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}
