@@ -1,17 +1,17 @@
 {
 	"type":"DMG",
 	"names":[
-		"BUNG Doctor GB Card 64M"
+		"GB Smart 32M"
 	],
 	"flash_ids":[
-		[ 0x89, 0x89, 0x15, 0x15 ]
+		[ 0x89, 0x89, 0x14, 0x14 ]
 	],
 	"voltage":5,
-	"flash_size":0x800000,
+	"flash_size":0x400000,
 	"sector_size":0x20000,
 	"start_addr":0,
 	"first_bank":1,
-	"write_pin":"VIN",
+	"write_pin":"AUDIO",
 	"commands":{
 		"reset":[
 			[ 0, 0xFF ]

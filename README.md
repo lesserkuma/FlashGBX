@@ -2,16 +2,19 @@
 
 by Lesserkuma
 
-<img src="/.github/FlashGBX_Windows.png" alt="Screenshot" width="500">
-<img src="/.github/FlashGBX_Ubuntu.png" alt="Screenshot" width="500">
+<img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/FlashGBX_Windows.png" alt="FlashGBX on Windows" width="500">
+
+<img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/FlashGBX_Ubuntu.png" alt="FlashGBX on Ubuntu" width="500">
+
+<img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/FlashGBX_macOS.png" alt="FlashGBX on macOS" width="500">
 
 ## Introduction
 
 ### Software features
 
-- Backup and restore save data from Game Boy and Game Boy Advance game cartridges
+- Backup, restore and erase save data from Game Boy and Game Boy Advance game cartridges
 - Backup ROM data from Game Boy and Game Boy Advance game cartridges
-- Flash new ROMs to a wide variety of Game Boy and Game Boy Advance flash cartridges
+- Write new ROMs to a wide variety of Game Boy and Game Boy Advance flash cartridges
 - Many flash cartridges can be auto-detected
 - A Flash ID check can be performed for unsupported flash cartridges
 
@@ -23,14 +26,15 @@ by Lesserkuma
 
 - Game Boy
 
+	- BUNG Doctor GB Card 64M
+	- DIY cart with AM29F016/AM29F016B *(thanks RevZ, AndehX)*
+	- GB Smart 32M
 	- insideGadgets 32 KB *(thanks AlexiG)*
 	- insideGadgets 512 KB *(thanks AlexiG)*
 	- insideGadgets 1 MB, 128 KB SRAM *(thanks AlexiG)*
 	- insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM *(thanks AlexiG)*
 	- insideGadgets 4 MB, 128 KB SRAM/FRAM *(thanks AlexiG)*
 	- insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC *(thanks AlexiG)*
-	- BUNG Doctor GB Card 64M
-	- GB Smart 32M
 
 - Game Boy Advance
 
@@ -42,7 +46,6 @@ by Lesserkuma
 
 - Game Boy
 
-	- DIY cart with AM29F016/AM29F016B *(thanks RevZ)*
 	- ES29LV160_DRV with 29DL32TF-70
 	- GB-M968 with M29W160EB *(thanks RevZ)*
 	- GB-M968 with MX29LV320ABTC
@@ -64,64 +67,52 @@ by Lesserkuma
 	- AGB-SD-E05 with MSP55LV128 *(thanks RevZ)*
 	- BX2006_0106_NEW with S29GL128N10TFI01 *(thanks litlemoran)*
 
-Many different bootleg cartridges share their command set, so even if yours is not on this list, it may still work fine or even be detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
+Many different bootleg cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
+
+## Installing and running
+
+The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) and [pyserial](https://pypi.org/project/pyserial/) packages. 
+
+If you have Python and pip installed, you can use `pip install FlashGBX` to download and install the application.
+
+To run it in portable mode, you can also download the source code archive and call `python run.py` after installing the prerequisites yourself.
+
+### Windows binaries
+
+Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section:
+
+* Windows Setup: An installer that will add the application to the start menu and optionally create a desktop icon
+* Windows Portable: Have everything in one place including the config files
+
+These executables have been created using *PyInstaller* and *Inno Setup*.
+
+### Troubleshooting
+
+* If something doesn’t work as expected during data transfer, first try to clean the game cartridge contacts, wiggle the cartridge a bit and reconnect the USB device.
+
+* On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
+
+* On some Linux systems, you may need the *XCB Xinerama package* if you see an error regarding failed Qt platform plugin initialization. You can install it with `sudo apt install libxcb-xinerama0` etc.
 
 ## DISCLAIMER
 
 This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!
 
-## System Requirements and Setup Instructions
-
-Requires [Python 3.8+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) and [pyserial](https://pypi.org/project/pyserial/) packages. If these are available for your Operating System, it should be compatible.
-
-Developed and tested using the *insideGadgets GBxCart RW v1.3 Pro* hardware device on Windows 10. Also confirmed working on most Debian-based Linux distributions including Ubuntu.
-
-### Windows
-
-There are multiple options to run this application on Windows:
-
-* You can install the app with the Setup program. This will add the app to the start menu and optionally create a desktop icon.
-* Or, you can extract the Portable package and run the precompiled `FlashGBX.exe` file (created with *PyInstaller*) which includes the Python interpreter, required packages and libraries.
-* Or, you can install Python and run the app directly from source code:
-	1. Install [Python 3.8+](https://www.python.org/downloads/)
-	2. Open a Command Prompt window and install PySide2 and pyserial like so:<br>`pip install PySide2 pyserial`
-	3. Run `FlashGBX.py`
-
-### Linux
-
-#### Manual setup procedure tested on Ubuntu 20.04.1 LTS
-
-1. Update the package list:<br>`sudo apt update`
-2. Install Python3, pip for Python 3 and the XCB library package (required by PySide2/Qt5):<br>`sudo apt install python3 python3-pip libxcb-xinerama0`<br>If it says “Package 'python3-pip' has no installation candidate”, you may need to run this command first and then try again:<br>`sudo add-apt-repository universe`
-3. Install PySide2 and pyserial using pip:<br>`sudo pip3 install PySide2 pyserial`
-4. At this point you could run the app with `sudo` privileges, but to avoid that you will need access permissions for your cart reader/writer hardware. Here are some ways to do that:
-	* Add yourself to the *dialout* usergroup and then reboot the system:<br>`sudo adduser $USER dialout`<br>`sudo reboot`
-	* Or, add permanent user permissions to your device. (No reboot required.)
-		1. Create a udev rules file:<br>`sudoedit /etc/udev/rules.d/50-ttyusb.rules`
-		2. Add the following line to this file (GBxCart RW uses Vendor ID *1a86* and Product ID *7523*):<br>`KERNEL=="ttyUSB[0-9]*",ATTRS{idVendor}=="1a86",ATTRS{idProduct}=="7523",MODE="0666"`
-		3. Reload your udev configuration:<br>`sudo udevadm control --reload`
-		4. Connect your cart reader/writer to a USB port. (If it was already connected, unplug and reconnect it.)
-6. Run the app:<br>`python3 FlashGBX.py`
-
-#### Automated install script for Debian-based distributions
-
-A third-party install script contributed by *RevZ* for your convenience is also available. This is not maintained by me, but this should take care of installing all the prerequisites and copy everything to a subdirectory in your home directory. It also adds a shortcut to your desktop.
-
-After extracting all FlashGBX files into a temporary directory, get the installer [here](https://pastebin.com/fDsYh1Eb), place it into the same directory, adjust permissions (`chmod +x installer.sh`) and run it (`./installer.sh`). After the install is complete you may still have to reboot, and right click the Desktop icon to “Allow Launching”.
-
 ## Contributions
 
-The author would like to thank the following kind people for their help and contributions:
+The author would like to thank the following very kind people for their help and contributions (in alphabetical order):
 
 - AlexiG (GBxCart RW hardware, bug reports, flash chip info)
-- RevZ (install script for Linux, testing, bug reports, flash chip info)
 - AndehX (app icon)
-- LovelyA72 (flash chip info)
+- JFox (help with properly packaging the app for pip)
+- julgr (macOS help, testing)
 - litlemoran (flash chip info)
+- LovelyA72 (flash chip info)
+- RevZ (Linux help, testing, bug reports, flash chip info)
 
 ## Changes
 
-### v0.7β
+### v0.7β (2020-09-25)
 
 - First started tracking changes
 - Added a way to launch the flash cartridge type auto-detection process from the type list
@@ -130,7 +121,7 @@ The author would like to thank the following kind people for their help and cont
 - Fixed config file for 4455_4400_4000_4350_36L0R_V3 with M36L0R705 (sector size map was incomplete)
 - Renamed some labels of flash cartridge types
 - Made config files UTF-8 compatible
-- File open and save dialogs will now remember the last used directory for ROM files and save data files respectively (stored in config.ini in AppData/Roaming), clearable with the `--resetconfig` switch
+- File open and save dialogs will now remember the last used directory for ROM files and save data files respectively (stored in config.ini in AppData/Roaming), clearable with the `--reset` switch or by editing/deleting config.ini
 - Added CRC32 checksum comparison for Game Boy Advance games by using a database based on header SHA1 hashes
 - Fixed a bug with save data restore and improved save data backup speed
 - Fixed a few status message errors
@@ -138,3 +129,26 @@ The author would like to thank the following kind people for their help and cont
 - Made some messages suppressible (stored in config.ini)
 - Added detection of ungraceful device disconnects when starting a new task, with optional automatic reconnect
 - First public beta release
+
+### v0.8β (2020-10-03)
+
+- Added support for the DIY cart with AM29F016/AM29F016B with AUDIO as WE *(thanks AndehX)*
+- Renamed `VIN` to `AUDIO` in config files and the command line switch `--resetconfig` to `--reset`
+- Added experimental support for GBxCart RW revisions other than v1.3 and fixed a crash when connecting to unknown revisions of the GBxCart RW
+- The app is now available as a package and can be installed directly through *pip* *(thanks JFox)*
+- Changed the way configuration files are stored (for details call with `--help` command line switch)
+- Added the option to write an automatically trimmed ROM file which can reduce flashing time, especially in Game Boy Advance mode (note that not all ROMs can be trimmed)
+- When dumping a flash cartridge that has been flashed with a trimmed ROM, the ROM will be fixed so checksums will still match up (can be disabled for debugging by adding `_notrimfix` to the file name)
+- Added a button that opens a file browser to the currently used config directory for easy access
+- Added the option to erase/wipe the save data on a cartridge
+- Rearranged some buttons on the main window so that the newly added button popup menus don’t block anything
+- Improved the database for Game Boy Advance titles (now detects SRAM_F_V### save types properly)
+- Rewrote some of the save data handling for Game Boy Advance cartridges to speed transfers up a bit
+- Fixed a couple of instability issues that used to caused timeouts on macOS *(thanks julgr)*
+- Confirmed support for SD007_48BALL_64M_V5 with 29DL163BD-90 *(thanks julgr)*
+- Added an option for flashing at 5V for a few flash cartridge types that sometimes require this; if you think your cartridge is affected, you can add `"voltage_variants":true,` to the config file
+- Fixed support for Windows 7 when using pre-compiled exe file packages
+- Reduced size and decompression time of the pre-compiled exe file packages by excluding unnecessary DLL files
+- Fixed a timing issue that could sometimes cause a loss of save data when hot-swapping Game Boy cartridges
+- Added some warnings that help with troubleshooting, for example that manually setting the feature box to a MBC5 option may be necessary for a clean dump when dumping ROMs from flash cartridges
+- Added taskbar progress visualization on Windows systems

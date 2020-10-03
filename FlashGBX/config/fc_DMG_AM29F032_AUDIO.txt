@@ -1,17 +1,17 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC"
+		"AM29F032/AM29F032B (DIY cart) @ AUDIO"
 	],
 	"flash_ids":[
-		[ 0x04, 0x04, 0x00, 0x00 ]
+		[ 0x04, 0xD4, 0x00, 0x00 ]
 	],
 	"voltage":5,
 	"flash_size":0x400000,
 	"start_addr":0,
 	"first_bank":1,
-	"write_pin":"VIN",
-	"chip_erase_timeout":120,
+	"write_pin":"AUDIO",
+	"chip_erase_timeout":60,
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]

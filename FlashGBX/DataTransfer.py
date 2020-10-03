@@ -30,11 +30,11 @@ class DataTransfer(QThread):
 				self.RUNNING = False
 			elif self.CONFIG['mode'] == 3:
 				self.RUNNING = True
-				self.CONFIG['port']._TransferData(3, self.updateProgress, [ self.CONFIG['path'], self.CONFIG['mbc'], self.CONFIG['save_type'] ])
+				self.CONFIG['port']._TransferData(3, self.updateProgress, [ self.CONFIG['path'], self.CONFIG['mbc'], self.CONFIG['save_type'], self.CONFIG['erase'] ])
 				self.RUNNING = False
 			elif self.CONFIG['mode'] == 4:
 				self.RUNNING = True
-				self.CONFIG['port']._TransferData(4, self.updateProgress, [ self.CONFIG['path'], self.CONFIG['cart_type'] ])
+				self.CONFIG['port']._TransferData(4, self.updateProgress, [ self.CONFIG['path'], self.CONFIG['cart_type'], self.CONFIG['trim_rom'], self.CONFIG['override_voltage'] ])
 				self.RUNNING = False
 
 		except Exception as e:

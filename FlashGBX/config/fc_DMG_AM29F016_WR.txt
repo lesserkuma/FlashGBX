@@ -1,13 +1,13 @@
 {
 	"type":"DMG",
 	"names":[
-		"AM29F016/AM29F016B (DIY cart)"
+		"AM29F016/AM29F016B (DIY cart) @ WR"
 	],
 	"flash_ids":[
 		[ 0x01, 0xAD, 0x00, 0x00 ]
 	],
 	"voltage":5,
-	"flash_size":0x400000,
+	"flash_size":0x200000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
