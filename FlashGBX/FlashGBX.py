@@ -45,7 +45,9 @@ class FlashGBX(QtWidgets.QWidget):
 		self.setStyleSheet("QMessageBox { messagebox-text-interaction-flags: 5; }")
 		self.setWindowIcon(QtGui.QIcon(app_path + "/res/icon.ico"))
 		self.setWindowTitle(APPNAME + " v" + VERSION)
-		self.setWindowFlags(self.windowFlags() | QtGui.Qt.MSWindowsFixedSizeDialogHint);
+
+		if hasattr(QtGui, "Qt"):
+			self.setWindowFlags(self.windowFlags() | QtGui.Qt.MSWindowsFixedSizeDialogHint)
 		
 		# Settings and Config
 		self.SETTINGS = QtCore.QSettings(config_path + "/config.ini", QtCore.QSettings.IniFormat)
@@ -359,7 +361,7 @@ class FlashGBX(QtWidgets.QWidget):
 		self.cmbHeaderFeaturesResult = QtWidgets.QComboBox()
 		self.cmbHeaderFeaturesResult.setStyleSheet("combobox-popup: 0;");
 		self.cmbHeaderFeaturesResult.view().setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-		self.cmbHeaderFeaturesResult.addItems(self.DMG_Header_Features.values())
+		self.cmbHeaderFeaturesResult.addItems(list(self.DMG_Header_Features.values()))
 		rowHeaderFeatures.addWidget(self.cmbHeaderFeaturesResult)
 		group_layout.addLayout(rowHeaderFeatures)
 
