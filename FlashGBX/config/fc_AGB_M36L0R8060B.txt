@@ -1,0 +1,86 @@
+{
+	"type":"AGB",
+	"names":[
+		"36L0R8-39VF512 with M36L0R8060B",
+		"36L0R8-39VF512 with M36L0R8060B"
+	],
+	"flash_ids":[
+		[ 0x20, 0x00, 0x0D, 0x88 ],
+		[ 0x8A, 0x00, 0x10, 0x88 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x2000000,
+	"sector_size":[
+		[0x08000, 4],
+		[0x20000, 255]
+	],
+	"commands":{
+		"reset":[
+			[ 0, 0xFF ],
+			[ 0x100000, 0xFF ],
+			[ 0x200000, 0xFF ],
+			[ 0x300000, 0xFF ],
+			[ 0x400000, 0xFF ],
+			[ 0x500000, 0xFF ],
+			[ 0x600000, 0xFF ],
+			[ 0x700000, 0xFF ],
+			[ 0x800000, 0xFF ],
+			[ 0x900000, 0xFF ],
+			[ 0xA00000, 0xFF ],
+			[ 0xB00000, 0xFF ],
+			[ 0xC00000, 0xFF ],
+			[ 0xD00000, 0xFF ],
+			[ 0xE00000, 0xFF ],
+			[ 0xF00000, 0xFF ],
+			[ 0x1000000, 0xFF ],
+			[ 0x1100000, 0xFF ],
+			[ 0x1200000, 0xFF ],
+			[ 0x1300000, 0xFF ],
+			[ 0x1400000, 0xFF ],
+			[ 0x1500000, 0xFF ],
+			[ 0x1600000, 0xFF ],
+			[ 0x1700000, 0xFF ],
+			[ 0x1800000, 0xFF ],
+			[ 0x1900000, 0xFF ],
+			[ 0x1A00000, 0xFF ],
+			[ 0x1B00000, 0xFF ],
+			[ 0x1C00000, 0xFF ],
+			[ 0x1D00000, 0xFF ],
+			[ 0x1E00000, 0xFF ],
+			[ 0x1F00000, 0xFF ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x60 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ "SA", 0x60 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xE8 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ]
+		]
+	}
+}

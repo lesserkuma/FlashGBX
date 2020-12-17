@@ -1,10 +1,16 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_BV5_V2 with HY29LV160TT"
+		"SD007_BV5_V2 with HY29LV160TT",
+		"SD007_BV5_V3 with HY29LV160BT",
+		"SD007_BV5_V3 with 29LV160BE-90PFTN",
+		"SD007_TSOP_48BALL with M29W160ET70ZA6"
 	],
 	"flash_ids":[
-		[ 0xAE, 0xAE, 0xC4, 0xC4 ]
+		[ 0xAE, 0xAE, 0xC4, 0xC4 ],
+		[ 0xAE, 0xAE, 0x4A, 0x4A ],
+		[ 0x04, 0x04, 0x4A, 0x4A ],
+		[ 0x20, 0x20, 0xC4, 0xC4 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x200000,

@@ -1,20 +1,20 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_48BALL_64M_V3 with 29DL161TD-90",
-		"SD007_48BALL_64M_V5 with 29DL163BD-90",
-		"SD007_48BALL_64M_V6 with 29DL163BD-90"
+		"SD007_48BALL_64M_V3 with 29DL161TD-90"
 	],
 	"flash_ids":[
-		[ 0x04, 0x04, 0x35, 0x35 ],
-		[ 0x04, 0x04, 0x2B, 0x2B ],
-		[ 0x04, 0x04, 0x2B, 0x2B ]
+		[ 0x04, 0x04, 0x35, 0x35 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x200000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
+	"sector_size":[
+		[0x10000, 31],
+		[0x2000, 8]
+	],
 	"chip_erase_timeout":120,
 	"commands":{
 		"reset":[
@@ -34,6 +34,22 @@
 			[ 0xAAA, 0x10 ]
 		],
 		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"sector_erase":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],

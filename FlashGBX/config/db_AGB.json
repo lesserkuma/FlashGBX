@@ -108,7 +108,7 @@
   "rom_size": 16777216,
   "rom_crc32": 199926516,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW9P"
  },
  "efde0279cc7584ad184ff2f0413cde0a97044d05": {
@@ -430,42 +430,42 @@
   "rom_size": 16777216,
   "rom_crc32": 575183996,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW3P"
  },
  "7d8b9ea39fdedcf700635b4f5fa45c1f91458c9e": {
   "rom_size": 33554432,
   "rom_crc32": 2496617259,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW4P"
  },
  "b822d712d8ba6800a3e951c90acb5ad6350e8bc8": {
   "rom_size": 16777216,
   "rom_crc32": 287824905,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW5P"
  },
  "e500621012c741ecdb24e772ef3782e84f54ea05": {
   "rom_size": 33554432,
   "rom_crc32": 743957896,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW7P"
  },
  "03e9c825fce0a38e3e35d977afdf07523704b995": {
   "rom_size": 33554432,
   "rom_crc32": 2769150515,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW6P"
  },
  "96f128dcd144f198ad2953d56f2c392187a47a3b": {
   "rom_size": 16777216,
   "rom_crc32": 2239209472,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW8P"
  },
  "c4990ad789bb3d6e843bbec6b6fc406243803342": {
@@ -920,35 +920,35 @@
   "rom_size": 8388608,
   "rom_crc32": 1727736297,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AWRP"
  },
  "8ea95333d61d058b6ae1c0dae6dd0eee2b183619": {
   "rom_size": 4194304,
   "rom_crc32": 654118857,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AWRE"
  },
  "2bd92f45310e335522a7c7c621737257b81ffe4d": {
   "rom_size": 4194304,
   "rom_crc32": 3689877868,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AWRE"
  },
  "5f683457960b5963da4e6f5a5fe65a75f96d6454": {
   "rom_size": 8388608,
   "rom_crc32": 1510583014,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AW2P"
  },
  "f65375328f67f328a1c9a0d725038b7eaed397f6": {
   "rom_size": 8388608,
   "rom_crc32": 1523639665,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AW2E"
  },
  "e1179c2537db6f49e08e7ae9af7bcbf59d264cf9": {
@@ -2033,7 +2033,7 @@
   "rom_size": 4194304,
   "rom_crc32": 1634770237,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A8YJ"
  },
  "38b849dcb4655fd3b944c78806274cb809881251": {
@@ -2264,7 +2264,7 @@
   "rom_size": 33554432,
   "rom_crc32": 2649083144,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BLEJ"
  },
  "0c1eb48f59af56de00fe35a34b3ea3eac8376546": {
@@ -2866,7 +2866,7 @@
   "rom_size": 8388608,
   "rom_crc32": 1233404890,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BIXJ"
  },
  "15d8d251505e14c0dd690193b0bad0d375c3769b": {
@@ -2908,14 +2908,14 @@
   "rom_size": 4194304,
   "rom_crc32": 2767146645,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "PEAJ"
  },
  "76a27e2dda8bb3ab043296a7bb6b3f21237efac3": {
   "rom_size": 8388608,
   "rom_crc32": 1094313923,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "PSAJ"
  },
  "6a7141231603a00a9fe7fa13f5618c22917527f7": {
@@ -3356,21 +3356,21 @@
   "rom_size": 4194304,
   "rom_crc32": 2327185344,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ACRP"
  },
  "db67700ddd5348393c71341b137193d35480c5ac": {
   "rom_size": 4194304,
   "rom_crc32": 747379546,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ACRJ"
  },
  "b50f162dcd8bcaff4ecb02278938b8de61603efa": {
   "rom_size": 4194304,
   "rom_crc32": 92254646,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ACRE"
  },
  "9fd6bed0cfd8e4b5cf90b8dc6f6f34c193bbed40": {
@@ -3566,7 +3566,7 @@
   "rom_size": 16777216,
   "rom_crc32": 4222596664,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW5E"
  },
  "b51cbeb1518b0b82f3c6f2793728ee80184a87b8": {
@@ -3965,7 +3965,7 @@
   "rom_size": 8388608,
   "rom_crc32": 1029982534,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ADSJ"
  },
  "253b30d9b70b3e65b824af4b576955434d3db3bb": {
@@ -4259,7 +4259,7 @@
   "rom_size": 4194304,
   "rom_crc32": 2538008338,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A8PJ"
  },
  "4bba99f563f243f718c40f35fa44f0542f62172e": {
@@ -4553,7 +4553,7 @@
   "rom_size": 33554432,
   "rom_crc32": 654750464,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BL4E"
  },
  "04d6bacd2461bd5ce713ffc902ac96a5c2d822c4": {
@@ -4896,35 +4896,35 @@
   "rom_size": 16777216,
   "rom_crc32": 569332069,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW3J"
  },
  "fdf42901bc017ef20582ddf2ceb4c24c2eab7adf": {
   "rom_size": 33554432,
   "rom_crc32": 836178643,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW4J"
  },
  "fa9e9956c3e173dcd6cc362ea18ede82f39d6538": {
   "rom_size": 33554432,
   "rom_crc32": 234529778,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BW6J"
  },
  "5a040dd1aa59c7803f878af8494c478d94794854": {
   "rom_size": 8388608,
   "rom_crc32": 3116457863,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A8DJ"
  },
  "8b8367e29ae016ea891bcc3bbf33c78d95c7b8d9": {
   "rom_size": 8388608,
   "rom_crc32": 3345271934,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A8DJ"
  },
  "b5974f5c7bbbf3c0ec8b6b34453718546dcba2f8": {
@@ -5120,14 +5120,14 @@
   "rom_size": 8388608,
   "rom_crc32": 721909649,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AT2J"
  },
  "aa11560789f6b552d54d91d8bb465b961b5f38dc": {
   "rom_size": 16777216,
   "rom_crc32": 3364991648,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BD3J"
  },
  "7276d57ce0cfe49acf9ab3a7205cd62a258b9e3c": {
@@ -5365,7 +5365,7 @@
   "rom_size": 8388608,
   "rom_crc32": 2334641511,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "PSAE"
  },
  "e0bf2d5bd19eb96b9ae8836be2f0f120f9ea31a8": {
@@ -5547,14 +5547,14 @@
   "rom_size": 8388608,
   "rom_crc32": 1215871978,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGRP"
  },
  "63bfd99df7b32af6c7a5eae7f6c13a1c5f82d3ce": {
   "rom_size": 8388608,
   "rom_crc32": 3384571301,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGRE"
  },
  "f91c07931c050b8458489b87996d858c4e81f613": {
@@ -5771,7 +5771,7 @@
   "rom_size": 16777216,
   "rom_crc32": 3688657379,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BFTJ"
  },
  "81cf9a21217b807b00c425fc53a6e34abe1e3122": {
@@ -6310,21 +6310,21 @@
   "rom_size": 16777216,
   "rom_crc32": 3126714439,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AFXP"
  },
  "ecd0098be38419aa812681cc26bcca4f17d386b4": {
   "rom_size": 16777216,
   "rom_crc32": 2776301620,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AFXJ"
  },
  "ac5e332a98c5038a72e0d3f2104616c71709ddc4": {
   "rom_size": 16777216,
   "rom_crc32": 1447421292,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AFXE"
  },
  "4a4dafbcd1edd146b68304862843c9c813eda8ca": {
@@ -6394,7 +6394,7 @@
   "rom_size": 16777216,
   "rom_crc32": 2684958754,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AFWJ"
  },
  "b093af59d8f3614da98141ce4eff9b47d5e4c747": {
@@ -6520,21 +6520,21 @@
   "rom_size": 8388608,
   "rom_crc32": 313152076,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AFPE"
  },
  "42530d057753c2625cbc245bf06bbde59255a51f": {
   "rom_size": 8388608,
   "rom_crc32": 3117400531,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AFYE"
  },
  "1b7f8ac8caa64d3ed79a8a23014ef95e61dfdb29": {
   "rom_size": 8388608,
   "rom_crc32": 196378243,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AFPJ"
  },
  "b73a6d7027d08cd644d97668181300bdc2de9bd3": {
@@ -6737,7 +6737,7 @@
   "rom_size": 8388608,
   "rom_crc32": 3874864597,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AUSJ"
  },
  "523a3765317937f9401700bfccde1ac2992e7aef": {
@@ -6807,14 +6807,14 @@
   "rom_size": 8388608,
   "rom_crc32": 3953094417,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ABIJ"
  },
  "cc6693098390dc0379ae7a6751a6044f507dcc8b": {
   "rom_size": 8388608,
   "rom_crc32": 3718638686,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AAIJ"
  },
  "2894bc67b2ef8dcd07aa8c8abd0a4944b3fc46b8": {
@@ -7227,7 +7227,7 @@
   "rom_size": 16777216,
   "rom_crc32": 1240342493,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BGWJ"
  },
  "1c3162a5f4709ddae88e8affa6649d9ed6dd8c6d": {
@@ -7353,7 +7353,7 @@
   "rom_size": 16777216,
   "rom_crc32": 1477050533,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BGJJ"
  },
  "5892f6754a7e2e044634ae270ef24331268c40a6": {
@@ -7374,7 +7374,7 @@
   "rom_size": 16777216,
   "rom_crc32": 2633402492,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BGIJ"
  },
  "96061da3d9f9b4f9b239c180ca1ef38620e0246e": {
@@ -7402,7 +7402,7 @@
   "rom_size": 8388608,
   "rom_crc32": 2447037544,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A8GJ"
  },
  "a264d5d44616a575bdddd5dcb5fbb93ff8b43cb0": {
@@ -7479,70 +7479,70 @@
   "rom_size": 8388608,
   "rom_crc32": 4132573537,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGSF"
  },
  "93acb70ddd068c802e7f6a298de05f983ab479f3": {
   "rom_size": 8388608,
   "rom_crc32": 273931492,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGSD"
  },
  "5f8f9cc642860ed147a8362e885194237f1c8447": {
   "rom_size": 8388608,
   "rom_crc32": 4078077970,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGSI"
  },
  "60676dd068d1263c6bd1fb5fd396e4986ebd388f": {
   "rom_size": 8388608,
   "rom_crc32": 3325036758,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGSS"
  },
  "f56ebfd0de821b6693ee6e2729e0a5961afc4e7f": {
   "rom_size": 8388608,
   "rom_crc32": 3791349992,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGSE"
  },
  "fe0a51dd66eb66e8ac51f6ac270d6fc0f379e92d": {
   "rom_size": 16777216,
   "rom_crc32": 3649165449,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGFD"
  },
  "67f5ab731e0185ce26148407aeb2b11fa1489117": {
   "rom_size": 16777216,
   "rom_crc32": 277921075,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGFF"
  },
  "91209c3fe5d8de35bf3ccb42d3dd8059c98497fa": {
   "rom_size": 16777216,
   "rom_crc32": 2749667139,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGFI"
  },
  "a2d69ac459345272b075297443ff26c079ad556a": {
   "rom_size": 16777216,
   "rom_crc32": 3996695188,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGFS"
  },
  "304742b2b49453595850f3843c6a7348dbf1b607": {
   "rom_size": 16777216,
   "rom_crc32": 1617566797,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGFE"
  },
  "a10e028b16e9d4d2f383be4e464ca7752b1a3cf3": {
@@ -7689,21 +7689,21 @@
   "rom_size": 8388608,
   "rom_crc32": 3130361373,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGXP"
  },
  "3096f813eef237c244f418d32eab7ca5562571be": {
   "rom_size": 8388608,
   "rom_crc32": 369689582,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGXJ"
  },
  "cdaf93f1f6038305144cb059a19a8faaf4ef406f": {
   "rom_size": 8388608,
   "rom_crc32": 1893416854,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGXE"
  },
  "544f36eea0e566442823aab7cd7b2ab30e1bdfaf": {
@@ -7745,7 +7745,7 @@
   "rom_size": 4194304,
   "rom_crc32": 818957017,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGCJ"
  },
  "b00225bf1a120fc55c96749a153260420a6341fa": {
@@ -7906,7 +7906,7 @@
   "rom_size": 4194304,
   "rom_crc32": 389704778,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BHAJ"
  },
  "00f9afb55c018786f2c43e5f5e33b5ad299dea99": {
@@ -8851,14 +8851,14 @@
   "rom_size": 8388608,
   "rom_crc32": 195395743,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGRJ"
  },
  "d3b08308e192a3ad2afc86f168c474dfc0f13c79": {
   "rom_size": 8388608,
   "rom_crc32": 3093551841,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGMJ"
  },
  "eb7cc17dc164f3451e918a80de1e248c43a2ce3a": {
@@ -8907,7 +8907,7 @@
   "rom_size": 4194304,
   "rom_crc32": 119099905,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AJUJ"
  },
  "e2c74e2690aab78e0bf7706031d05f66f8ab8212": {
@@ -9089,7 +9089,7 @@
   "rom_size": 16777216,
   "rom_crc32": 2192897018,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AKZJ"
  },
  "fe236457f2df5c2fd039d12f8be5fc8f12948f52": {
@@ -9124,7 +9124,7 @@
   "rom_size": 8388608,
   "rom_crc32": 1677606398,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AYKE"
  },
  "afdaf47afe088ff9a3f2fed4ce690d62ab60bd61": {
@@ -9187,14 +9187,14 @@
   "rom_size": 8388608,
   "rom_crc32": 1155213326,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ATPJ"
  },
  "e4c96c2d2366d42c7a77f5bada0758d68670bef5": {
   "rom_size": 8388608,
   "rom_crc32": 2408958547,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ATSJ"
  },
  "f37413a0f76b1b9302fc60e0f0d98099f994d7c7": {
@@ -9978,21 +9978,21 @@
   "rom_size": 8388608,
   "rom_crc32": 2381936029,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BLJK"
  },
  "0cf7b20bf2e1c7d5cf03e7196529366030337e32": {
   "rom_size": 16777216,
   "rom_crc32": 2554538513,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BLVJ"
  },
  "687bb774170c7480748523f65feabc91354043e2": {
   "rom_size": 8388608,
   "rom_crc32": 865403432,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BLJJ"
  },
  "4a40b79fe5c04da1470c711a25186c5a424d8030": {
@@ -10559,7 +10559,7 @@
   "rom_size": 8388608,
   "rom_crc32": 1880241488,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AJOJ"
  },
  "8b5bce28d650077e1669ef75169e637698da6e1e": {
@@ -10608,7 +10608,7 @@
   "rom_size": 8388608,
   "rom_crc32": 1506535700,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AMVJ"
  },
  "c00029f76e7333852fb000388d62b8ecf066658c": {
@@ -10643,7 +10643,7 @@
   "rom_size": 8388608,
   "rom_crc32": 999834257,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AMCJ"
  },
  "cd1efa43615ae3624cd105f94f99b1e88f1efd09": {
@@ -10804,21 +10804,21 @@
   "rom_size": 4194304,
   "rom_crc32": 537024578,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AMKP"
  },
  "0813b90ec2623886a1ad21f4b141573d9886c73a": {
   "rom_size": 4194304,
   "rom_crc32": 3979439671,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AMKE"
  },
  "1df96ece8b773a8fc523f2485321663a34ce2f48": {
   "rom_size": 4194304,
   "rom_crc32": 820617165,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AMKJ"
  },
  "06a39d45ff867fcc5efef7065d607e01600cba9d": {
@@ -10874,21 +10874,21 @@
   "rom_size": 16777216,
   "rom_crc32": 3389197665,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BM5P"
  },
  "470794d23dc8864c2b3b51b01d0cf59c42e52c2b": {
   "rom_size": 16777216,
   "rom_crc32": 2083213929,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BM5J"
  },
  "3620ce1ded7045358b144164474d288c67ec42b4": {
   "rom_size": 16777216,
   "rom_crc32": 633574609,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BM5E"
  },
  "2c6caf3c5d3ec7c2d909637ed86a59b676630856": {
@@ -11161,14 +11161,14 @@
   "rom_size": 8388608,
   "rom_crc32": 356846435,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ANAJ"
  },
  "e7f62f516f8c1905d788e2e5f1b17130aceb6370": {
   "rom_size": 8388608,
   "rom_crc32": 3896313814,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AVIJ"
  },
  "6f5857fcd4bfbf4faa4663c5264a82e3b227c8c9": {
@@ -11574,7 +11574,7 @@
   "rom_size": 8388608,
   "rom_crc32": 1357149096,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BMKJ"
  },
  "0c73cf2187929042bf8a74c80d6a868e347fa156": {
@@ -11854,7 +11854,7 @@
   "rom_size": 8388608,
   "rom_crc32": 2381881536,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AMBJ"
  },
  "dcf72caf7848ea983b621021a9a92fa73d7df5c9": {
@@ -12169,7 +12169,7 @@
   "rom_size": 33554432,
   "rom_crc32": 1118608569,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A3UJ"
  },
  "52842630235eccf74d1965a9e70f1a70a0c94f78": {
@@ -12547,7 +12547,7 @@
   "rom_size": 8388608,
   "rom_crc32": 233354420,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AN2J"
  },
  "978c3add8408279427ec8e7dc40589f3be7e499e": {
@@ -12750,7 +12750,7 @@
   "rom_size": 4194304,
   "rom_crc32": 4012099486,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ANBJ"
  },
  "8a6abc8d04a4d69fddc3e2dfc1c0aa4b207d69cf": {
@@ -12946,7 +12946,7 @@
   "rom_size": 8388608,
   "rom_crc32": 3748200944,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AICJ"
  },
  "7ddef563f53457341be11ac7035ad04254bc9c27": {
@@ -12995,14 +12995,14 @@
   "rom_size": 8388608,
   "rom_crc32": 4220967390,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGSJ"
  },
  "8c354bed050cc53a46105f89bd194a8fa7c361be": {
   "rom_size": 16777216,
   "rom_crc32": 2198567263,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGFJ"
  },
  "6cbc3a838f133ecdd612afa6b39da0945ffe7209": {
@@ -13562,49 +13562,49 @@
   "rom_size": 16777216,
   "rom_crc32": 1216476152,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPEJ"
  },
  "f5a922fdf81768f73acc848e2a563266f949bf46": {
   "rom_size": 16777216,
   "rom_crc32": 3143896567,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRJ"
  },
  "e139f8003de78e59ebcab6cc83fd957bb8c56e1e": {
   "rom_size": 16777216,
   "rom_crc32": 991975145,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRJ"
  },
  "d7afa6e7e8f15df9dc871a65d9b900a2303f064a": {
   "rom_size": 16777216,
   "rom_crc32": 2376359962,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGJ"
  },
  "d2e246c82af32ecc46ee92813695dc337a27e031": {
   "rom_size": 16777216,
   "rom_crc32": 172512619,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGJ"
  },
  "ea91c7159643c8b4d1dc7318e7af59605ac61980": {
   "rom_size": 8388608,
   "rom_crc32": 3471394586,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVJ"
  },
  "d8025d0b015dce3bd949f2cb9ed3ecf7a8045e55": {
   "rom_size": 8388608,
   "rom_crc32": 4246662008,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPJ"
  },
  "85b5103ec947c18cab67c3648e7475f8f662071f": {
@@ -13646,294 +13646,294 @@
   "rom_size": 16777216,
   "rom_crc32": 3509526493,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGD"
  },
  "665c13faf471b2cae7a61f20d93b477e6eb73c55": {
   "rom_size": 16777216,
   "rom_crc32": 2353869064,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPES"
  },
  "7584e1cefe1dd47026cbd38399e9b8260a1eb7bd": {
   "rom_size": 16777216,
   "rom_crc32": 2668103246,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRS"
  },
  "371f031b7612c8d296981ff8326d62bf52773f74": {
   "rom_size": 16777216,
   "rom_crc32": 3112239093,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVS"
  },
  "9927c4fd32f53c3802b7800c6fdd19bae454c85a": {
   "rom_size": 16777216,
   "rom_crc32": 3943115215,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVS"
  },
  "281ed96d5850ca56cf5af43115f9586eb93b0797": {
   "rom_size": 16777216,
   "rom_crc32": 748756313,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGS"
  },
  "3230710bb0c3b549e7478aa23bc287fa5aa4d246": {
   "rom_size": 16777216,
   "rom_crc32": 4073228593,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPS"
  },
  "e8fefcda0a725f23e1aec144c8aa1a07860c4cfb": {
   "rom_size": 16777216,
   "rom_crc32": 2689556235,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPS"
  },
  "e0618bd3b4c0986b7f710226d813f8a0de8a4e78": {
   "rom_size": 16777216,
   "rom_crc32": 521931003,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPEE"
  },
  "da97b4134145f1bc41245f4be7e56ea7ddb2c9b5": {
   "rom_size": 16777216,
   "rom_crc32": 444722911,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRD"
  },
  "62f5e8cf2f83e65df7a5a0e4ab1a84886f2b4838": {
   "rom_size": 16777216,
   "rom_crc32": 3716707868,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRE"
  },
  "646d2e75e8e5fcd835bbe62b888595e957b228a4": {
   "rom_size": 16777216,
   "rom_crc32": 2230208374,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRE"
  },
  "ad4ce6033af10b253ae57a8aac48bf5fa4f6966f": {
   "rom_size": 16777216,
   "rom_crc32": 3600586444,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGE"
  },
  "e8f43d6c5286b626d039621ae3bef5103774329e": {
   "rom_size": 16777216,
   "rom_crc32": 3674205420,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGE"
  },
  "7362399e23d685a6fbeaaa989b25fc67b9bd114c": {
   "rom_size": 16777216,
   "rom_crc32": 3404239972,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVD"
  },
  "0f0542313b01552f79fe3793c2bed6f8e76f14dc": {
   "rom_size": 16777216,
   "rom_crc32": 367125120,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVD"
  },
  "ef59dc2dbbcc1caa4cc50a0155d0491a59d91076": {
   "rom_size": 16777216,
   "rom_crc32": 4035010279,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVE"
  },
  "4545c4e0aa9664f38800d881570f2504b7061f20": {
   "rom_size": 16777216,
   "rom_crc32": 1633949046,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVE"
  },
  "d8fc86baa6a0da0034ff22d3590ab79596fd866c": {
   "rom_size": 16777216,
   "rom_crc32": 2930537446,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVE"
  },
  "aa6d44b020143ea0439b251f6b45b1dfc9aca05e": {
   "rom_size": 16777216,
   "rom_crc32": 2965638268,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPD"
  },
  "b1a5c50656fd7f29036d934620515f9ce9e316e0": {
   "rom_size": 16777216,
   "rom_crc32": 1875737240,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPD"
  },
  "8155fd52f7b90ef4fe68851aedf95e0dc1d8cfc4": {
   "rom_size": 16777216,
   "rom_crc32": 1431170500,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPE"
  },
  "bff91c51da1e93df1661a3e507a8ffd9488b019b": {
   "rom_size": 16777216,
   "rom_crc32": 3137264357,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPE"
  },
  "fbd5059e024e18ba4dd8b0b827bdf1b2586ca80c": {
   "rom_size": 16777216,
   "rom_crc32": 2630107406,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPE"
  },
  "e3b6f29d1344332b911846e9b0e9f01b6e841340": {
   "rom_size": 16777216,
   "rom_crc32": 885645193,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPED"
  },
  "1149712e89c009f49d9e3558f038b536e7c19218": {
   "rom_size": 16777216,
   "rom_crc32": 2751319217,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPEF"
  },
  "89d09e60724be1e9ea5533a6cf7f204f09b58d25": {
   "rom_size": 16777216,
   "rom_crc32": 1573284086,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRF"
  },
  "860734e3ec2510021d85de67ff2f04e52ba8d735": {
   "rom_size": 16777216,
   "rom_crc32": 2677546866,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVF"
  },
  "2353cd6cfdb6eb946f97bc1d1da0e24d5e7ea896": {
   "rom_size": 16777216,
   "rom_crc32": 1762644752,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVF"
  },
  "266d59f6664a16a9795de36423a748fa4cb019e8": {
   "rom_size": 16777216,
   "rom_crc32": 719622470,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPF"
  },
  "af2873d365fe985449c12b2d69523fa21072e732": {
   "rom_size": 16777216,
   "rom_crc32": 897687647,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPF"
  },
  "b32f530c91a07028653afe4878880efaed5ca2e7": {
   "rom_size": 16777216,
   "rom_crc32": 3123873251,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGF"
  },
  "0074dc0c470e70829df4a519fb91fdbdba63ed9e": {
   "rom_size": 16777216,
   "rom_crc32": 1940332903,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPRI"
  },
  "31a3bc40967c4274d6593342f7bea1dc203225bc": {
   "rom_size": 16777216,
   "rom_crc32": 2466637715,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVI"
  },
  "b7c6ed99b3bae979bb8e3a6f45cd8dd686e2b977": {
   "rom_size": 16777216,
   "rom_crc32": 3246535081,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXVI"
  },
  "9e7e38766eb5264e0e3a1130653fff5441ca4c33": {
   "rom_size": 16777216,
   "rom_crc32": 2695809034,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPEI"
  },
  "4f81d3d5e5a2807e0861eaa795b74609599a187d": {
   "rom_size": 16777216,
   "rom_crc32": 379012358,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BPGI"
  },
  "322a018b0bb5060915a3fe2f1472304f7beedba3": {
   "rom_size": 16777216,
   "rom_crc32": 1593722003,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPI"
  },
  "f0ec8ae459a004dbd2b7787bd14a4fac1f685a81": {
   "rom_size": 16777216,
   "rom_crc32": 209293993,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AXPI"
  },
  "fb62f31654590827a29c864b3e9b3ec89f202b79": {
   "rom_size": 33554432,
   "rom_crc32": 438020688,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B24J"
  },
  "7b39c9db54d636058ba85d808aa6db19528572f7": {
   "rom_size": 33554432,
   "rom_crc32": 3251736548,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "B24P"
  },
  "6fa0c5f5b8072a607af212f14e90f9696d001101": {
   "rom_size": 33554432,
   "rom_crc32": 3708471404,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "B24E"
  },
  "3410b936c4bf86261fdcea3bab522dca1d404260": {
@@ -13975,14 +13975,14 @@
   "rom_size": 4194304,
   "rom_crc32": 2402151352,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BIIP"
  },
  "8723e3e1370df22c5ce843d53123f677a4a00a39": {
   "rom_size": 4194304,
   "rom_crc32": 47590633,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BIIE"
  },
  "d7ab7617cc018b8e0c0c595d3d2402be39e04186": {
@@ -14234,28 +14234,28 @@
   "rom_size": 4194304,
   "rom_crc32": 3397991364,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BPMP"
  },
  "8fce74ae035e146b48b2591176ef5e933535a495": {
   "rom_size": 4194304,
   "rom_crc32": 2841245240,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BPMP"
  },
  "0cf932e6c14701381ca80d3bd5991fc6f63b10dc": {
   "rom_size": 4194304,
   "rom_crc32": 654761970,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BP4P"
  },
  "7e191f1fc0aa2a274be59d8e8bae111363c8a6bc": {
   "rom_size": 4194304,
   "rom_crc32": 990144315,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BP5P"
  },
  "c50fc7fa7ec0c2ce5963ccc16bef5ff9863a8859": {
@@ -14794,28 +14794,28 @@
   "rom_size": 8388608,
   "rom_crc32": 1758659130,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ACVE"
  },
  "a58122e23085b7d1b5be8f5637c211a9c3ac1297": {
   "rom_size": 8388608,
   "rom_crc32": 3396591994,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ARPE"
  },
  "8f0f3cc537c2334b517a037d450699873edff129": {
   "rom_size": 8388608,
   "rom_crc32": 208612123,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ACVJ"
  },
  "09afe0c6126c28ff6f30820f6e93e62a1a6e10ab": {
   "rom_size": 8388608,
   "rom_crc32": 1610749340,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ARPJ"
  },
  "32b1ab0a45d87cf45ead7b0b270e13272bec80d5": {
@@ -14955,7 +14955,7 @@
   "rom_size": 8388608,
   "rom_crc32": 2789629979,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BR4J"
  },
  "2f6c13a0ac611560507b827abc28dd9005936cc0": {
@@ -15039,7 +15039,7 @@
   "rom_size": 8388608,
   "rom_crc32": 3892085200,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A8TJ"
  },
  "7b922bdc8492f805fe4295e6e78b9e6cb27b0dff": {
@@ -15179,21 +15179,21 @@
   "rom_size": 8388608,
   "rom_crc32": 4090741305,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ASXJ"
  },
  "acb06d19af1ac57fe4bcf418b76921aff64390f9": {
   "rom_size": 4194304,
   "rom_crc32": 2762066262,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B3EJ"
  },
  "1cac3488a1b9b21a60c426d95a252fd40676ce10": {
   "rom_size": 8388608,
   "rom_crc32": 1984971775,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B3QJ"
  },
  "e96a28cb18b8ae0adaa3d492182fcfa54770502b": {
@@ -15494,14 +15494,14 @@
   "rom_size": 16777216,
   "rom_crc32": 3702186101,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BKAJ"
  },
  "0c9f1a9ba635c3ca68a2ec52e7465a630ab893df": {
   "rom_size": 16777216,
   "rom_crc32": 2734069612,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "BKAJ"
  },
  "fc8c25cce5ec65d50df16c7befc60e799496a852": {
@@ -15830,49 +15830,49 @@
   "rom_size": 8388608,
   "rom_crc32": 1958072425,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AHUP"
  },
  "8ed879bac1b821f47ebe3d63f0ec1cf3ecf8a2fe": {
   "rom_size": 8388608,
   "rom_crc32": 1377063121,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AHUJ"
  },
  "74d497de599ba0ddb3357334f609c87804ba9d34": {
   "rom_size": 8388608,
   "rom_crc32": 3915102732,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AHUE"
  },
  "9c43149f56c492855e7f2bd1dda26e9d4803ee2e": {
   "rom_size": 16777216,
   "rom_crc32": 1441072065,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AU2P"
  },
  "4b5351a7da02570d7d0d0d358a5313f5197656b6": {
   "rom_size": 16777216,
   "rom_crc32": 2067376050,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AU2J"
  },
  "55f78ffa7e8e17de6d1935f2a59abc97e0dc55d4": {
   "rom_size": 16777216,
   "rom_crc32": 1077469826,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AU2E"
  },
  "817d6cd431e1ced202dfe739e45fa3d5c2f0654e": {
   "rom_size": 16777216,
   "rom_crc32": 833757413,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AVSJ"
  },
  "57c9b7bb1be6fe4decbd2558f807279b7d552e35": {
@@ -16117,21 +16117,21 @@
   "rom_size": 33554432,
   "rom_crc32": 2333853663,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B46E"
  },
  "e3b355e67ace40f28e613845ebdddb9fe9e43838": {
   "rom_size": 33554432,
   "rom_crc32": 2281200028,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B4OX"
  },
  "14a80327c4add4a9a60528baa6eea3c81bcfc2b2": {
   "rom_size": 33554432,
   "rom_crc32": 3961471017,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B4OE"
  },
  "8981a4eaae2710d081c2bdc082281ffc3e971f34": {
@@ -16299,112 +16299,112 @@
   "rom_size": 8388608,
   "rom_crc32": 1647477659,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ASOP"
  },
  "4413c9397d7ab229500bbc4247156fb38246e4c8": {
   "rom_size": 8388608,
   "rom_crc32": 2241165860,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ASOJ"
  },
  "372e1880a0dd1213422422a8e56aac7b8ed01d66": {
   "rom_size": 8388608,
   "rom_crc32": 1599152675,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ASOJ"
  },
  "b37ebb42082531a8b19b4135b418b1a0f379777e": {
   "rom_size": 8388608,
   "rom_crc32": 1677135832,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ASOE"
  },
  "6a7f68a89eb6949e631fc79f15d58be9c343ef76": {
   "rom_size": 16777216,
   "rom_crc32": 2303760529,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A2NP"
  },
  "8063f0416fa8b6c0308f16ca8b0b75a98f2b6e7b": {
   "rom_size": 16777216,
   "rom_crc32": 1362625791,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A2NJ"
  },
  "b86c0231782e6f5c94b97e75920950074bcd50c8": {
   "rom_size": 16777216,
   "rom_crc32": 2130634743,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A2NE"
  },
  "75ec7cfe6fd4e9715b753c8a9fcab3d0466a1450": {
   "rom_size": 16777216,
   "rom_crc32": 1542992982,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B3SP"
  },
  "54c6f80b4a54bb9af3086879a65a3ca33476109b": {
   "rom_size": 16777216,
   "rom_crc32": 1131803094,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B3SJ"
  },
  "87d0b8c6967ad71f1cfaf11d4a68ba2ca4efbf8d": {
   "rom_size": 16777216,
   "rom_crc32": 1239262694,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B3SE"
  },
  "9581bf4e75e5c410d716dfcb002e70a28af036f3": {
   "rom_size": 16777216,
   "rom_crc32": 3505803557,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BSBP"
  },
  "ca289d003d6cf14882b9b0f6409ae929f89aef71": {
   "rom_size": 16777216,
   "rom_crc32": 1929751600,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BSBJ"
  },
  "5425170401c21236ff5bb6e473be425bf2118d3e": {
   "rom_size": 16777216,
   "rom_crc32": 2664028271,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BSBE"
  },
  "600900657db867a7b1dd7e02af6de839d69301e0": {
   "rom_size": 8388608,
   "rom_crc32": 1144361342,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A3VP"
  },
  "3a8b0121284aee9880877be82bc1190e2102ed2b": {
   "rom_size": 8388608,
   "rom_crc32": 1135997287,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A86J"
  },
  "6a4e23f1e3ddc9aed119b4fac1624e0ac3bb847a": {
   "rom_size": 8388608,
   "rom_crc32": 142165827,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A3VE"
  },
  "db78ad7cd77b4215f7be5683a07b397c2f4bc2bb": {
@@ -17412,49 +17412,49 @@
   "rom_size": 4194304,
   "rom_crc32": 1516725284,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AX4J"
  },
  "264cd0336a8f4c657b5d2e8b9aedfd2017f64e16": {
   "rom_size": 4194304,
   "rom_crc32": 2065320994,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AX4J"
  },
  "042a2fc1b3846798ce0549afa32a5a3e8313613e": {
   "rom_size": 4194304,
   "rom_crc32": 4090000134,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AX4J"
  },
  "55c16e8dcab8c0c07fde1afa0ff996ec9ef64dbf": {
   "rom_size": 8388608,
   "rom_crc32": 2374282492,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AX4P"
  },
  "3f8e097a2db67aac369cfdba6ff35faf22079179": {
   "rom_size": 8388608,
   "rom_crc32": 924065586,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AX4P"
  },
  "0bde2155cd2ccd33327ad77491f90116587d210a": {
   "rom_size": 4194304,
   "rom_crc32": 2756421535,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AX4E"
  },
  "d403fd1341f13106d47baa56a4f22e8380962041": {
   "rom_size": 4194304,
   "rom_crc32": 2296033919,
   "savesize": 131072,
-  "savetype": 6,
+  "savetype": 7,
   "code": "AX4E"
  },
  "8d904c5caddcc4b8a4698477362b16a9fd7be742": {
@@ -17531,63 +17531,63 @@
   "rom_size": 16777216,
   "rom_crc32": 3182980266,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AOGP"
  },
  "2e52ca55e7a2f54398b07c8e34f39c450f943497": {
   "rom_size": 8388608,
   "rom_crc32": 1964146372,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AOGJ"
  },
  "db641133a065909dff04b7b8b2c44221c7c58852": {
   "rom_size": 16777216,
   "rom_crc32": 1491624550,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AOGE"
  },
  "e2aff59f5a90503067ec8c9a76980abd141157c1": {
   "rom_size": 16777216,
   "rom_crc32": 2785574927,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B2RJ"
  },
  "18f7eb3d4e411eee51b00c371cf0a2ef6c756239": {
   "rom_size": 16777216,
   "rom_crc32": 720241536,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B2RE"
  },
  "55d018e29781c15aded399619c3540ee1a1708f7": {
   "rom_size": 8388608,
   "rom_crc32": 795776904,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ASRJ"
  },
  "a4bb144d278b6a9ec0d5bec39ff11adb2f3c4b7a": {
   "rom_size": 8388608,
   "rom_crc32": 4021571863,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A6SJ"
  },
  "bced30c579c29b2b49fe8f163d30090fec83a906": {
   "rom_size": 16777216,
   "rom_crc32": 3377921335,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "B6JJ"
  },
  "7972f2b5220d443bac5fc5a96dd9eee7002aa864": {
   "rom_size": 8388608,
   "rom_crc32": 3749679548,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AJ9J"
  },
  "90b3f47c4786796dc677df692cf1bdb060b6bc5a": {
@@ -17678,28 +17678,28 @@
   "rom_size": 16777216,
   "rom_crc32": 295743305,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AVSY"
  },
  "352da67011a8dbd93dc26bfd41bd467e1fd54cd8": {
   "rom_size": 16777216,
   "rom_crc32": 1591836369,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AVSX"
  },
  "5cff665bd7d417b3b626a33e7f4d790a3ee91251": {
   "rom_size": 16777216,
   "rom_crc32": 2296793738,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AVSP"
  },
  "dc9e56b67bfc972e49f963acecf96ed2f88f4c1a": {
   "rom_size": 16777216,
   "rom_crc32": 2132716661,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AVSE"
  },
  "b54424b04c68dff800d4e3bed36fe9aa12c926ab": {
@@ -17727,14 +17727,14 @@
   "rom_size": 8388608,
   "rom_crc32": 1716114126,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ATOE"
  },
  "db411340c20b2eaf91c602814b7273904094d692": {
   "rom_size": 8388608,
   "rom_crc32": 23570552,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ATOJ"
  },
  "f30595d0c10c2991edbef187bebe6b369d1a7ca1": {
@@ -18007,7 +18007,7 @@
   "rom_size": 8388608,
   "rom_crc32": 3710143642,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "ATIJ"
  },
  "052d411a16e5cd61e5f702ed5a97104a0a993cba": {
@@ -18553,7 +18553,7 @@
   "rom_size": 4194304,
   "rom_crc32": 3754462526,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A2YE"
  },
  "fb56c6cff2d21ecc0471cacf5e18f59f5a480b1d": {
@@ -18644,14 +18644,14 @@
   "rom_size": 8388608,
   "rom_crc32": 3962723474,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BTRJ"
  },
  "8e26a7ba6c1687473f84f8be0256bdd5c0365af8": {
   "rom_size": 8388608,
   "rom_crc32": 2514507925,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BTRE"
  },
  "eec0a1975c68ed9f18329c6e91c13b46d536882e": {
@@ -18749,7 +18749,7 @@
   "rom_size": 4194304,
   "rom_crc32": 1518237227,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BIIJ"
  },
  "4a13a4198da97326c7d05146277bb17c55fde103": {
@@ -18987,7 +18987,7 @@
   "rom_size": 8388608,
   "rom_crc32": 3224864199,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BUTJ"
  },
  "afced08761c65e939d8274b9ab96bb851133438f": {
@@ -19043,14 +19043,14 @@
   "rom_size": 33554432,
   "rom_crc32": 3150758653,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BOCJ"
  },
  "ffb1229bf6d8c549e13e0f0af4e89ceed68be483": {
   "rom_size": 33554432,
   "rom_crc32": 2335387835,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "BOCE"
  },
  "4de78b608d2dad0b08d0719f7daf6a6267f3f89b": {
@@ -19449,21 +19449,21 @@
   "rom_size": 4194304,
   "rom_crc32": 4128770805,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AWPJ"
  },
  "d99e6c8498bb7b4e7706524a618a46134122bd73": {
   "rom_size": 4194304,
   "rom_crc32": 2679418634,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AWPJ"
  },
  "4379f548feea37e96d360084215d39a407c4bffb": {
   "rom_size": 4194304,
   "rom_crc32": 1524261110,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AWPJ"
  },
  "21a4580b592356d6f539e23add8be0ad5bcba542": {
@@ -19841,21 +19841,21 @@
   "rom_size": 8388608,
   "rom_crc32": 3996221289,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AYDP"
  },
  "cb6c0e3dde6d76ffc21ee33e343beb9cfdc1c4dc": {
   "rom_size": 8388608,
   "rom_crc32": 1370709639,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AYDJ"
  },
  "6fa5952ed82ced10cb525ed693c4a63b4c8a0f0e": {
   "rom_size": 8388608,
   "rom_crc32": 2338196007,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AYDE"
  },
  "28685df31700adc7c7c1f0db3bd436eba00fdba6": {
@@ -20072,7 +20072,7 @@
   "rom_size": 8388608,
   "rom_crc32": 2683237997,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AZEJ"
  },
  "714f2321b7fb6e6854e196edd3ec26eaa73348e6": {
@@ -20114,14 +20114,14 @@
   "rom_size": 4194304,
   "rom_crc32": 3542133093,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AGTJ"
  },
  "60a0a115869886ed4973fad07975c7410fc29c64": {
   "rom_size": 8388608,
   "rom_crc32": 646945918,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "A2ZJ"
  },
  "95b3a7696b8d1bcb21a2e341a818dcec3851db3a": {
@@ -20142,7 +20142,7 @@
   "rom_size": 4194304,
   "rom_crc32": 3732675304,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AZTJ"
  },
  "a811e4f0b26f498f61f1a5241fd608755241afac": {
@@ -20240,14 +20240,14 @@
   "rom_size": 8388608,
   "rom_crc32": 2536806112,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AZEP"
  },
  "ac4d50a5223e1905a281bdcf3c787794aac0adc6": {
   "rom_size": 8388608,
   "rom_crc32": 606356501,
   "savesize": 65536,
-  "savetype": 5,
+  "savetype": 6,
   "code": "AZEE"
  },
  "b4fb4232bfb6a420bcc3c424b9cb5c33fdd97383": {

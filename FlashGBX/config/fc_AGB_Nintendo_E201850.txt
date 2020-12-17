@@ -12,7 +12,10 @@
 	"wait_read_status_register":true,
 	"commands":{
 		"reset":[
-			[ 0, 0xFF ]
+			[ 0, 0xFF ],
+			[ 0x400000, 0xFF ],
+			[ 0x800000, 0xFF ],
+			[ 0xC00000, 0xFF ]
 		],
 		"read_status_register":[
 			[ 0, 0x70 ]

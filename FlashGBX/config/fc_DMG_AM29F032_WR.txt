@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"AM29F032/AM29F032B (DIY cart) @ WR"
+		"DIY cart with AM29F032/AM29F032B @ WR"
 	],
 	"flash_ids":[
 		[ 0x04, 0xD4, 0x00, 0x00 ]
