@@ -1,10 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"GB-M968 with MX29LV320ABTC"
+		"GB-M968 with MX29LV320ABTC",
+		"SD007_BV5_DRV with M29W320DT"
 	],
 	"flash_ids":[
-		[ 0xC2, 0xC2, 0xA8, 0xA8 ]
+		[ 0xC2, 0xC2, 0xA8, 0xA8 ],
+		[ 0x20, 0x20, 0xCA, 0xCA ]
 	],
 	"voltage":3.3,
 	"flash_size":0x400000,

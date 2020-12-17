@@ -11,6 +11,12 @@
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
+	"sector_size":[
+		[0x4000, 1],
+		[0x2000, 2],
+		[0x8000, 1],
+		[0x10000, 31]
+	],
 	"chip_erase_timeout":30,
 	"commands":{
 		"reset":[
@@ -36,6 +42,22 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ 0, 0xFF, 0xFF ]
+		],
+		"sector_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFF, 0xFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xAA ],

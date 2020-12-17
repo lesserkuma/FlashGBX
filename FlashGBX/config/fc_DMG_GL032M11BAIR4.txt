@@ -2,9 +2,11 @@
 	"type":"DMG",
 	"names":[
 		"SD007_48BALL_64M with GL032M11BAIR4",
-		"S29GL032 (no PCB text)"
+		"SD007_48BALL_64M_V2 with GL032M11BAIR4",
+		"S29GL032N90T and ALTERA CPLD (no PCB text)"
 	],
 	"flash_ids":[
+		[ 0x02, 0x02, 0x7D, 0x7D ],
 		[ 0x02, 0x02, 0x7D, 0x7D ],
 		[ 0x02, 0x02, 0x7D, 0x7D ]
 	],
@@ -13,23 +15,27 @@
 	"start_addr":0x4000,
 	"first_bank":0,
 	"write_pin":"WR",
+	"sector_size":[
+		[0x2000, 8],
+		[0x10000, 63]
+	],
 	"chip_erase_timeout":60,
 	"commands":{
 		"reset":[
-			[ 0x7000, 0xF0 ]
+			[ 0x4000, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x90 ]
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0x90 ]
 		],
 		"chip_erase":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x80 ],
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x10 ]
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0x80 ],
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0x10 ]
 		],
 		"chip_erase_wait_for":[
 			[ null, null, null ],
@@ -39,10 +45,26 @@
 			[ null, null, null ],
 			[ 0, 0xFF, 0xFF ]
 		],
+		"sector_erase":[
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0x80 ],
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
 		"single_write":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0xA0 ],
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0xA0 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[

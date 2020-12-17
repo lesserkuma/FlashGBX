@@ -1,10 +1,16 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_48BALL_64M_V5 with 36VF3204"
+		"SD007_48BALL_64M_V5 with 36VF3204",
+		"SD007_48BALL_64M_V6 with 36VF3204",
+		"SD007_TSOP_48BALL with 36VF3204",
+		"SD007_48BALL_64M_V5 with 36VF3203"
 	],
 	"flash_ids":[
-		[ 0xBF, 0x00, 0x53, 0x73 ]
+		[ 0xBF, 0x00, 0x53, 0x73 ],
+		[ 0xBF, 0x00, 0x53, 0x73 ],
+		[ 0xBF, 0x00, 0x53, 0x73 ],
+		[ 0xBF, 0x00, 0x54, 0x73 ]
 	],
 	"voltage":3.3,
 	"voltage_variants":true,
