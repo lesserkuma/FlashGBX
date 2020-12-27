@@ -1,9 +1,11 @@
 {
 	"type":"AGB",
 	"names":[
-		"28F256L03B-DRV with 256L30B"
+		"28F256L03B-DRV with 256L30B",
+		"4400 with 4400L0ZDQ0"
 	],
 	"flash_ids":[
+		[ 0x8A, 0x00, 0x15, 0x88 ],
 		[ 0x8A, 0x00, 0x15, 0x88 ]
 	],
 	"voltage":3.3,

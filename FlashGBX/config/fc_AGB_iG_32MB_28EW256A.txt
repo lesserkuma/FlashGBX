@@ -1,39 +1,47 @@
 {
 	"type":"AGB",
 	"names":[
-		"AGB-E05-01 with MSP55LV128M",
-		"AGB-E05-01 with GL128S",
-		"BX2006_0106_NEW with S29GL128N10TFI01",
-		"BX2006_TSOP_64BALL with GL128S",
-		"BX2006_TSOPBGA_0106 with M29W640GB6AZA6",
-		"AGB-E05-02 with M29W128GH"
+		"insideGadgets 32 MB (28EW256A) + RTC/Rumble"
 	],
 	"flash_ids":[
-		[ 0x02, 0x00, 0x7D, 0x22 ],
-		[ 0x02, 0x00, 0x7D, 0x22 ],
-		[ 0x02, 0x00, 0x7D, 0x22 ],
-		[ 0x02, 0x00, 0x7D, 0x22 ],
-		[ 0x20, 0x00, 0x7D, 0x22 ],
-		[ 0x20, 0x00, 0x7D, 0x22 ]
+		[ 0x89, 0x00, 0x7E, 0x22 ]
 	],
 	"voltage":3.3,
-	"flash_size":0x1000000,
+	"flash_size":0x2000000,
 	"sector_size":0x20000,
+	"chip_erase_timeout":300,
+	"single_write_first_256_bytes":true,
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x90 ]
 		],
-		"sector_erase":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
+		"chip_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFFFF, 0xFFFF ]
+		],
+		"sector_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
 			[ "SA", 0x30 ]
 		],
 		"sector_erase_wait_for":[
@@ -45,12 +53,12 @@
 			[ "SA", 0xFFFF, 0xFFFF ]
 		],
 		"buffer_write":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ "SA", 0x26 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ "SA", 0x25 ],
 			[ "SA", "BS" ],
 			[ "PA", "PD" ],
-			[ "SA", 0x2A ]
+			[ "SA", 0x29 ]
 		],
 		"buffer_write_wait_for":[
 			[ null, null, null ],
@@ -61,8 +69,8 @@
 			[ "SA", "PD", 0xFFFF ]
 		],
 		"single_write":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
 			[ 0xAAA, 0xA0 ],
 			[ "PA", "PD" ]
 		],

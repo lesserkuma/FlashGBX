@@ -17,10 +17,11 @@ by Lesserkuma
 - Write new ROMs to a wide variety of Game Boy and Game Boy Advance flash cartridges
 - Many reproduction cartridges and flash cartridges can be auto-detected
 - A flash chip query can be performed for unsupported flash cartridges
+- Decode and extract Game Boy Camera (Pocket Camera) photos from save data
 
 ### Confirmed working reader/writer hardware
 
-- [insideGadgets GBxCart RW v1.3 and v1.3 Pro](https://www.gbxcart.com/) with firmware versions from R19 up to R23 (other hardware revisions and firmware versions may also work, but are untested)
+- [insideGadgets GBxCart RW v1.3 and v1.3 Pro](https://www.gbxcart.com/) with firmware versions from R19 up to R24 (other hardware revisions and firmware versions may also work, but are untested)
 
 ### Currently supported flash cartridges
 
@@ -39,6 +40,11 @@ by Lesserkuma
 - Game Boy Advance
 
 	- Flash2Advance 256M (non-ultra variant, with 2× 28F128J3A150)
+	- insideGadgets 16 MB, 64K EEPROM with Solar and RTC options *(thanks AlexiG)*
+	- insideGadgets 32 MB, 1M FLASH with RTC option *(thanks AlexiG)*
+	- insideGadgets 32 MB, 512K FLASH *(thanks AlexiG)*
+	- insideGadgets 32 MB, 4K/64K EEPROM *(thanks AlexiG)*
+	- insideGadgets 32 MB, 256K FRAM with Rumble option *(thanks AlexiG)*
 	- Nintendo AGB Cartridge 128M Flash S, E201850
 	- Nintendo AGB Cartridge 256M Flash S, E201868
 
@@ -59,13 +65,15 @@ by Lesserkuma
 	- SD007_48BALL_64M_V6 with 36VF3204
 	- SD007_48BALL_64M_V6 with 29DL163BD-90 *(thanks LovelyA72)*
 	- SD007_BV5_DRV with M29W320DT *(thanks Frost Clock)*
-	- SD007_BV5_V3 with 29LV160BE-90PFTN *(thanks LucentW)*
-	- SD007_BV5_V3 with HY29LV160BT-70 *(thanks LucentW)*
 	- SD007_BV5_V2 with HY29LV160TT *(thanks RevZ)*
 	- SD007_BV5_V2 with MX29LV320BTC *(thanks RevZ)*
+	- SD007_BV5_V3 with 29LV160BE-90PFTN *(thanks LucentW)*
+	- SD007_BV5_V3 with HY29LV160BT-70 *(thanks LucentW)*
 	- SD007_BV5_V3 with AM29LV160MB *(thanks RevZ)*
 	- SD007_TSOP_48BALL with 36VF3204
+	- SD007_TSOP_48BALL with AM29LV160DB *(thanks marv17)*
 	- SD007_TSOP_48BALL with AM29LV160DT *(thanks marv17)*
+	- SD007_TSOP_48BALL with M29W160ET *(thanks LucentW)*
 	- SD007_TSOP_48BALL with L160DB12VI *(thanks marv17)*
 
 - Game Boy Advance
@@ -76,6 +84,7 @@ by Lesserkuma
 	- 4050_4400_4000_4350_36L0R_V5 with M36L0R7050T
 	- 4050_4400_4000_4350_36L0R_V5 with M36L0T8060T
 	- 4050_4400_4000_4350_36L0R_V5 with M36L0R8060T
+	- 4400 with 4400L0ZDQ0 *(thanks Zeii)*
 	- 4455_4400_4000_4350_36L0R_V3 with M36L0R7050T
 	- AGB-E05-01 with GL128S
 	- AGB-E05-01 with MSP55LV128M
@@ -85,16 +94,19 @@ by Lesserkuma
 	- BX2006_0106_NEW with S29GL128N10TFI01 *(thanks litlemoran)*
 	- BX2006_TSOP_64BALL with GL128S
 	- BX2006_TSOPBGA_0106 with M29W640GB6AZA6
+	- BX2006_TSOPBGA_0106 with K8D6316UTM-PI07 *(thanks LucentW)*
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
 ## Installing and running
 
-The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) and [pyserial](https://pypi.org/project/pyserial/) packages. 
+The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [requests](https://pypi.org/project/requests/) and [setuptools](https://pypi.org/project/setuptools/) packages.
 
-If you have Python and pip installed, you can use `pip install FlashGBX` to download and install the application. Then use `python -m FlashGBX` to run it.
+If you have Python and pip installed, you can use `pip install FlashGBX` to download and install the application, or use `pip install --upgrade FlashGBX` to upgrade from an older version. Then use `python -m FlashGBX` to run it.
 
 To run FlashGBX in portable mode, you can also download the source code archive and call `python run.py` after installing the prerequisites yourself.
+
+*On some platforms you may have to use `pip3`/`python3` instead of `pip`/`python`.*
 
 ### Windows binaries
 
@@ -107,7 +119,7 @@ These executables have been created using *PyInstaller* and *Inno Setup*.
 
 ### Troubleshooting
 
-* If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99%+ on a Q-tip) and reconnect the device.
+* If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a Q-tip) and reconnect the device.
 
 * On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
 
@@ -127,8 +139,11 @@ The author would like to thank the following very kind people for their help and
 
 - AlexiG (GBxCart RW hardware, bug reports, flash chip info)
 - AndehX (app icon, flash chip info)
+- ClassicOldSong (fix for Raspberry Pi)
+- djedditt (testing)
 - easthighNerd (feature suggestions)
 - Frost Clock (flash chip info)
+- Icesythe7 (feature suggestions)
 - JFox (help with properly packaging the app for pip)
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
@@ -136,6 +151,7 @@ The author would like to thank the following very kind people for their help and
 - LucentW (flash chip info, testing)
 - marv17 (flash chip info, testing)
 - RevZ (Linux help, testing, bug reports, flash chip info)
+- Zeii (flash chip info)
 
 ## Changes
 
@@ -164,8 +180,6 @@ The author would like to thank the following very kind people for their help and
 - Added experimental support for GBxCart RW revisions other than v1.3 and fixed a crash when connecting to unknown revisions of the GBxCart RW
 - The app is now available as a package and can be installed directly through *pip* *(thanks JFox)*
 - Changed the way configuration files are stored (for details call with `--help` command line switch)
-- ~~Added the option to write an automatically trimmed ROM file which can reduce flashing time, especially in Game Boy Advance mode (note that not all ROMs can be trimmed)~~
-- ~~When dumping a flash cartridge that has been flashed with a trimmed ROM, the ROM will be fixed so checksums will still match up (can be disabled for debugging by adding `_notrimfix` to the file name)~~
 - Added a button that opens a file browser to the currently used config directory for easy access
 - Added the option to erase/wipe the save data on a cartridge
 - Rearranged some buttons on the main window so that the newly added button popup menus don’t block anything
@@ -186,7 +200,7 @@ The author would like to thank the following very kind people for their help and
 - Confirmed support for SD007_48BALL_64M_V2 with GL032M11BAIR4
 - Added support for 4050_4400_4000_4350_36L0R_V5 with M36L0R8060T/M36L0T8060T
 - Rewrote parts of the GBxCart RW interface code
-- Removed the option to trim ROM files and will now instead just skip writing empty chunks of data
+- When flashing ROM files, empty chunks of data will now be skipped
 - Fixed config files for MSP55LV128 and MSP55LV128M flash chips
 - Confirmed support for SD007_48BALL_64M_V6 with 36VF3204
 - Confirmed support for SD007_TSOP_48BALL with 36VF3204
@@ -204,14 +218,27 @@ The author would like to thank the following very kind people for their help and
 - Added support for SD007_BV5_V3 with 29LV160BE-90PFTN *(thanks LucentW)*
 - Added support for SD007_BV5_V3 with HY29LV160BT *(thanks LucentW)*
 - Added support for SD007_48BALL_64M_V5 with 36VF3203 *(thanks LucentW)*
-- Added support for SD007_TSOP_48BALL with M29W160ET70ZA6 *(thanks LucentW)*
+- Added support for SD007_TSOP_48BALL with M29W160ET *(thanks LucentW)*
 - Added support for AGB-E08-09 with 29LV128DTMC-90Q *(thanks LucentW)*
 - Confirmed support for SD007_TSOP_48BALL with L160DB12VI *(thanks marv17)*
 - Added support for SD007_TSOP_48BALL with AM29LV160DT *(thanks marv17)*
 - Added support for SD007_BV5_DRV with M29W320DT *(thanks Frost Clock)*
-- Added experimental *fast read mode* support for GBxCart RW v1.3 with firmware R19+ (about 20% faster)
-- Bumped the required minimum firmware version of GBxCart RW v1.3 to R19
+- Added experimental *Fast Read Mode* support for GBxCart RW with firmware R19+; can be up to 20% faster, but the functioning currently heavily relies on system performance and drivers
+- Bumped the required minimum firmware version of GBxCart RW to R19
 - Confirmed support for 4050_4400_4000_4350_36L0R_V5 with M36L0R7050T
-- Added the option to enable the preference of sector erase over chip erase when flashing a ROM (this can improve flashing speed for ROMs smaller than the flash chip capacity)
+- Added the option to enable the preference of sector erase over chip erase when flashing a ROM; this can improve flashing speed for ROMs smaller than the flash chip capacity
 - Some flash chips may have reversed sectors despite shared flash ID; if you think your cartridge is affected, you can add `"sector_reversal":true,` to its config file for a prompt upon flashing
 - Renamed config.ini to settings.ini to avoid confusion with the term “config file”
+
+### v0.10 (released 2020-12-27)
+- Fixed an issue with Raspberry Pi compatibility *(thanks ClassicOldSong)*
+- Confirmed support for SD007_TSOP_48BALL with AM29LV160DB *(thanks marv17)*
+- Fixed timeout errors with ROMs that have non-standard file sizes (e.g. trimmed files)
+- Improved writing speed for most Game Boy reproduction cartridges by up to 40% (requires GBxCart RW firmware R24 or higher)
+- Improved writing speed for M36L0R and similar flash chips by up to 80% (requires GBxCart RW firmware R24 or higher)
+- Confirmed support for 4400 with 4400L0ZDQ0 *(thanks Zeii)*
+- Backup and restore save data of flash chips manufactured by SANYO requires GBxCart RW firmware R24 or higher; a warning message for this will now be displayed in necessary cases
+- Added the option to check for updates at application start *(thanks Icesythe7 and JFox)*
+- Added support for BX2006_TSOPBGA_0106 with K8D6316UTM-PI07 *(thanks LucentW)*
+- Added support for the currently available insideGadgets Game Boy Advance flash cartridges *(thanks AlexiG)*
+- Added a Game Boy Camera (Pocket Camera) album viewer and picture extractor
