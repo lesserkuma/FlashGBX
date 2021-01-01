@@ -1203,6 +1203,11 @@ class GbxDevice:
 		# Reverse sectors if requested
 		if reverse_sectors: flashcart_meta['sector_size'].reverse()
 		
+		# Firmware check R20+
+		if (int(self.FW[0]) < 20) and self.MODE == "AGB" and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] == [[0xAAA, 0xAA], [0x555, 0x55], ['SA', 0x25], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0x29]]:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"A firmware update is required to write to this cartridge. Please update the firmware of your GBxCart RW device to version R20 or higher.", "abortable":False})
+			return False
+		# Firmware check R20+
 		# Firmware check R23+
 		if (int(self.FW[0]) < 23) and self.MODE == "AGB" and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] == [[0xAAA, 0xA9], [0x555, 0x56], ['SA', 0x26], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0x2A]]:
 			print("NOTE: Update your GBxCart RW firmware to version R23 or higher for a better transfer rate with this cartridge.")

@@ -11,7 +11,7 @@ from . import hw_GBxCartRW
 hw_devices = [hw_GBxCartRW]
 
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "0.10"
+VERSION_PEP440 = "1.0"
 VERSION = "v{:s}".format(VERSION_PEP440)
 
 class FlashGBX(QtWidgets.QWidget):
@@ -229,11 +229,10 @@ class FlashGBX(QtWidgets.QWidget):
 		
 		# Read config, find devices and connect
 		self.InitConfig(args)
-		self.FindDevices()
 		
 		# Show app window first, then do update check
 		qt_app.processEvents()
-		QtCore.QTimer.singleShot(1, lambda: [ self.UpdateCheck() ])
+		QtCore.QTimer.singleShot(1, lambda: [ self.UpdateCheck(), self.FindDevices() ])
 	
 	def InitConfig(self, args):
 		app_path = args['app_path']
@@ -524,7 +523,7 @@ class FlashGBX(QtWidgets.QWidget):
 	def UpdateCheck(self):
 		update_check = self.SETTINGS.value("UpdateCheck")
 		if update_check is None:
-			answer = QtWidgets.QMessageBox.question(self, APPNAME, "Would you like to automatically check for new versions at application startup?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+			answer = QtWidgets.QMessageBox.question(self, APPNAME, "Would you like to automatically check for new versions at application startup?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 			if answer == QtWidgets.QMessageBox.Yes:
 				self.SETTINGS.setValue("UpdateCheck", "enabled")
 				self.mnuConfig.actions()[0].setChecked(True)
@@ -636,6 +635,7 @@ class FlashGBX(QtWidgets.QWidget):
 			
 			if ret is False:
 				self.CONN = None
+				if self.cmbDevice.count() == 0: self.lblDevice.setText("No connection.")
 				return False
 			
 			elif isinstance(ret, list):
@@ -699,6 +699,7 @@ class FlashGBX(QtWidgets.QWidget):
 		#self.btnScan.setEnabled(False)
 		self.btnConnect.setEnabled(False)
 		qt_app.processEvents()
+		time.sleep(0.05)
 		
 		global hw_devices
 		for hw_device in hw_devices:
@@ -816,7 +817,7 @@ class FlashGBX(QtWidgets.QWidget):
 			if self.CONN.INFO["transferred"] == 131072: # 128 KB
 				with open(self.CONN.INFO["last_path"], "rb") as file: temp = file.read()
 				if temp[0x1FFB1:0x1FFB6] == b'Magic':
-					answer = QtWidgets.QMessageBox.question(self, APPNAME, "Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+					answer = QtWidgets.QMessageBox.question(self, APPNAME, "Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 					if answer == QtWidgets.QMessageBox.Yes:
 						self.CAMWIN = None
 						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"])
@@ -862,7 +863,7 @@ class FlashGBX(QtWidgets.QWidget):
 			QtWidgets.QMessageBox.critical(self, APPNAME, "No flash cartridge type configuration files found. Try to restart the application with the “--reset” switch to reset the configuration.", QtWidgets.QMessageBox.Ok)
 			return 0
 		
-		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="Would you like " + APPNAME + " to try and auto-detect the flash cartridge type?", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="Would you like " + APPNAME + " to try and auto-detect the flash cartridge type?", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 		cb = QtWidgets.QCheckBox("Limit voltage to 3.3V", checked=True)
 		if self.CONN.GetMode() == "DMG":
 			msgbox.setCheckBox(cb)
@@ -873,7 +874,7 @@ class FlashGBX(QtWidgets.QWidget):
 		else:
 			detected = self.CONN.AutoDetectFlash(limitVoltage)
 			if len(detected) == 0:
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for flashing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for flashing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 				if self.CONN.GetMode() == "DMG":
 					msgbox.setCheckBox(cb)
 				answer = msgbox.exec()
@@ -1013,7 +1014,7 @@ class FlashGBX(QtWidgets.QWidget):
 		path = ""
 		if dpath != "":
 			text = "The following ROM file will now be written to the flash cartridge:\n" + dpath
-			answer = QtWidgets.QMessageBox.question(self, APPNAME, text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.question(self, APPNAME, text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 			path = dpath
 		
@@ -1058,7 +1059,7 @@ class FlashGBX(QtWidgets.QWidget):
 		with open(path, "rb") as file: buffer = file.read()
 		rom_size = len(buffer)
 		if rom_size > carts[cart_type]['flash_size']:
-			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "The selected flash cartridge type seems to support ROMs that are up to " + str(int(carts[cart_type]['flash_size'] / 1024 / 1024)) + " MB in size, but the file you selected is " + str(os.path.getsize(path)/1024/1024) + " MB. You can still give it a try, but it’s possible that it’s too large.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "The selected flash cartridge type seems to support ROMs that are up to " + str(int(carts[cart_type]['flash_size'] / 1024 / 1024)) + " MB in size, but the file you selected is " + str(os.path.getsize(path)/1024/1024) + " MB. You can still give it a try, but it’s possible that it’s too large.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		
 		override_voltage = False
@@ -1098,10 +1099,10 @@ class FlashGBX(QtWidgets.QWidget):
 		elif self.CONN.GetMode() == "AGB":
 			hdr = RomFileAGB(path).GetHeader()
 		if not hdr["logo_correct"]:
-			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "Warning: The ROM file you selected may not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "Warning: The ROM file you selected will not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		if not hdr["header_checksum_correct"]:
-			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "Warning: The ROM file you selected may not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"]), QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"]), QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		
 		self.CONN.FlashROM(fncSetProgress=self.SetProgress, path=path, cart_type=cart_type, override_voltage=override_voltage, prefer_sector_erase=prefer_sector_erase, reverse_sectors=reverse_sectors)
@@ -1175,12 +1176,12 @@ class FlashGBX(QtWidgets.QWidget):
 		
 		if dpath != "":
 			text = "The following save data file will now be written to the cartridge:\n" + dpath
-			answer = QtWidgets.QMessageBox.question(self, APPNAME, text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.question(self, APPNAME, text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 			path = dpath
 			self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 		elif erase:
-			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "The save data on your cartridge will now be erased.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "The save data on your cartridge will now be erased.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		else:
 			path = path + ".sav"
@@ -1203,7 +1204,7 @@ class FlashGBX(QtWidgets.QWidget):
 					dontShowAgain = str(self.SETTINGS.value("AutoReconnect")).lower() == "enabled"
 					if not dontShowAgain:
 						cb = QtWidgets.QCheckBox("Always try to reconnect without asking", checked=False)
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="The connection to the device was lost. Do you want to try and reconnect to the first device found? The cartridge information will also be reset and read again.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="The connection to the device was lost. Do you want to try and reconnect to the first device found? The cartridge information will also be reset and read again.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 						msgbox.setCheckBox(cb)
 						answer = msgbox.exec()
 						dontShowAgain = cb.isChecked()
@@ -1248,7 +1249,7 @@ class FlashGBX(QtWidgets.QWidget):
 		
 		if not dontShowAgain and mode is not None:
 			cb = QtWidgets.QCheckBox("Don’t show this message again.", checked=False)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle=APPNAME, text="The mode will now be changed to " + {"DMG":"Game Boy", "AGB":"Game Boy Advance"}[setTo] + " mode. To be safe, cartridges should only be exchanged while the device is not powered on." + voltageWarning, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle=APPNAME, text="The mode will now be changed to " + {"DMG":"Game Boy", "AGB":"Game Boy Advance"}[setTo] + " mode. To be safe, cartridges should only be exchanged while the device is not powered on." + voltageWarning, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, defaultButton=QtWidgets.QMessageBox.Ok)
 			if self.CONN.CanSetVoltageAutomatically(): msgbox.setCheckBox(cb)
 			answer = msgbox.exec()
 			dontShowAgain = cb.isChecked()
@@ -1769,7 +1770,7 @@ def main(portableMode=False):
 	args = parser.parse_args()
 	config_path = cp[args.cfgdir]
 	
-	print("\n{:s} {:s} by Lesserkuma".format(APPNAME, VERSION))
+	print("{:s} {:s} by Lesserkuma".format(APPNAME, VERSION))
 	print("\nDISCLAIMER: This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!")
 	print("\nFor troubleshooting please visit https://github.com/lesserkuma/FlashGBX")
 	

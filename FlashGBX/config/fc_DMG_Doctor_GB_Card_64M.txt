@@ -1,9 +1,11 @@
 {
 	"type":"DMG",
 	"names":[
-		"BUNG Doctor GB Card 64M"
+		"BUNG Doctor GB Card 64M",
+		"Mr Flash 64M"
 	],
 	"flash_ids":[
+		[ 0x89, 0x89, 0x15, 0x15 ],
 		[ 0x89, 0x89, 0x15, 0x15 ]
 	],
 	"voltage":5,

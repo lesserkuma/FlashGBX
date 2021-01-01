@@ -36,6 +36,7 @@ by Lesserkuma
 	- insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM *(thanks AlexiG)*
 	- insideGadgets 4 MB, 128 KB SRAM/FRAM *(thanks AlexiG)*
 	- insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC *(thanks AlexiG)*
+	- Mr Flash 64M
 
 - Game Boy Advance
 
@@ -242,3 +243,8 @@ The author would like to thank the following very kind people for their help and
 - Added support for BX2006_TSOPBGA_0106 with K8D6316UTM-PI07 *(thanks LucentW)*
 - Added support for the currently available insideGadgets Game Boy Advance flash cartridges *(thanks AlexiG)*
 - Added a Game Boy Camera (Pocket Camera) album viewer and picture extractor
+
+### v1.0 (released 2021-01-01)
+- Added a firmware check when writing to insideGadgets Game Boy Advance flash cartridges (requires GBxCart RW firmware R20 or higher)
+- Confirmed support for Mr Flash 64M (rebranded BUNG Doctor GB Card 64M)
+- Fixed a problem with writing to the insideGadgets 512 KB Game Boy flash cartridge
