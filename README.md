@@ -21,81 +21,85 @@ by Lesserkuma
 
 ### Confirmed working reader/writer hardware
 
-- [insideGadgets GBxCart RW v1.3 and v1.3 Pro](https://www.gbxcart.com/) with firmware versions from R19 up to R24 (other hardware revisions and firmware versions may also work, but are untested)
+- [insideGadgets GBxCart RW v1.3 and v1.3 Pro](https://www.gbxcart.com/) with firmware versions from R19 up to R25 (other hardware revisions and firmware versions may also work, but are untested)
 
 ### Currently supported flash cartridges
 
 - Game Boy
 
 	- BUNG Doctor GB Card 64M
-	- DIY cart with AM29F016/AM29F016B *(thanks RevZ, AndehX)*
+	- DIY cart with AM29F016/AM29F016B
 	- GB Smart 32M
-	- insideGadgets 32 KB *(thanks AlexiG)*
-	- insideGadgets 512 KB *(thanks AlexiG)*
-	- insideGadgets 1 MB, 128 KB SRAM *(thanks AlexiG)*
-	- insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM *(thanks AlexiG)*
-	- insideGadgets 4 MB, 128 KB SRAM/FRAM *(thanks AlexiG)*
-	- insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC *(thanks AlexiG)*
+	- insideGadgets 32 KB
+	- insideGadgets 512 KB
+	- insideGadgets 1 MB, 128 KB SRAM
+	- insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM
+	- insideGadgets 4 MB, 128 KB SRAM/FRAM
+	- insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC
 	- Mr Flash 64M
 
 - Game Boy Advance
 
+	- Development AGB Cartridge 128M Flash S, E201850
+	- Development AGB Cartridge 256M Flash S, E201868
 	- Flash2Advance 256M (non-ultra variant, with 2× 28F128J3A150)
-	- insideGadgets 16 MB, 64K EEPROM with Solar and RTC options *(thanks AlexiG)*
-	- insideGadgets 32 MB, 1M FLASH with RTC option *(thanks AlexiG)*
-	- insideGadgets 32 MB, 512K FLASH *(thanks AlexiG)*
-	- insideGadgets 32 MB, 4K/64K EEPROM *(thanks AlexiG)*
-	- insideGadgets 32 MB, 256K FRAM with Rumble option *(thanks AlexiG)*
-	- Nintendo AGB Cartridge 128M Flash S, E201850
-	- Nintendo AGB Cartridge 256M Flash S, E201868
+	- insideGadgets 16 MB, 64K EEPROM with Solar and RTC options
+	- insideGadgets 32 MB, 1M FLASH with RTC option
+	- insideGadgets 32 MB, 512K FLASH
+	- insideGadgets 32 MB, 4K/64K EEPROM
+	- insideGadgets 32 MB, 256K FRAM with Rumble option
 
 ### Currently supported and tested reproduction cartridges
 
 - Game Boy
 
 	- ES29LV160_DRV with 29DL32TF-70
-	- GB-M968 with M29W160EB *(thanks RevZ)*
+	- GB-M968 with M29W160EB
 	- GB-M968 with MX29LV320ABTC
 	- ALTERA CPLD and S29GL032N90T (no PCB text)
-	- SD007_48BALL_64M with GL032M11BAIR4 *(thanks RevZ)*
+	- SD007_48BALL_64M with GL032M11BAIR4
 	- SD007_48BALL_64M with M29W640
 	- SD007_48BALL_64M_V2 with GL032M11BAIR4
+	- SD007_48BALL_64M_V2 with M29W160ET
 	- SD007_48BALL_64M_V3 with 29DL161TD-90
 	- SD007_48BALL_64M_V5 with 36VF3203
 	- SD007_48BALL_64M_V5 with 36VF3204
 	- SD007_48BALL_64M_V6 with 36VF3204
-	- SD007_48BALL_64M_V6 with 29DL163BD-90 *(thanks LovelyA72)*
-	- SD007_BV5_DRV with M29W320DT *(thanks Frost Clock)*
-	- SD007_BV5_V2 with HY29LV160TT *(thanks RevZ)*
-	- SD007_BV5_V2 with MX29LV320BTC *(thanks RevZ)*
-	- SD007_BV5_V3 with 29LV160BE-90PFTN *(thanks LucentW)*
-	- SD007_BV5_V3 with HY29LV160BT-70 *(thanks LucentW)*
-	- SD007_BV5_V3 with AM29LV160MB *(thanks RevZ)*
+	- SD007_48BALL_64M_V6 with 29DL163BD-90
+	- SD007_BV5_DRV with M29W320DT
+	- SD007_BV5_V2 with HY29LV160TT
+	- SD007_BV5_V2 with MX29LV320BTC
+	- SD007_BV5_V3 with 29LV160BE-90PFTN
+	- SD007_BV5_V3 with HY29LV160BT-70
+	- SD007_BV5_V3 with AM29LV160MB
 	- SD007_TSOP_48BALL with 36VF3204
-	- SD007_TSOP_48BALL with AM29LV160DB *(thanks marv17)*
-	- SD007_TSOP_48BALL with AM29LV160DT *(thanks marv17)*
-	- SD007_TSOP_48BALL with M29W160ET *(thanks LucentW)*
-	- SD007_TSOP_48BALL with L160DB12VI *(thanks marv17)*
+	- SD007_TSOP_48BALL with AM29LV160DB
+	- SD007_TSOP_48BALL with AM29LV160DT
+	- SD007_TSOP_48BALL with M29W160ET
+	- SD007_TSOP_48BALL with L160DB12VI
 
 - Game Boy Advance
 
 	- 28F256L03B-DRV with 256L30B
-	- 36L0R8-39VF512 with M36L0R8060B *(thanks LucentW)*
-	- 36L0R8-39VF512 with M36L0R8060T *(thanks AndehX)*
+	- 36L0R8-39VF512 with M36L0R8060B
+	- 36L0R8-39VF512 with M36L0R8060T
 	- 4050_4400_4000_4350_36L0R_V5 with M36L0R7050T
 	- 4050_4400_4000_4350_36L0R_V5 with M36L0T8060T
 	- 4050_4400_4000_4350_36L0R_V5 with M36L0R8060T
-	- 4400 with 4400L0ZDQ0 *(thanks Zeii)*
+	- 4400 with 4400L0ZDQ0
 	- 4455_4400_4000_4350_36L0R_V3 with M36L0R7050T
 	- AGB-E05-01 with GL128S
 	- AGB-E05-01 with MSP55LV128M
-	- AGB-E05-02 with M29W128GH *(thanks marv17)*
-	- AGB-E08-09 with 29LV128DTMC-90Q *(thanks LucentW)*
-	- AGB-SD-E05 with MSP55LV128 *(thanks RevZ)*
-	- BX2006_0106_NEW with S29GL128N10TFI01 *(thanks litlemoran)*
+	- AGB-E05-02 with M29W128GH
+	- AGB-E08-09 with 29LV128DTMC-90Q
+	- AGB-SD-E05 with MSP55LV128
+	- BX2006_0106_NEW with S29GL128N10TFI01
 	- BX2006_TSOP_64BALL with GL128S
+	- BX2006_TSOP_64BALL with GL256S
 	- BX2006_TSOPBGA_0106 with M29W640GB6AZA6
-	- BX2006_TSOPBGA_0106 with K8D6316UTM-PI07 *(thanks LucentW)*
+	- BX2006_TSOPBGA_0106 with K8D6316UTM-PI07
+	- GE28F128W30 with 128W30B0
+	- M6MGJ927 (no PCB text)
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
@@ -120,7 +124,7 @@ These executables have been created using *PyInstaller* and *Inno Setup*.
 
 ### Troubleshooting
 
-* If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a Q-tip) and reconnect the device.
+* If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device.
 
 * On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
 
@@ -140,6 +144,7 @@ The author would like to thank the following very kind people for their help and
 
 - AlexiG (GBxCart RW hardware, bug reports, flash chip info)
 - AndehX (app icon, flash chip info)
+- bbsan (flash chip info)
 - ClassicOldSong (fix for Raspberry Pi)
 - djedditt (testing)
 - easthighNerd (feature suggestions)
@@ -150,8 +155,10 @@ The author would like to thank the following very kind people for their help and
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
 - LucentW (flash chip info, testing)
-- marv17 (flash chip info, testing)
+- marv17 (flash chip info, testing, feature suggestions)
+- Paradoxical (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
+- Super Maker (flash chip info, testing)
 - Zeii (flash chip info)
 
 ## Changes
@@ -205,7 +212,7 @@ The author would like to thank the following very kind people for their help and
 - Fixed config files for MSP55LV128 and MSP55LV128M flash chips
 - Confirmed support for SD007_48BALL_64M_V6 with 36VF3204
 - Confirmed support for SD007_TSOP_48BALL with 36VF3204
-- Added the option to add date and time to suggested filenames for save data backups *(thanks easthighNerd)*
+- Added the option to add date and time to suggested filenames for save data backups *(thanks easthighNerd for the suggestion)*
 - Added a check and warning for unstable ROM readings
 - Added Common Flash Interface query for both unknown and known flash cartridge types
 - Added support for 36L0R8-39VF512 with M36L0R8060B *(thanks LucentW)*
@@ -239,7 +246,7 @@ The author would like to thank the following very kind people for their help and
 - Improved writing speed for M36L0R and similar flash chips by up to 80% (requires GBxCart RW firmware R24 or higher)
 - Confirmed support for 4400 with 4400L0ZDQ0 *(thanks Zeii)*
 - Backup and restore save data of flash chips manufactured by SANYO requires GBxCart RW firmware R24 or higher; a warning message for this will now be displayed in necessary cases
-- Added the option to check for updates at application start *(thanks Icesythe7 and JFox)*
+- Added the option to check for updates at application start *(thanks Icesythe7 and JFox for the suggestion and help)*
 - Added support for BX2006_TSOPBGA_0106 with K8D6316UTM-PI07 *(thanks LucentW)*
 - Added support for the currently available insideGadgets Game Boy Advance flash cartridges *(thanks AlexiG)*
 - Added a Game Boy Camera (Pocket Camera) album viewer and picture extractor
@@ -248,3 +255,12 @@ The author would like to thank the following very kind people for their help and
 - Added a firmware check when writing to insideGadgets Game Boy Advance flash cartridges (requires GBxCart RW firmware R20 or higher)
 - Confirmed support for Mr Flash 64M (rebranded BUNG Doctor GB Card 64M)
 - Fixed a problem with writing to the insideGadgets 512 KB Game Boy flash cartridge
+
+### v1.1 (released 2021-01-11)
+- Added support for GE28F128W30 with 128W30B0 *(thanks bbsan)*
+- Added support for BX2006_TSOP_64BALL with GL256S *(thanks Paradoxical)*
+- Confirmed support for SD007_48BALL_64M_V2 with M29W160ET *(thanks Paradoxical)*
+- Added support for M6MGJ927 (no PCB text) *(thanks Super Maker)*
+- Added a warning for very old reproduction cartridges with DRM that show “YJencrypted” as their game title *(thanks Super Maker)*
+- Added a firmware check when writing to cartridges with flash chips manufactured by Sharp (unsupported by GBxCart RW firmware R25)
+- Added optional verification of written data after ROM flashing *(thanks marv17 for the suggestion)*
