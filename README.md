@@ -267,7 +267,8 @@ The author would like to thank the following very kind people for their help and
 - Added a firmware check when writing to cartridges with flash chips manufactured by Sharp (unsupported by GBxCart RW firmware R25)
 - Added optional verification of written data after ROM flashing *(thanks marv17 for the suggestion)*
 
-### v1.2 (released 2021-01-16)
+### v1.2/v1.2.1 (released 2021-01-16)
 - Fixed a bug introduced in v1.1 that broke MBC3 handling *(thanks marv17 for reporting)*
 - Will now default back to 5V for Game Boy cartridges after unsuccessful flash chip auto-detection
 - Added support for DIY carts with the AT49F040 flash chip *(thanks howie0210)*
+- Minor bug fixes

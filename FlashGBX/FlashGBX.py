@@ -11,7 +11,7 @@ from . import hw_GBxCartRW
 hw_devices = [hw_GBxCartRW]
 
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "1.2"
+VERSION_PEP440 = "1.2.1"
 VERSION = "v{:s}".format(VERSION_PEP440)
 
 class FlashGBX(QtWidgets.QWidget):

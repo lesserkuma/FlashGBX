@@ -475,15 +475,13 @@ class GbxDevice:
 		buffer = format(command, 's')
 		self.write(buffer)
 		if command in (self.DEVICE_CMD["VOLTAGE_3_3V"], self.DEVICE_CMD["VOLTAGE_5V"]):
-			#time.sleep(0.01)
+			#time.sleep(0.005)
 			pass
 
 	def set_number(self, number, command):
 		buffer = format(command, 's') + format(int(number), 'x') + '\x00'
 		self.write(buffer)
-		if command in (self.DEVICE_CMD["SET_START_ADDRESS"]):
-			#time.sleep(0.005)
-			pass
+		time.sleep(0.005)
 	
 	def EnableRAM(self, mbc=1, enable=True):
 		if enable:
@@ -1181,7 +1179,7 @@ class GbxDevice:
 									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_BYTE"], data)
 							
 							else: # EEPROM / SRAM
-								self.gbx_flash_write_data_bytes(write_command, data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD[write_command], data)
 						
 						self.SetProgress({"action":"WRITE", "bytes_added":len(data)})
 						self.wait_for_ack()
