@@ -103,5 +103,5 @@ def ParseCFI(buffer):
 
 def dprint(*args, **kwargs):
 	# uncomment for some debug prints
-	#print(" ".join(map(str, args)), **kwargs)
+	#print(datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]"), " ".join(map(str, args)), **kwargs)
 	pass

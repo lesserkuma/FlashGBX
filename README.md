@@ -29,6 +29,7 @@ by Lesserkuma
 
 	- BUNG Doctor GB Card 64M
 	- DIY cart with AM29F016/AM29F016B
+	- DIY cart with AT49F040
 	- GB Smart 32M
 	- insideGadgets 32 KB
 	- insideGadgets 512 KB
@@ -149,13 +150,14 @@ The author would like to thank the following very kind people for their help and
 - djedditt (testing)
 - easthighNerd (feature suggestions)
 - Frost Clock (flash chip info)
+- howie0210 (flash chip info)
 - Icesythe7 (feature suggestions)
 - JFox (help with properly packaging the app for pip)
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
 - LucentW (flash chip info, testing)
-- marv17 (flash chip info, testing, feature suggestions)
+- marv17 (flash chip info, testing, bug reports, feature suggestions)
 - Paradoxical (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
 - Super Maker (flash chip info, testing)
@@ -264,3 +266,8 @@ The author would like to thank the following very kind people for their help and
 - Added a warning for very old reproduction cartridges with DRM that show “YJencrypted” as their game title *(thanks Super Maker)*
 - Added a firmware check when writing to cartridges with flash chips manufactured by Sharp (unsupported by GBxCart RW firmware R25)
 - Added optional verification of written data after ROM flashing *(thanks marv17 for the suggestion)*
+
+### v1.2 (released 2021-01-16)
+- Fixed a bug introduced in v1.1 that broke MBC3 handling *(thanks marv17 for reporting)*
+- Will now default back to 5V for Game Boy cartridges after unsuccessful flash chip auto-detection
+- Added support for DIY carts with the AT49F040 flash chip *(thanks howie0210)*

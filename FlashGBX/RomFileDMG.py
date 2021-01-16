@@ -57,6 +57,7 @@ class RomFileDMG:
 	def GetHeader(self):
 		buffer = self.ROMFILE
 		data = {}
+		data["empty"] = (self.ROMFILE == bytearray([buffer[0]] * len(buffer)))
 		data["logo_correct"] = hashlib.sha1(buffer[0x104:0x134]).digest() == bytearray([ 0x07, 0x45, 0xFD, 0xEF, 0x34, 0x13, 0x2D, 0x1B, 0x3D, 0x48, 0x8C, 0xFB, 0xDF, 0x03, 0x79, 0xA3, 0x9F, 0xD5, 0x4B, 0x4C ])
 		game_title = bytearray(buffer[0x134:0x143]).decode("ascii", "replace")
 		game_title = re.sub(r"(\x00+)$", "", game_title).replace("\x00", "_")

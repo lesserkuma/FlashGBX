@@ -203,7 +203,7 @@ class GbxDevice:
 	def Close(self):
 		if self.IsConnected():
 			try:
-				self.set_mode(self.DEVICE_CMD['VOLTAGE_3_3V']) # set to lower voltage when closing for safety
+				self.set_mode(self.DEVICE_CMD["VOLTAGE_3_3V"]) # set to lower voltage when closing for safety
 				self.DEVICE.close()
 			except:
 				self.DEVICE = None
@@ -225,9 +225,9 @@ class GbxDevice:
 		return self.PORT
 	
 	def LoadFirmwareVersion(self):
-		self.write(self.DEVICE_CMD['READ_FIRMWARE_VERSION'])
+		self.write(self.DEVICE_CMD["READ_FIRMWARE_VERSION"])
 		fw = bytearray(self.read(1))[0]
-		self.write(self.DEVICE_CMD['READ_PCB_VERSION'])
+		self.write(self.DEVICE_CMD["READ_PCB_VERSION"])
 		pcb = bytearray(self.read(1))[0]
 		self.FW = [fw, pcb]
 	
@@ -375,22 +375,22 @@ class GbxDevice:
 			if self.MODE == "DMG":
 				if self.FAST_READ and length == 0x4000:
 					if set_address:
-						self.set_number(offset, self.DEVICE_CMD['SET_START_ADDRESS'])
-					self.set_mode(self.DEVICE_CMD['READ_ROM_4000H'])
+						self.set_number(offset, self.DEVICE_CMD["SET_START_ADDRESS"])
+					self.set_mode(self.DEVICE_CMD["READ_ROM_4000H"])
 				else:
 					if set_address:
-						self.set_number(offset, self.DEVICE_CMD['SET_START_ADDRESS'])
-					self.set_mode(self.DEVICE_CMD['READ_ROM_RAM'])
+						self.set_number(offset, self.DEVICE_CMD["SET_START_ADDRESS"])
+					self.set_mode(self.DEVICE_CMD["READ_ROM_RAM"])
 				buffer = self.read(length, last=True)
 			elif self.MODE == "AGB":
 				if self.FAST_READ and length == 0x10000:
 					if set_address:
-						self.set_number(math.floor(offset / 2), self.DEVICE_CMD['SET_START_ADDRESS'])
-					self.set_mode(self.DEVICE_CMD['GBA_READ_ROM_8000H'])
+						self.set_number(math.floor(offset / 2), self.DEVICE_CMD["SET_START_ADDRESS"])
+					self.set_mode(self.DEVICE_CMD["GBA_READ_ROM_8000H"])
 				else:
 					if set_address:
-						self.set_number(math.floor(offset / 2), self.DEVICE_CMD['SET_START_ADDRESS'])
-					self.set_mode(self.DEVICE_CMD['GBA_READ_ROM'])
+						self.set_number(math.floor(offset / 2), self.DEVICE_CMD["SET_START_ADDRESS"])
+					self.set_mode(self.DEVICE_CMD["GBA_READ_ROM"])
 				buffer = self.read(length, last=True)
 			
 			'''
@@ -430,11 +430,11 @@ class GbxDevice:
 	def gba_flash_write_address_byte(self, address, data):
 		address = int(address / 2)
 		address = format(address, 'x')
-		buffer = self.DEVICE_CMD['GBA_FLASH_CART_WRITE_BYTE'] + address + '\x00'
+		buffer = self.DEVICE_CMD["GBA_FLASH_CART_WRITE_BYTE"] + address + '\x00'
 		self.write(buffer)
 		time.sleep(0.001)
 		data = format(data, 'x')
-		buffer = self.DEVICE_CMD['GBA_FLASH_CART_WRITE_BYTE'] + data + '\x00'
+		buffer = self.DEVICE_CMD["GBA_FLASH_CART_WRITE_BYTE"] + data + '\x00'
 		self.write(buffer)
 		time.sleep(0.001)
 		ack = self.wait_for_ack()
@@ -445,7 +445,7 @@ class GbxDevice:
 	
 	def gb_flash_write_address_byte(self, address, data):
 		address = format(address, 'x')
-		buffer = self.DEVICE_CMD['GB_FLASH_WRITE_BYTE'] + address + '\x00'
+		buffer = self.DEVICE_CMD["GB_FLASH_WRITE_BYTE"] + address + '\x00'
 		self.write(buffer)
 		buffer = format(data, 'x') + '\x00'
 		self.write(buffer)
@@ -456,17 +456,17 @@ class GbxDevice:
 			return False
 	
 	def gbx_flash_write_data_bytes(self, command, data):
-		buffer = bytearray(self.DEVICE_CMD[command], "ascii") + bytearray(data)
+		buffer = bytearray(command, "ascii") + bytearray(data)
 		self.write(buffer)
 	
 	def set_bank(self, address, bank):
 		address = format(address, 'x')
-		buffer = self.DEVICE_CMD['SET_BANK'] + address + '\x00'
+		buffer = self.DEVICE_CMD["SET_BANK"] + address + '\x00'
 		self.write(buffer)
 		time.sleep(0.005)
 		
 		bank = format(bank, 'd')
-		buffer = self.DEVICE_CMD['SET_BANK'] + bank + '\x00'
+		buffer = self.DEVICE_CMD["SET_BANK"] + bank + '\x00'
 		self.write(buffer)
 		time.sleep(0.005)
 	
@@ -474,14 +474,16 @@ class GbxDevice:
 		dprint("set_mode(command={:s})".format(str(command)))
 		buffer = format(command, 's')
 		self.write(buffer)
+		if command in (self.DEVICE_CMD["VOLTAGE_3_3V"], self.DEVICE_CMD["VOLTAGE_5V"]):
+			#time.sleep(0.01)
+			pass
 
 	def set_number(self, number, command):
 		buffer = format(command, 's') + format(int(number), 'x') + '\x00'
 		self.write(buffer)
-		if command in ("SET_START_ADDRESS"):
-			time.sleep(0.005)
-		elif command in ("VOLTAGE_3_3V", "VOLTAGE_5V"):
-			time.sleep(0.3)
+		if command in (self.DEVICE_CMD["SET_START_ADDRESS"]):
+			#time.sleep(0.005)
+			pass
 	
 	def EnableRAM(self, mbc=1, enable=True):
 		if enable:
@@ -492,28 +494,36 @@ class GbxDevice:
 			if mbc <= 4: self.set_bank(0x6000, 0)
 		time.sleep(0.2)
 	
-	def SetBankROM(self, bank, mbc=5):
-		dprint("SetBankROM(", bank, ",", mbc, ")", bank & 0xFF, ((bank >> 8) & 0xFF))
+	def SetBankROM(self, bank, mbc=0, bank_count=0):
+		dprint("SetBankROM(bank={:d}, mbc={:d}, bank_count={:d})".format(bank, mbc, bank_count))
+		if mbc == 0 and bank_count == 0: mbc = 5
 		if mbc == 1: # MBC1
+			dprint("0x6000=0x00, 0x4000=0x{:X}, 0x2000=0x{:X}".format(bank >> 5, bank & 0x1F))
 			self.set_bank(0x6000, 0)
 			self.set_bank(0x4000, bank >> 5)
 			self.set_bank(0x2000, bank & 0x1F)
 		elif mbc == 1.1: # Hudson MBC1
 			self.set_bank(0x4000, bank >> 4)
 			if (bank < 10):
+				dprint("0x4000=0x{:X}, 0x2000=0x{:X}".format(bank >> 4, bank & 0x1F))
 				self.set_bank(0x2000, bank & 0x1F)
 			else:
+				dprint("0x4000=0x{:X}, 0x2000=0x{:X}".format(bank >> 4, 0x10 | (bank & 0x1F)))
 				self.set_bank(0x2000, 0x10 | (bank & 0x1F))
-		else:
+		elif (mbc == 0 and bank_count > 256) or mbc == 5: # MBC5
+			dprint("0x2100=0x{:X}, 0x3000=0x{:X}".format(bank & 0xFF, ((bank >> 8) & 0xFF)))
 			self.set_bank(0x2100, (bank & 0xFF))
 			self.set_bank(0x3000, ((bank >> 8) & 0xFF))
+		else: # MBC2, MBC3 and others
+			dprint("0x2100=0x{:X}".format(bank & 0xFF))
+			self.set_bank(0x2100, (bank & 0xFF))
 	
 	def SetBankRAM(self, bank):
 		self.set_bank(0x4000, (bank & 0xFF))
 	
 	def ReadFlashSaveMakerID(self):
 		makers = { 0x1F:"ATMEL", 0xBF:"SST/SANYO", 0xC2:"MACRONIX", 0x32:"PANASONIC", 0x62:"SANYO" }
-		self.set_mode(self.DEVICE_CMD['GBA_FLASH_READ_ID'])
+		self.set_mode(self.DEVICE_CMD["GBA_FLASH_READ_ID"])
 		time.sleep(0.02)
 		buffer = self.DEVICE.read(2)
 		if buffer[0] in makers.keys():
@@ -523,21 +533,24 @@ class GbxDevice:
 	
 	def SetMode(self, mode):
 		if mode == "DMG":
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_5V'])
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
 			self.MODE = "DMG"
 		elif mode == "AGB":
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_3_3V'])
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_3_3V"])
 			self.MODE = "AGB"
-		self.set_number(0, self.DEVICE_CMD['SET_START_ADDRESS'])
+		self.set_number(0, self.DEVICE_CMD["SET_START_ADDRESS"])
 	
 	def AutoDetectFlash(self, limitVoltage=False):
 		flash_types = []
 		flash_type = 0
 		flash_id = None
-		if limitVoltage:
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_3_3V'])
 		
 		if self.MODE == "DMG":
+			if limitVoltage:
+				self.set_mode(self.DEVICE_CMD["VOLTAGE_3_3V"])
+			else:
+				self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
+			
 			supported_carts = list(self.SUPPORTED_CARTS['DMG'].values())
 			for f in range(2, len(supported_carts)):
 				flashcart_meta = supported_carts[f]
@@ -545,16 +558,16 @@ class GbxDevice:
 					if flash_id not in flashcart_meta["flash_ids"]:
 						continue
 				
-				self.set_mode(self.DEVICE_CMD['GB_CART_MODE'])
+				self.set_mode(self.DEVICE_CMD["GB_CART_MODE"])
 				if "flash_commands_on_bank_1" in flashcart_meta:
-					self.set_mode(self.DEVICE_CMD['GB_FLASH_BANK_1_COMMAND_WRITES'])
+					self.set_mode(self.DEVICE_CMD["GB_FLASH_BANK_1_COMMAND_WRITES"])
 				
 				if flashcart_meta["write_pin"] == "WR":
-					self.set_mode(self.DEVICE_CMD['GB_FLASH_WE_PIN'])
-					self.set_mode(self.DEVICE_CMD['WE_AS_WR_PIN'])
+					self.set_mode(self.DEVICE_CMD["GB_FLASH_WE_PIN"])
+					self.set_mode(self.DEVICE_CMD["WE_AS_WR_PIN"])
 				elif flashcart_meta["write_pin"] in ("AUDIO", "VIN"):
-					self.set_mode(self.DEVICE_CMD['GB_FLASH_WE_PIN'])
-					self.set_mode(self.DEVICE_CMD['WE_AS_AUDIO_PIN'])
+					self.set_mode(self.DEVICE_CMD["GB_FLASH_WE_PIN"])
+					self.set_mode(self.DEVICE_CMD["WE_AS_AUDIO_PIN"])
 				
 				# Unlock Flash
 				if "unlock" in flashcart_meta["commands"]:
@@ -594,7 +607,7 @@ class GbxDevice:
 					flash_types.append(flash_type)
 			
 			if not flash_id_found:
-				self.set_mode(self.DEVICE_CMD['VOLTAGE_5V'])
+				self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
 		
 		elif self.MODE == "AGB":
 			supported_carts = list(self.SUPPORTED_CARTS['AGB'].values())
@@ -644,9 +657,6 @@ class GbxDevice:
 		return flash_types
 	
 	def CheckFlashChip(self, limitVoltage=False, cart_type=None):
-		if limitVoltage:
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_3_3V'])
-		
 		flash_id_lines = []
 		flash_commands = [
 			{ 'read_cfi':[[0x555, 0x98]], 'read_identifier':[[ 0x555, 0xAA ], [ 0x2AA, 0x55 ], [ 0x555, 0x90 ]], 'reset':[[ 0x0, 0xF0 ]] },
@@ -671,6 +681,10 @@ class GbxDevice:
 		cfi = {'raw':b''}
 		
 		if self.MODE == "DMG":
+			if limitVoltage:
+				self.set_mode(self.DEVICE_CMD["VOLTAGE_3_3V"])
+			else:
+				self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
 			rom_string = "[     ROM     ] " + rom_string
 			we_pins = [ "WR", "AUDIO" ]
 		else:
@@ -681,8 +695,8 @@ class GbxDevice:
 			if "method" in cfi: break
 			for method in flash_commands:
 				if self.MODE == "DMG":
-					self.set_mode(self.DEVICE_CMD['GB_FLASH_WE_PIN'])
-					self.set_mode(self.DEVICE_CMD['WE_AS_' + we + '_PIN'])
+					self.set_mode(self.DEVICE_CMD["GB_FLASH_WE_PIN"])
+					self.set_mode(self.DEVICE_CMD["WE_AS_" + we + "_PIN"])
 				
 				for i in range(0, len(method['reset'])):
 					self.gbx_flash_write_address_byte(method['reset'][i][0], method['reset'][i][1])
@@ -770,6 +784,32 @@ class GbxDevice:
 			#s += "\nSHA-1: {:s}".format(cfi["sha1"])
 			cfi_info = s
 		
+		if cfi['raw'] == b'':
+			for we in we_pins:
+				for method in flash_commands:
+					for i in range(0, len(method['reset'])):
+						self.gbx_flash_write_address_byte(method['reset'][i][0], method["reset"][i][1])
+					for i in range(0, len(method['read_identifier'])):
+						self.gbx_flash_write_address_byte(method['read_identifier'][i][0], method["read_identifier"][i][1])
+					flash_id = self.ReadROM(0, 64)[0:8]
+					for i in range(0, len(method['reset'])):
+						self.gbx_flash_write_address_byte(method['reset'][i][0], method["reset"][i][1])
+					
+					if flash_id != check_buffer[0:8]:
+						if self.MODE == "DMG":
+							method_string = "[" + we.ljust(5) + "/{:4X}/{:2X}]".format(method['read_identifier'][0][0], method['read_identifier'][0][1])
+						else:
+							method_string = "[{:6X}/{:2X}]".format(method['read_identifier'][0][0], method['read_identifier'][0][1])
+						line_exists = False
+						for i in range(0, len(flash_id_lines)):
+							if method_string == flash_id_lines[i][0]: line_exists = True
+						if not line_exists: flash_id_lines.append([method_string, flash_id])
+						for i in range(0, len(method['reset'])):
+							self.gbx_flash_write_address_byte(method['reset'][i][0], method['reset'][i][1])
+			
+			if self.MODE == "DMG":
+				self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
+		
 		flash_id = ""
 		for i in range(0, len(flash_id_lines)):
 			flash_id += flash_id_lines[i][0] + " "
@@ -777,8 +817,7 @@ class GbxDevice:
 				flash_id += "{:02X} ".format(flash_id_lines[i][1][j])
 			flash_id += "\n"
 		
-		if flash_id != "":
-			flash_id = rom_string + flash_id
+		flash_id = rom_string + flash_id
 		
 		return (flash_id, cfi_info, cfi)
 	
@@ -794,6 +833,9 @@ class GbxDevice:
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
 		data = {}
 		self.POS = 0
+		if self.MODE == "DMG":
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
+		
 		header = self.ReadROM(0, 0x180)
 		
 		if self.MODE == "DMG":
@@ -813,7 +855,7 @@ class GbxDevice:
 		self.INFO["flash_type"] = 0
 		self.INFO["last_action"] = 0
 		
-		self.set_mode(self.DEVICE_CMD['SET_PINS_AS_INPUTS'])
+		self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
 		return data
 	
 	def BackupROM(self, fncSetProgress=None, path="ROM.gb", mbc=0x00, rom_banks=512, agb_rom_size=0, start_addr=0, fast_read_mode=False):
@@ -1067,13 +1109,13 @@ class GbxDevice:
 					endAddr = startAddr + min(save_size, bank_size)
 					if endAddr > (startAddr + save_size): endAddr = startAddr + save_size
 					if save_type == 1 or save_type == 2: # EEPROM
-						self.set_number(eeprom_size, self.DEVICE_CMD['GBA_SET_EEPROM_SIZE'])
+						self.set_number(eeprom_size, self.DEVICE_CMD["GBA_SET_EEPROM_SIZE"])
 					elif (save_type == 5) and bank > 0: # 1M SRAM
 						self.gbx_flash_write_address_byte(0x1000000, bank)
 					elif (save_type == 6 or save_type == 7) and bank > 0: # FLASH
-						self.set_number(bank, self.DEVICE_CMD['GBA_FLASH_SET_BANK'])
+						self.set_number(bank, self.DEVICE_CMD["GBA_FLASH_SET_BANK"])
 				
-				self.set_number(startAddr, self.DEVICE_CMD['SET_START_ADDRESS'])
+				self.set_number(startAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 				
 				buffer_len = transfer_size
 				sector = 0
@@ -1082,8 +1124,8 @@ class GbxDevice:
 						if self.MODE == "DMG":
 							self.EnableRAM(mbc=mbc, enable=False)
 						elif self.MODE == "AGB":
-							if bank > 0: self.set_number(0, self.DEVICE_CMD['GBA_FLASH_SET_BANK'])
-							self.set_mode(self.DEVICE_CMD['READ_ROM_RAM'])
+							if bank > 0: self.set_number(0, self.DEVICE_CMD["GBA_FLASH_SET_BANK"])
+							self.set_mode(self.DEVICE_CMD["READ_ROM_RAM"])
 						self.ReadInfo()
 						cancel_args = {"action":"ABORT", "abortable":False}
 						cancel_args.update(self.CANCEL_ARGS)
@@ -1111,20 +1153,21 @@ class GbxDevice:
 					elif mode == 3: # Restore
 						data = data_import[pos:pos+buffer_len]
 						if self.MODE == "DMG":
-							self.gbx_flash_write_data_bytes("WRITE_RAM", data)
+							
+							self.gbx_flash_write_data_bytes(self.DEVICE_CMD["WRITE_RAM"], data)
 						
 						elif self.MODE == "AGB":
 							if save_type == 6 or save_type == 7: # FLASH
 								if maker_id == "ATMEL":
-									self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_ATMEL", data)
+									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_ATMEL"], data)
 								else:
 									if (currAddr % 4096 == 0):
-										self.set_number(sector, self.DEVICE_CMD['GBA_FLASH_4K_SECTOR_ERASE'])
+										self.set_number(sector, self.DEVICE_CMD["GBA_FLASH_4K_SECTOR_ERASE"])
 										self.wait_for_ack()
 										sector += 1
 										lives = 50
 										while True: # wait for 0xFF (= erase done)
-											self.set_number(currAddr, self.DEVICE_CMD['SET_START_ADDRESS'])
+											self.set_number(currAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 											self.set_mode(self.DEVICE_CMD[read_command])
 											buffer = self.read(buffer_len, last=True)
 											if buffer[0] == 0xFF: break
@@ -1133,9 +1176,9 @@ class GbxDevice:
 											if lives == 0:
 												self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Writing the flash save data failed. Please make sure you selected the correct save type.", "abortable":False})
 												return False
-										self.set_number(currAddr, self.DEVICE_CMD['SET_START_ADDRESS'])
+										self.set_number(currAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 									
-									self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_BYTE", data)
+									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_BYTE"], data)
 							
 							else: # EEPROM / SRAM
 								self.gbx_flash_write_data_bytes(write_command, data)
@@ -1156,7 +1199,7 @@ class GbxDevice:
 					if (save_type == 5) and bank > 0: # 1M SRAM
 						self.gbx_flash_write_address_byte(0x1000000, 0)
 					elif (save_type == 6 or save_type == 7) and bank > 0: # FLASH
-						self.set_number(0, self.DEVICE_CMD['GBA_FLASH_SET_BANK'])
+						self.set_number(0, self.DEVICE_CMD["GBA_FLASH_SET_BANK"])
 			
 			if mode == 2: file.close()
 			
@@ -1195,7 +1238,7 @@ class GbxDevice:
 			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=args["start_addr"], signal=signal, prefer_sector_erase=args["prefer_sector_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_flash=args["verify_flash"])
 		
 		# Reset pins to avoid save data loss
-		self.set_mode(self.DEVICE_CMD['SET_PINS_AS_INPUTS'])
+		self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
 	
 	#######################################################################################################################################
 	
@@ -1204,6 +1247,7 @@ class GbxDevice:
 		if self.INFO == None: self.ReadInfo()
 		self.INFO["last_action"] = 4
 		bank_size = 0x4000
+		mbc = 0
 		time_start = time.time()
 		
 		data_import = copy.copy(buffer)
@@ -1239,32 +1283,36 @@ class GbxDevice:
 		
 		# Set Voltage
 		if voltage == 3.3:
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_3_3V'])
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_3_3V"])
 		elif voltage == 5:
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_5V'])
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
 		elif flashcart_meta["voltage"] == 3.3:
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_3_3V'])
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_3_3V"])
 		elif flashcart_meta["voltage"] == 5:
-			self.set_mode(self.DEVICE_CMD['VOLTAGE_5V'])
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
+		
+		if "mbc" in flashcart_meta:
+			mbc = flashcart_meta['mbc']
+			dprint("Set MBC to {:d}".format(mbc))
 		
 		if self.MODE == "DMG":
-			self.set_mode(self.DEVICE_CMD['GB_CART_MODE'])
+			self.set_mode(self.DEVICE_CMD["GB_CART_MODE"])
 			if "flash_commands_on_bank_1" in flashcart_meta and flashcart_meta["flash_commands_on_bank_1"]:
-				self.set_mode(self.DEVICE_CMD['GB_FLASH_BANK_1_COMMAND_WRITES'])
+				self.set_mode(self.DEVICE_CMD["GB_FLASH_BANK_1_COMMAND_WRITES"])
 				dprint("Setting GB_FLASH_BANK_1_COMMAND_WRITES...")
 			
-			self.set_mode(self.DEVICE_CMD['GB_FLASH_WE_PIN'])
+			self.set_mode(self.DEVICE_CMD["GB_FLASH_WE_PIN"])
 			if flashcart_meta["write_pin"] == "WR":
-				self.set_mode(self.DEVICE_CMD['WE_AS_WR_PIN'])
+				self.set_mode(self.DEVICE_CMD["WE_AS_WR_PIN"])
 				dprint("Setting WE_AS_WR_PIN...")
 			elif flashcart_meta["write_pin"] in ("AUDIO", "VIN"):
-				self.set_mode(self.DEVICE_CMD['WE_AS_AUDIO_PIN'])
+				self.set_mode(self.DEVICE_CMD["WE_AS_AUDIO_PIN"])
 				dprint("Setting WE_AS_AUDIO_PIN...")
 
 			if "single_write" in flashcart_meta["commands"] and len(flashcart_meta["commands"]["single_write"]) == 4:
 				# Submit flash program commands to firmware
 				dprint("Setting GB_FLASH_PROGRAM_METHOD...")
-				self.set_mode(self.DEVICE_CMD['GB_FLASH_PROGRAM_METHOD'])
+				self.set_mode(self.DEVICE_CMD["GB_FLASH_PROGRAM_METHOD"])
 				for i in range(0, 3):
 					dprint("single_write_command(",i,"):", hex(flashcart_meta["commands"]["single_write"][i][0]), "=", hex(flashcart_meta["commands"]["single_write"][i][1]))
 					self.write(bytearray(format(flashcart_meta["commands"]["single_write"][i][0], "x"), "ascii") + b'\x00', True)
@@ -1331,7 +1379,7 @@ class GbxDevice:
 			
 			dprint("Chip erase took {:d} seconds".format(math.ceil(time.time() - time_start)))
 		
-		self.set_number(0, self.DEVICE_CMD['SET_START_ADDRESS'])
+		self.set_number(0, self.DEVICE_CMD["SET_START_ADDRESS"])
 		
 		# Write Flash
 		pos = 0
@@ -1342,7 +1390,7 @@ class GbxDevice:
 			if "start_addr" in flashcart_meta: currAddr = flashcart_meta["start_addr"]
 			endAddr = 0x7FFF
 			bank_count = math.ceil(len(data_import) / bank_size)
-			if start_addr == 0: self.SetBankROM(0)
+			if start_addr == 0: self.SetBankROM(0, mbc=mbc, bank_count=bank_count)
 		elif self.MODE == "AGB":
 			currAddr = 0
 			endAddr = len(data_import)
@@ -1356,7 +1404,7 @@ class GbxDevice:
 		# Fast Forward
 		if start_addr > 0:
 			first_bank = math.floor(start_addr / bank_size)
-			self.SetBankROM(first_bank)
+			self.SetBankROM(first_bank, mbc=mbc, bank_count=bank_count)
 			offset = start_addr % bank_size
 			currAddr = bank_size + offset
 			if "sector_erase" in flashcart_meta["commands"]:
@@ -1391,7 +1439,7 @@ class GbxDevice:
 			dprint("BANK {:d}".format(bank))
 			if self.MODE == "DMG":
 				if bank > first_bank: currAddr = bank_size
-				self.set_number(currAddr, self.DEVICE_CMD['SET_START_ADDRESS'])
+				self.set_number(currAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 			
 			while (currAddr < endAddr):
 				if pos >= len(data_import): break
@@ -1413,7 +1461,7 @@ class GbxDevice:
 						if "reset" in flashcart_meta["commands"]:
 							for i in range(0, len(flashcart_meta["commands"]["reset"])):
 								self.gbx_flash_write_address_byte(flashcart_meta["commands"]["reset"][i][0], flashcart_meta["commands"]["reset"][i][1])
-						self.SetBankROM(bank)
+						self.SetBankROM(bank, mbc=mbc, bank_count=bank_count)
 						time.sleep(0.05)
 				
 				# Sector Erase (if supported)
@@ -1480,9 +1528,9 @@ class GbxDevice:
 								self.gbx_flash_write_address_byte(flashcart_meta["commands"]["reset"][i][0], flashcart_meta["commands"]["reset"][i][1])
 						
 						if self.MODE == "DMG":
-							self.set_number(currAddr, self.DEVICE_CMD['SET_START_ADDRESS'])
+							self.set_number(currAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 						elif self.MODE == "AGB":
-							self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+							self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 						
 						if sector_count is not None:
 							sector_count -= 1
@@ -1499,9 +1547,9 @@ class GbxDevice:
 								skipping = True
 							else:
 								if skipping:
-									self.set_number(currAddr, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 									skipping = False
-								self.gbx_flash_write_data_bytes("GB_FLASH_WRITE_INTEL_BUFFERED_32BYTE", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GB_FLASH_WRITE_INTEL_BUFFERED_32BYTE"], data)
 								ack = self.wait_for_ack()
 							currAddr += 32
 							pos += 32
@@ -1518,9 +1566,9 @@ class GbxDevice:
 								skipping = True
 							else:
 								if skipping:
-									self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 									skipping = False
-								self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_INTEL_INTERLEAVED_256BYTE", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_INTEL_INTERLEAVED_256BYTE"], data)
 								ack = self.wait_for_ack()
 							currAddr += 256
 							pos += 256
@@ -1539,7 +1587,7 @@ class GbxDevice:
 								data = data_import[pos:pos+2]
 								
 								if int(currAddr % 0x8000) == 0:
-									self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 							
 							# R24+
 							elif (int(self.FW[0]) >= 24) and "single_write_7FC0_to_7FFF" not in flashcart_meta:
@@ -1548,9 +1596,9 @@ class GbxDevice:
 									skipping = True
 								else:
 									if skipping:
-										self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+										self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 										skipping = False
-									self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_INTEL_256BYTE", data)
+									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_INTEL_256BYTE"], data)
 									ack = self.wait_for_ack()
 								
 								currAddr += 256
@@ -1562,9 +1610,9 @@ class GbxDevice:
 									skipping = True
 								else:
 									if skipping:
-										self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+										self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 										skipping = False
-									self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_INTEL_64BYTE", data)
+									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_INTEL_64BYTE"], data)
 									ack = self.wait_for_ack()
 								
 								currAddr += 64
@@ -1577,9 +1625,9 @@ class GbxDevice:
 								skipping = True
 							else:
 								if skipping:
-									self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 									skipping = False
-								self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_BUFFERED_256BYTE_SWAPPED_D0D1", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_BUFFERED_256BYTE_SWAPPED_D0D1"], data)
 								ack = self.wait_for_ack()
 							currAddr += 256
 							pos += 256
@@ -1598,7 +1646,7 @@ class GbxDevice:
 								data = data_import[pos:pos+2]
 								
 								if currAddr == 256:
-									self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 							
 							else:
 								data = data_import[pos:pos+256]
@@ -1606,9 +1654,9 @@ class GbxDevice:
 									skipping = True
 								else:
 									if skipping:
-										self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+										self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 										skipping = False
-									self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_BUFFERED_256BYTE", data)
+									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_BUFFERED_256BYTE"], data)
 									ack = self.wait_for_ack()
 								currAddr += 256
 								pos += 256
@@ -1629,14 +1677,14 @@ class GbxDevice:
 							skipping = True
 						else:
 							if skipping:
-								self.set_number(currAddr, self.DEVICE_CMD['SET_START_ADDRESS'])
+								self.set_number(currAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 								skipping = False
 							if "pulse_reset_after_write" in flashcart_meta and flashcart_meta["pulse_reset_after_write"]:
-								self.gbx_flash_write_data_bytes("GB_FLASH_WRITE_64BYTE_PULSE_RESET", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GB_FLASH_WRITE_64BYTE_PULSE_RESET"], data)
 							elif len(data) == 64:
-								self.gbx_flash_write_data_bytes("GB_FLASH_WRITE_64BYTE", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GB_FLASH_WRITE_64BYTE"], data)
 							elif len(data) == 256:
-								self.gbx_flash_write_data_bytes("GB_FLASH_WRITE_UNBUFFERED_256BYTE", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GB_FLASH_WRITE_UNBUFFERED_256BYTE"], data)
 							ack = self.wait_for_ack()
 							
 						currAddr += len(data)
@@ -1650,9 +1698,9 @@ class GbxDevice:
 								skipping = True
 							else:
 								if skipping:
-									self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 									skipping = False
-								self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_256BYTE_SWAPPED_D0D1", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_256BYTE_SWAPPED_D0D1"], data)
 								ack = self.wait_for_ack()
 							currAddr += 256
 							pos += 256
@@ -1664,9 +1712,9 @@ class GbxDevice:
 								skipping = True
 							else:
 								if skipping:
-									self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 									skipping = False
-								self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_INTEL_64BYTE_WORD", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_INTEL_64BYTE_WORD"], data)
 								ack = self.wait_for_ack()
 							currAddr += 64
 							pos += 64
@@ -1678,9 +1726,9 @@ class GbxDevice:
 								skipping = True
 							else:
 								if skipping:
-									self.set_number(currAddr / 2, self.DEVICE_CMD['SET_START_ADDRESS'])
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
 									skipping = False
-								self.gbx_flash_write_data_bytes("GBA_FLASH_WRITE_SHARP_64BYTE", data)
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_SHARP_64BYTE"], data)
 								ack = self.wait_for_ack()
 							currAddr += 64
 							pos += 64
@@ -1697,7 +1745,7 @@ class GbxDevice:
 							data = data_import[pos:pos+2]
 				
 				if ack == False:
-					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t write {:d} bytes to flash at position 0x{:X}. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(len(data), pos), "abortable":False})
+					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t write {:d} bytes to flash at position 0x{:X}. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(len(data), pos-len(data)), "abortable":False})
 					return False
 				else:
 					self.SetProgress({"action":"WRITE", "bytes_added":len(data), "skipping":skipping})
@@ -1717,7 +1765,6 @@ class GbxDevice:
 			rom_size = len(data_import)
 			buffer_len = 0x1000
 			if self.MODE == "DMG":
-				mbc = 5
 				if fast_read_mode:
 					buffer_len = 0x4000
 					self.FAST_READ = True
@@ -1748,7 +1795,7 @@ class GbxDevice:
 					if bank > 0:
 						startAddr = bank_size
 						endAddr = startAddr + bank_size
-					self.SetBankROM(bank, mbc)
+					self.SetBankROM(bank, mbc=mbc, bank_count=bank_count)
 				
 				for currAddr in range(startAddr, endAddr, buffer_len):
 					if self.CANCEL:
@@ -1786,4 +1833,7 @@ class GbxDevice:
 			verified = True
 		
 		self.POS = 0
+		if self.MODE == "DMG":
+			self.SetBankROM(0, mbc=mbc, bank_count=bank_count)
+		
 		self.SetProgress({"action":"FINISHED", "verified":verified})
