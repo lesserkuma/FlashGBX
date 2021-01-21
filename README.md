@@ -29,6 +29,7 @@ by Lesserkuma
 
 	- BUNG Doctor GB Card 64M
 	- DIY cart with AM29F016/AM29F016B
+	- DIY cart with AM29F032/AM29F032B
 	- DIY cart with AT49F040
 	- GB Smart 32M
 	- insideGadgets 32 KB
@@ -156,7 +157,7 @@ The author would like to thank the following very kind people for their help and
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
-- LucentW (flash chip info, testing)
+- LucentW (flash chip info, testing, bug reports)
 - marv17 (flash chip info, testing, bug reports, feature suggestions)
 - Paradoxical (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
@@ -272,3 +273,7 @@ The author would like to thank the following very kind people for their help and
 - Will now default back to 5V for Game Boy cartridges after unsuccessful flash chip auto-detection
 - Added support for DIY carts with the AT49F040 flash chip *(thanks howie0210)*
 - Minor bug fixes
+
+### v1.3 (released 2021-01-21)
+- Fixed a bug introduced in v1.1 that broke AGB-E08-09 with 29LV128DTMC-90Q support *(thanks LucentW for reporting)*
+- Will now show the application’s version number in message boxes

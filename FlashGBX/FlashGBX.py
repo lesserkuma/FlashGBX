@@ -11,7 +11,7 @@ from . import hw_GBxCartRW
 hw_devices = [hw_GBxCartRW]
 
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "1.2.1"
+VERSION_PEP440 = "1.3"
 VERSION = "v{:s}".format(VERSION_PEP440)
 
 class FlashGBX(QtWidgets.QWidget):
@@ -264,7 +264,7 @@ class FlashGBX(QtWidgets.QWidget):
 							rf_list += zfile + "\n"
 						zip.extract(zfile, self.CONFIG_PATH + "/")
 				
-				if rf_list != "": QtWidgets.QMessageBox.information(self, APPNAME, "The application was recently updated and some config files have been updated as well. You will find backup copies of them in your configuration directory.\n\nUpdated files:\n" + rf_list[:-1], QtWidgets.QMessageBox.Ok)
+				if rf_list != "": QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "The application was recently updated and some config files have been updated as well. You will find backup copies of them in your configuration directory.\n\nUpdated files:\n" + rf_list[:-1], QtWidgets.QMessageBox.Ok)
 				fc_files = glob.glob("{0:s}/fc_*.txt".format(self.CONFIG_PATH))
 			else:
 				print("WARNING: {:s} not found. This is required to load new flash cartridge type configurations after updating.\n".format(app_path + "/res/config.zip"))
@@ -527,7 +527,7 @@ class FlashGBX(QtWidgets.QWidget):
 	def UpdateCheck(self):
 		update_check = self.SETTINGS.value("UpdateCheck")
 		if update_check is None:
-			answer = QtWidgets.QMessageBox.question(self, APPNAME, "Would you like to automatically check for new versions at application startup?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!\nWould you like to automatically check for new versions at application startup?".format(APPNAME, VERSION), QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 			if answer == QtWidgets.QMessageBox.Yes:
 				self.SETTINGS.setValue("UpdateCheck", "enabled")
 				self.mnuConfig.actions()[0].setChecked(True)
@@ -618,7 +618,7 @@ class FlashGBX(QtWidgets.QWidget):
 			else:
 				subprocess.Popen(["xdg-open", path])
 		except:
-			QtWidgets.QMessageBox.information(self, APPNAME, "Your configuration files are stored in\n" + path, QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Your configuration files are stored in\n" + path, QtWidgets.QMessageBox.Ok)
 	
 	def ConnectDevice(self):
 		if self.CONN is not None:
@@ -650,15 +650,15 @@ class FlashGBX(QtWidgets.QWidget):
 					if status == 0:
 						msg += text + "\n"
 					elif status == 1:
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle=APPNAME, text=text, standardButtons=QtWidgets.QMessageBox.Ok)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 						if not '\n' in text: msgbox.setTextFormat(QtCore.Qt.RichText)
 						msgbox.exec()
 					elif status == 2:
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle=APPNAME, text=text, standardButtons=QtWidgets.QMessageBox.Ok)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 						if not '\n' in text: msgbox.setTextFormat(QtCore.Qt.RichText)
 						msgbox.exec()
 					elif status == 3:
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle=APPNAME, text=text, standardButtons=QtWidgets.QMessageBox.Ok)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 						if not '\n' in text: msgbox.setTextFormat(QtCore.Qt.RichText)
 						msgbox.exec()
 						self.CONN = None
@@ -723,7 +723,7 @@ class FlashGBX(QtWidgets.QWidget):
 					status = ret[i][0]
 					msg = ret[i][1]
 					if status == 3:
-						QtWidgets.QMessageBox.critical(self, APPNAME, msg, QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok)
 						self.CONN = None
 			
 			if dev.IsConnected():
@@ -770,7 +770,7 @@ class FlashGBX(QtWidgets.QWidget):
 		
 		dontShowAgain = str(self.SETTINGS.value("SkipFinishMessage")).lower() == "enabled"
 		
-		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle=APPNAME, text="Operation complete!", standardButtons=QtWidgets.QMessageBox.Ok)
+		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Operation complete!", standardButtons=QtWidgets.QMessageBox.Ok)
 		cb = QtWidgets.QCheckBox("Don’t show this message again.", checked=False)
 		msgbox.setCheckBox(cb)
 		
@@ -794,7 +794,7 @@ class FlashGBX(QtWidgets.QWidget):
 					self.lblHeaderROMChecksumResult.setText("Valid (0x{:04X})".format(self.CONN.INFO["rom_checksum"]))
 					self.lblHeaderROMChecksumResult.setStyleSheet("QLabel { color: green; }");
 					self.lblStatus4a.setText("Done!")
-					#msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle=APPNAME, text="The ROM was dumped successfully!", standardButtons=QtWidgets.QMessageBox.Ok)
+					#msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The ROM was dumped successfully!", standardButtons=QtWidgets.QMessageBox.Ok)
 					msgbox.setText("The ROM backup is complete and the checksum was verified successfully!")
 					if not dontShowAgain:
 						msgbox.exec()
@@ -803,7 +803,7 @@ class FlashGBX(QtWidgets.QWidget):
 					self.lblHeaderROMChecksumResult.setText("Invalid (0x{:04X}≠0x{:04X})".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["rom_checksum"]))
 					self.lblHeaderROMChecksumResult.setStyleSheet("QLabel { color: red; }");
 					self.lblStatus4a.setText("Done.")
-					QtWidgets.QMessageBox.warning(self, APPNAME, "The ROM was dumped, but the checksum is not correct. This may indicate a bad dump, however this can be normal for some reproduction cartridges, prototypes and patched games.\nWhen dumping from a flash cartridge, manually selecting MBC5 before dumping may also help.", QtWidgets.QMessageBox.Ok)
+					QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The ROM was dumped, but the checksum is not correct. This may indicate a bad dump, however this can be normal for some reproduction cartridges, prototypes and patched games.\nWhen dumping from a flash cartridge, manually selecting MBC5 before dumping may also help.", QtWidgets.QMessageBox.Ok)
 			elif self.CONN.GetMode() == "AGB":
 				if self.AGB_Global_CRC32 == self.CONN.INFO["rom_checksum_calc"]:
 					self.lblAGBHeaderROMChecksumResult.setText("Valid (0x{:06X})".format(self.AGB_Global_CRC32))
@@ -818,12 +818,12 @@ class FlashGBX(QtWidgets.QWidget):
 					self.lblAGBHeaderROMChecksumResult.setText("0x{:06X}".format(self.CONN.INFO["rom_checksum_calc"]))
 					self.lblAGBHeaderROMChecksumResult.setStyleSheet(self.lblHeaderCGBResult.styleSheet())
 					self.lblStatus4a.setText("Done!")
-					QtWidgets.QMessageBox.information(self, APPNAME, "The ROM backup is complete!", QtWidgets.QMessageBox.Ok)
+					QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "The ROM backup is complete!", QtWidgets.QMessageBox.Ok)
 				else:
 					self.lblAGBHeaderROMChecksumResult.setText("Invalid (0x{:06X}≠0x{:06X})".format(self.CONN.INFO["rom_checksum_calc"], self.AGB_Global_CRC32))
 					self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: red; }");
 					self.lblStatus4a.setText("Done.")
-					QtWidgets.QMessageBox.warning(self, APPNAME, "The ROM backup is complete, but the checksum doesn’t match the known database entry. This may indicate a bad dump, however this can be normal for some reproduction cartridges, prototypes and patched games.", QtWidgets.QMessageBox.Ok)
+					QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The ROM backup is complete, but the checksum doesn’t match the known database entry. This may indicate a bad dump, however this can be normal for some reproduction cartridges, prototypes and patched games.", QtWidgets.QMessageBox.Ok)
 		
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.lblStatus4a.setText("Done!")
@@ -831,7 +831,7 @@ class FlashGBX(QtWidgets.QWidget):
 			if self.CONN.INFO["transferred"] == 131072: # 128 KB
 				with open(self.CONN.INFO["last_path"], "rb") as file: temp = file.read()
 				if temp[0x1FFB1:0x1FFB6] == b'Magic':
-					answer = QtWidgets.QMessageBox.question(self, APPNAME, "Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+					answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 					if answer == QtWidgets.QMessageBox.Yes:
 						self.CAMWIN = None
 						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"])
@@ -870,14 +870,14 @@ class FlashGBX(QtWidgets.QWidget):
 		cart_text = ""
 		
 		if self.CONN.CheckROMStable() is False:
-			QtWidgets.QMessageBox.critical(self, APPNAME, "Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
 			return 0
 		
 		if self.CONN.GetMode() in self.FLASHCARTS and len(self.FLASHCARTS[self.CONN.GetMode()]) == 0:
-			QtWidgets.QMessageBox.critical(self, APPNAME, "No flash cartridge type configuration files found. Try to restart the application with the “--reset” switch to reset the configuration.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "No flash cartridge type configuration files found. Try to restart the application with the “--reset” switch to reset the configuration.", QtWidgets.QMessageBox.Ok)
 			return 0
 		
-		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="Would you like " + APPNAME + " to try and auto-detect the flash cartridge type?\n(Official game cartridges can not be re-written.)", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Would you like " + APPNAME + " to try and auto-detect the flash cartridge type?\n(Official game cartridges can not be re-written.)", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 		cb = QtWidgets.QCheckBox("Limit voltage to 3.3V", checked=True)
 		if self.CONN.GetMode() == "DMG":
 			msgbox.setCheckBox(cb)
@@ -888,7 +888,7 @@ class FlashGBX(QtWidgets.QWidget):
 		else:
 			detected = self.CONN.AutoDetectFlash(limitVoltage)
 			if len(detected) == 0:
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for flashing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for flashing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 				if self.CONN.GetMode() == "DMG":
 					msgbox.setCheckBox(cb)
 				answer = msgbox.exec()
@@ -900,9 +900,9 @@ class FlashGBX(QtWidgets.QWidget):
 				if answer == QtWidgets.QMessageBox.Yes:
 					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage)
 					if cfi_s == "":
-						QtWidgets.QMessageBox.information(self, APPNAME, "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.", QtWidgets.QMessageBox.Ok)
 					else:
-						QtWidgets.QMessageBox.information(self, APPNAME, "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
 						with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])
 				return 0
 			else:
@@ -940,7 +940,7 @@ class FlashGBX(QtWidgets.QWidget):
 					else:
 						msg_text = "The following flash cartridge type variants were detected:\n" + cart_text + "\nAll from this list should work the same. The first name/alias will now be auto-selected.\n\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
 				
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text=msg_text)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
 				button_ok = msgbox.addButton("&OK", QtWidgets.QMessageBox.ActionRole)
 				button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
 				button_cfi = msgbox.addButton("  Run flash chip &query  ", QtWidgets.QMessageBox.ActionRole)
@@ -950,9 +950,9 @@ class FlashGBX(QtWidgets.QWidget):
 				if msgbox.clickedButton() == button_cfi:
 					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
 					if cfi_s == "":
-						QtWidgets.QMessageBox.information(self, APPNAME, "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.", QtWidgets.QMessageBox.Ok)
 					else:
-						QtWidgets.QMessageBox.information(self, APPNAME, "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
 						with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])
 				elif msgbox.clickedButton() == button_cancel: return 0
 		
@@ -1036,9 +1036,9 @@ class FlashGBX(QtWidgets.QWidget):
 		if not self.CheckDeviceAlive(): return
 		path = ""
 		if dpath != "":
-			text = "The following ROM file will now be written to the flash cartridge:\n" + dpath
-			answer = QtWidgets.QMessageBox.question(self, APPNAME, text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
-			if answer == QtWidgets.QMessageBox.Cancel: return
+			#text = "The following ROM file will now be written to the flash cartridge:\n" + dpath
+			#answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
+			#if answer == QtWidgets.QMessageBox.Cancel: return
 			path = dpath
 		
 		if self.CONN.GetMode() == "DMG":
@@ -1076,18 +1076,18 @@ class FlashGBX(QtWidgets.QWidget):
 		self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 		
 		if os.path.getsize(path) > 0x2000000: # reject too large files to avoid exploding RAM
-			QtWidgets.QMessageBox.critical(self, APPNAME, "Files bigger than 32 MB are not supported.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "Files bigger than 32 MB are not supported.", QtWidgets.QMessageBox.Ok)
 			return
 		
 		with open(path, "rb") as file: buffer = file.read()
 		rom_size = len(buffer)
 		if rom_size > carts[cart_type]['flash_size']:
-			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "The selected flash cartridge type seems to support ROMs that are up to " + str(int(carts[cart_type]['flash_size'] / 1024 / 1024)) + " MB in size, but the file you selected is " + str(os.path.getsize(path)/1024/1024) + " MB. You can still give it a try, but it’s possible that it’s too large.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The selected flash cartridge type seems to support ROMs that are up to " + str(int(carts[cart_type]['flash_size'] / 1024 / 1024)) + " MB in size, but the file you selected is " + str(os.path.getsize(path)/1024/1024) + " MB. You can still give it a try, but it’s possible that it’s too large.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		
 		override_voltage = False
 		if 'voltage_variants' in carts[cart_type] and carts[cart_type]['voltage'] == 3.3:
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="The selected flash cartridge type usually flashes fine with 3.3V, however sometimes it may require 5V. Which mode should be used?")
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The selected flash cartridge type usually flashes fine with 3.3V, however sometimes it may require 5V. Which mode should be used?")
 			button_3_3v = msgbox.addButton("  Use &3.3V (safer)  ", QtWidgets.QMessageBox.ActionRole)
 			button_5v = msgbox.addButton("Use &5V", QtWidgets.QMessageBox.ActionRole)
 			button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
@@ -1100,7 +1100,7 @@ class FlashGBX(QtWidgets.QWidget):
 		
 		reverse_sectors = False
 		if 'sector_reversal' in carts[cart_type]:
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="The selected flash cartridge type is reported to sometimes have reversed sectors. If the cartridge is not working after flashing, try reversed sectors.")
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The selected flash cartridge type is reported to sometimes have reversed sectors. If the cartridge is not working after flashing, try reversed sectors.")
 			button_normal = msgbox.addButton("Normal", QtWidgets.QMessageBox.ActionRole)
 			button_reversed = msgbox.addButton("Reversed", QtWidgets.QMessageBox.ActionRole)
 			button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
@@ -1137,13 +1137,13 @@ class FlashGBX(QtWidgets.QWidget):
 			elif self.CONN.GetMode() == "AGB":
 				hdr = RomFileAGB(path).GetHeader()
 			if not hdr["logo_correct"]:
-				answer = QtWidgets.QMessageBox.warning(self, APPNAME, "Warning: The ROM file you selected will not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
+				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 				if answer == QtWidgets.QMessageBox.Cancel: return
 			if not hdr["header_checksum_correct"]:
-				answer = QtWidgets.QMessageBox.warning(self, APPNAME, "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"]), QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
+				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"]), QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 				if answer == QtWidgets.QMessageBox.Cancel: return
 		except:
-			QtWidgets.QMessageBox.critical(self, APPNAME, "The file you selected could not be read.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The file you selected could not be read.", QtWidgets.QMessageBox.Ok)
 			return
 		
 		self.CONN.FlashROM(fncSetProgress=self.SetProgress, path=path, cart_type=cart_type, override_voltage=override_voltage, prefer_sector_erase=prefer_sector_erase, reverse_sectors=reverse_sectors, fast_read_mode=fast_read_mode, verify_flash=verify_flash)
@@ -1160,7 +1160,7 @@ class FlashGBX(QtWidgets.QWidget):
 			features = self.DMG_Header_Features_MBC[self.cmbHeaderFeaturesResult.currentIndex()]
 			save_type = self.DMG_Header_RAM_Sizes_Flasher_Map[self.cmbHeaderRAMSizeResult.currentIndex()]
 			if save_type == 0:
-				QtWidgets.QMessageBox.warning(self, APPNAME, "Please select the correct save data size.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Please select the correct save data size.", QtWidgets.QMessageBox.Ok)
 				return
 		elif self.CONN.GetMode() == "AGB":
 			setting_name = "LastDirSaveDataAGB"
@@ -1172,7 +1172,7 @@ class FlashGBX(QtWidgets.QWidget):
 			features = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
-				QtWidgets.QMessageBox.warning(self, APPNAME, "The save type was not selected or auto-detection failed.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The save type was not selected or auto-detection failed.", QtWidgets.QMessageBox.Ok)
 				return
 		else:
 			return
@@ -1200,7 +1200,7 @@ class FlashGBX(QtWidgets.QWidget):
 			features = self.DMG_Header_Features_MBC[self.cmbHeaderFeaturesResult.currentIndex()]
 			save_type = self.DMG_Header_RAM_Sizes_Flasher_Map[self.cmbHeaderRAMSizeResult.currentIndex()]
 			if save_type == 0:
-				QtWidgets.QMessageBox.warning(self, APPNAME, "Please select the correct save data size.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Please select the correct save data size.", QtWidgets.QMessageBox.Ok)
 				return
 		elif self.CONN.GetMode() == "AGB":
 			setting_name = "LastDirSaveDataAGB"
@@ -1210,19 +1210,19 @@ class FlashGBX(QtWidgets.QWidget):
 			features = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
-				QtWidgets.QMessageBox.critical(self, APPNAME, "The save type was not selected or auto-detection failed.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The save type was not selected or auto-detection failed.", QtWidgets.QMessageBox.Ok)
 				return
 		else:
 			return
 		
 		if dpath != "":
 			text = "The following save data file will now be written to the cartridge:\n" + dpath
-			answer = QtWidgets.QMessageBox.question(self, APPNAME, text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
+			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 			path = dpath
 			self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 		elif erase:
-			answer = QtWidgets.QMessageBox.warning(self, APPNAME, "The save data on your cartridge will now be erased.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
+			answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The save data on your cartridge will now be erased.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		else:
 			path = path + ".sav"
@@ -1230,7 +1230,7 @@ class FlashGBX(QtWidgets.QWidget):
 			if not path == "": self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 			if (path == ""): return
 			if os.path.getsize(path) > 0x100000: # reject too large files to avoid exploding RAM
-				QtWidgets.QMessageBox.critical(self, APPNAME, "Files bigger than 1 MB are not supported.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "Files bigger than 1 MB are not supported.", QtWidgets.QMessageBox.Ok)
 				return
 		
 		self.CONN.RestoreRAM(fncSetProgress=self.SetProgress, path=path, mbc=features, save_type=save_type, erase=erase)
@@ -1245,7 +1245,7 @@ class FlashGBX(QtWidgets.QWidget):
 					dontShowAgain = str(self.SETTINGS.value("AutoReconnect")).lower() == "enabled"
 					if not dontShowAgain:
 						cb = QtWidgets.QCheckBox("Always try to reconnect without asking", checked=False)
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle=APPNAME, text="The connection to the device was lost. Do you want to try and reconnect to the first device found? The cartridge information will also be reset and read again.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The connection to the device was lost. Do you want to try and reconnect to the first device found? The cartridge information will also be reset and read again.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 						msgbox.setCheckBox(cb)
 						answer = msgbox.exec()
 						dontShowAgain = cb.isChecked()
@@ -1290,7 +1290,7 @@ class FlashGBX(QtWidgets.QWidget):
 		
 		if not dontShowAgain and mode is not None:
 			cb = QtWidgets.QCheckBox("Don’t show this message again.", checked=False)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle=APPNAME, text="The mode will now be changed to " + {"DMG":"Game Boy", "AGB":"Game Boy Advance"}[setTo] + " mode. To be safe, cartridges should only be exchanged while the device is not powered on." + voltageWarning, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, defaultButton=QtWidgets.QMessageBox.Ok)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The mode will now be changed to " + {"DMG":"Game Boy", "AGB":"Game Boy Advance"}[setTo] + " mode. To be safe, cartridges should only be exchanged while the device is not powered on." + voltageWarning, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, defaultButton=QtWidgets.QMessageBox.Ok)
 			if self.CONN.CanSetVoltageAutomatically(): msgbox.setCheckBox(cb)
 			answer = msgbox.exec()
 			dontShowAgain = cb.isChecked()
@@ -1463,7 +1463,7 @@ class FlashGBX(QtWidgets.QWidget):
 				self.cmbAGBHeaderROMSizeResult.setCurrentIndex(3)
 				self.cmbAGBSaveTypeResult.setCurrentIndex(0)
 			else:
-				self.lblHeaderTitleResult.setStyleSheet(self.lblHeaderCGBResult.styleSheet())
+				self.lblAGBHeaderTitleResult.setStyleSheet(self.lblHeaderCGBResult.styleSheet())
 			
 			self.grpDMGCartridgeInfo.setVisible(False)
 			self.grpAGBCartridgeInfo.setVisible(True)
@@ -1477,14 +1477,14 @@ class FlashGBX(QtWidgets.QWidget):
 			self.FinishOperation()
 		
 		if self.CONN.CheckROMStable() is False:
-			QtWidgets.QMessageBox.warning(self, APPNAME, "Unstable ROM reading detected. Please make sure that the cartridge contacts are very clean and that you selected the correct mode.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Unstable ROM reading detected. Please make sure that the cartridge contacts are very clean and that you selected the correct mode.", QtWidgets.QMessageBox.Ok)
 			return
 		
 		if not data['logo_correct'] and data['empty'] == False:
-			QtWidgets.QMessageBox.warning(self, APPNAME, "The Nintendo Logo check failed which usually means that the cartridge couldn’t be read correctly. Please make sure that the cartridge contacts are very clean and that you selected the correct mode.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The Nintendo Logo check failed which usually means that the cartridge couldn’t be read correctly. Please make sure that the cartridge contacts are very clean and that you selected the correct mode.", QtWidgets.QMessageBox.Ok)
 		
 		if data['game_title'][:11] == "YJencrypted":
-			QtWidgets.QMessageBox.warning(self, APPNAME, "This cartridge may be protected against reading or writing a ROM. If you don’t want to risk this cartridge to render itself unusable, please do not try to write a new ROM to it.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "This cartridge may be protected against reading or writing a ROM. If you don’t want to risk this cartridge to render itself unusable, please do not try to write a new ROM to it.", QtWidgets.QMessageBox.Ok)
 
 	def formatFileSize(self, size):
 		size = size / 1024
@@ -1635,7 +1635,7 @@ class FlashGBX(QtWidgets.QWidget):
 			self.grpAGBCartridgeInfo.setEnabled(True)
 			self.grpActions.setEnabled(True)
 			self.btnCancel.setEnabled(False)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle=APPNAME, text=str(args["error"]), standardButtons=QtWidgets.QMessageBox.Ok)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=str(args["error"]), standardButtons=QtWidgets.QMessageBox.Ok)
 			if not '\n' in str(args["error"]): msgbox.setTextFormat(QtCore.Qt.RichText)
 			msgbox.exec()
 			return
@@ -1703,11 +1703,11 @@ class FlashGBX(QtWidgets.QWidget):
 				
 				if "info_type" in args.keys() and "info_msg" in args.keys():
 					if args["info_type"] == "msgbox_critical":
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle=APPNAME, text=args["info_msg"], standardButtons=QtWidgets.QMessageBox.Ok)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=args["info_msg"], standardButtons=QtWidgets.QMessageBox.Ok)
 						if not '\n' in args["info_msg"]: msgbox.setTextFormat(QtCore.Qt.RichText)
 						msgbox.exec()
 					elif args["info_type"] == "msgbox_information":
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle=APPNAME, text=args["info_msg"], standardButtons=QtWidgets.QMessageBox.Ok)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=args["info_msg"], standardButtons=QtWidgets.QMessageBox.Ok)
 						if not '\n' in args["info_msg"]: msgbox.setTextFormat(QtCore.Qt.RichText)
 						msgbox.exec()
 					elif args["info_type"] == "label":

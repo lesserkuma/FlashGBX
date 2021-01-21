@@ -1704,7 +1704,7 @@ class GbxDevice:
 							pos += 256
 						
 						# 128W30B0 etc.
-						if flashcart_meta["commands"]["single_write"] == [[ 'PA', 0x40 ], [ 'PA', 'PD' ]]:
+						elif flashcart_meta["commands"]["single_write"] == [[ 'PA', 0x40 ], [ 'PA', 'PD' ]]:
 							data = data_import[pos:pos+64]
 							if data == bytearray([0xFF] * len(data)):
 								skipping = True
