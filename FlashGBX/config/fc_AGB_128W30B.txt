@@ -1,7 +1,7 @@
 {
 	"type":"AGB",
 	"names":[
-		"GE28F128W30 with 128W30B0"
+		"GE28F128W30 with 128W30B"
 	],
 	"flash_ids":[
 		[ 0x8A, 0x00, 0x57, 0x88 ]

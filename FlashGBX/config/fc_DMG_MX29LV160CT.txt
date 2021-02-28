@@ -1,0 +1,75 @@
+{
+	"type":"DMG",
+	"names":[
+		"SD007_K8D3216_32M with MX29LV160CT"
+	],
+	"flash_ids":[
+		[ 0xC1, 0xC1, 0xC4, 0xC4 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x200000,
+	"start_addr":0,
+	"first_bank":1,
+	"write_pin":"WR",
+	"sector_size":[
+		[0x10000, 31],
+		[0x8000, 1],
+		[0x2000, 2],
+		[0x4000, 1]
+	],
+	"chip_erase_timeout":60,
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x90 ]
+		],
+		"chip_erase":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"sector_erase":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

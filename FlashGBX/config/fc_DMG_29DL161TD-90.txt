@@ -11,10 +11,7 @@
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"sector_size":[
-		[0x10000, 31],
-		[0x2000, 8]
-	],
+	"sector_size_from_cfi":true,
 	"chip_erase_timeout":120,
 	"commands":{
 		"reset":[

@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 # ＵＴＦ－８
 import hashlib, re, sys, string
+from . import Util
 
 class RomFileDMG:
-	DMG_Header_Features = { 0x00:'ROM ONLY', 0x01:'MBC1', 0x02:'MBC1+RAM', 0x03:'MBC1+RAM+BATTERY', 0x05:'MBC2', 0x06:'MBC2+BATTERY', 0x08:'ROM+RAM', 0x09:'ROM+RAM+BATTERY', 0x0B:'MMM01', 0x0C:'MMM01+RAM', 0x0D:'MMM01+RAM+BATTERY', 0x0F:'MBC3+TIMER+BATTERY', 0x10:'MBC3+TIMER+RAM+BATTERY', 0x11:'MBC3', 0x12:'MBC3+RAM', 0x13:'MBC3+RAM+BATTERY', 0x15:'MBC4', 0x16:'MBC4+RAM', 0x17:'MBC4+RAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+RAM', 0x1B:'MBC5+RAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1D:'MBC5+RUMBLE+RAM', 0x1E:'MBC5+RUMBLE+RAM+BATTERY', 0x20:'MBC6', 0x22:'MBC7+SENSOR+RUMBLE+RAM+BATTERY', 0x55:'Game Genie', 0x56:'Game Genie v3.0', 0xFC:'POCKET CAMERA', 0xFD:'BANDAI TAMA5', 0xFE:'HuC3', 0xFF:'HuC1+RAM+BATTERY' }
-	DMG_Header_ROM_Sizes = { 0x00:0x8000, 0x01:0x10000, 0x02:0x20000, 0x03:0x40000, 0x04:0x80000, 0x05:0x100000, 0x52:0x120000, 0x53:0x140000, 0x54:0x180000, 0x06:0x200000, 0x07:0x400000, 0x08:0x800000 }
-	DMG_Header_RAM_Sizes = { 0x00:0, 0x01:0x800, 0x02:0x2000, 0x03:0x8000, 0x05:0x10000, 0x04:0x20000 }
-	DMG_Header_SGB = { 0x00:'No support', 0x03:'Supported' }
-	DMG_Header_CGB = { 0x00:'No support', 0x80:'Supported', 0xC0:'Required' }
-	
 	ROMFILE_PATH = None
 	ROMFILE = bytearray()
 	
@@ -59,35 +54,71 @@ class RomFileDMG:
 		data = {}
 		data["empty"] = (self.ROMFILE == bytearray([buffer[0]] * len(buffer)))
 		data["logo_correct"] = hashlib.sha1(buffer[0x104:0x134]).digest() == bytearray([ 0x07, 0x45, 0xFD, 0xEF, 0x34, 0x13, 0x2D, 0x1B, 0x3D, 0x48, 0x8C, 0xFB, 0xDF, 0x03, 0x79, 0xA3, 0x9F, 0xD5, 0x4B, 0x4C ])
-		game_title = bytearray(buffer[0x134:0x143]).decode("ascii", "replace")
-		game_title = re.sub(r"(\x00+)$", "", game_title).replace("\x00", "_")
+		data["cgb"] = int(buffer[0x143])
+		data["sgb"] = int(buffer[0x146])
+		
+		if data["cgb"] in (0x00, 0x80, 0xC0):
+			game_title = bytearray(buffer[0x134:0x143]).decode("ascii", "replace")
+		else:
+			game_title = bytearray(buffer[0x134:0x144]).decode("ascii", "replace")
+		game_title = re.sub(r"(\x00+)$", "", game_title)
+		game_title = re.sub(r"((_)_+|(\x00)\x00+|(\s)\s+)", "\\2\\3\\4", game_title).replace("\x00", "_")
 		game_title = ''.join(filter(lambda x: x in set(string.printable), game_title))
 		data["game_title"] = game_title
+
 		data["maker_code"] = format(int(buffer[0x14B]), "02X")
 		if data["maker_code"] == '33':
 			maker_code = bytearray(buffer[0x144:0x146]).decode("ascii", "replace")
 			maker_code = ''.join(filter(lambda x: x in set(string.printable), maker_code))
 			data["maker_code_new"] = maker_code
-		data["cgb"] = int(buffer[0x143])
-		data["sgb"] = int(buffer[0x146])
 		data["features_raw"] = int(buffer[0x147])
 		data["features"] = "?"
-		if buffer[0x147] in self.DMG_Header_Features: data["features"] = self.DMG_Header_Features[buffer[0x147]]
 		data["rom_size_raw"] = int(buffer[0x148])
 		data["rom_size"] = "?"
-		if buffer[0x148] in self.DMG_Header_ROM_Sizes: data["rom_size"] = self.DMG_Header_ROM_Sizes[buffer[0x148]]
+		if buffer[0x148] in Util.DMG_Header_ROM_Sizes: data["rom_size"] = Util.DMG_Header_ROM_Sizes[buffer[0x148]]
 		data["ram_size_raw"] = int(buffer[0x149])
-		if data["features"] == 0x05 or data["features"] == 0x06:
+		if data["features_raw"] == 0x05 or data["features_raw"] == 0x06:
 			data["ram_size"] = 0x200
 		else:
 			data["ram_size"] = "?"
-			if buffer[0x149] in self.DMG_Header_RAM_Sizes: data["ram_size"] = self.DMG_Header_RAM_Sizes[buffer[0x149]]
+			if buffer[0x149] in Util.DMG_Header_RAM_Sizes:
+				data["ram_size"] = Util.DMG_Header_RAM_Sizes[buffer[0x149]]
 		data["header_checksum"] = int(buffer[0x14D])
 		data["header_checksum_calc"] = self.CalcChecksumHeader()
 		data["header_checksum_correct"] = data["header_checksum"] == data["header_checksum_calc"]
 		data["rom_checksum"] = int(256 * buffer[0x14E] + buffer[0x14F])
 		data["rom_checksum_calc"] = self.CalcChecksumGlobal()
 		data["rom_checksum_correct"] = data["rom_checksum"] == data["rom_checksum_calc"]
+
+		# MBC1M
+		if data["features_raw"] == 0x03 and data["game_title"] == "MOMOCOL" and data["header_checksum"] == 0x28 or \
+		data["features_raw"] == 0x01 and data["game_title"] == "BOMCOL" and data["header_checksum"] == 0x86 or \
+		data["features_raw"] == 0x01 and data["game_title"] == "GENCOL" and data["header_checksum"] == 0x8A or \
+		data["features_raw"] == 0x01 and data["game_title"] == "SUPERCHINESE 123" and data["header_checksum"] == 0xE4 or \
+		data["features_raw"] == 0x01 and data["game_title"] == "MORTALKOMBATI&II" and data["header_checksum"] == 0xB9 or \
+		data["features_raw"] == 0x01 and data["game_title"] == "MORTALKOMBAT DUO" and data["header_checksum"] == 0xA7:
+			data["features_raw"] += 0x100
+
+		# GB Memory
+		if data["features_raw"] == 0x19 and data["game_title"] == "NP M-MENU MENU" and data["header_checksum"] == 0xD3:
+			data["features_raw"] = 0x105
+		
+		# M161 (Mani 4 in 1)
+		elif data["features_raw"] == 0x10 and data["game_title"] == "TETRIS SET" and data["header_checksum"] == 0x3F:
+			data["features_raw"] = 0x104
+		
+		# MMM01 (Mani 4 in 1)
+		elif data["features_raw"] == 0x11 and data["game_title"] == "BOUKENJIMA2 SET" and data["header_checksum"] == 0 or \
+		data["features_raw"] == 0x11 and data["game_title"] == "BUBBLEBOBBLE SET" and data["header_checksum"] == 0xC6 or \
+		data["features_raw"] == 0x11 and data["game_title"] == "GANBARUGA SET" and data["header_checksum"] == 0x90 or \
+		data["features_raw"] == 0x11 and data["game_title"] == "RTYPE 2 SET" and data["header_checksum"] == 0x32:
+			data["features_raw"] = 0x0B
+
+		if data["features_raw"] in Util.DMG_Header_Features:
+			data["features"] = Util.DMG_Header_Features[data["features_raw"]]
+		elif data["logo_correct"]:
+			print("{:s}WARNING: Unknown memory bank controller type 0x{:02X}{:s}".format(Util.ANSI.YELLOW, data["features_raw"], Util.ANSI.RESET))
+
 		return data
 	
 	def GetData(self):
