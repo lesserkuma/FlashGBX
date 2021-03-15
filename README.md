@@ -21,7 +21,7 @@ by Lesserkuma
 
 ### Confirmed working reader/writer hardware
 
-- [insideGadgets GBxCart RW v1.3 and v1.3 Pro](https://www.gbxcart.com/) with firmware versions from R19 up to R26 (other hardware revisions and firmware versions may also work, but are untested)
+- [insideGadgets GBxCart RW v1.3 and v1.3 Pro](https://www.gbxcart.com/) with firmware versions from R19 up to R27 (other hardware revisions and firmware versions may also work, but are untested)
 
 ### Currently supported official cartridge memory mappers
 
@@ -31,7 +31,7 @@ by Lesserkuma
   - MBC2
   - MBC3/MBC30
   - MBC5
-  - MBC7
+  - MBC7¹
   - MBC1M
   - MMM01
   - Game Boy Camera
@@ -43,7 +43,9 @@ by Lesserkuma
 
 - Game Boy Advance
   - All cartridges without memory mapping
-  - 3D Memory (GBA Video)
+  - 3D Memory (GBA Video)¹
+
+¹ Preliminary support; will not fully work until the GBxCart RW device is updated to a future firmware version
 
 ### Currently supported flash cartridges
 
@@ -64,14 +66,16 @@ by Lesserkuma
 
 - Game Boy Advance
 
-  - Development AGB Cartridge 128M Flash S, E201850
-  - Development AGB Cartridge 256M Flash S, E201868
+  - Development AGB Cartridge 128M Flash S, E201850¹
+  - Development AGB Cartridge 256M Flash S, E201868¹
   - Flash2Advance 256M (non-ultra variant, with 2× 28F128J3A150)
   - insideGadgets 16 MB, 64K EEPROM with Solar Sensor and RTC options
   - insideGadgets 32 MB, 1M FLASH with RTC option
   - insideGadgets 32 MB, 512K FLASH
   - insideGadgets 32 MB, 4K/64K EEPROM
   - insideGadgets 32 MB, 256K FRAM with Rumble option
+
+¹ Preliminary support; will not fully work until the GBxCart RW device is updated to a future firmware version
 
 ### Currently supported and tested reproduction cartridges
 
@@ -111,7 +115,7 @@ by Lesserkuma
   - 28F256L03B-DRV with 256L30B
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
-  - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0
+  - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0¹
   - 4050_4400_4000_4350_36L0R_V5 with 4050L0YTQ2
   - 4050_4400_4000_4350_36L0R_V5 with M36L0R7050T
   - 4050_4400_4000_4350_36L0R_V5 with M36L0T8060T
@@ -135,6 +139,8 @@ by Lesserkuma
   - M6MGJ927 (no PCB text)
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
+
+¹ Preliminary support; will not fully work until the GBxCart RW device is updated to a future firmware version
 
 ## Installing and running
 
