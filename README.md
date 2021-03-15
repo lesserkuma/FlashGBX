@@ -31,20 +31,19 @@ by Lesserkuma
   - MBC2
   - MBC3/MBC30
   - MBC5
-  - MBC7 (ROM backup only)
+  - MBC7
   - MBC1M
   - MMM01
   - Game Boy Camera
   - G-MMC1 (ROM and map backup only)
+  - M161
   - HuC-1
   - HuC-3
   - TAMA5
 
 - Game Boy Advance
   - All cartridges without memory mapping
-  - 3D Memory (GBA Video)¹
-
-¹ Preliminary support; will not work until the GBxCart RW device is updated to a future firmware version
+  - 3D Memory (GBA Video)
 
 ### Currently supported flash cartridges
 
@@ -112,6 +111,7 @@ by Lesserkuma
   - 28F256L03B-DRV with 256L30B
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
+  - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0
   - 4050_4400_4000_4350_36L0R_V5 with 4050L0YTQ2
   - 4050_4400_4000_4350_36L0R_V5 with M36L0R7050T
   - 4050_4400_4000_4350_36L0R_V5 with M36L0T8060T
@@ -125,6 +125,7 @@ by Lesserkuma
   - AGB-E05-02 with M29W128GH
   - AGB-E08-09 with 29LV128DTMC-90Q
   - AGB-SD-E05 with MSP55LV128
+  - B104 with MSP55LV128
   - BX2006_0106_NEW with S29GL128N10TFI01
   - BX2006_TSOP_64BALL with GL128S
   - BX2006_TSOP_64BALL with GL256S
@@ -141,9 +142,9 @@ If you have Python and pip installed, you can use `pip install FlashGBX` to down
 
 To run FlashGBX in portable mode, you can also download the source code archive and call `python run.py` after installing the prerequisites yourself.
 
-*On some platforms you may have to use `pip3`/`python3` instead of `pip`/`python`.*
+The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3.7+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/) and [requests](https://pypi.org/project/requests/) packages.
 
-The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [requests](https://pypi.org/project/requests/) and [setuptools](https://pypi.org/project/setuptools/) packages.
+*On some platforms you may have to use `pip3`/`python3` instead of `pip`/`python`.*
 
 ### Windows binaries
 
@@ -161,6 +162,8 @@ These executables have been created using *PyInstaller* and *Inno Setup*.
 * On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
 
 * On some Linux systems, you may need the *XCB Xinerama package* if you see an error regarding failed Qt platform plugin initialization. You can install it with `sudo apt install libxcb-xinerama0` etc.
+
+* If the `PySide2` package is not available for your system, you can install FlashGBX like so instead: `pip install pyserial Pillow setuptools requests` followed by `pip install --no-deps FlashGBX`.
 
 * On older systems such as MacOS X El Capitan 10.11, you may run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`. Installing [Python 3.7.9](https://www.python.org/downloads/release/python-379/) instead of the latest available version may resolve this issue. If that still doesn’t work, you can try to uninstall PySide2 (`pip uninstall PySide2`) and then run FlashGBX again in command line interface mode.
 
@@ -196,11 +199,11 @@ The author would like to thank the following very kind people for their help and
 - Super Maker (flash chip info, testing)
 - Veund (flash chip info)
 - Zeii (flash chip info)
+- Zelante (flash chip info)
 
 ## Changes
 
 ### v0.7β (released 2020-09-25)
-
 - First started tracking changes
 - Added a way to launch the flash cartridge type auto-detection process from the type list
 - Added support for SD007_48BALL_64M_V6 with 29DL163BD-90 *(thanks LovelyA72)*
@@ -218,7 +221,6 @@ The author would like to thank the following very kind people for their help and
 - First public beta release
 
 ### v0.8β (released 2020-10-03)
-
 - Added support for the DIY cart with AM29F016/AM29F016B with AUDIO as WE *(thanks AndehX)*
 - Renamed `VIN` to `AUDIO` in config files and the command line switch `--resetconfig` to `--reset`
 - Added experimental support for GBxCart RW revisions other than v1.3 and fixed a crash when connecting to unknown revisions of the GBxCart RW
@@ -239,7 +241,6 @@ The author would like to thank the following very kind people for their help and
 - Added taskbar progress visualization on Windows systems
 
 ### v0.9β (released 2020-12-17)
-
 - Confirmed support for BX2006_TSOP_64BALL with GL128S
 - Confirmed support for SD007_48BALL_64M_V2 with GL032M11BAIR4
 - Added support for 4050_4400_4000_4350_36L0R_V5 with M36L0R8060T/M36L0T8060T
@@ -257,7 +258,7 @@ The author would like to thank the following very kind people for their help and
 - Added backup and restore of 1M SRAM save data in GBA mode
 - Confirmed support for BX2006_TSOPBGA_0106 with M29W640GB6AZA6 *(thanks LucentW)*
 - Confirmed support for AGB-E05-01 with GL128S
-- Improved writing speed for MSP55LV128M, S29GL128 and similar flash chips (requires GBxCart RW firmware R23 or higher)
+- Improved writing speed for MSP55LV128M, S29GL128 and similar flash chips (requires GBxCart RW firmware R23 or newer)
 - Before flashing a ROM it will now be checked if its logo data and header checksum are valid and a warning will be shown if not
 - Added support for SD007_BV5_V3 with 29LV160BE-90PFTN *(thanks LucentW)*
 - Added support for SD007_BV5_V3 with HY29LV160BT *(thanks LucentW)*
@@ -278,17 +279,17 @@ The author would like to thank the following very kind people for their help and
 - Fixed an issue with Raspberry Pi compatibility *(thanks ClassicOldSong)*
 - Confirmed support for SD007_TSOP_48BALL with AM29LV160DB *(thanks marv17)*
 - Fixed timeout errors with ROMs that have non-standard file sizes (e.g. trimmed files)
-- Improved writing speed for most Game Boy reproduction cartridges by up to 40% (requires GBxCart RW firmware R24 or higher)
-- Improved writing speed for M36L0R and similar flash chips by up to 80% (requires GBxCart RW firmware R24 or higher)
+- Improved writing speed for most Game Boy reproduction cartridges by up to 40% (requires GBxCart RW firmware R24 or newer)
+- Improved writing speed for M36L0R and similar flash chips by up to 80% (requires GBxCart RW firmware R24 or newer)
 - Confirmed support for 4400 with 4400L0ZDQ0 *(thanks Zeii)*
-- Backup and restore save data of flash chips manufactured by SANYO requires GBxCart RW firmware R24 or higher; a warning message for this will now be displayed in necessary cases
+- Backup and restore save data of flash chips manufactured by SANYO requires GBxCart RW firmware R24 or newer; a warning message for this will now be displayed in necessary cases
 - Added the option to check for updates at application start *(thanks Icesythe7 and JFox for the suggestion and help)*
 - Added support for BX2006_TSOPBGA_0106 with K8D6316UTM-PI07 *(thanks LucentW)*
 - Added support for the currently available insideGadgets Game Boy Advance flash cartridges *(thanks AlexiG)*
 - Added a Game Boy Camera album viewer and picture extractor
 
 ### v1.0 (released 2021-01-01)
-- Added a firmware check when writing to insideGadgets Game Boy Advance flash cartridges (requires GBxCart RW firmware R20 or higher)
+- Added a firmware check when writing to insideGadgets Game Boy Advance flash cartridges (requires GBxCart RW firmware R20 or newer)
 - Confirmed support for Mr Flash 64M (rebranded BUNG Doctor GB Card 64M)
 - Fixed a problem with writing to the insideGadgets 512 KB Game Boy flash cartridge
 
@@ -301,7 +302,7 @@ The author would like to thank the following very kind people for their help and
 - Added a firmware check when writing to cartridges with flash chips manufactured by Sharp (unsupported by GBxCart RW firmware R25)
 - Added optional verification of written data after ROM flashing *(thanks marv17 for the suggestion)*
 
-### v1.2/v1.2.1 (released 2021-01-16)
+### v1.2.1 (released 2021-01-16)
 - Fixed a bug introduced in v1.1 that broke MBC3 handling *(thanks marv17 for reporting)*
 - Will now default back to 5V for Game Boy cartridges after unsuccessful flash chip auto-detection
 - Added support for DIY carts with the AT49F040 flash chip *(thanks howie0210)*
@@ -327,14 +328,22 @@ The author would like to thank the following very kind people for their help and
 - Added support for AGB-E05-01 with MX29GL128FHT2I-90G *(thanks antPL)*
 - Added support for official cartridges with the HuC-1 memory bank controller; tested with “Pokémon Card GB” (DMG-ACXJ-JPN)
 - Added support for official cartridges with the HuC-3 memory bank controller; tested with “Robot Poncots Sun Version” (DMG-HREJ-JPN)
-- Added support for official cartridges with the TAMA5 memory bank controller; tested with “Game de Hakken!! Tamagotchi Osutchi to Mesutchi” (DMG-AOMJ-JPN) (requires GBxCart RW firmware R26 or higher)
-- Added preliminary support for official GBA Video cartridges with 3D Memory; tested with “Shrek 2” (AGB-M2SE-USA) *(thanks to endrift’s article [“Dumping the Undumped”](https://mgba.io/2015/10/20/dumping-the-undumped/))* – requires a future firmware update of GBxCart RW
+- Added support for official cartridges with the TAMA5 memory bank controller; tested with “Game de Hakken!! Tamagotchi Osutchi to Mesutchi” (DMG-AOMJ-JPN) (requires GBxCart RW firmware R26 or newer)
+- Added preliminary support for official GBA Video cartridges with 3D Memory; tested with “Shrek 2” (AGB-M2SE-USA) *(thanks to endrift’s article [“Dumping the Undumped”](https://mgba.io/2015/10/20/dumping-the-undumped/))* (requires a future firmware update of GBxCart RW)
 - Added support for optionally saving and restoring RTC registers of official TAMA5 cartridges inside the save file
 - Experimental support for optionally saving RTC registers of official MBC3+RTC+SRAM+BATTERY cartridges inside the save file using the 48 bytes save format explained on the [BGB website](https://bgb.bircd.org/rtcsave.html) was added. Latching the RTC register and restoring RTC register values to the cartridge is not supported at this time as it requires a new GBxCart RW hardware device revision.
 - Added support for 4050_4400_4000_4350_36L0R_V5 with 4050L0YTQ2 *(thanks Shinichi999)*
 - Fixed GUI support on macOS Big Sur *(thanks paarongiroux)*
 - Added support for official cartridges with the MBC1M memory bank controller; tested with “Bomberman Collection” (DMG-ABCJ-JPN); save data backup is untested but should work
-- Added support for official cartridges with the MMM01 memory bank controller; tested with “Momotarou Collection 2” (DMG-AM3J-JPN) (requires GBxCart RW firmware R26 or higher)
+- Added support for official cartridges with the MMM01 memory bank controller; tested with “Momotarou Collection 2” (DMG-AM3J-JPN) (requires GBxCart RW firmware R26 or newer)
 - Support for optionally saving and restoring RTC registers of official HuC-3+RTC+SRAM+BATTERY cartridges inside the save file using the 12 bytes save format used by the [hhugboy emulator](https://github.com/tzlion/hhugboy) was added.
 - Added support for SD007_TSOP_48BALL with K8D3216UTC *(thanks marv17)*
+
+### v1.4.1 (released 2021-03-15)
 - Added ROM and map backup support for official Nintendo Power GB Memory cartridges (DMG-MMSA-JPN); save data handling and ROM writing is not supported yet
+- Fixed a minor bug with save data backup and restore (the bug did not cause damage)
+- Added preliminary support for 4050M0Y0Q0-39VF512 with 4050M0Y0Q0 (requires a future firmware update of GBxCart RW)
+- Added preliminary support for official cartridges with the MBC7 memory bank controller; tested with “Korokoro Kirby” (CGB-KKKJ-JPN) (requires a future firmware update of GBxCart RW)
+- Added support for official cartridges with the M161 memory bank controller; tested with “Mani 4 in 1: Tetris + Alleyway + Yakuman + Tennis” (DMG-601CHN) (requires GBxCart RW firmware R26 or newer)
+- Added support for B104 with MSP55LV128 *(thanks Zelante)*
+- Added save data backup and restore support for official cartridges with ATMEL AT29LV512 flash chips; tested with a copy of “Mario Kart: Super Circuit” (AGB-AMKP-EUR)

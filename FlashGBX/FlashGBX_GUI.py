@@ -19,6 +19,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	CONFIG_PATH = ""
 	TBPROG = None # Windows 7+ Taskbar Progress Bar
 	PROGRESS = None
+	STATUS = {}
 	
 	def __init__(self, args):
 		QtWidgets.QWidget.__init__(self)
@@ -697,7 +698,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					if not dontShowAgain:
 						msgbox.exec()
 						dontShowAgain = cb.isChecked()
-				elif "DMG-MMSA-JPN" in self.cmbDMGCartridgeTypeResult.currentText():
+				elif "dmg-mmsa-jpn" in self.STATUS["cart_type"] and "operation" in self.STATUS and self.STATUS["operation"] == "GBMEMORY_INITIAL_DUMP":
+					# todo
+					self.STATUS["operation"] = None
+				elif "dmg-mmsa-jpn" in self.STATUS["cart_type"]:
 					self.lblHeaderROMChecksumResult.setText("0x{:04X}".format(self.CONN.INFO["rom_checksum_calc"]))
 					self.lblStatus4a.setText("Done!")
 					msgbox.setText("The ROM backup is complete!")
@@ -875,15 +879,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				cart_type = self.CartridgeTypeAutoDetect()
 				if (cart_type == 1): cart_type = 0
 				self.cmbDMGCartridgeTypeResult.setCurrentIndex(cart_type)
+				self.STATUS["cart_type"] = cart_types[1][index]
 			elif cart_types[1][index] == "RETAIL": # special keyword
 				pass
 			else:
 				for i in range(0, len(Util.DMG_Header_ROM_Sizes_Flasher_Map)):
 					if cart_types[1][index]["flash_size"] == (Util.DMG_Header_ROM_Sizes_Flasher_Map[i] * 0x4000):
 						self.cmbHeaderROMSizeResult.setCurrentIndex(i)
-			
-			#if "DMG-MMSA-JPN" in cart_types[0][index]:
-			#	self.cmbHeaderFeaturesResult.setCurrentIndex(list(Util.DMG_Header_Features.keys()).index(0x105))
+				self.STATUS["cart_type"] = cart_types[1][index]
 		
 		elif self.CONN.GetMode() == "AGB":
 			cart_types = self.CONN.GetSupportedCartridgesAGB()
@@ -895,6 +898,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				pass
 			else:
 				self.cmbAGBHeaderROMSizeResult.setCurrentIndex(Util.AGB_Header_ROM_Sizes_Map.index(cart_types[1][index]["flash_size"]))
+				self.STATUS["cart_type"] = cart_types[1][index]
 	
 	def BackupROM(self):
 		if not self.CheckDeviceAlive(): return
@@ -931,7 +935,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 			path = self.lblAGBHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii') + "_" + self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
 			if path == "_": path = self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or path == "(No ROM data detected)": path = "ROM"
+			if path == "" or path.startswith("(No ROM data detected)"): path = "ROM"
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 			rom_size = Util.AGB_Header_ROM_Sizes_Map[self.cmbAGBHeaderROMSizeResult.currentIndex()]
 			path = path + ".gba"
@@ -945,7 +949,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.lblAGBHeaderROMChecksumResult.setStyleSheet(self.lblHeaderCGBResult.styleSheet())
 		
 		self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, path=path, mbc=mbc, rom_banks=rom_banks, agb_rom_size=rom_size, fast_read_mode=fast_read_mode, cart_type=cart_type)
-
+	
 	def FlashROM(self, dpath=""):
 		if not self.CheckDeviceAlive(): return
 		path = ""
@@ -1092,7 +1096,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 			path = self.lblAGBHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii') + "_" + self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
 			if path == "_": path = self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or path == "(No ROM data detected)": path = "ROM"
+			if path == "" or path.startswith("(No ROM data detected)"): path = "ROM"
 			mbc = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
@@ -1176,8 +1180,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		rtc = False
 		# RTC of TAMA5, HuC-3
-		if (features == 0xFD and (filesize == save_type + 0x18 or erase)) or \
-		(features == 0xFE and (filesize == save_type + 0xC or erase)): #or (features == 0x10 and filesize == save_type + 0x30 or erase):
+		if self.CONN.GetMode() == "DMG" and \
+		((features == 0xFD and (filesize == save_type + 0x18 or erase)) or \
+		(features == 0xFE and (filesize == save_type + 0xC or erase))): #or (features == 0x10 and filesize == save_type + 0x30 or erase):
 			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Do you want the Real Time Clock register values to be also written?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Yes)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 			rtc = (answer == QtWidgets.QMessageBox.Yes)
@@ -1276,6 +1281,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.DisconnectDevice()
 			return False
 				
+		if self.CONN.CheckROMStable() is False:
+			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
+			return
+		
 		if self.CONN.GetMode() == "DMG":
 			self.cmbHeaderFeaturesResult.clear()
 			self.cmbHeaderFeaturesResult.addItems(list(Util.DMG_Header_Features.values()))
@@ -1343,11 +1352,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			else:
 				self.lblHeaderTitleResult.setStyleSheet(self.lblHeaderCGBResult.styleSheet())
 				if data['logo_correct'] and not self.CONN.IsSupportedMbc(data["features_raw"]):
-					QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "This cartridge uses a Memory Bank Controller that may not be completely supported yet. A future version of {:s} may add support for it.".format(APPNAME), QtWidgets.QMessageBox.Ok)
+					QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "This cartridge uses a Memory Bank Controller that may not be completely supported yet. A future version of {:s} or the {:s} device firmware may add support for it.".format(APPNAME, self.CONN.GetName()), QtWidgets.QMessageBox.Ok)
 				if data['logo_correct'] and data['game_title'] == "NP M-MENU MENU":
 					cart_types = self.CONN.GetSupportedCartridgesDMG()
 					for i in range(0, len(cart_types[0])):
-						if "DMG-MMSA-JPN" in cart_types[0][i]:
+						if "dmg-mmsa-jpn" in cart_types[1][i]:
 							self.cmbDMGCartridgeTypeResult.setCurrentIndex(i)
 			
 			self.grpAGBCartridgeInfo.setVisible(False)
@@ -1440,10 +1449,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.lblStatus4a.setText("Ready.")
 			self.grpStatus.setTitle("Transfer Status")
 			self.FinishOperation()
-		
-		if self.CONN.CheckROMStable() is False:
-			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
-			return
 		
 		if not data['logo_correct'] and data['empty'] == False:
 			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The Nintendo Logo check failed which usually means that the cartridge couldn’t be read correctly. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)

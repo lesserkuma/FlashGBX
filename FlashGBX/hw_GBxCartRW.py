@@ -11,7 +11,7 @@ from . import Util
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 19
-	DEVICE_MAX_FW = 26
+	DEVICE_MAX_FW = 27
 	
 	DEVICE_CMD = {
 		"CART_MODE":'C',
@@ -26,6 +26,8 @@ class GbxDevice:
 		"SET_BANK_WITH_CS":'H',
 		"RESET_MBC":'-',
 		"GB_CART_MODE":'G',
+		"READ_EEPROM_MBC7":'~',
+		"WRITE_EEPROM_MBC7":'#',
 		# GBA defines/commands
 		"EEPROM_NONE":0,
 		"EEPROM_4KBIT":1,
@@ -81,6 +83,7 @@ class GbxDevice:
 		"GBA_FLASH_WRITE_BUFFERED_256BYTE":'c',
 		"GBA_FLASH_WRITE_BUFFERED_256BYTE_SWAPPED_D0D1":'d',
 		"GBA_FLASH_WRITE_INTEL_64BYTE":'l',
+		"GBA_FLASH_WRITE_INTEL_1024BYTE_4050":'K',
 		"GBA_FLASH_WRITE_INTEL_256BYTE":';',
 		"GBA_FLASH_WRITE_INTEL_64BYTE_WORD":'u',
 		"GBA_FLASH_WRITE_INTEL_INTERLEAVED_256BYTE":'v',
@@ -261,10 +264,13 @@ class GbxDevice:
 			return ["DMG", "AGB"]
 	
 	def IsSupportedMbc(self, mbc):
-		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1B, 0x1C, 0x1E, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x105 )
+		if (int(self.FW[0]) >= 26):
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1B, 0x1C, 0x1E, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
+		else:
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x10, 0x13, 0x19, 0x1B, 0x1C, 0x1E, 0xFC, 0xFE, 0xFF, 0x101, 0x103, 0x105 )
 	
 	def IsSupported3dMemory(self):
-		return False #int(self.FW[0]) >= 27
+		return False
 	
 	def IsClkConnected(self):
 		return False
@@ -510,6 +516,7 @@ class GbxDevice:
 		buffer = self.DEVICE_CMD["GBA_FLASH_CART_WRITE_BYTE"] + data + '\x00'
 		self.write(buffer)
 		time.sleep(0.001)
+		
 		ack = self.wait_for_ack()
 		if ack == False:
 			self.CANCEL = True
@@ -522,6 +529,7 @@ class GbxDevice:
 		self.write(buffer)
 		buffer = format(data, 'x') + '\x00'
 		self.write(buffer)
+		
 		ack = self.wait_for_ack()
 		if ack == False:
 			self.CANCEL = True
@@ -539,11 +547,11 @@ class GbxDevice:
 			cmd = self.DEVICE_CMD["SET_BANK_WITH_CS"]
 		else:
 			cmd = self.DEVICE_CMD["SET_BANK"]
+		
 		address = format(address, 'x')
 		buffer = cmd + address + '\x00'
 		self.write(buffer)
 		time.sleep(0.005)
-		
 		bank = format(bank, 'd')
 		buffer = cmd + bank + '\x00'
 		self.write(buffer)
@@ -555,7 +563,8 @@ class GbxDevice:
 		self.write(buffer)
 
 	def set_number(self, number, command):
-		buffer = format(command, 's') + format(int(number), 'x') + '\x00'
+		number = int(number)
+		buffer = format(command, 's') + format(number, 'x') + '\x00'
 		self.write(buffer)
 		time.sleep(0.005)
 	
@@ -573,8 +582,10 @@ class GbxDevice:
 		time.sleep(0.2)
 	
 	def SetBankROM(self, bank, mbc=0, bank_count=0):
-		dprint("SetBankROM(bank={:d}, mbc={:X}, bank_count={:d})".format(bank, int(mbc), bank_count))
-		if mbc == 0 and bank_count == 0: mbc = 0x19 # MBC5
+		dprint("SetBankROM(bank={:d}, mbc=0x{:X}, bank_count={:d})".format(bank, int(mbc), bank_count))
+		if mbc == 0 and bank_count == 0:
+			mbc = 0x19 # MBC5
+		
 		if mbc in (0x01, 0x02, 0x03): # MBC1
 			dprint("└[MBC1] 0x6000=0x00, 0x4000=0x{:X}, 0x2000=0x{:X}".format(bank >> 5, bank & 0x1F))
 			self.cart_write(0x6000, 0)
@@ -613,8 +624,13 @@ class GbxDevice:
 			self.cart_write(0xA001, Util.TAMA5_REG.ROM_BANK_H.value, cs=True) # ROM bank (high)
 			self.cart_write(0xA000, (bank >> 4) & 0x0F, cs=True)
 		elif mbc == 0xFF: # HuC-1
-			dprint("└[HuC-1] 0x2000=0x{:X}".format(bank & 0xFF))
+			dprint("└[HuC-1] 0x2000=0x{:X}".format(bank & 0x3F))
 			self.cart_write(0x2000, (bank & 0x3F))
+		elif mbc == 0x104: # M161
+			dprint("└[M161] RESET_MBC, 0x4000=0x{:X}".format(bank & 0x7))
+			self.set_mode(self.DEVICE_CMD['RESET_MBC'])
+			self.wait_for_ack()
+			self.cart_write(0x4000, (bank & 0x7))
 		else: # MBC2, MBC3 and others
 			dprint("└[MBCx] 0x2100=0x{:X}".format(bank & 0xFF))
 			self.cart_write(0x2100, (bank & 0xFF))
@@ -949,8 +965,11 @@ class GbxDevice:
 		if self.MODE == "DMG":
 			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
 			time.sleep(0.1)
-			self.set_mode(self.DEVICE_CMD['RESET_MBC'])
-			self.wait_for_ack()
+			# Firmware check R26+
+			if (int(self.FW[0]) >= 26):
+				self.set_mode(self.DEVICE_CMD['RESET_MBC'])
+				self.wait_for_ack()
+			# Firmware check R26+
 		
 		header = self.ReadROM(0, 0x180)
 		
@@ -1032,12 +1051,11 @@ class GbxDevice:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"A firmware update is required to access this cartridge. Please update the firmware of your GBxCart RW device to version R26 or higher.", "abortable":False})
 			return False
 		# Firmware check R26+
-		# Firmware check R27+
+		# Firmware check
 		if "agb_rom_size" in args and args["agb_rom_size"] == 64 * 1024 * 1024: # 3D Memory
-			if (int(self.FW[0]) < 27):
-				self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"A future firmware update is required to access this cartridge. Please look for updates of FlashGBX and GBxCart RW firmware.", "abortable":False})
-				return False
-		# Firmware check R27+
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"A future firmware update is required to access this cartridge. Please look out for updates of FlashGBX and GBxCart RW firmware.", "abortable":False})
+			return False
+		# Firmware check
 
 		# Enable TAMA5
 		if self.MODE == "DMG" and "mbc" in args and args["mbc"] == 0xFD:
@@ -1054,7 +1072,7 @@ class GbxDevice:
 				if lives < 0:
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The TAMA5 cartridge doesn’t seem to respond. Please try again.", "abortable":False})
 					return False
-
+		
 		# main work starts here
 		self.INFO["last_action"] = mode
 		self.FAST_READ = False
@@ -1065,6 +1083,11 @@ class GbxDevice:
 				supported_carts = list(self.SUPPORTED_CARTS['DMG'].values())
 				mbc = args["mbc"]
 				bank_count = args["rom_banks"]
+				
+				if mbc == 0x104: # M161
+					bank_count = 8
+					bank_size = 0x8000
+				
 				if fast_read_mode:
 					buffer_len = 0x4000
 					self.FAST_READ = True
@@ -1101,7 +1124,7 @@ class GbxDevice:
 				if flashcart_meta in ("RETAIL", "AUTODETECT"): flashcart_meta = False
 			else:
 				flashcart_meta = args["cart_type"]
-
+			
 			if flashcart_meta is not False and "unlock_before_rom_dump" in flashcart_meta and flashcart_meta["unlock_before_rom_dump"] is True:
 				# Unlock Flash
 				if "unlock" in flashcart_meta["commands"]:
@@ -1145,6 +1168,9 @@ class GbxDevice:
 					if mbc in (0x0B, 0x0D) and bank % 0x20 == 0: # MMM01
 						startAddr = 0
 						endAddr = bank_size
+					elif mbc == 0x104: # M161
+						startAddr = 0
+						endAddr = 0x8000
 
 					self.SetBankROM(bank, mbc)
 				
@@ -1255,8 +1281,28 @@ class GbxDevice:
 				if mbc == 0xFD: # TAMA5
 					if args["rtc"]: save_size += 0x10
 				elif mbc == 0x22: # MBC7 EEPROM
-					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Save data handling is not supported yet for this cartridge type.", "abortable":False})
-					return False
+					transfer_size = 32
+					self.cart_write(0x4000, 0x40)
+					if mode == 3: # Restore
+						self.cart_write(0xA080, 0x00) # init eeprom
+						self.cart_write(0xA080, 0x80)
+
+						self.cart_write(0xA080, 0x80) # init command
+						self.cart_write(0xA080, 0xC0)
+						self.cart_write(0xA080, 0x82)
+						self.cart_write(0xA080, 0xC2)
+
+						self.cart_write(0xA080, 0x80) # write enable command
+						self.cart_write(0xA080, 0xC0)
+						self.cart_write(0xA080, 0x80)
+						self.cart_write(0xA080, 0xC0)
+						self.cart_write(0xA080, 0x82)
+						self.cart_write(0xA080, 0xC2)
+						self.cart_write(0xA080, 0x82)
+						self.cart_write(0xA080, 0xC2)
+						for _ in range(0, 6):
+							self.cart_write(0xA080, 0x80)
+							self.cart_write(0xA080, 0xC0)
 				
 				if transfer_size >= save_size:
 					transfer_size = save_size
@@ -1305,19 +1351,18 @@ class GbxDevice:
 					bank_count = 2
 				else:
 					return
-				
+
 				# Get Save Flash Manufacturer
 				maker_id = None
 				if save_type == 6 or save_type == 7:
 					maker_id = self.ReadFlashSaveMakerID()
-					if maker_id == "ATMEL":
-						print("NOTE: For save data, this cartridge uses an ATMEL chip which is untested.")
+					if maker_id == "ATMEL" and mode == 3:
 						transfer_size = 128
 					elif maker_id == "SANYO":
 						if int(self.FW[0]) < 24:
 							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"A firmware update is required to access this cartridge. Please update the firmware of your GBxCart RW device to version R24 or higher.", "abortable":False})
 							return False
-			
+
 			# Prepare some stuff
 			if mode == 2: # Backup
 				try:
@@ -1349,7 +1394,8 @@ class GbxDevice:
 				if self.MODE == "DMG":
 					endAddr = startAddr + bank_size
 					if endAddr > (startAddr + save_size): endAddr = startAddr + save_size
-					self.SetBankRAM(bank, mbc)
+					if mbc != 0x22: # exclude MBC7
+						self.SetBankRAM(bank, mbc)
 				
 				elif self.MODE == "AGB":
 					endAddr = startAddr + min(save_size, bank_size)
@@ -1382,6 +1428,12 @@ class GbxDevice:
 						if self.MODE == "DMG":
 							if mbc == 0xFD: # TAMA5
 								buffer = self.ReadRAM_TAMA5(rtc=args["rtc"])
+							elif mbc == 0x22: # MBC7 EEPROM
+								self.set_mode(self.DEVICE_CMD["READ_EEPROM_MBC7"])
+								buffer = self.read(length=buffer_len, last=True, ask_next_bytes=False)
+								if buffer == False:
+									self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Backup failed, please try again.", "abortable":False})
+									return False
 							else:
 								buffer = self.ReadROM(currAddr, buffer_len)
 						elif self.MODE == "AGB":
@@ -1399,6 +1451,9 @@ class GbxDevice:
 						if self.MODE == "DMG":
 							if mbc == 0xFD: # TAMA5
 								self.WriteRAM_TAMA5(data, rtc=args["rtc"])
+							elif mbc == 0x22: # MBC7 EEPROM
+								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["WRITE_EEPROM_MBC7"], data)
+								self.wait_for_ack()
 							else:
 								self.gbx_flash_write_data_bytes(self.DEVICE_CMD["WRITE_RAM"], data)
 								self.wait_for_ack()
@@ -1422,7 +1477,7 @@ class GbxDevice:
 											time.sleep(0.01)
 											lives -= 1
 											if lives == 0:
-												self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Writing the flash save data failed. Please make sure you selected the correct save type.", "abortable":False})
+												self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Accessing the save data flash chip failed. Please make sure you selected the correct save type. If you are using a reproduction cartridge, check if it really is equipped with a flash chip for save data, or if it uses SRAM for save data instead.", "abortable":False})
 												return False
 										self.set_number(currAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
 									
@@ -1441,8 +1496,30 @@ class GbxDevice:
 					self.INFO["transferred"] = pos
 			
 			if self.MODE == "DMG":
+				# MBC7 EEPROM write end
+				if mode == 3 and mbc == 0x22:
+					self.cart_write(0xA080, 0x00) # init eeprom
+					self.cart_write(0xA080, 0x80)
+
+					self.cart_write(0xA080, 0x80) # init command
+					self.cart_write(0xA080, 0xC0)
+					self.cart_write(0xA080, 0x82)
+					self.cart_write(0xA080, 0xC2)
+
+					self.cart_write(0xA080, 0x80) # disable write command
+					self.cart_write(0xA080, 0xC0)
+					self.cart_write(0xA080, 0x80)
+					self.cart_write(0xA080, 0xC0)
+					self.cart_write(0xA080, 0x80)
+					self.cart_write(0xA080, 0xC0)
+					self.cart_write(0xA080, 0x80)
+					self.cart_write(0xA080, 0xC0)
+					for _ in range(0, 6):
+						self.cart_write(0xA080, 0x80)
+						self.cart_write(0xA080, 0xC0)
+					
 				# RTC for MBC3+RTC+SRAM+BATTERY
-				if mbc == 0x10 and args["rtc"]:
+				elif mbc == 0x10 and args["rtc"]:
 					buffer = bytearray()
 					self.cart_write(0x6000, 0)
 					self.cart_write(0x6000, 1)
@@ -1622,6 +1699,11 @@ class GbxDevice:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Support for this flash cartridge type has been temporarily dropped with GBxCart RW firmware version R25. You can either downgrade to firmware version R24, or look for a newer firmware and FlashGBX version.", "abortable":False})
 			return False
 		# Firmware check R25+
+		# Firmware check
+		if self.MODE == "AGB" and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] == [['SA', 0x60], ['SA', 0xD0], ['SA', 0xEA], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0xD0], ['SA', 0xFF]]:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"A future firmware update is required to access this cartridge. Please look out for updates of FlashGBX and GBxCart RW firmware.", "abortable":False})
+			return False
+		# Firmware check
 		
 		# Set Voltage
 		if voltage == 3.3:
@@ -1937,7 +2019,7 @@ class GbxDevice:
 							currAddr += 256
 							pos += 256
 						
-						# 256L30B etc.
+						# 256L30B, M36L0R etc.
 						elif flashcart_meta["commands"]["buffer_write"] == [['SA', 0x60], ['SA', 0xD0], ['SA', 0xE8], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0xD0], ['SA', 0xFF]]:
 							if "single_write_7FC0_to_7FFF" in flashcart_meta and flashcart_meta["single_write_7FC0_to_7FFF"] and int(currAddr % 0x8000) in range(0x7FC0, 0x7FFF):
 								for i in range(0, len(flashcart_meta["commands"]["single_write"])):
@@ -2025,6 +2107,24 @@ class GbxDevice:
 								currAddr += 256
 								pos += 256
 						
+						# 4050M0Y0Q0 etc.
+						elif flashcart_meta["commands"]["buffer_write"] == [['SA', 0x60], ['SA', 0xD0], ['SA', 0xEA], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0xD0], ['SA', 0xFF]]:
+							data = data_import[pos:pos+1024]
+							if data == bytearray([0xFF] * len(data)):
+								skipping = True
+							else:
+								if skipping:
+									self.set_number(currAddr / 2, self.DEVICE_CMD["SET_START_ADDRESS"])
+									skipping = False
+								
+								for i in range(0, 4):
+									buffer = data[256*i:256*i+256]
+									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_INTEL_1024BYTE_4050"], buffer)
+									ack = self.wait_for_ack()
+								self.write('0')
+							currAddr += 1024
+							pos += 1024
+						
 						else: # TODO
 							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not implemented yet.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							return False
@@ -2096,7 +2196,7 @@ class GbxDevice:
 								ack = self.wait_for_ack()
 							currAddr += 64
 							pos += 64
-						
+
 						else: # super slow -- for testing purposes only!
 							for i in range(0, len(flashcart_meta["commands"]["single_write"])):
 								addr = flashcart_meta["commands"]["single_write"][i][0]
@@ -2104,6 +2204,24 @@ class GbxDevice:
 								if addr == "PA": addr = int(currAddr)
 								if data == "PD": data = struct.unpack('H', data_import[pos:pos+2])[0]
 								self.gbx_flash_write_address_byte(addr, data)
+
+							if flashcart_meta["commands"]["single_write_wait_for"][i][0] != None:
+								addr = flashcart_meta["commands"]["single_write_wait_for"][i][0]
+								data = flashcart_meta["commands"]["single_write_wait_for"][i][1]
+								if addr == "SA": addr = currAddr
+								time.sleep(0.05)
+								timeout = 100
+								while True:
+									wait_for = self.ReadROM(currAddr, 64)
+									wait_for = ((wait_for[1] << 8 | wait_for[0]) & flashcart_meta["commands"]["single_write_wait_for"][i][2])
+									print("SW_SR {:X}=={:X}?".format(wait_for, data))
+									time.sleep(0.1)
+									timeout -= 1
+									if timeout < 1:
+										self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Writing a single word timed out. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.", "abortable":False})
+										return False
+									if wait_for == data: break
+
 							currAddr += 2
 							pos += 2
 							data = data_import[pos:pos+2]
@@ -2112,7 +2230,11 @@ class GbxDevice:
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t write {:d} bytes to flash at position 0x{:X}. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(len(data), pos-len(data)), "abortable":False})
 					return False
 				else:
-					self.SetProgress({"action":"WRITE", "bytes_added":len(data), "skipping":skipping})
+					if isinstance(data, int) or data is None or data == b'':
+						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"No flash commands available for this cartridge type. Please make sure that the selected cartridge type and settings are correct. ({:s})".format(str(data)), "abortable":False})
+						return False
+					else:
+						self.SetProgress({"action":"WRITE", "bytes_added":len(data), "skipping":skipping})
 		
 		self.SetProgress({"action":"UPDATE_POS", "pos":pos})
 		time.sleep(0.5)

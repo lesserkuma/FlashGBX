@@ -8,7 +8,7 @@
 	],
 	"voltage":3.3,
 	"flash_size":0x1000000,
-	"chip_erase_timeout":80,
+	"chip_erase_timeout":100,
 	"wait_read_status_register":true,
 	"reset_every":0x400000,
 	"commands":{

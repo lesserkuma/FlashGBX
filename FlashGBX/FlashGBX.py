@@ -161,6 +161,8 @@ def main(portableMode=False):
 		try:
 			from . import FlashGBX_GUI
 			app = FlashGBX_GUI.FlashGBX_GUI(args)
+		except ModuleNotFoundError:
+			app = None
 		except:
 			exc = traceback.format_exc()
 			app = None
@@ -168,9 +170,9 @@ def main(portableMode=False):
 		if app is None:
 			from . import FlashGBX_CLI
 			if args["argparsed"].action is None:
-				parser.print_help()
-				print("\n\n{:s}ERROR: GUI mode couldn’t be launched, but the application can be run in CLI mode.\n       Command line switches are explained above.{:s}\n".format(Util.ANSI.RED, Util.ANSI.RESET))
 				if exc is not None: print("{:s}{:s}{:s}".format(Util.ANSI.YELLOW, exc, Util.ANSI.RESET))
+				parser.print_help()
+				print("\n\n{:s}NOTE: GUI mode couldn’t be launched, but the application can be run in CLI mode.\n      Optional command line switches are explained above.{:s}\n".format(Util.ANSI.RED, Util.ANSI.RESET))
 			
 			print("Now running in CLI mode.\n")
 			app = FlashGBX_CLI.FlashGBX_CLI(args)

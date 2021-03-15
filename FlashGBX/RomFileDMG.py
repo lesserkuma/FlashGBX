@@ -9,8 +9,7 @@ class RomFileDMG:
 	
 	def __init__(self, file=None):
 		if isinstance(file, str):
-			self.ROMFILE_PATH = file
-			if self.ROMFILE_PATH != None: self.Load()
+			self.Open(file)
 		elif isinstance(file, bytearray):
 			self.ROMFILE = file
 	
