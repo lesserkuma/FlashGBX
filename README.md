@@ -95,6 +95,7 @@ by Lesserkuma
   - SD007_48BALL_64M_V5 with 36VF3204
   - SD007_48BALL_64M_V6 with 36VF3204
   - SD007_48BALL_64M_V6 with 29DL163BD-90
+  - SD007_48BALL_64M_V8 with M29W160ET
   - SD007_BV5_DRV with M29W320DT
   - SD007_BV5_DRV with S29GL032M90TFIR4
   - SD007_BV5_V2 with HY29LV160TT
@@ -353,3 +354,7 @@ The author would like to thank the following very kind people for their help and
 - Added support for official cartridges with the M161 memory bank controller; tested with “Mani 4 in 1: Tetris + Alleyway + Yakuman + Tennis” (DMG-601CHN) (requires GBxCart RW firmware R26 or newer)
 - Added support for B104 with MSP55LV128 *(thanks Zelante)*
 - Added save data backup and restore support for official cartridges with ATMEL AT29LV512 flash chips; tested with a copy of “Mario Kart: Super Circuit” (AGB-AMKP-EUR)
+
+### v1.4.2 (released 2021-03-17)
+- Confirmed support for SD007_48BALL_64M_V8 with M29W160ET *(thanks marv17)*
+- Fixed minor bugs

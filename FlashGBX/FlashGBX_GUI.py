@@ -229,7 +229,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), config_ret[i][1], QtWidgets.QMessageBox.Ok)
 
 		QtCore.QTimer.singleShot(1, lambda: [ self.UpdateCheck(), self.FindDevices() ])
-	
+
 	def GuiCreateGroupBoxDMGCartInfo(self):
 		self.grpDMGCartridgeInfo = QtWidgets.QGroupBox("Game Boy Cartridge Information")
 		self.grpDMGCartridgeInfo.setMinimumWidth(280)
@@ -699,7 +699,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						msgbox.exec()
 						dontShowAgain = cb.isChecked()
 				elif "dmg-mmsa-jpn" in self.STATUS["cart_type"] and "operation" in self.STATUS and self.STATUS["operation"] == "GBMEMORY_INITIAL_DUMP":
-					# todo
 					self.STATUS["operation"] = None
 				elif "dmg-mmsa-jpn" in self.STATUS["cart_type"]:
 					self.lblHeaderROMChecksumResult.setText("0x{:04X}".format(self.CONN.INFO["rom_checksum_calc"]))
@@ -887,7 +886,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					if cart_types[1][index]["flash_size"] == (Util.DMG_Header_ROM_Sizes_Flasher_Map[i] * 0x4000):
 						self.cmbHeaderROMSizeResult.setCurrentIndex(i)
 				self.STATUS["cart_type"] = cart_types[1][index]
-		
+			
 		elif self.CONN.GetMode() == "AGB":
 			cart_types = self.CONN.GetSupportedCartridgesAGB()
 			if cart_types[1][index] == "AUTODETECT": # special keyword

@@ -2230,7 +2230,8 @@ class GbxDevice:
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t write {:d} bytes to flash at position 0x{:X}. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(len(data), pos-len(data)), "abortable":False})
 					return False
 				else:
-					if isinstance(data, int) or data is None or data == b'':
+					if (skipping is False) and (isinstance(data, int) or data is None or data == b''):
+						print(skipping, data)
 						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"No flash commands available for this cartridge type. Please make sure that the selected cartridge type and settings are correct. ({:s})".format(str(data)), "abortable":False})
 						return False
 					else:
