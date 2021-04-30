@@ -11,6 +11,7 @@
 	"chip_erase_timeout":100,
 	"wait_read_status_register":true,
 	"reset_every":0x400000,
+	"command_set":"SHARP",
 	"commands":{
 		"reset":[
 			[ 0, 0xFF ]
@@ -50,12 +51,12 @@
 			[ 0xC00000, 0x80, 0x80 ]
 		],
 		"single_write":[
-			[ 0, 0x70 ],
-			[ 0, 0x10 ],
+			[ "PA", 0x70 ],
+			[ "PA", 0x10 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[
-			[ 0, 0x80, 0x80 ],
+			[ "PA", 0x80, 0x80 ],
 			[ null, null, null ],
 			[ null, null, null ]
 		]

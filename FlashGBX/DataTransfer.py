@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-# ＵＴＦ－８
+# FlashGBX
+# Author: Lesserkuma (github.com/lesserkuma)
+
 import sys, traceback
 import PySide2
 

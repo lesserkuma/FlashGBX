@@ -12,6 +12,7 @@
 	"first_bank":1,
 	"write_pin":"WR",
 	"chip_erase_timeout":70,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]

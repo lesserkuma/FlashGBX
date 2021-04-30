@@ -9,6 +9,8 @@
 	"voltage":3.3,
 	"flash_size":0x2000000,
 	"sector_size":0x40000,
+	"buffer_size":64,
+	"command_set":"INTEL",
 	"commands":{
 		"unlock":[
 			[ 0x130ECA8, 0x5354, 1 ],
@@ -22,7 +24,7 @@
 			[ 0x00268A0, 0x1234, 1 ],
 			[ 0x002468A, 0xABCD, 5 ],
 			[ 0x130ECA8, 0x5354, 1 ],
-			[ 0x1E2468A, 0x9413, 1 ]			
+			[ 0x1E2468A, 0x9413, 1 ]
 		],
 		"reset":[
 			[ 0, 0xFF ],

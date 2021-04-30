@@ -1,10 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"GB-M968 with M29W160EB"
+		"GB-M968 with M29W160EB",
+		"GB-M968 with 29LV160DB"
 	],
 	"flash_ids":[
-		[ 0x20, 0x20, 0x49, 0x49 ]
+		[ 0x20, 0x20, 0x49, 0x49 ],
+		[ 0xC2, 0xC2, 0xC4, 0xC4 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x200000,
@@ -18,9 +20,13 @@
 		[0x10000, 31]
 	],
 	"chip_erase_timeout":30,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
+		],
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
 		],
 		"read_identifier":[
 			[ 0xAAA, 0xAA ],

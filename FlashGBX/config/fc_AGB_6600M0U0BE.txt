@@ -1,18 +1,18 @@
 {
 	"type":"AGB",
 	"names":[
-		"GE28F128W30 with 128W30B"
+		"100BS6600_48BALL_V4 with 6600M0U0BE"
 	],
 	"flash_ids":[
-		[ 0x8A, 0x00, 0x57, 0x88 ]
+		[ 0x8A, 0x00, 0xB0, 0x88 ]
 	],
 	"voltage":3.3,
-	"flash_size":0x1000000,
-	"sector_size":[
-		[0x2000, 8],
-		[0x10000, 255]
-	],
-	"reset_every":0x80000,
+	"flash_size":0x10000000,
+	"flash_bank_size":0x2000000,
+	"flash_bank_select_type":1,
+	"sector_size":0x40000,
+	"reset_every":0x400000,
+	"buffer_size":1024,
 	"command_set":"INTEL",
 	"commands":{
 		"reset":[
@@ -32,16 +32,20 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0xFFFF ]
+			[ "SA", 0x80, 0x80 ]
 		],
-		"single_write":[
-			[ 0, 0x70 ],
-			[ 0, 0x10 ],
-			[ "PA", "PD" ]
+		"buffer_write":[
+			[ "SA", 0xEA ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
 		],
-		"single_write_wait_for":[
-			[ 0, 0x80, 0x80 ],
+		"buffer_write_wait_for":[
+			[ "SA", 0x80, 0x80 ],
 			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ],
 			[ null, null, null ]
 		]
 	}

@@ -11,6 +11,8 @@
 	"sector_size":0x20000,
 	"chip_erase_timeout":300,
 	"single_write_first_256_bytes":true,
+	"rtc":true,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
@@ -20,21 +22,8 @@
 			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x90 ]
 		],
-		"chip_erase":[
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ 0xAAA, 0x10 ]
-		],
-		"chip_erase_wait_for":[
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ 0, 0xFFFF, 0xFFFF ]
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
 		],
 		"sector_erase":[
 			[ 0xAAA, 0xAA ],
@@ -51,6 +40,22 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ "SA", 0xFFFF, 0xFFFF ]
+		],
+		"chip_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFFFF, 0xFFFF ]
 		],
 		"buffer_write":[
 			[ 0xAAA, 0xAA ],

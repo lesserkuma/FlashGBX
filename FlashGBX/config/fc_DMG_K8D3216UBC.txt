@@ -1,10 +1,10 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_TSOP_48BALL with K8D3216UTC"
+		"SD007_TSOP_48BALL with K8D3216UBC"
 	],
 	"flash_ids":[
-		[ 0xEC, 0xEC, 0xA0, 0xA0 ]
+		[ 0xEC, 0xEC, 0xA1, 0xA1 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x400000,
@@ -12,8 +12,8 @@
 	"first_bank":1,
 	"write_pin":"WR",
 	"sector_size":[
-		[0x10000, 63],
-		[0x02000, 8]
+		[0x02000, 8],
+		[0x10000, 63]
 	],
 	"chip_erase_timeout":70,
 	"command_set":"AMD",

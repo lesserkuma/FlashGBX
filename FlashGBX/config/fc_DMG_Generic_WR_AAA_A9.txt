@@ -1,21 +1,14 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_TSOP_48BALL with K8D3216UTC"
-	],
-	"flash_ids":[
-		[ 0xEC, 0xEC, 0xA0, 0xA0 ]
+		"Generic Flash Cartridge (WR/AAA/A9)"
 	],
 	"voltage":3.3,
-	"flash_size":0x400000,
+	"voltage_variants":true,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"sector_size":[
-		[0x10000, 63],
-		[0x02000, 8]
-	],
-	"chip_erase_timeout":70,
+	"chip_erase_timeout":120,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -25,6 +18,9 @@
 			[ 0xAAA, 0xA9 ],
 			[ 0x555, 0x56 ],
 			[ 0xAAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0xAAA, 0x98 ]
 		],
 		"chip_erase":[
 			[ 0xAAA, 0xA9 ],
@@ -41,22 +37,6 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ 0, 0xFF, 0xFF ]
-		],
-		"sector_erase":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ "SA", 0x30 ]
-		],
-		"sector_erase_wait_for":[
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ "SA", 0xFF, 0xFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xA9 ],

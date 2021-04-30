@@ -20,6 +20,7 @@
 		[0x10000, 63]
 	],
 	"chip_erase_timeout":60,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0x4000, 0xF0 ]
@@ -28,6 +29,9 @@
 			[ 0x4AAA, 0xA9 ],
 			[ 0x4555, 0x56 ],
 			[ 0x4AAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0x4AAA, 0x98 ]
 		],
 		"chip_erase":[
 			[ 0x4AAA, 0xA9 ],
@@ -59,7 +63,23 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ 0, 0xFF, 0xFF ]
+			[ "SA", 0xFF, 0xFF ]
+		],
+		"buffer_write":[
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ "SA", 0x26 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0x2A ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", "PD", 0xFFFF ]
 		],
 		"single_write":[
 			[ 0x4AAA, 0xA9 ],

@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# FlashGBX
+# Author: Lesserkuma (github.com/lesserkuma)
+
 from PIL import Image, ImageDraw
 from PIL.PngImagePlugin import PngInfo
 import os, hashlib

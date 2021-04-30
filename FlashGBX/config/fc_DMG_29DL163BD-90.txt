@@ -18,6 +18,7 @@
 		[0x10000, 31]
 	],
 	"chip_erase_timeout":120,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
@@ -57,7 +58,7 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ 0, 0xFF, 0xFF ]
+			[ "SA", 0xFF, 0xFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xA9 ],

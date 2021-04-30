@@ -3,14 +3,12 @@
 	"names":[
 		"SD007_BV5_V3 with AM29LV160MB",
 		"SD007_TSOP_48BALL with L160DB12VI",
-		"SD007_TSOP_48BALL with AM29LV160DB",
-		"SD007_TSOP_48BALL with AM29LV160DT"
+		"SD007_TSOP_48BALL with AM29LV160DB"
 	],
 	"flash_ids":[
 		[ 0x02, 0x02, 0x4A, 0x4A ],
 		[ 0x02, 0x02, 0x4A, 0x4A ],
-		[ 0x02, 0x02, 0x4A, 0x4A ],
-		[ 0x02, 0x02, 0xC4, 0xC4 ]
+		[ 0x02, 0x02, 0x4A, 0x4A ]
 	],
 	"voltage":5,
 	"flash_size":0x200000,
@@ -18,6 +16,7 @@
 	"first_bank":1,
 	"write_pin":"WR",
 	"chip_erase_timeout":70,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]

@@ -1,26 +1,30 @@
 # -*- coding: utf-8 -*-
-# ＵＴＦ－８
-import math, time, datetime, copy, configparser, threading, statistics, os, platform
+# FlashGBX
+# Author: Lesserkuma (github.com/lesserkuma)
+
+import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback, io
 from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "1.4.2"
+VERSION_PEP440 = "2.0"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
-AGB_Header_ROM_Sizes = [ "4 MB", "8 MB", "16 MB", "32 MB", "64 MB (GBA Video)" ]
-AGB_Header_ROM_Sizes_Map = [ 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000 ]
-AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "512K FLASH (64 KB)", "1M FLASH (128 KB)" ]
+AGB_Header_ROM_Sizes = [ "4 MB", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB", "256 MB" ]
+AGB_Header_ROM_Sizes_Map = [ 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
+AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "512K FLASH (64 KB)", "1M FLASH (128 KB)", "8M DACS (1008 KB)" ]
+AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 65536, 131072, 1032192 ]
 AGB_Global_CRC32 = 0
+AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
 
-DMG_Header_Features = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+FLASH+SRAM+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'CAMERA+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM' }
+DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM' }
 DMG_Header_ROM_Sizes = [ "32 KB", "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 2, 4, 8, 16, 32, 64, 128, 256, 512 ] # Number of ROM banks
-DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KB)", "64K SRAM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "2K MBC7 EEPROM (256 Bytes)", "4K MBC7 EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)" ]
-DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x04, 0x101, 0x102, 0x103 ]
-DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x100, 0x200, 0x20 ] # RAM size in bytes
+DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KB)", "64K SRAM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "MBC6 SRAM+FLASH (1.03 MB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)" ]
+DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103 ]
+DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20 ] # RAM size in bytes
 DMG_Header_SGB = { 0x00:'No support', 0x03:'Supported' }
 DMG_Header_CGB = { 0x00:'No support', 0x80:'Supported', 0xC0:'Required' }
 
@@ -29,60 +33,74 @@ class ANSI:
 	RED = '\033[91m'
 	GREEN = '\033[92m'
 	YELLOW = '\033[33m'
+	DARK_GRAY = '\033[90m'
 	RESET = '\033[0m'
 	CLEAR_LINE = '\033[2K'
 
 class IniSettings():
 	FILENAME = ""
 	SETTINGS = None
-	def __init__(self, ini_file):
-		try:
-			if not os.path.isdir(os.path.dirname(ini_file)):
-				os.makedirs(os.path.dirname(ini_file))
-			if os.path.exists(ini_file):
-				with open(ini_file, "a+") as f: f.close()
-			else:
-				with open(ini_file, "w+") as f: f.close()
-		except:
-			print("Error accessing the configuration directory or settings file.")
-			return
+	MAIN_SECTION = "General"
+	def __init__(self, path="", ini="", main_section="General"):
+		if path != "":
+			try:
+				if not os.path.isdir(os.path.dirname(path)):
+					os.makedirs(os.path.dirname(path))
+				if os.path.exists(path):
+					with open(path, "a+") as f: f.close()
+				else:
+					with open(path, "w+") as f: f.close()
+			except:
+				print("Error accessing the configuration directory or settings file.")
+				return
+			self.FILENAME = path
+			self.SETTINGS = configparser.ConfigParser()
+			self.SETTINGS.optionxform = str
+			self.Reload()
 		
-		self.FILENAME = ini_file
-		self.SETTINGS = configparser.ConfigParser()
-		self.SETTINGS.optionxform = str
-		self.Reload()
+		else:
+			#buf = io.StringIO(ini)
+			self.FILENAME = False
+			self.SETTINGS = configparser.ConfigParser()
+			self.SETTINGS.read_string(ini)
+			self.SETTINGS.optionxform = str
 		
+		self.MAIN_SECTION = main_section
+	
 	def Reload(self):
 		if self.SETTINGS is None: return
-		with open(self.FILENAME, "r", encoding="utf-8") as f:
-			self.SETTINGS.read_file(f)
+		if self.FILENAME is not False:
+			with open(self.FILENAME, "r", encoding="utf-8") as f:
+				self.SETTINGS.read_file(f)
 		if len(self.SETTINGS.sections()) == 0:
-			self.SETTINGS.add_section("General")
+			self.SETTINGS.add_section(self.MAIN_SECTION)
 	
 	def value(self, key, default=None): return self.GetValue(key, default)
 	def GetValue(self, key, default=None):
 		if self.SETTINGS is None: return None
 		self.Reload()
-		if key not in self.SETTINGS["General"]:
+		if key not in self.SETTINGS[self.MAIN_SECTION]:
 			if default is not None: self.SetValue(key, default)
 			return default
-		return (self.SETTINGS["General"][key])
+		return (self.SETTINGS[self.MAIN_SECTION][key])
 	
 	def setValue(self, key, value): self.SetValue(key, value)
 	def SetValue(self, key, value):
 		if self.SETTINGS is None: return None
 		self.Reload()
-		self.SETTINGS["General"][key] = value
+		self.SETTINGS[self.MAIN_SECTION][key] = value
 		dprint("Updating settings:", key, "=", value)
-		with open(self.FILENAME, "w", encoding="utf-8") as f:
-			self.SETTINGS.write(f)
+		if self.FILENAME is not False:
+			with open(self.FILENAME, "w", encoding="utf-8") as f:
+				self.SETTINGS.write(f)
 	
 	def clear(self): self.Clear()
 	def Clear(self):
 		if self.SETTINGS is None: return None
 		self.SETTINGS.clear()
-		with open(self.FILENAME, "w", encoding="utf-8") as f:
-			self.SETTINGS.write(f)
+		if self.FILENAME is not False:
+			with open(self.FILENAME, "w", encoding="utf-8") as f:
+				self.SETTINGS.write(f)
 
 class Progress():
 	MUTEX = threading.Lock()
@@ -122,7 +140,7 @@ class Progress():
 				self.UPDATER(args)
 				self.PROGRESS = {}
 			
-			elif args["action"] in ("ERASE", "SECTOR_ERASE"):
+			elif args["action"] in ("ERASE", "SECTOR_ERASE", "UNLOCK"):
 				if "time_start" in self.PROGRESS:
 					args["time_elapsed"] = now - self.PROGRESS["time_start"]
 				elif "time_start" in args:
@@ -191,9 +209,11 @@ class Progress():
 				self.PROGRESS["time_last_emit"] = now
 				self.PROGRESS["time_last_update_speed"] = now
 				self.PROGRESS["time_left"] = 0
+				if self.PROGRESS["time_elapsed"] == 0: self.PROGRESS["time_elapsed"] = 0.001
 				self.PROGRESS["speed"] = (self.PROGRESS["size"] / self.PROGRESS["time_elapsed"]) / 1024
 				self.PROGRESS["bytes_last_emit"] = self.PROGRESS["size"]
-				if "verified" in args: self.PROGRESS["verified"] = (args["verified"] == True)
+				if "verified" in args:
+					self.PROGRESS["verified"] = (args["verified"] == True)
 				
 				if self.PROGRESS["speed"] > self.PROGRESS["size"] / 1024:
 					self.PROGRESS["speed"] = self.PROGRESS["size"] / 1024
@@ -283,6 +303,11 @@ def bitswap(n, s):
 		n ^= (1 << p)
 		n ^= (1 << q)
 	return n
+
+def DecodeBCD(value):
+	return (((value) & 0x0F) + (((value) >> 4) * 10))
+def EncodeBCD(value):
+	return math.floor(value / 10) << 4 | value % 10
 
 def ParseCFI(buffer):
 	buffer = copy.copy(buffer)
@@ -380,6 +405,26 @@ def ParseCFI(buffer):
 	
 	return info
 
+def validate_datetime_format(string, format):
+    try:
+        if string != datetime.datetime.strptime(string, format).strftime(format):
+            raise ValueError
+        return True
+    except ValueError:
+        return False
+
+def convert_full_half(s, reverse=False):
+	full2half = dict((i + 0xFEE0, i) for i in range(0x21, 0x7F))
+	full2half[0x3000] = 0x20
+	half2full = dict((i, i + 0xFEE0) for i in range(0x21, 0x7F))
+	half2full[0x20] = 0x3000
+	if reverse is False:
+		return s.translate(full2half)
+	else:
+		return s.translate(half2full)
+
 def dprint(*args, **kwargs):
 	if DEBUG:
-		print("{:s}{:s} {:s}".format(ANSI.CLEAR_LINE, datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]"), " ".join(map(str, args)), **kwargs))
+		stack = traceback.extract_stack()
+		stack = stack[len(stack)-2]
+		print("{:s}[{:s}] [{:s}:{:d}] {:s}(): {:s}".format(ANSI.CLEAR_LINE, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), stack.filename, stack.lineno, stack.name, " ".join(map(str, args)), **kwargs))

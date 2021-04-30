@@ -13,6 +13,7 @@
 	"flash_commands_on_bank_1":true,
 	"write_pin":"AUDIO",
 	"chip_erase_timeout":30,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]

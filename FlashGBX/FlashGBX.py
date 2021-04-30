@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-# ＵＴＦ－８
+# FlashGBX
+# Author: Lesserkuma (github.com/lesserkuma)
+
 import sys, os, glob, re, json, zlib, argparse, zipfile, traceback, platform, datetime
 from . import Util
 
 def ReadConfigFiles(args):
 	reset = args['argparsed'].reset
-	settings = Util.IniSettings(ini_file=args["config_path"] + "/settings.ini")
+	settings = Util.IniSettings(path=args["config_path"] + "/settings.ini")
 	config_version = settings.value("ConfigVersion")
 	if not os.path.exists(args["config_path"]): os.makedirs(args["config_path"])
 	fc_files = glob.glob("{0:s}/fc_*.txt".format(args["config_path"]))
@@ -31,7 +33,7 @@ def LoadConfig(args):
 	(config_version, fc_files) = ReadConfigFiles(args=args)
 	if config_version != Util.VERSION:
 		# Rename old files that have since been replaced/renamed/merged
-		deprecated_files = [ "fc_AGB_M36L0R705.txt", "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt" ]
+		deprecated_files = [ "fc_AGB_M36L0R705.txt", "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt" ]
 		for file in deprecated_files:
 			if os.path.exists(config_path + "/" + file):
 				os.rename(config_path + "/" + file, config_path + "/" + file + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".bak")
@@ -118,7 +120,7 @@ def main(portableMode=False):
 
 	ap_cli1 = parser.add_argument_group('main command line interface arguments')
 	ap_cli1.add_argument("--mode", choices=["dmg", "agb"], type=str.lower, default=None, help="set cartridge mode to \"dmg\" (Game Boy) or \"agb\" (Game Boy Advance)")
-	ap_cli1.add_argument("--action", choices=["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "debug-probe-save"], type=str.lower, default=None, help="select program action")
+	ap_cli1.add_argument("--action", choices=["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "debug-test-save"], type=str.lower, default=None, help="select program action")
 	ap_cli1.add_argument("--overwrite", action="store_true", help="overwrite without asking if target file already exists")
 	ap_cli1.add_argument("path", nargs="?", default="auto", help="target or source file path (optional when reading, required when writing)")
 	
@@ -127,7 +129,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--dmg-mbc", choices=["auto", "1", "2", "3", "5", "6", "7"], type=str.lower, default="auto", help="set memory bank controller type of Game Boy cartridge")
 	ap_cli2.add_argument("--dmg-savesize", choices=["auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5"], type=str.lower, default="auto", help="set size of Game Boy cartridge save data")
 	ap_cli2.add_argument("--agb-romsize", choices=["auto", "4mb", "8mb", "16mb", "32mb", "64mb"], type=str.lower, default="auto", help="set size of Game Boy Advance cartridge ROM data")
-	ap_cli2.add_argument("--agb-savetype", choices=["auto", "eeprom4k", "eeprom64k", "sram256k", "sram512k", "sram1m", "flash512k", "flash1m"], type=str.lower, default="auto", help="set type of Game Boy cartridge save data")
+	ap_cli2.add_argument("--agb-savetype", choices=["auto", "eeprom4k", "eeprom64k", "sram256k", "sram512k", "sram1m", "flash512k", "flash1m", "dacs8m"], type=str.lower, default="auto", help="set type of Game Boy cartridge save data")
 	ap_cli2.add_argument("--store-rtc", action="store_true", help="store RTC register values if supported")
 	ap_cli2.add_argument("--ignore-bad-header", action="store_true", help="don’t stop if invalid data found in cartridge header data")
 	ap_cli2.add_argument("--fast-read-mode", action="store_true", help="enable experimental fast read mode for GBxCart RW v1.3")

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-# ＵＴＦ－８
-import hashlib, re, sys, string
+# FlashGBX
+# Author: Lesserkuma (github.com/lesserkuma)
+
+import hashlib, re, sys, string, datetime
 from . import Util
 
 class RomFileDMG:
@@ -19,7 +21,7 @@ class RomFileDMG:
 	
 	def Load(self):
 		with open(self.ROMFILE_PATH, "rb") as f:
-			self.ROMFILE = bytearray(f.read())
+			self.ROMFILE = bytearray(f.read(0x1000))
 	
 	def CalcChecksumHeader(self, fix=False):
 		buffer = self.ROMFILE
@@ -101,6 +103,7 @@ class RomFileDMG:
 		# GB Memory
 		if data["features_raw"] == 0x19 and data["game_title"] == "NP M-MENU MENU" and data["header_checksum"] == 0xD3:
 			data["features_raw"] = 0x105
+			data["ram_size_raw"] = 0x04
 		
 		# M161 (Mani 4 in 1)
 		elif data["features_raw"] == 0x10 and data["game_title"] == "TETRIS SET" and data["header_checksum"] == 0x3F:
@@ -113,8 +116,8 @@ class RomFileDMG:
 		data["features_raw"] == 0x11 and data["game_title"] == "RTYPE 2 SET" and data["header_checksum"] == 0x32:
 			data["features_raw"] = 0x0B
 
-		if data["features_raw"] in Util.DMG_Header_Features:
-			data["features"] = Util.DMG_Header_Features[data["features_raw"]]
+		if data["features_raw"] in Util.DMG_Header_Mapper:
+			data["features"] = Util.DMG_Header_Mapper[data["features_raw"]]
 		elif data["logo_correct"]:
 			print("{:s}WARNING: Unknown memory bank controller type 0x{:02X}{:s}".format(Util.ANSI.YELLOW, data["features_raw"], Util.ANSI.RESET))
 

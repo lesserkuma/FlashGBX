@@ -14,10 +14,12 @@
 		[0x08000, 4],
 		[0x20000, 255]
 	],
-	"single_write_7FC0_to_7FFF":true,
 	"reset_every":0x200000,
+	"single_write_7FC0_to_7FFF":true,
+	"command_set":"INTEL",
 	"commands":{
 		"reset":[
+			[ 0, 0x50 ],
 			[ 0, 0xFF ]
 		],
 		"read_identifier":[
@@ -33,11 +35,9 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ]
+			[ "SA", 0x80, 0xFFFF ]
 		],
 		"buffer_write":[
-			[ "SA", 0x60 ],
-			[ "SA", 0xD0 ],
 			[ "SA", 0xE8 ],
 			[ "SA", "BS" ],
 			[ "PA", "PD" ],
@@ -45,21 +45,21 @@
 			[ "SA", 0xFF ]
 		],
 		"buffer_write_wait_for":[
+			[ "SA", 0x80, 0xFFFF ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ],
+			[ "SA", 0x80, 0xFFFF ],
 			[ null, null, null ]
 		],
 		"single_write":[
-			[ "PA", 0x40 ],
+			[ 0, 0x70 ],
+			[ 0, 0x10 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ]
+			[ null, null, null ]
 		]
 	}
 }

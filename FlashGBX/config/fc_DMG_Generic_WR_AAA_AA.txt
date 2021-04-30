@@ -1,37 +1,34 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with AT49F040 @ WR"
+		"Generic Flash Cartridge (WR/AAA/AA)"
 	],
-	"flash_ids":[
-		[ 0x1F, 0x13, 0xFE, 0xFF ]
-	],
-	"voltage":5,
-	"flash_size":0x8000,
+	"voltage":3.3,
+	"voltage_variants":true,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":120,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0x5555, 0xAA ],
-			[ 0x2AAA, 0x55 ],
-			[ 0x5555, 0x90 ]
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x90 ]
 		],
 		"read_cfi":[
-			[ 0x5555, 0x98 ]
+			[ 0xAAA, 0x98 ]
 		],
 		"chip_erase":[
-			[ 0x5555, 0xAA ],
-			[ 0x2AAA, 0x55 ],
-			[ 0x5555, 0x80 ],
-			[ 0x5555, 0xAA ],
-			[ 0x2AAA, 0x55 ],
-			[ 0x5555, 0x10 ]
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
 		],
 		"chip_erase_wait_for":[
 			[ null, null, null ],
@@ -42,9 +39,9 @@
 			[ 0, 0xFF, 0xFF ]
 		],
 		"single_write":[
-			[ 0x5555, 0xAA ],
-			[ 0x2AAA, 0x55 ],
-			[ 0x5555, 0xA0 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA0 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[

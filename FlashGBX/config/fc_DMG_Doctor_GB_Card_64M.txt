@@ -14,6 +14,8 @@
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"AUDIO",
+	"buffer_size":32,
+	"command_set":"INTEL",
 	"commands":{
 		"reset":[
 			[ 0, 0xFF ]
@@ -33,13 +35,25 @@
 			[ "SA", 0xE8 ],
 			[ "SA", "BS" ],
 			[ "PA", "PD" ],
-			[ "SA", 0xD0 ]
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
 		],
 		"buffer_write_wait_for":[
 			[ "SA", 0x80, 0xFF ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0xFF ]
+			[ "SA", 0x80, 0xFF ],
+			[ null, null, null ]
+		],
+		"single_write":[
+			[ "PA", 0x70 ],
+			[ "PA", 0x10 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ]
 		]
 	}
 }

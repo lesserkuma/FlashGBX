@@ -12,8 +12,10 @@
 		[0x2000, 8],
 		[0x10000, 127]
 	],
+	"command_set":"INTEL",
 	"commands":{
 		"reset":[
+			[ 0, 0x50 ],
 			[ 0, 0xFF ]
 		],
 		"read_identifier":[
@@ -29,15 +31,17 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ]
+			[ "SA", 0x80, 0xFFFF ]
 		],
 		"single_write":[
-			[ "PA", 0x40 ],
+			[ 0, 0x70 ],
+			[ 0, 0x10 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ]
+			[ null, null, null ]
 		]
 	}
 }

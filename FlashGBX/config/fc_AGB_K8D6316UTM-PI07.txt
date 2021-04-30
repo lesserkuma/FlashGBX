@@ -12,6 +12,7 @@
 		[0x10000, 127],
 		[0x2000, 8]
 	],
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
@@ -20,6 +21,9 @@
 			[ 0xAAA, 0xA9 ],
 			[ 0x555, 0x56 ],
 			[ 0xAAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
 		],
 		"sector_erase":[
 			[ 0xAAA, 0xA9 ],

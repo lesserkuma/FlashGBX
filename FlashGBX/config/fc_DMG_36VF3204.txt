@@ -19,6 +19,7 @@
 	"first_bank":1,
 	"write_pin":"WR",
 	"chip_erase_timeout":5,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
@@ -27,6 +28,9 @@
 			[ 0xAAA, 0xA9 ],
 			[ 0x555, 0x56 ],
 			[ 0xAAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0xAAA, 0x98 ]
 		],
 		"chip_erase":[
 			[ 0xAAA, 0xA9 ],

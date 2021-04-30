@@ -1,21 +1,10 @@
 {
-	"type":"DMG",
+	"type":"AGB",
 	"names":[
-		"DMG-DHCN-20 with MX29LV320ET"
-	],
-	"flash_ids":[
-		[ 0xC2, 0xC2, 0xA7, 0xA7 ]
+		"Generic Flash Cartridge (AAA/AA)"
 	],
 	"voltage":3.3,
-	"flash_size":0x200000,
-	"start_addr":0,
-	"first_bank":1,
-	"write_pin":"WR",
-	"sector_size":[
-		[0x10000, 31],
-		[0x2000, 8]
-	],
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":120,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -25,6 +14,9 @@
 			[ 0xAAA, 0xAA ],
 			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
 		],
 		"chip_erase":[
 			[ 0xAAA, 0xAA ],
@@ -40,23 +32,7 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ 0, 0xFF, 0xFF ]
-		],
-		"sector_erase":[
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ "SA", 0x30 ]
-		],
-		"sector_erase_wait_for":[
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ "SA", 0xFF, 0xFF ]
+			[ 0, 0xFFFF, 0xFFFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xAA ],

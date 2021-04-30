@@ -13,6 +13,7 @@
 	"write_pin":"WR",
 	"sector_size_from_cfi":true,
 	"chip_erase_timeout":50,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]

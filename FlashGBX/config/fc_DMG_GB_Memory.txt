@@ -4,9 +4,8 @@
 		"NP GB Memory Cartridge (DMG-MMSA-JPN)"
 	],
 	"flash_ids":[
-		[ 0xC2, 0x89, 0xC2, 0xFF ]
+		[ 0xC2, 0x89 ]
 	],
-	"dmg-mmsa-jpn":true,
 	"voltage":5,
 	"flash_size":0x100000,
 	"start_addr":0,
@@ -14,6 +13,9 @@
 	"write_pin":"WR",
 	"unlock_before_rom_dump":true,
 	"hidden_sector_size":128,
+	"chip_erase_timeout":10,
+	"dmg-mmsa-jpn":true,
+	"command_set":"GBMEMORY",
 	"commands":{
 		"reset":[
 			[ 0x2100, 0x01 ],
@@ -33,6 +35,8 @@
 			[ 0x13F, 0xA5 ]
 		],
 		"unlock":[
+			[ 0x2100, 0x01, 1 ],
+			
 			[ 0x120, 0x09, 1 ],
 			[ 0x121, 0xAA, 1 ],
 			[ 0x122, 0x55, 1 ],
@@ -41,7 +45,12 @@
 			[ 0x120, 0x11, 1 ],
 			[ 0x13F, 0xA5, 1 ],
 
-			[ 0x2100, 0x01, 1 ]
+			[ 0x120, 0x0A, 1 ],
+			[ 0x125, 0x62, 1 ],
+			[ 0x126, 0x04, 1 ],
+			[ 0x13F, 0xA5, 1 ],
+			[ 0x120, 0x02, 1 ],
+			[ 0x13F, 0xA5, 1 ]
 		],
 		"read_identifier":[
 			[ 0x2100, 0x01 ],

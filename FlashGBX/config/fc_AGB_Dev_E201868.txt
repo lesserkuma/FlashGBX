@@ -19,8 +19,11 @@
 		[0x02000, 8]
 	],
 	"wait_read_status_register":true,
+	"reset_every":0x200000,
+	"command_set":"SHARP",
 	"commands":{
 		"reset":[
+			[ 0, 0x50 ],
 			[ 0, 0xFF ]
 		],
 		"read_status_register":[
@@ -34,22 +37,22 @@
 			[ "SA", 0xD0 ],
 			[ "SA", 0x20 ],
 			[ "SA", 0xD0 ],
-			[ 0, 0x70 ]
+			[ "SA", 0x70 ]
 		],
 		"sector_erase_wait_for":[
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ]
+			[ "SA", 0x8080, 0x8080 ]
 		],
 		"single_write":[
-			[ 0, 0x70 ],
-			[ 0, 0x10 ],
+			[ "PA", 0x70 ],
+			[ "PA", 0x10 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[
-			[ 0, 0x80, 0x80 ],
+			[ "PA", 0x8080, 0x8080 ],
 			[ null, null, null ],
 			[ null, null, null ]
 		]

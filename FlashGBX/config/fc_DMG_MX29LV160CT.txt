@@ -18,6 +18,7 @@
 		[0x4000, 1]
 	],
 	"chip_erase_timeout":60,
+	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
