@@ -156,7 +156,7 @@ If you have Python and pip installed, you can use `pip install FlashGBX` to down
 
 To run FlashGBX in portable mode, you can also download the source code archive and call `python run.py` after installing the prerequisites yourself.
 
-The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3.7+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/) and [requests](https://pypi.org/project/requests/) packages.
+The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3.7+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.
 
 ⚠️ On some platforms you may have to use `pip3`/`python3` instead of `pip`/`python`.
 
@@ -170,7 +170,7 @@ The application should work on pretty much every operating system that supports 
 
 * On some Linux systems like Fedora, you may need to install the `python3-pillow-qt` package manually in order for the GUI mode to work.
 
-* If the `PySide2` package is not available for your system, you can install FlashGBX like so instead: `pip install pyserial Pillow setuptools requests` followed by `pip install --no-deps FlashGBX`.
+* If the `PySide2` package is not available for your system, you can install FlashGBX like so instead: `pip install pyserial Pillow setuptools requests python-dateutil` followed by `pip install --no-deps FlashGBX`.
 
 * On older systems such as MacOS X El Capitan 10.11, you may run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`. Installing [Python 3.7.9](https://www.python.org/downloads/release/python-379/) instead of the latest available version may resolve this issue. If that still doesn’t work, you can try to uninstall PySide2 (`pip uninstall PySide2`) and then run FlashGBX again in command line interface mode.
 

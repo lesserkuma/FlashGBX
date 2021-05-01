@@ -21,7 +21,7 @@
 - Previously preliminarily added mapper support including for MBC7 and GBA Video cartridges is now working (requires GBxCart RW firmware version L1+)
 - Added support for writing compilation ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN); requires a .map file in the same directory as the ROM file; all this can be generated using [orangelo’s GBNP ROM builder website](https://orangeglo.github.io/gbnp/index.html)
 - Confirmed support for GB-M968 with 29LV160DB *(thanks bbsan)*
-- Added support for ROM backup as well as save data backung and restore for 8M FLASH DACS cartridges; tested with “Hikaru no Go 3 – Joy Carry Cartridge” (AGB-GHTJ-JPN)
+- Added support for ROM backup as well as save data backup and restore for 8M FLASH DACS cartridges; tested with “Hikaru no Go 3 – Joy Carry Cartridge” (AGB-GHTJ-JPN)
 - Confirmed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17)*
 - Added support for 100BS6600_48BALL_V4 with 6600M0U0BE (the “369IN1” cartridge) *(thanks to BennVenn’s research on Discord)*
 - Removed broken support for saving and restoring RTC registers of official TAMA5 cartridges inside the save file as it became clear that the year value was not correctly written; more research needed
