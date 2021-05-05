@@ -659,15 +659,26 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.mnuTools.actions()[2].setEnabled(True)
 					if dev.FirmwareUpdateAvailable():
 						dontShowAgain = str(self.SETTINGS.value("SkipFirmwareUpdate", default="disabled")).lower() == "enabled"
-						if not dontShowAgain:
-							msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="A firmware update for your {:s} is available.\nDo you want to update now?".format(dev.GetFullName()), standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
-							cb = QtWidgets.QCheckBox("Ignore firmware updates", checked=dontShowAgain)
-							msgbox.setCheckBox(cb)
+						if not dontShowAgain or dev.FW_UPDATE_REQ:
+							if dev.FW_UPDATE_REQ:
+								text = "A firmware update for your {:s} device is required to use this software. Do you want to update now?".format(dev.GetFullName())
+								msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=text, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+							else:
+								text = "A firmware update for your {:s} device is available. Do you want to update now?".format(dev.GetFullName())
+								msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=text, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+								cb = QtWidgets.QCheckBox("Ignore firmware updates", checked=dontShowAgain)
+								msgbox.setCheckBox(cb)
 							answer = msgbox.exec()
-							dontShowAgain = cb.isChecked()
-							if dontShowAgain: self.SETTINGS.setValue("SkipFirmwareUpdate", "enabled")
-							if answer == QtWidgets.QMessageBox.Yes:
-								self.ShowFirmwareUpdateWindow()
+							if dev.FW_UPDATE_REQ:
+								if answer == QtWidgets.QMessageBox.Yes:
+									self.ShowFirmwareUpdateWindow()
+								elif not Util.DEBUG:
+									self.DisconnectDevice()
+							else:
+								dontShowAgain = cb.isChecked()
+								if dontShowAgain: self.SETTINGS.setValue("SkipFirmwareUpdate", "enabled")
+								if answer == QtWidgets.QMessageBox.Yes:
+									self.ShowFirmwareUpdateWindow()
 				else:
 					self.mnuTools.actions()[2].setEnabled(False)
 

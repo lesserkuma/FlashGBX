@@ -1,4 +1,14 @@
 # Release notes
+### v2.1 (released 2021-05-05)
+- Fixed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17 and 90sFlav)*
+- Added support for a DIY cart with MBC1 and AM29F080 *(thanks skite2001)*
+- Added support for SD007_TSOP_48BALL_V8 with 29LV320CTTC *(thanks Jayro)*
+- Added the MBC5+SRAM mapper type which is officially unused, but is actually used by GB Studio *(thanks Jayro)*
+- The GBxCart RW v1.3 firmware updater should now also work if the device is below firmware version R19
+- Adjusted the baudrate used for updating the firmware which fixes a problem on some macOS systems
+- Added support for Flash2Advance Ultra 64M with 2× 28F320C3B
+- Confirmed support for 4350Q2 with 4350LLYBQ2
+
 ### v2.0 (released 2021-05-01)
 - Added an integrated firmware updater for GBxCart v1.3 devices which includes the latest official firmware version at time of FlashGBX release; also supports external firmware files
 - Added support for the new GBxCart RW v1.4 hardware
@@ -19,7 +29,7 @@
     - Same as above but already integrated into the official firmware of GBxCart RW v1.4
 - Added support for official cartridges with the MBC6 memory bank controller including its flash memory; tested with “Net de Get: Minigame @ 100” (CGB-BMVJ-JPN) *(thanks to endrift’s research at [gbdev](https://gbdev.gg8.se/forums/viewtopic.php?id=544))* (requires GBxCart RW firmware version L1+)
 - Previously preliminarily added mapper support including for MBC7 and GBA Video cartridges is now working (requires GBxCart RW firmware version L1+)
-- Added support for writing compilation ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN); requires a .map file in the same directory as the ROM file; all this can be generated using [orangelo’s GBNP ROM builder website](https://orangeglo.github.io/gbnp/index.html)
+- Added support for writing compilation ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN); requires a .map file in the same directory as the ROM file; all this can be generated using orangeglo’s [GBNP ROM builder website](https://orangeglo.github.io/gbnp/index.html)
 - Confirmed support for GB-M968 with 29LV160DB *(thanks bbsan)*
 - Added support for ROM backup as well as save data backup and restore for 8M FLASH DACS cartridges; tested with “Hikaru no Go 3 – Joy Carry Cartridge” (AGB-GHTJ-JPN)
 - Confirmed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17)*

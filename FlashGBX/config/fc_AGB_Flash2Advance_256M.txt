@@ -1,0 +1,76 @@
+{
+	"type":"AGB",
+	"names":[
+		"Flash2Advance 256M with 2× 28F128J3A150"
+	],
+	"flash_ids":[
+		[ 0x89, 0x00, 0x89, 0x00, 0x18, 0x00, 0x18, 0x00 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x2000000,
+	"sector_size":0x40000,
+	"buffer_size":64,
+	"command_set":"INTEL",
+	"commands":{
+		"unlock":[
+			[ 0x130ECA8, 0x5354, 1 ],
+			[ 0x002468A, 0x1234, 5 ],
+			[ 0x000ECA8, 0x5354, 1 ],
+			[ 0x002468A, 0x5354, 1 ],
+			[ 0x002468A, 0x5678, 5 ],
+			[ 0x130ECA8, 0x5354, 1 ],
+			[ 0x002468A, 0x5354, 1 ],
+			[ 0x0ECA800, 0x5678, 1 ],
+			[ 0x00268A0, 0x1234, 1 ],
+			[ 0x002468A, 0xABCD, 5 ],
+			[ 0x130ECA8, 0x5354, 1 ],
+			[ 0x1E2468A, 0x9413, 1 ]
+		],
+		"reset":[
+			[ 0, 0xFF ],
+			[ 2, 0xFF ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ],
+			[ 2, 0x90 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ],
+			[ "SA+2", 0x20 ],
+			[ "SA+2", 0xD0 ],
+			[ null, null ],
+			[ null, null ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ],
+			[ "SA+2", 0x80, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ "SA", 0xE8 ],
+			[ "SA+2", 0xE8 ],
+			[ "SA", "BS" ],
+			[ "SA+2", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA+2", 0xD0 ],
+			[ null, null ],
+			[ null, null ]
+		],
+		"buffer_write_wait_for":[
+			[ 0, 0x80, 0x8080 ],
+			[ 2, 0x80, 0x8080 ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0x80, 0xFFFF ],
+			[ 2, 0x80, 0xFFFF ]
+		]
+	}
+}

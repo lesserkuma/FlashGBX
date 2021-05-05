@@ -443,44 +443,6 @@ class DMG_MBC6(DMG_MBC):
 		])
 		self.SelectBankROM(self.CURRENT_ROM_BANK)
 		return flash_id
-	
-	'''
-	def Test(self):
-		self.EnableFlash(enable=True, enable_write=True)
-		
-		self.CartWrite([
-			[ 0x2000, 0x01 ],
-			[ 0x3000, 0x02 ],
-			[ 0x7555, 0xAA ],
-			[ 0x4AAA, 0x55 ],
-			[ 0x7555, 0x80 ],
-			[ 0x7555, 0xAA ],
-			[ 0x4AAA, 0x55 ],
-			[ 0x4000, 0x30 ],
-		])
-
-		with open("mbc6.bin", "rb") as f: buffer = f.read()
-		for j in range(0, int(len(buffer)/128)):
-			self.CartWrite([
-				[ 0x2000, 0x01 ],
-				[ 0x3000, 0x02 ],
-				[ 0x7555, 0xAA ],
-				[ 0x4AAA, 0x55 ],
-				[ 0x7555, 0xA0 ],
-			])
-			self.SelectBankROM(1)
-			commands = []
-			for i in range(0, 128):
-				commands.append([0x4000 + (j*128+i), buffer[j*128+i]])
-			commands.append([0x4000 + (j*128) + 127, 0x00])
-			self.CartWrite(commands)
-			time.sleep(0.01)
-			self.CartWrite([[0x4000 + (j*128) + 127, 0xF0]])
-
-		flash_id = self.CartRead(0x4000, 8)
-		self.SelectBankROM(self.CURRENT_ROM_BANK)
-		return flash_id
-	'''
 
 class DMG_MBC7(DMG_MBC):
 	def GetName(self):

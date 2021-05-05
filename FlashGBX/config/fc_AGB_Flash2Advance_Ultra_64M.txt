@@ -1,0 +1,60 @@
+{
+	"type":"AGB",
+	"names":[
+		"Flash2Advance Ultra 64M with 2× 28F320C3B"
+	],
+	"flash_ids":[
+		[ 0x89, 0x00, 0x89, 0x00, 0xC5, 0x88, 0xC5, 0x88 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x800000,
+	"sector_size":[
+		[0x04000, 8],
+		[0x20000, 63]
+	],
+	"command_set":"INTEL",
+	"commands":{
+		"reset":[
+			[ 0, 0xFF ],
+			[ 2, 0xFF ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ],
+			[ 2, 0x90 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x60 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ],
+			[ "SA+2", 0x60 ],
+			[ "SA+2", 0xD0 ],
+			[ "SA+2", 0x20 ],
+			[ "SA+2", 0xD0 ],
+			[ null, null ],
+			[ null, null ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ],
+			[ "SA+2", 0x80, 0xFFFF ]
+		],
+		"single_write":[
+			[ 0, 0x70 ],
+			[ 0, 0x10 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

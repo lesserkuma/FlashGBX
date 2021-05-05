@@ -1,0 +1,58 @@
+{
+	"type":"DMG",
+	"names":[
+		"DIY cart with MBC1 and AM29F080 @ WR"
+	],
+	"flash_ids":[
+		[ 0x20, 0xF1 ]
+	],
+	"voltage":5,
+	"flash_size":0x100000,
+	"start_addr":0,
+	"first_bank":1,
+	"write_pin":"WR",
+	"chip_erase_timeout":60,
+	"mbc":1,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0x555, 0x98 ]
+		],
+		"chip_erase":[
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

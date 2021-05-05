@@ -3,12 +3,14 @@
 	"names":[
 		"SD007_BV5_V3 with AM29LV160MB",
 		"SD007_TSOP_48BALL with L160DB12VI",
-		"SD007_TSOP_48BALL with AM29LV160DB"
+		"SD007_TSOP_48BALL with AM29LV160DB",
+		"SD007_TSOP_29LV017D with L017D70VC"
 	],
 	"flash_ids":[
 		[ 0x02, 0x02, 0x4A, 0x4A ],
 		[ 0x02, 0x02, 0x4A, 0x4A ],
-		[ 0x02, 0x02, 0x4A, 0x4A ]
+		[ 0x02, 0x02, 0x4A, 0x4A ],
+		[ 0x02, 0xC8, 0x00, 0x00 ]
 	],
 	"voltage":5,
 	"flash_size":0x200000,

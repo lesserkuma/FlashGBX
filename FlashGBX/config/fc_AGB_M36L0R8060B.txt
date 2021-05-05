@@ -2,7 +2,7 @@
 	"type":"AGB",
 	"names":[
 		"36L0R8-39VF512 with M36L0R8060B",
-		"36L0R8-39VF512 with M36L0R8060B"
+		"4350Q2 with 4350LLYBQ2"
 	],
 	"flash_ids":[
 		[ 0x20, 0x00, 0x0D, 0x88 ],

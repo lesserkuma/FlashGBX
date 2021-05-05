@@ -55,6 +55,7 @@ for Windows, Linux, macOS
   - DIY cart with AM29F016/AM29F016B
   - DIY cart with AM29F032/AM29F032B
   - DIY cart with AT49F040
+  - DIY cart with MBC1 and AM29F080
   - GB Smart 32M
   - insideGadgets 32 KB
   - insideGadgets 512 KB
@@ -68,7 +69,8 @@ for Windows, Linux, macOS
 
   - Development AGB Cartridge 128M Flash S, E201850
   - Development AGB Cartridge 256M Flash S, E201868
-  - Flash2Advance 256M (non-ultra variant, with 2× 28F128J3A150)
+  - Flash2Advance 256M (with 2× 28F128J3A150)
+  - Flash2Advance Ultra 64M (with 2× 28F320C3B)
   - insideGadgets 16 MB, 64K EEPROM with Solar Sensor and RTC options
   - insideGadgets 32 MB, 1M FLASH with RTC option
   - insideGadgets 32 MB, 512K FLASH
@@ -84,7 +86,7 @@ for Windows, Linux, macOS
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
   - GB-M968 with MX29LV320ABTC
-  - ALTERA CPLD and S29GL032N90T (no PCB text)
+  - S29GL032N90T and ALTERA CPLD (configured for MBC5)
   - SD007_48BALL_64M with GL032M11BAIR4
   - SD007_48BALL_64M with M29W640
   - SD007_48BALL_64M_V2 with GL032M11BAIR4
@@ -112,9 +114,11 @@ for Windows, Linux, macOS
 
 - Game Boy Advance
 
+  - 100BS6600_48BALL_V4 with 6600M0U0BE
   - 28F256L03B-DRV with 256L30B
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
+  - 4350Q2 with 4350LLYBQ2
   - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0
   - 4050_4400_4000_4350_36L0R_V5 with 4050L0YTQ2
   - 4050_4400_4000_4350_36L0R_V5 with M36L0R7050T
@@ -122,7 +126,6 @@ for Windows, Linux, macOS
   - 4050_4400_4000_4350_36L0R_V5 with M36L0R8060T
   - 4400 with 4400L0ZDQ0
   - 4455_4400_4000_4350_36L0R_V3 with M36L0R7050T
-  - 100BS6600_48BALL_V4 with 6600M0U0BE
   - AGB-E05-01 with GL128S
   - AGB-E05-01 with MSP55LV128M
   - AGB-E05-01 with MX29GL128FHT2I-90G
@@ -184,6 +187,7 @@ This software is provided as-is and the developer is not responsible for any dam
 
 The author would like to thank the following very kind people for their help and contributions (in alphabetical order):
 
+- 90sFlav (flash chip info)
 - AcoVanConis (bug reports)
 - AlexiG (GBxCart RW hardware, bug reports, flash chip info)
 - AndehX (app icon, flash chip info)
@@ -195,6 +199,7 @@ The author would like to thank the following very kind people for their help and
 - Frost Clock (flash chip info)
 - howie0210 (flash chip info)
 - Icesythe7 (feature suggestions)
+- Jayro (flash chip info)
 - JFox (help with properly packaging the app for pip)
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
@@ -204,6 +209,7 @@ The author would like to thank the following very kind people for their help and
 - paarongiroux (bug reports)
 - Paradoxical (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
+- skite2001 (flash chip info)
 - Super Maker (flash chip info, testing)
 - Veund (flash chip info)
 - Zeii (flash chip info)

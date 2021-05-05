@@ -7,7 +7,6 @@ import serial, serial.tools.list_ports
 from serial import SerialException
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
-#from .GBMemory import GBMemory
 from .Mapper import DMG_MBC, AGB_GPIO
 from .Flashcart import Flashcart, Flashcart_DMG_MMSA, CFI
 from .Util import ANSI, dprint, bitswap, ParseCFI
@@ -84,6 +83,7 @@ class GbxDevice:
 	SUPPORTED_CARTS = {}
 	
 	FW = []
+	FW_UPDATE_REQ = False
 	MODE = None
 	PORT = ''
 	DEVICE = None
@@ -234,7 +234,7 @@ class GbxDevice:
 		return ["DMG", "AGB"]
 	
 	def IsSupportedMbc(self, mbc):
-		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
+		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
 	
 	def IsSupported3dMemory(self):
 		return True
@@ -1957,8 +1957,8 @@ class GbxDevice:
 		if "flash_ids" in cart_type:
 			(verified, flash_id) = flashcart.VerifyFlashID()
 			if not verified:
-				print("FAIL: This cartridge’s Flash ID ({:s}) didn’t match the cartridge type selection.".format(' '.join(format(x, '02X') for x in flash_id)))
-				return False
+				print("WARNING: This cartridge’s Flash ID ({:s}) didn’t match the cartridge type selection.".format(' '.join(format(x, '02X') for x in flash_id)))
+				#return False
 		# ↑↑↑ Read Flash ID
 		
 		# ↓↓↓ Read Sector Map
@@ -2156,16 +2156,6 @@ class GbxDevice:
 				self._read(1)
 				self.CartPowerOn()
 			
-			#debug 369IN1
-			#self._set_fw_variable("TRANSFER_SIZE", 1)
-			#self._set_fw_variable("ADDRESS", 2)
-			#self._write(self.DEVICE_CMD["AGB_CART_WRITE_SRAM"])
-			#self._write(bytearray([7 << 4]))
-			#temp = self._read(1)
-			#print(temp)
-			#return
-			#debug 369IN1
-
 			ret = False
 			self.SIGNAL = signal
 			if args['mode'] == 1: ret = self._BackupROM(args)

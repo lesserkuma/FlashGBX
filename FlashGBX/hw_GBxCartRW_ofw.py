@@ -117,6 +117,7 @@ class GbxDevice:
 	SUPPORTED_CARTS = {}
 	
 	FW = []
+	FW_UPDATE_REQ = False
 	MODE = None
 	PORT = ''
 	DEVICE = None
@@ -185,10 +186,11 @@ class GbxDevice:
 					self.DEVICE = None
 					return False
 				elif self.FW[0] < self.DEVICE_MIN_FW:
-					dev.close()
-					self.DEVICE = None
-					conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version R" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
-					continue
+					#dev.close()
+					#self.DEVICE = None
+					#conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version R" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
+					#continue
+					self.FW_UPDATE_REQ = True
 				elif self.FW[0] < self.DEVICE_MAX_FW:
 					# TODO: not showing this for now
 					#conn_msg.append([1, "The GBxCart RW device on port " + ports[i] + " is running an older firmware version. Please consider updating to version R" + str(self.DEVICE_MAX_FW) + " to make use of the latest features.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
@@ -196,7 +198,6 @@ class GbxDevice:
 				elif self.FW[0] > self.DEVICE_MAX_FW:
 					#conn_msg.append([0, "NOTE: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with."])
 					pass
-				conn_msg.append([0, "NOTE: FlashGBX is now optimized for the custom high compatibility firmware. You can install it from the Tools menu."])
 				
 				if self.FW[1] not in self.PCB_VERSIONS.keys():
 					dev.close()
@@ -206,6 +207,8 @@ class GbxDevice:
 				
 				if (self.FW[1] != 4):
 					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3 and v1.3 Pro. Other revisions are untested and may not be fully compatible."])
+				else:
+					conn_msg.append([0, "NOTE: FlashGBX is now optimized for the custom high compatibility firmware. You can install it from the Tools menu."])
 				
 				self.PORT = ports[i]
 				
@@ -344,7 +347,7 @@ class GbxDevice:
 		#if (int(self.FW[0]) >= 26):
 		#	return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1B, 0x1C, 0x1E, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
 		#else:
-		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x10, 0x13, 0x19, 0x1B, 0x1C, 0x1E, 0xFC, 0xFE, 0xFF, 0x101, 0x103 )
+		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0xFC, 0xFE, 0xFF, 0x101, 0x103 )
 
 	def IsSupported3dMemory(self):
 		return False

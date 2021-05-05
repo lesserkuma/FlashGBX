@@ -1,10 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_BV5_V2 with MX29LV320BTC"
+		"SD007_BV5_V2 with MX29LV320BTC",
+		"SD007_TSOP_48BALL_V8 with 29LV320CTTC"
 	],
 	"flash_ids":[
-		[ 0xC1, 0xC1, 0xA8, 0xA8 ]
+		[ 0xC1, 0xC1, 0xA8, 0xA8 ],
+		[ 0xC1, 0xC1, 0xA7, 0xA7 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x400000,

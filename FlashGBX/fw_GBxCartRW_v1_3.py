@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import zlib, zipfile, os, serial, struct, time, re, math
+import zlib, zipfile, os, serial, struct, time, re, math, platform
 from PySide2 import QtCore, QtWidgets, QtGui
 from . import Util
 
@@ -177,8 +177,10 @@ class FirmwareUpdater(QtWidgets.QDialog):
 			return False
 		dev.write(b'0')
 		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
 		dev.write(struct.pack(">BIBB", 0x2A, 0x37653565, 0x31, 0))
 		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
 		self.APP.QT_APP.processEvents()
 		time.sleep(0.3 + delay)
 		dev.reset_input_buffer()
@@ -208,7 +210,10 @@ class FirmwareUpdater(QtWidgets.QDialog):
 			fw = "{:s}<br><br><b>Please double check that this is a valid firmware file for the GBxCart RW v1.3. If it is invalid or an update for a different device, it may render your device unusable.</b>".format(path)
 			fn = None
 		
-		text = "The following firmware will now be written to your GBxCart v1.3 device:<br>{:s}<br><br>Do you want to continue?".format(fw)
+		text = "The following firmware will now be written to your GBxCart v1.3 device:<br>- {:s}".format(fw)
+		#if platform.system() == "Darwin":
+		#	text += "<br><br>DISCLAIMER: In rare occasions, the firmware update may reportedly fail on some macOS systems with unstable drivers, so please proceed at your own risk. If an error occurs, your device can still be recovered using the official firmware update tool by insideGadgets."
+		text += "<br><br>Do you want to continue?"
 		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 		msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 		msgbox.setTextFormat(QtCore.Qt.TextFormat.RichText)
@@ -247,7 +252,7 @@ class FirmwareUpdater(QtWidgets.QDialog):
 			chk = chk & 0xFF
 			chk = (~chk + 1) & 0xFF
 			if (chk != data["checksum"]):
-				self.lblStatus.setText("Status: Firmware checksum error.")
+				fncSetStatus("Status: Firmware checksum error.")
 				self.prgStatus.setValue(0)
 				self.btnUpdate.setEnabled(True)
 				self.btnClose.setEnabled(True)
@@ -258,249 +263,258 @@ class FirmwareUpdater(QtWidgets.QDialog):
 				buffer += bytearray(data["data"])
 	
 		if len(buffer) >= 7168:
-			self.lblStatus.setText("Status: Firmware file is too large.")
+			fncSetStatus("Status: Firmware file is too large.")
 			self.prgStatus.setValue(0)
 			self.btnUpdate.setEnabled(True)
 			self.btnClose.setEnabled(True)
 			self.grpAvailableFwUpdates.setEnabled(True)
 			return False
 		
-		fw_buffer = buffer
-
 		self.APP.DisconnectDevice()
-		port = self.PORT
 
-		flash_ok = False
-		while not flash_ok:
-			delay = 0
-			lives = 10
-			buffer = bytearray()
-
-			self.lblStatus.setText("Status: Waiting for bootloader...")
-			if self.ResetAVR(delay) is False:
-				self.lblStatus.setText("Status: Device reboot error.")
-				self.prgStatus.setValue(0)
-				return False
-			
-			while True:
-				try:
-					dev = serial.Serial(port=port, baudrate=57600, timeout=0.5)
-				except:
-					self.lblStatus.setText("Status: Device access error.")
-					self.prgStatus.setValue(0)
-					self.btnUpdate.setEnabled(True)
-					self.btnClose.setEnabled(True)
-					self.grpAvailableFwUpdates.setEnabled(True)
-					return False
-				dev.reset_input_buffer()
-				dev.reset_output_buffer()
-				dev.write(b"@@@")
-				dev.flush()
-				buffer = dev.read(0x11)
-				if (len(buffer) < 0x11) or (buffer[0:3] != b'TSB'):
-					dev.write(b"?")
-					dev.flush()
-					dev.close()
-					self.APP.QT_APP.processEvents()
-					time.sleep(1)
-					if len(buffer) != 0x11:
-						delay += 0.05
-					self.lblStatus.setText("Status: Waiting for bootloader... (+{:d}ms)".format(int(delay * 1000)))
-					if self.ResetAVR(delay) is False:
-						self.lblStatus.setText("Status: Device reboot error.")
-						self.prgStatus.setValue(0)
-						self.btnUpdate.setEnabled(True)
-						self.btnClose.setEnabled(True)
-						self.grpAvailableFwUpdates.setEnabled(True)
-						return False
-					lives -= 1
-					if lives < 0:
-						self.lblStatus.setText("Status: Device reboot error.")
-						self.prgStatus.setValue(0)
-						self.btnUpdate.setEnabled(True)
-						self.btnClose.setEnabled(True)
-						self.grpAvailableFwUpdates.setEnabled(True)
-						return False
-					continue
-				break
-			
-			self.lblStatus.setText("Reading bootloader information...")
-			info = {}
-			keys = ["magic", "tsb_version", "tsb_status", "signature", "page_size", "flash_size", "eeprom_size", "unknown", "avr_jmp_identifier"]
-			values = struct.unpack("<3sHB3sBHHBB", bytearray(buffer[:-1]))
-			info = dict(zip(keys, values))
-			info["page_size"] *= 2
-			info["flash_size"] *= 2
-			info["eeprom_size"] += 1
-			if info["avr_jmp_identifier"] == 0x00:
-				info["jmp_mode"] = "relative"
-				info["device_type"] = "attiny"
-			elif info["avr_jmp_identifier"] == 0x0C:
-				info["jmp_mode"] = "absolute"
-				info["device_type"] = "attiny"
-			elif info["avr_jmp_identifier"] == 0xAA:
-				info["jmp_mode"] = "relative"
-				info["device_type"] = "atmega"
-			
-			if info["page_size"] != 64 or info["flash_size"] != 7616 or info["eeprom_size"] != 512 or info["jmp_mode"] != "relative" or info["device_type"] != "atmega" or info["signature"] != b'\x1E\x93\x06':
-				self.btnUpdate.setEnabled(True)
-				self.btnClose.setEnabled(True)
-				self.grpAvailableFwUpdates.setEnabled(True)
-				self.lblStatus.setText("Status: Wrong device detected.")
-				return False
-			
-			if (info["tsb_version"] < 32768):
-				info["tsb_version"] = int((info["tsb_version"] & 31) + ((info["tsb_version"] & 480) / 32) * 100 + ((info["tsb_version"] & 65024 ) / 512) * 10000 + 20000000)
-			else:
-				self.btnUpdate.setEnabled(True)
-				self.btnClose.setEnabled(True)
-				self.grpAvailableFwUpdates.setEnabled(True)
-				self.lblStatus.setText("Status: Wrong device detected.")
-				return False
-			
-			#################
-
-			# Read user data
-			self.lblStatus.setText("Status: Reading user data...")
-			dev.write(b"c")
-			user_data = bytearray(dev.read(0x41))
-			info["tsb_timeout"] = user_data[2]
-
-			# Change timeout to 6s
-			self.lblStatus.setText("Status: Writing user data...")
-			user_data[2] = 254
-			dev.write(b"C")
-			dev.read(1)
-			dev.write(b"!")
-			dev.write(user_data)
-			dev.flush()
-			dev.read(0x41)
-
-			# Write firmware
-			self.lblStatus.setText("Status: Updating firmware... Do not unplug the device!")
-			iterations = math.ceil(len(fw_buffer) / 0x40)
-			if len(fw_buffer) < iterations * 0x40:
-				fw_buffer = fw_buffer + bytearray([0xFF] * ((iterations * 0x40) - len(fw_buffer)))
-
-			lives = 10
-			dev.write(b"F")
-			dev.flush()
-			ret = dev.read(1)
-			while ret != b"?":
-				dev.write(b"F")
-				dev.flush()
-				ret = dev.read(1)
-				lives -= 1
-				if lives == 0:
-					dev.write(b"?")
-					dev.flush()
-					dev.close()
-					self.lblStatus.setText("Status: Protocol error. Please try again.")
-					self.prgStatus.setValue(0)
-					self.btnUpdate.setEnabled(True)
-					self.btnClose.setEnabled(True)
-					self.grpAvailableFwUpdates.setEnabled(True)
-					return False
-			
-			for i in range(0, iterations):
-				self.APP.QT_APP.processEvents()
-				dev.write(b"!")
-				dev.write(fw_buffer[i*0x40:i*0x40+0x40])
-				self.prgStatus.setValue((i*0x40+0x40) / len(fw_buffer) * 100)
-				if (dev.read(1) != b"?"):
-					dev.write(b"?")
-					dev.flush()
-					dev.close()
-					self.lblStatus.setText("Status: Write error. Please try again.")
-					self.prgStatus.setValue(0)
-					self.btnUpdate.setEnabled(True)
-					self.btnClose.setEnabled(True)
-					self.grpAvailableFwUpdates.setEnabled(True)
-					return False
-			dev.write(b"?")
-			dev.flush()
-			dev.read(1)
-			
-			# verify flash
-			self.lblStatus.setText("Status: Verifying update...")
-			buffer2 = bytearray()
-			dev.write(b"f")
-			dev.flush()
-			for i in range(0, 0x1DC0, 0x40):
-				self.APP.QT_APP.processEvents()
-				dev.write(b"!")
-				dev.flush()
-				while dev.in_waiting == 0: time.sleep(0.01)
-				ret = bytearray(dev.read(0x40))
-				buffer2 += ret
-				self.prgStatus.setValue(len(buffer2) / 0x1DC0 * 100)
-			dev.read(1)
-			
-			buffer2 = buffer2[:len(fw_buffer)]
-
-			if fw_buffer == buffer2:
-				self.lblStatus.setText("Status: Verification OK.")
-				self.APP.QT_APP.processEvents()
-				time.sleep(0.2)
-			else:
-				self.lblStatus.setText("Status: Verification error.")
-				self.prgStatus.setValue(0)
-				dev.write(b"?")
-				dev.flush()
-				dev.close()
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful. Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
-				answer = msgbox.exec()
-				if answer == QtWidgets.QMessageBox.Yes:
-					time.sleep(1)
-					continue
-				self.btnUpdate.setEnabled(True)
-				self.btnClose.setEnabled(True)
-				self.grpAvailableFwUpdates.setEnabled(True)
-				return False
-
-			# Change timeout to 1s
-			self.lblStatus.setText("Status: Writing user data...")
-			user_data[2] = 42
-			dev.write(b"C")
-			dev.flush()
-			ret = dev.read(1)
-			while ret != b"?":
-				dev.write(b"C")
-				dev.flush()
-				ret = dev.read(1)
-				lives -= 1
-				if lives == 0:
-					dev.write(b"?")
-					dev.flush()
-					dev.close()
-					self.btnUpdate.setEnabled(True)
-					self.btnClose.setEnabled(True)
-					self.grpAvailableFwUpdates.setEnabled(True)
-					self.lblStatus.setText("Status: User data update error. Please try again.")
-					return False
-			dev.write(b"!")
-			dev.write(user_data)
-			dev.flush()
-			dev.read(0x41)
-			
-			# Restart
-			self.APP.QT_APP.processEvents()
-			time.sleep(0.1)
-			self.lblStatus.setText("Status: Restarting the device...")
-			dev.write(b"?")
-			dev.flush()
-			dev.close()
-			self.APP.QT_APP.processEvents()
-			time.sleep(0.8)
-			self.lblStatus.setText("Status: Done.")
-			self.APP.QT_APP.processEvents()
-			time.sleep(0.2)
-			self.DEVICE = None
+		while True:
+			ret = self.WriteFirmware(buffer, self.SetStatus)
+			if ret == 1: return True
+			elif ret == 2: return False
+			elif ret == 3: continue
+	
+	def SetStatus(self, text, enableUI=False, setProgress=None):
+		self.lblStatus.setText(text)
+		if setProgress is not None:
+			self.prgStatus.setValue(setProgress)
+		if enableUI:
 			self.btnUpdate.setEnabled(True)
 			self.btnClose.setEnabled(True)
 			self.grpAvailableFwUpdates.setEnabled(True)
-			flash_ok = True
-			text = "The firmware update is complete!"
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
+
+	def WriteFirmware(self, data, fncSetStatus):
+		fw_buffer = data
+		port = self.PORT
+		
+		delay = 0
+		lives = 10
+		buffer = bytearray()
+
+		fncSetStatus(text="Status: Waiting for bootloader...", setProgress=0)
+		if self.ResetAVR(delay) is False:
+			fncSetStatus(text="Status: Device reboot error.", enableUI=True)
+			self.prgStatus.setValue(0)
+			return 2
+		
+		while True:
+			try:
+				dev = serial.Serial(port=port, baudrate=9600, timeout=1)
+			except:
+				fncSetStatus(text="Status: Device access error.", enableUI=True)
+				return 2
+			dev.reset_input_buffer()
+			dev.reset_output_buffer()
+			dev.write(b"@@@")
+			dev.flush()
+			if platform.system() == "Darwin": time.sleep(0.00125)
+			buffer = dev.read(0x11)
+			if (len(buffer) < 0x11) or (buffer[0:3] != b'TSB'):
+				dev.write(b"?")
+				dev.flush()
+				if platform.system() == "Darwin": time.sleep(0.00125)
+				dev.close()
+				self.APP.QT_APP.processEvents()
+				time.sleep(1)
+				if len(buffer) != 0x11:
+					delay += 0.05
+				fncSetStatus("Status: Waiting for bootloader... (+{:d}ms)".format(int(delay * 1000)))
+				if self.ResetAVR(delay) is False:
+					fncSetStatus(text="Status: Device reboot error.", enableUI=True)
+					return 2
+				lives -= 1
+				if lives < 0:
+					fncSetStatus(text="Status: Device reboot error.", enableUI=True)
+					return 2
+				continue
+			break
+		
+		fncSetStatus("Reading bootloader information...")
+		info = {}
+		keys = ["magic", "tsb_version", "tsb_status", "signature", "page_size", "flash_size", "eeprom_size", "unknown", "avr_jmp_identifier"]
+		values = struct.unpack("<3sHB3sBHHBB", bytearray(buffer[:-1]))
+		info = dict(zip(keys, values))
+		info["page_size"] *= 2
+		info["flash_size"] *= 2
+		info["eeprom_size"] += 1
+		if info["avr_jmp_identifier"] == 0x00:
+			info["jmp_mode"] = "relative"
+			info["device_type"] = "attiny"
+		elif info["avr_jmp_identifier"] == 0x0C:
+			info["jmp_mode"] = "absolute"
+			info["device_type"] = "attiny"
+		elif info["avr_jmp_identifier"] == 0xAA:
+			info["jmp_mode"] = "relative"
+			info["device_type"] = "atmega"
+		
+		if info["page_size"] != 64 or info["flash_size"] != 7616 or info["eeprom_size"] != 512 or info["jmp_mode"] != "relative" or info["device_type"] != "atmega" or info["signature"] != b'\x1E\x93\x06':
+			fncSetStatus(text="Status: Wrong device detected.", enableUI=True)
+			return 2
+		
+		if (info["tsb_version"] < 32768):
+			info["tsb_version"] = int((info["tsb_version"] & 31) + ((info["tsb_version"] & 480) / 32) * 100 + ((info["tsb_version"] & 65024 ) / 512) * 10000 + 20000000)
+		else:
+			fncSetStatus(text="Status: Wrong device detected.", enableUI=True)
+			return 2
+		
+		#################
+
+		# Read user data
+		fncSetStatus("Status: Reading user data...")
+		dev.write(b"c")
+		user_data = bytearray(dev.read(0x41))
+		info["tsb_timeout"] = user_data[2]
+
+		# Change timeout to 6s
+		fncSetStatus("Status: Writing user data...")
+		user_data[2] = 254
+		dev.write(b"C")
+		dev.read(1)
+		dev.write(b"!")
+		dev.write(user_data)
+		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
+		dev.read(0x41)
+
+		# Write firmware
+		fncSetStatus("Status: Updating firmware... Do not unplug the device!")
+		iterations = math.ceil(len(fw_buffer) / 0x40)
+		if len(fw_buffer) < iterations * 0x40:
+			fw_buffer = fw_buffer + bytearray([0xFF] * ((iterations * 0x40) - len(fw_buffer)))
+
+		lives = 10
+		dev.write(b"F")
+		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
+		ret = dev.read(1)
+		while ret != b"?":
+			dev.write(b"F")
+			dev.flush()
+			if platform.system() == "Darwin": time.sleep(0.00125)
+			ret = dev.read(1)
+			lives -= 1
+			if lives == 0:
+				dev.write(b"?")
+				dev.flush()
+				if platform.system() == "Darwin": time.sleep(0.00125)
+				dev.close()
+				fncSetStatus(text="Status: Protocol Error. Please try again.", enableUI=True)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Protocol Error). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+				answer = msgbox.exec()
+				if answer == QtWidgets.QMessageBox.Yes:
+					time.sleep(1)
+					return 3
+				return 2
+		
+		for i in range(0, iterations):
+			self.APP.QT_APP.processEvents()
+			dev.write(b"!")
+			dev.write(fw_buffer[i*0x40:i*0x40+0x40])
+			fncSetStatus(text="Status: Updating firmware... Do not unplug the device!", setProgress=(i*0x40+0x40) / len(fw_buffer) * 100)
+			ret = dev.read(1)
+			if (ret != b"?"):
+				dev.write(b"?")
+				dev.flush()
+				if platform.system() == "Darwin": time.sleep(0.00125)
+				dev.close()
+				fncSetStatus(text="Status: Write Error ({:s}). Please try again.".format(str(ret)), enableUI=True)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Write Error, {:s}). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, you will have to use the official firmware updater to recover the firmware.".format(str(ret)), standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+				answer = msgbox.exec()
+				if answer == QtWidgets.QMessageBox.Yes:
+					time.sleep(1)
+					return 3
+				return 2
+		dev.write(b"?")
+		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
+		dev.read(1)
+		
+		# verify flash
+		fncSetStatus("Status: Verifying update...")
+		buffer2 = bytearray()
+		dev.write(b"f")
+		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
+		for i in range(0, 0x1DC0, 0x40):
+			self.APP.QT_APP.processEvents()
+			dev.write(b"!")
+			dev.flush()
+			if platform.system() == "Darwin": time.sleep(0.00125)
+			while dev.in_waiting == 0: time.sleep(0.01)
+			ret = bytearray(dev.read(0x40))
+			buffer2 += ret
+			self.prgStatus.setValue(len(buffer2) / 0x1DC0 * 100)
+		dev.read(1)
+		
+		buffer2 = buffer2[:len(fw_buffer)]
+
+		if fw_buffer == buffer2:
+			fncSetStatus("Status: Verification OK.")
+			self.APP.QT_APP.processEvents()
+			time.sleep(0.2)
+		else:
+			fncSetStatus(text="Status: Verification Error.", enableUI=True)
+			dev.write(b"?")
+			dev.flush()
+			if platform.system() == "Darwin": time.sleep(0.00125)
+			dev.close()
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Verification Error). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 			answer = msgbox.exec()
-			self.reject()
+			if answer == QtWidgets.QMessageBox.Yes:
+				time.sleep(1)
+				return 3
+			return 2
+
+		# Change timeout to 1s
+		fncSetStatus("Status: Writing user data...")
+		user_data[2] = 42
+		dev.write(b"C")
+		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
+		ret = dev.read(1)
+		while ret != b"?":
+			dev.write(b"C")
+			dev.flush()
+			if platform.system() == "Darwin": time.sleep(0.00125)
+			ret = dev.read(1)
+			lives -= 1
+			if lives == 0:
+				dev.write(b"?")
+				dev.flush()
+				if platform.system() == "Darwin": time.sleep(0.00125)
+				dev.close()
+				fncSetStatus(text="Status: User data update error. Please try again.", enableUI=True)
+				return 2
+		dev.write(b"!")
+		dev.write(user_data)
+		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
+		dev.read(0x41)
+		
+		# Restart
+		self.APP.QT_APP.processEvents()
+		time.sleep(0.1)
+		fncSetStatus("Status: Restarting the device...")
+		dev.write(b"?")
+		dev.flush()
+		if platform.system() == "Darwin": time.sleep(0.00125)
+		dev.close()
+		self.APP.QT_APP.processEvents()
+		time.sleep(0.8)
+		fncSetStatus("Status: Done.")
+		self.APP.QT_APP.processEvents()
+		time.sleep(0.2)
+		self.DEVICE = None
+		self.btnUpdate.setEnabled(True)
+		self.btnClose.setEnabled(True)
+		self.grpAvailableFwUpdates.setEnabled(True)
+		flash_ok = True
+		text = "The firmware update is complete!"
+		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
+		answer = msgbox.exec()
+		self.reject()
+		return 1
