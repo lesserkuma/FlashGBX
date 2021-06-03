@@ -56,11 +56,13 @@ for Windows, Linux, macOS
   - DIY cart with AM29F032/AM29F032B
   - DIY cart with AT49F040
   - DIY cart with MBC1 and AM29F080
+  - DIY cart with MBC3 and MX29LV640
   - GB Smart 32M
   - insideGadgets 32 KB
   - insideGadgets 512 KB
   - insideGadgets 1 MB, 128 KB SRAM
   - insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM
+  - insideGadgets 2 MB, 32 KB FRAM, v1.0
   - insideGadgets 4 MB, 128 KB SRAM/FRAM
   - insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC
   - Mr Flash 64M
@@ -86,7 +88,7 @@ for Windows, Linux, macOS
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
   - GB-M968 with MX29LV320ABTC
-  - S29GL032N90T and ALTERA CPLD (configured for MBC5)
+  - S29GL032N90T and ALTERA CPLD configured for MBC5
   - SD007_48BALL_64M with GL032M11BAIR4
   - SD007_48BALL_64M with M29W640
   - SD007_48BALL_64M_V2 with GL032M11BAIR4
@@ -106,16 +108,20 @@ for Windows, Linux, macOS
   - SD007_BV5_V3 with AM29LV160MB
   - SD007_K8D3216_32M with MX29LV160CT
   - SD007_TSOP_29LV017D with L017D70VC
+  - SD007_TSOP_29LV017D with S29GL032M90T
   - SD007_TSOP_48BALL with 36VF3204
   - SD007_TSOP_48BALL with AM29LV160DB
   - SD007_TSOP_48BALL with K8D3216UTC
   - SD007_TSOP_48BALL with M29W160ET
   - SD007_TSOP_48BALL with L160DB12VI
+  - SD007_TSOP_48BALL_V10 with M29W320DT
 
 - Game Boy Advance
 
+  - 0121 with 0121M0Y0BE
   - 100BS6600_48BALL_V4 with 6600M0U0BE
   - 28F256L03B-DRV with 256L30B
+  - 29LV128DBT2C-90Q and ALTERA CPLD
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
   - 4350Q2 with 4350LLYBQ2
@@ -139,7 +145,9 @@ for Windows, Linux, macOS
   - BX2006_TSOP_64BALL with GL256S
   - BX2006_TSOPBGA_0106 with M29W640GB6AZA6
   - BX2006_TSOPBGA_0106 with K8D6316UTM-PI07
+  - GA-07 with unlabeled flash chip
   - GE28F128W30 with 128W30B0
+  - M5M29G130AN (no PCB text)
   - M6MGJ927 (no PCB text)
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
@@ -195,10 +203,12 @@ The author would like to thank the following very kind people for their help and
 - bbsan (flash chip info)
 - ClassicOldSong (bug reports)
 - djedditt (testing)
+- dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
+- eveningmoose (flash chip info)
 - Frost Clock (flash chip info)
 - howie0210 (flash chip info)
-- Icesythe7 (feature suggestions)
+- Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
 - JFox (help with properly packaging the app for pip)
 - julgr (macOS help, testing)
@@ -206,11 +216,15 @@ The author would like to thank the following very kind people for their help and
 - LovelyA72 (flash chip info)
 - LucentW (flash chip info, testing, bug reports)
 - marv17 (flash chip info, testing, bug reports, feature suggestions)
+- Mr_V (flash chip info, testing)
 - paarongiroux (bug reports)
 - Paradoxical (flash chip info)
+- RetroGorek (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
+- Sgt.DoudouMiel (flash chip info)
 - skite2001 (flash chip info)
 - Super Maker (flash chip info, testing)
+- t5b6_de (flash chip info)
 - Veund (flash chip info)
 - Zeii (flash chip info)
 - Zelante (flash chip info)

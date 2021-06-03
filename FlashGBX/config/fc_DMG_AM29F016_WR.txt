@@ -1,9 +1,11 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with AM29F016/AM29F016B @ WR"
+		"DIY cart with AM29F016/AM29F016B @ WR",
+		"insideGadgets 2 MB, 32 KB FRAM, v1.0"
 	],
 	"flash_ids":[
+		[ 0x01, 0xAD, 0x00, 0x00 ],
 		[ 0x01, 0xAD, 0x00, 0x00 ]
 	],
 	"voltage":5,

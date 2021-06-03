@@ -1,12 +1,10 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM",
 		"insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM"
 	],
 	"flash_ids":[
-		[ 0x01, 0x01, 0xD2, 0xD2 ],
-		[ 0x01, 0xAD, 0x00, 0x00 ]		
+		[ 0x01, 0x01, 0xD2, 0xD2 ]
 	],
 	"voltage":5,
 	"flash_size":0x200000,

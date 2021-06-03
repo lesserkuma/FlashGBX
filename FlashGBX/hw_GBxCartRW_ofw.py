@@ -112,6 +112,9 @@ class GbxDevice:
 		"USART_1_7M_SPEED":'>',
 		"CLK_HIGH":'K',
 		"CLK_LOW":'[',
+		"CART_PWR_ON":'/',
+		"CART_PWR_OFF":'.',
+		"QUERY_CART_PWR":']'
 	}
 	PCB_VERSIONS = {1:'v1.0', 2:'v1.1', 4:'v1.3', 90:'XMAS', 100:'Mini'}
 	SUPPORTED_CARTS = {}
@@ -200,10 +203,13 @@ class GbxDevice:
 					pass
 				
 				if self.FW[1] not in self.PCB_VERSIONS.keys():
-					dev.close()
-					self.DEVICE = None
-					continue
-					#pass
+					if Util.DEBUG is True and self.FW[1] == 5:
+						self.PCB_VERSIONS[5] = "v1.4"
+						pass
+					else:
+						dev.close()
+						self.DEVICE = None
+						continue
 				
 				if (self.FW[1] != 4):
 					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3 and v1.3 Pro. Other revisions are untested and may not be fully compatible."])
@@ -736,6 +742,16 @@ class GbxDevice:
 		else:
 			return buffer[0]
 	
+	def CartPowerOn(self):
+		if self.FW[1] == 5:
+			self.write(self.DEVICE_CMD["QUERY_CART_PWR"])
+			ret = self.DEVICE.read(1)
+			if ret == b'\x00':
+				self.set_mode(self.DEVICE_CMD["CART_PWR_ON"])
+				print("POWER ON")
+				time.sleep(0.2)
+				self.DEVICE.reset_input_buffer() # bug workaround
+
 	def SetMode(self, mode):
 		if mode == "DMG":
 			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
@@ -744,6 +760,7 @@ class GbxDevice:
 			self.set_mode(self.DEVICE_CMD["VOLTAGE_3_3V"])
 			self.MODE = "AGB"
 		self.set_number(0, self.DEVICE_CMD["SET_START_ADDRESS"])
+		self.CartPowerOn()
 	
 	def AutoDetectFlash(self, limitVoltage=False):
 		flash_types = []
@@ -1060,6 +1077,8 @@ class GbxDevice:
 		
 		header = self.ReadROM(0, 0x180)
 		if len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
+		if Util.DEBUG:
+			with open("debug_header.bin", "wb") as f: f.write(header)
 
 		# Check for DACS
 		dacs_8m = False
@@ -1834,6 +1853,10 @@ class GbxDevice:
 		#	return False
 		# Firmware check
 		#dprint(flashcart_meta)
+
+		if "flash_commands_on_bank_1" in cart_type:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported by FlashGBX. Please try the official GBxCart RW firmware and interface software instead.", "abortable":False})
+			return False
 
 		# Set Voltage
 		if voltage == 3.3:

@@ -411,7 +411,7 @@ class GbxDevice:
 				return self.ReadROM(address, length)
 
 	def _cart_write(self, address, value, flashcart=False, sram=False):
-		#dprint("Writing to cartridge: 0x{:X} = 0x{:X}".format(address, value & 0xFF))
+		dprint("Writing to cartridge: 0x{:X} = 0x{:X}".format(address, value & 0xFF))
 		if self.MODE == "DMG":
 			if flashcart:
 				buffer = bytearray([self.DEVICE_CMD["DMG_FLASH_WRITE_BYTE"]])
@@ -523,7 +523,9 @@ class GbxDevice:
 		
 		header = self.ReadROM(0, 0x180)
 		if len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
-
+		if Util.DEBUG:
+			with open("debug_header.bin", "wb") as f: f.write(header)
+		
 		# Check for DACS
 		dacs_8m = False
 		if header[0x04:0x04+0x9C] == bytearray([0x00] * 0x9C):
@@ -536,11 +538,23 @@ class GbxDevice:
 		# Parse ROM header
 		if self.MODE == "DMG":
 			data = RomFileDMG(header).GetHeader()
+			if data["logo_correct"] is False: # try to fix weird bootlegs
+				self._cart_write(0, 0xFF)
+				time.sleep(0.1)
+				header = self.ReadROM(0, 0x180)
+				data = RomFileDMG(header).GetHeader()
+			
 			_mbc = DMG_MBC().GetInstance(args={"mbc":data["features_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
 			self.INFO["has_rtc"] = _mbc.HasRTC() is True
 		
 		elif self.MODE == "AGB":
 			data = RomFileAGB(header).GetHeader()
+			if data["logo_correct"] is False: # try to fix weird bootlegs
+				self._cart_write(0, 0xFF)
+				time.sleep(0.1)
+				header = self.ReadROM(0, 0x180)
+				data = RomFileAGB(header).GetHeader()
+
 			size_check = header[0xA0:0xA0+16]
 			currAddr = 0x400000
 			while currAddr < 0x2000000:
@@ -553,7 +567,7 @@ class GbxDevice:
 			elif dacs_8m:
 				data["dacs_8m"] = True
 			
-			if header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
+			if data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
 				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
 				has_rtc = _agb_gpio.HasRTC()
 				data["has_rtc"] = has_rtc is True
@@ -569,7 +583,6 @@ class GbxDevice:
 		self.INFO["last_action"] = 0
 		
 		if self.MODE == "DMG" and setPinsAsInputs: self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"])
-		#with open("debug.bin", "wb") as f: f.write(header)
 		return data
 	
 	def ReadROM(self, address, length, skip_init=False, max_length=64):
@@ -1121,6 +1134,7 @@ class GbxDevice:
 					for i in range(0, len(method['read_identifier'])):
 						self._cart_write(method['read_identifier'][i][0], method["read_identifier"][i][1], flashcart=True)
 					flash_id = self.ReadROM(0, 64)[0:8]
+
 					if self.MODE == "DMG":
 						method_string = "[" + we.ljust(5) + "/{:4X}/{:2X}]".format(method['read_identifier'][0][0], method['read_identifier'][0][1])
 					else:
@@ -1133,7 +1147,30 @@ class GbxDevice:
 						self._cart_write(method['reset'][i][0], method['reset'][i][1], flashcart=True)
 					
 					cfi["method"] = method
-				
+				else:
+					for j in range(0, 2):
+						if j == 1:
+							d_swap = ( 0, 1 )
+							for k in method.keys():
+								for c in range(0, len(method[k])):
+									if isinstance(method[k][c][1], int):
+										method[k][c][1] = bitswap(method[k][c][1], d_swap)
+						for i in range(0, len(method['read_identifier'])):
+							self._cart_write(method['read_identifier'][i][0], method["read_identifier"][i][1], flashcart=True)
+						flash_id = self.ReadROM(0, 64)[0:8]
+						if flash_id == check_buffer[:len(flash_id)]: continue
+
+						if self.MODE == "DMG":
+							method_string = "[" + we.ljust(5) + "/{:4X}/{:2X}]".format(method['read_identifier'][0][0], method['read_identifier'][0][1])
+						else:
+							method_string = "[{:6X}/{:2X}]".format(method['read_identifier'][0][0], method['read_identifier'][0][1])
+						line_exists = False
+						for i in range(0, len(flash_id_lines)):
+							if method_string == flash_id_lines[i][0]: line_exists = True
+						if not line_exists: flash_id_lines.append([method_string, flash_id])
+						for i in range(0, len(method['reset'])):
+							self._cart_write(method['reset'][i][0], method['reset'][i][1], flashcart=True)
+
 				if cart_type is not None: # reset cartridge if method is known
 					flashcart_meta = copy.deepcopy(cart_type)
 					if "reset" in flashcart_meta["commands"]:
@@ -1799,6 +1836,12 @@ class GbxDevice:
 		cart_type = copy.deepcopy(supported_carts[args["cart_type"]])
 		if cart_type == "RETAIL" or cart_type == "AUTODETECT": return False # Generic ROM Cartridge is not flashable
 		
+		# Firmware check L1
+		if "flash_commands_on_bank_1" in cart_type:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported by FlashGBX. Please try the official GBxCart RW firmware and interface software instead.", "abortable":False})
+			return False
+		# Firmware check L1
+
 		cart_type["_index"] = 0
 		for i in range(0, len(list(self.SUPPORTED_CARTS[self.MODE].keys()))):
 			if i == args["cart_type"]:

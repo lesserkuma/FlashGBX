@@ -7,12 +7,12 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "2.1"
+VERSION_PEP440 = "2.2"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
-AGB_Header_ROM_Sizes = [ "4 MB", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB", "256 MB" ]
-AGB_Header_ROM_Sizes_Map = [ 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
+AGB_Header_ROM_Sizes = [ "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB", "256 MB" ]
+AGB_Header_ROM_Sizes_Map = [ 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
 AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "512K FLASH (64 KB)", "1M FLASH (128 KB)", "8M DACS (1008 KB)" ]
 AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 65536, 131072, 1032192 ]
 AGB_Global_CRC32 = 0

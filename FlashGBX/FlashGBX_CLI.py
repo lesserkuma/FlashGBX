@@ -543,6 +543,10 @@ class FlashGBX_CLI():
 			if self.CONN.GetMode() == "DMG": cart_types = self.CONN.GetSupportedCartridgesDMG()
 			elif self.CONN.GetMode() == "AGB": cart_types = self.CONN.GetSupportedCartridgesAGB()
 			size = cart_types[1][detected[0]]["flash_size"]
+			if "manual_select" in cart_types[1][detected[0]]:
+				manual_select = cart_types[1][detected[0]]["manual_select"]
+			else:
+				manual_select = False
 			if "sector_size" in cart_types[1][detected[0]]:
 				sectors = cart_types[1][detected[0]]["sector_size"]
 			else:
@@ -555,25 +559,29 @@ class FlashGBX_CLI():
 					sectors_undetected = True
 				cart_text += "- " + cart_types[0][detected[i]] + "\n"
 			
-			if size_undetected:
-				(_, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
-				if isinstance(cfi, dict) and 'device_size' in cfi:
-					for i in range(0, len(detected)):
-						if cfi['device_size'] == cart_types[1][detected[i]]["flash_size"]:
-							cart_type = detected[i]
-							size_undetected = False
-							break
-			
-			if len(detected) == 1:
-				msg_text = "The following flash cartridge type was detected:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
+			if manual_select:
+				msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nHowever, there are differences between these cartridge types that cannot be detected automatically, so please select the correct cartridge type manually."
+				cart_type = 0
 			else:
-				if size_undetected is True:
-					msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nHowever, you may need to manually adjust the ROM size selection.\n\nIMPORTANT: While these cartridges share the same electronic signature, their supported ROM size can differ. As the size can not be detected automatically at this time, please select it manually."
+				if size_undetected:
+					(_, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
+					if isinstance(cfi, dict) and 'device_size' in cfi:
+						for i in range(0, len(detected)):
+							if cfi['device_size'] == cart_types[1][detected[i]]["flash_size"]:
+								cart_type = detected[i]
+								size_undetected = False
+								break
+				
+				if len(detected) == 1:
+					msg_text = "The following flash cartridge type was detected:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
 				else:
-					msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
-			
-			if sectors_undetected and "sector_size_from_cfi" not in cart_types[1][cart_type]:
-				msg_text = msg_text + "\n\n{:s}IMPORTANT:{:s} While these share most of their attributes, some of them can not be automatically detected. If you encounter any errors while writing a ROM, please manually select the correct type based on the flash chip markings of your cartridge. Unchecking the “Prefer sector erase mode” config option can also help.".format(ANSI.RED, ANSI.RESET)
+					if size_undetected is True:
+						msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nHowever, you may need to manually adjust the ROM size selection.\n\nIMPORTANT: While these cartridges share the same electronic signature, their supported ROM size can differ. As the size can not be detected automatically at this time, please select it manually."
+					else:
+						msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
+				
+				if sectors_undetected and "sector_size_from_cfi" not in cart_types[1][cart_type]:
+					msg_text = msg_text + "\n\n{:s}IMPORTANT:{:s} While these share most of their attributes, some of them can not be automatically detected. If you encounter any errors while writing a ROM, please manually select the correct type based on the flash chip markings of your cartridge. Unchecking the “Prefer sector erase mode” config option can also help.".format(ANSI.RED, ANSI.RESET)
 			
 			print(msg_text)
 			if knownCartCFI:
@@ -720,7 +728,7 @@ class FlashGBX_CLI():
 			if cart_type == 0:
 				msg_5v = ""
 				if mode == "DMG": msg_5v = "If your flash cartridge requires 5V to work, you can use the “--force-5v” command line switch, however please note that 5V can be unsafe for some flash chips."
-				print("\n{:s}Auto-detection failed. Please use the “--flashcart-handler” command line switch to select the flash cartridge handler manually.\n{:s}{:s}{:s}".format(ANSI.RED, ANSI.YELLOW, msg_5v, ANSI.RESET))
+				print("\n{:s}Auto-detection failed. Please use the “--flashcart-handler” command line switch to select the flash cartridge type manually.\n{:s}{:s}{:s}".format(ANSI.RED, ANSI.YELLOW, msg_5v, ANSI.RESET))
 				return
 			elif cart_type < 0: return
 		elif cart_type == 0 and args.flashcart_handler != "autodetect":
@@ -734,8 +742,11 @@ class FlashGBX_CLI():
 			path = args.path
 		
 		try:
-			if os.path.getsize(path) > 0x2000000: # reject too large files to avoid exploding RAM
-				print("{:s}Files bigger than 32 MB are not supported at this time.{:s}".format(ANSI.RED, ANSI.RESET))
+			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
+				print("{:s}ROM files bigger than 256 MB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
+				return
+			elif os.path.getsize(path) < 0x400:
+				print("{:s}ROM files smaller than 1 KB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
 			with open(path, "rb") as file: buffer = file.read()
 		except (PermissionError, FileNotFoundError):

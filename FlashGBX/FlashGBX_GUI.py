@@ -933,7 +933,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if answer == QtWidgets.QMessageBox.Yes:
 					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage)
 					if cfi_s == "":
-						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. Please clean the cartridge contacts and make sure that the cartridge is seated correctly. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. It may be too old, not reflashable or the cartridge may not be seated correctly.", QtWidgets.QMessageBox.Ok)
 					else:
 						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
 						with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])
@@ -945,6 +945,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if self.CONN.GetMode() == "DMG": cart_types = self.CONN.GetSupportedCartridgesDMG()
 				elif self.CONN.GetMode() == "AGB": cart_types = self.CONN.GetSupportedCartridgesAGB()
 				size = cart_types[1][detected[0]]["flash_size"]
+				if "manual_select" in cart_types[1][detected[0]]:
+					manual_select = cart_types[1][detected[0]]["manual_select"]
+				else:
+					manual_select = False
 				if "sector_size" in cart_types[1][detected[0]]:
 					sectors = cart_types[1][detected[0]]["sector_size"]
 				else:
@@ -957,35 +961,43 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						sectors_undetected = True
 					cart_text += "- " + cart_types[0][detected[i]] + "\n"
 				
-				if size_undetected:
-					(_, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
-					if isinstance(cfi, dict) and 'device_size' in cfi:
-						for i in range(0, len(detected)):
-							if cfi['device_size'] == cart_types[1][detected[i]]["flash_size"]:
-								cart_type = detected[i]
-								size_undetected = False
-								break
-				
-				if len(detected) == 1:
-					msg_text = "The following flash cartridge type was detected:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
+				if manual_select:
+					msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nHowever, there are differences between these cartridge types that cannot be detected automatically, so please select the correct cartridge type manually."
+					cart_type = 0
 				else:
-					if size_undetected is True:
-						msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nA compatible entry from this list will now be auto-selected, but you may need to manually adjust the ROM size selection.\n\nIMPORTANT: While these cartridges share the same electronic signature, their supported ROM size can differ. As the size can not be detected automatically at this time, please select it manually."
+					if size_undetected:
+						(_, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
+						if isinstance(cfi, dict) and 'device_size' in cfi:
+							for i in range(0, len(detected)):
+								if cfi['device_size'] == cart_types[1][detected[i]]["flash_size"]:
+									cart_type = detected[i]
+									size_undetected = False
+									break
+					
+					if len(detected) == 1:
+						msg_text = "The following flash cartridge type was detected:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
 					else:
-						msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nA compatible entry from this list will now be auto-selected.\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
+						if size_undetected is True:
+							msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nA compatible entry from this list will now be auto-selected, but you may need to manually adjust the ROM size selection.\n\nIMPORTANT: While these cartridges share the same electronic signature, their supported ROM size can differ. As the size can not be detected automatically at this time, please select it manually."
+						else:
+							msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nA compatible entry from this list will now be auto-selected.\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
+					
+					if sectors_undetected and "sector_size_from_cfi" not in cart_types[1][cart_type]:
+						msg_text = msg_text + "\n\n{:s}IMPORTANT:{:s} While these share most of their attributes, some of them can not be automatically detected. If you encounter any errors while writing a ROM, please manually select the correct type based on the flash chip markings of your cartridge. Enabling the “Prefer chip erase mode” config option can also help.".format(ANSI.RED, ANSI.RESET)
 				
-				if sectors_undetected and "sector_size_from_cfi" not in cart_types[1][cart_type]:
-					msg_text = msg_text + "\n\n{:s}IMPORTANT:{:s} While these share most of their attributes, some of them can not be automatically detected. If you encounter any errors while writing a ROM, please manually select the correct type based on the flash chip markings of your cartridge. Enabling the “Prefer chip erase mode” config option can also help.".format(ANSI.RED, ANSI.RESET)
-				
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
-				button_ok = msgbox.addButton("&OK", QtWidgets.QMessageBox.ActionRole)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
+				if cart_type != 0:
+					button_ok = msgbox.addButton("&OK", QtWidgets.QMessageBox.ActionRole)
 				button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
 				button_cfi = msgbox.addButton("  Run flash chip &query  ", QtWidgets.QMessageBox.ActionRole)
-				msgbox.setDefaultButton(button_ok)
+				if cart_type != 0:
+					msgbox.setDefaultButton(button_ok)
+				else:
+					msgbox.setDefaultButton(button_cancel)
 				msgbox.setEscapeButton(button_cancel)
 				answer = msgbox.exec()
 				if msgbox.clickedButton() == button_cfi:
-					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
+					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type] if cart_type != 0 else None)
 					if cfi_s == "" or cfi == False:
 						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.", QtWidgets.QMessageBox.Ok)
 					else:
@@ -1146,7 +1158,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 		
 		if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
-			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "Files bigger than 256 MB are not supported.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MB are not supported.", QtWidgets.QMessageBox.Ok)
+			return
+		elif os.path.getsize(path) < 0x400:
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files smaller than 1 KB are not supported.", QtWidgets.QMessageBox.Ok)
 			return
 		
 		with open(path, "rb") as file: buffer = bytearray(file.read(0x1000))
@@ -1274,7 +1289,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if self.CONN.GetMode() == "DMG" and features == 0x10 and not self.CONN.IsClkConnected():
 				rtc = False
 			else:
-				msg = "A Real Time Clock was detected on the cartridge. Do you want the cartridge’s Real Time Clock register values also to be saved?"
+				msg = "A Real Time Clock cartridge was detected. Do you want the cartridge’s Real Time Clock register values also to be saved?"
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 				answer = msgbox.exec()
@@ -1349,7 +1364,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				rtc = False
 			elif (self.CONN.GetMode() == "DMG" and ((features == 0xFE and (filesize == save_type + 0xC or erase)) or (self.CONN.IsClkConnected() and features == 0x10 and filesize == save_type + 0x30 or erase))) or \
 			     (self.CONN.GetMode() == "AGB" and (filesize == Util.AGB_Header_Save_Sizes[save_type] + 0x10 or erase)):
-				msg = "A Real Time Clock was detected on the cartridge. Do you want the Real Time Clock register values to be also written?"
+				msg = "A Real Time Clock cartridge was detected. Do you want the Real Time Clock register values to be also written?"
 				cb = QtWidgets.QCheckBox("Update RTC", checked=True)
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)

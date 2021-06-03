@@ -297,8 +297,10 @@ class FirmwareUpdater(QtWidgets.QDialog):
 
 		fncSetStatus(text="Status: Waiting for bootloader...", setProgress=0)
 		if self.ResetAVR(delay) is False:
-			fncSetStatus(text="Status: Device reboot error.", enableUI=True)
+			fncSetStatus(text="Status: Bootloader error.", enableUI=True)
 			self.prgStatus.setValue(0)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW v1.3 bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+			answer = msgbox.exec()
 			return 2
 		
 		while True:
@@ -322,13 +324,17 @@ class FirmwareUpdater(QtWidgets.QDialog):
 				time.sleep(1)
 				if len(buffer) != 0x11:
 					delay += 0.05
-				fncSetStatus("Status: Waiting for bootloader... (+{:d}ms)".format(int(delay * 1000)))
+				fncSetStatus("Status: Waiting for bootloader... (+{:d}ms)".format(math.ceil(delay * 1000)))
 				if self.ResetAVR(delay) is False:
-					fncSetStatus(text="Status: Device reboot error.", enableUI=True)
+					fncSetStatus(text="Status: Bootloader error.", enableUI=True)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW v1.3 bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+					answer = msgbox.exec()
 					return 2
 				lives -= 1
 				if lives < 0:
-					fncSetStatus(text="Status: Device reboot error.", enableUI=True)
+					fncSetStatus(text="Status: Bootloader timeout.", enableUI=True)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW v1.3 bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+					answer = msgbox.exec()
 					return 2
 				continue
 			break

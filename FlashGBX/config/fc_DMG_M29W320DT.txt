@@ -1,0 +1,75 @@
+{
+	"type":"DMG",
+	"names":[
+		"SD007_TSOP_29LV017D with M29W320DT",
+		"SD007_TSOP_48BALL_V10 with M29W320DT"
+	],
+	"flash_ids":[
+		[ 0x02, 0x02, 0x7D, 0x7D ],
+		[ 0x20, 0x20, 0xC9, 0xC9 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x400000,
+	"start_addr":0x4000,
+	"first_bank":0,
+	"write_pin":"WR",
+	"chip_erase_timeout":60,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
+		],
+		"chip_erase":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"sector_erase":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
+			[ 0xAAA, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

@@ -1,4 +1,20 @@
 # Release notes
+### v2.2 (released 2021-06-03)
+- Added support for insideGadgets 2 MB, 32 KB FRAM, v1.0 *(thanks t5b6_de)*
+- Added support for SD007_TSOP_29LV017D with M29W320DT *(thanks marv17)*
+- Added support for SD007_TSOP_29LV017D with S29GL032M90T *(thanks marv17)*
+- Fixed detection of Classic NES Series and Famicom Mini game cartridges for Game Boy Advance *(thanks LucentW)*
+- Added support for 29LV128DBT2C-90Q and ALTERA CPLD *(thanks Sgt.DoudouMiel)*
+- Added support for 0121 with 0121M0Y0BE *(thanks RetroGorek)*
+- Fixed detection of Pocket Monsters Ruby v1.1 (AGB-AXVJ-JPN) and Pocket Monsters Sapphire v1.1 (AGB-AXPJ-JPN) genuine game cartridges *(thanks Icesythe7)*
+- Fixed flash chip query for flash cartridges that have no CFI data but swapped pins *(thanks marv17)*
+- Added support for M5M29G130AN (no PCB text) *(thanks Mr_V)*
+- Added support for GA-07 with unlabeled flash chip *(thanks Mr_V)*
+- Added support for SD007_TSOP_48BALL_V10 with M29W320DT *(thanks Jayro)*
+- Fixed a problem of reading from a certain type of cartridge that uses the GL256S flash chip *(thanks marv17)*
+- Added support for B11 with 26L6420MC-90 *(thanks dyf2007)*
+- Added support for a DIY cart with MBC3 and MX29LV640 *(thanks eveningmoose)*
+
 ### v2.1 (released 2021-05-05)
 - Fixed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17 and 90sFlav)*
 - Added support for a DIY cart with MBC1 and AM29F080 *(thanks skite2001)*

@@ -161,7 +161,7 @@ class Flashcart:
 		dprint("Flash ID: {:s}".format(' '.join(format(x, '02X') for x in cart_flash_id)))
 		verified = True
 		if cart_flash_id not in self.CONFIG["flash_ids"]:
-			dprint("WARNING: This Flash ID does not exist in flashcart handler file.")
+			dprint("This Flash ID does not exist in flashcart handler file.")
 			verified = False
 		return (verified, cart_flash_id)
 	
@@ -238,6 +238,7 @@ class Flashcart:
 							#sr_addr = self.CONFIG["commands"]["read_status_register"][j][0]
 							sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
 							self.CartWrite([[addr, sr_data]])
+					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
 					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["chip_erase_wait_for"][i][2], data, str(wait_for == data)))
 					wait_for = wait_for & self.CONFIG["commands"]["chip_erase_wait_for"][i][2]
@@ -281,6 +282,7 @@ class Flashcart:
 							sr_addr = self.CONFIG["commands"]["read_status_register"][j][0]
 							sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
 							self.CartWrite([[sr_addr, sr_data]])
+					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
 					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["sector_erase_wait_for"][i][2], data, str(wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2] == data)))
 					wait_for = wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2]
@@ -320,6 +322,7 @@ class Flashcart:
 
 class CFI:
 	def Parse(self, buffer):
+		if buffer is False or buffer == b'': return False
 		buffer = copy.copy(buffer)
 		info = {}
 		magic = "{:s}{:s}{:s}".format(chr(buffer[0x20]), chr(buffer[0x22]), chr(buffer[0x24]))
