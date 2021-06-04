@@ -5,6 +5,7 @@
 	],
 	"voltage":3.3,
 	"chip_erase_timeout":120,
+	"sector_size_from_cfi":true,
 	"command_set":"INTEL",
 	"commands":{
 		"reset":[

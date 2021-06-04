@@ -13,7 +13,8 @@
 	"start_addr":0x4000,
 	"first_bank":0,
 	"write_pin":"WR",
-	"chip_erase_timeout":60,
+	"sector_size_from_cfi":true,
+	"chip_erase_timeout":120,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
