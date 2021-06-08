@@ -486,6 +486,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.SETTINGS.setValue("UpdateCheck", "disabled")
 		
 		if update_check and update_check.lower() == "enabled":
+			print("")
 			if ".dev" in VERSION_PEP440:
 				type = "test "
 				url = "https://test.pypi.org/pypi/FlashGBX/json"
@@ -933,7 +934,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if answer == QtWidgets.QMessageBox.Yes:
 					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage)
 					if cfi_s == "":
-						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. It may be too old, not reflashable or the cartridge may not be seated correctly.", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>This cartridge does not provide Common Flash Interface (CFI) information.", QtWidgets.QMessageBox.Ok)
 					else:
 						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
 						with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])
@@ -999,7 +1000,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if msgbox.clickedButton() == button_cfi:
 					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type] if cart_type != 0 else None)
 					if cfi_s == "" or cfi == False:
-						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>There was no Common Flash Interface (CFI) response from the cartridge. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>This cartridge does not provide Common Flash Interface (CFI) information.", QtWidgets.QMessageBox.Ok)
 					else:
 						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
 						with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])

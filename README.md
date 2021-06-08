@@ -14,7 +14,7 @@ for Windows, Linux, macOS
 - Many reproduction cartridges and flash cartridges can be auto-detected
 - A flash chip query (including Common Flash Interface information) can be performed for flash cartridges
 - Decode and extract Game Boy Camera photos from save data
-- Update firmware of GBxCart RW v1.3 devices
+- Update firmware of insideGadgets GBxCart RW v1.3 devices
 
 ### Confirmed working reader/writer hardware and firmware versions
 
@@ -114,12 +114,14 @@ for Windows, Linux, macOS
   - SD007_TSOP_48BALL with K8D3216UTC
   - SD007_TSOP_48BALL with M29W160ET
   - SD007_TSOP_48BALL with L160DB12VI
+  - SD007_TSOP_48BALL_V10 with GL032M10BFIR3
   - SD007_TSOP_48BALL_V10 with M29W320DT
 
 - Game Boy Advance
 
   - 0121 with 0121M0Y0BE
   - 100BS6600_48BALL_V4 with 6600M0U0BE
+  - 2006_TSOP_64BALL_6106 with W29GL128SH9B
   - 28F256L03B-DRV with 256L30B
   - 29LV128DBT2C-90Q and ALTERA CPLD
   - 36L0R8-39VF512 with M36L0R8060B
@@ -137,9 +139,11 @@ for Windows, Linux, macOS
   - AGB-E05-01 with MX29GL128FHT2I-90G
   - AGB-E05-02 with M29W128FH
   - AGB-E05-02 with M29W128GH
+  - AGB-E05-06L with 29LV128DBT2C-90Q
   - AGB-E08-09 with 29LV128DTMC-90Q
   - AGB-SD-E05 with MSP55LV128
   - B104 with MSP55LV128
+  - B11 with 26L6420MC-90
   - BX2006_0106_NEW with S29GL128N10TFI01
   - BX2006_TSOP_64BALL with GL128S
   - BX2006_TSOP_64BALL with GL256S
@@ -207,6 +211,7 @@ The author would like to thank the following very kind people for their help and
 - easthighNerd (feature suggestions)
 - eveningmoose (flash chip info)
 - Frost Clock (flash chip info)
+- Grender (testing)
 - howie0210 (flash chip info)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)

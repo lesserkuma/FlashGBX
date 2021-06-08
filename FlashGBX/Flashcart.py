@@ -699,7 +699,7 @@ class Flashcart_DMG_MMSA(Flashcart):
 			[ 0x120, 0x09 ],
 			[ 0x121, 0xAA ],
 			[ 0x122, 0x55 ],
-			[ 0x13F, 0xa5 ],
+			[ 0x13F, 0xA5 ],
 		]
 		self.CartWrite(cmds)
 		# Re-Enable writes to MBC registers
@@ -719,6 +719,16 @@ class Flashcart_DMG_MMSA(Flashcart):
 		]
 		self.CartWrite(cmds)
 		self.CartWrite([[ 0x2100, 0x01 ]])
+		
+		# Suspend potential previous erase
+		cmds = [
+			[ 0x120, 0x0F ],
+			[ 0x125, 0x00 ],
+			[ 0x126, 0x00 ],
+			[ 0x127, 0xB0 ],
+			[ 0x13F, 0xA5 ],
+		]
+		self.CartWrite(cmds)
 		
 		# Unlock Hidden Sector
 		cmds = [

@@ -211,8 +211,6 @@ class FirmwareUpdater(QtWidgets.QDialog):
 			fn = None
 		
 		text = "The following firmware will now be written to your GBxCart v1.3 device:<br>- {:s}".format(fw)
-		#if platform.system() == "Darwin":
-		#	text += "<br><br>DISCLAIMER: In rare occasions, the firmware update may reportedly fail on some macOS systems with unstable drivers, so please proceed at your own risk. If an error occurs, your device can still be recovered using the official firmware update tool by insideGadgets."
 		text += "<br><br>Do you want to continue?"
 		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 		msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)

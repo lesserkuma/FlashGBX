@@ -211,11 +211,12 @@ class GbxDevice:
 						self.DEVICE = None
 						continue
 				
-				if (self.FW[1] != 4):
-					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3 and v1.3 Pro. Other revisions are untested and may not be fully compatible."])
-				else:
-					conn_msg.append([0, "NOTE: FlashGBX is now optimized for the custom high compatibility firmware. You can install it from the Tools menu."])
-				
+				if (self.FW[1] not in (4, 5, 100)):
+					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3, v1.4 and GBxCart RW Mini. Other revisions are untested and may not be fully compatible."])
+				elif self.FW[1] == 4:
+					conn_msg.append([0, "FlashGBX is now optimized for the custom high compatibility firmware. You can install it from the Tools menu."])
+				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
+
 				self.PORT = ports[i]
 				
 				# Load Flash Cartridge Handlers
@@ -350,9 +351,6 @@ class GbxDevice:
 			return ["DMG", "AGB"]
 	
 	def IsSupportedMbc(self, mbc):
-		#if (int(self.FW[0]) >= 26):
-		#	return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1B, 0x1C, 0x1E, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
-		#else:
 		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0xFC, 0xFE, 0xFF, 0x101, 0x103 )
 
 	def IsSupported3dMemory(self):
@@ -1816,6 +1814,14 @@ class GbxDevice:
 		if cart_type == "RETAIL" or cart_type == "AUTODETECT": return False # Generic ROM Cartridge is not flashable
 		flashcart_meta = copy.deepcopy(cart_type)
 		
+		# Special carts
+		if "Retrostage GameBoy Blaster" in cart_type["names"]:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The Retrostage GameBoy Blaster cartridge is currently not fully supported by FlashGBX. However, you can use the insideGadgets “Flasher” software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> to flash this cartridge.", "abortable":False})
+			return False
+		elif "insideGadgets Power Cart 1 MB, 128 KB SRAM" in cart_type["names"]:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The insideGadgets Power Cart is currently not fully supported by FlashGBX. However, you can use the dedicated insideGadgets “iG Power Cart Programs” software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> to flash this cartridge.", "abortable":False})
+			return False
+		# Special carts
 		# Firmware check R20+
 		if (int(self.FW[0]) < 20) and self.MODE == "AGB" and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] == [[0xAAA, 0xAA], [0x555, 0x55], ['SA', 0x25], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0x29]]:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"A firmware update is required to access this cartridge. Please update the firmware of your GBxCart RW device to version R20 or higher.", "abortable":False})
@@ -1848,6 +1854,7 @@ class GbxDevice:
 			del flashcart_meta["commands"]["buffer_write"]
 		elif self.MODE == "AGB" and "single_write" in flashcart_meta["commands"] and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] != [['SA', 0xE8], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0xD0], ['SA', 0xFF]]:
 			print("NOTE: Update your GBxCart RW firmware to version L1 or higher for a better transfer rate with this cartridge.")
+
 		#if "dmg-mmsa-jpn" in flashcart_meta:
 		#	self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Flashing GB Memory cartridges is currently only supported via the high compatibility firmware which you can install from the Tools menu.", "abortable":False})
 		#	return False

@@ -1,4 +1,12 @@
 # Release notes
+### v2.3 (released 2021-06-08)
+- Added support for AGB-E05-06L with 29LV128DBT2C-90Q *(thanks marv17)*
+- Nintendo Power GB Memory Cartridges will now be unlocked properly even if they’re stuck in erase mode *(thanks Grender for testing)*
+- Confirmed support for SD007_TSOP_48BALL_V10 with GL032M10BFIR3 *(thanks Mr_V)*
+- Added support for 2006_TSOP_64BALL_6106 with W29GL128SH9B *(thanks marv17)*
+- Fixed support for insideGadgets 1 MB, 128 KB SRAM *(thanks AlexiG)*
+- The [setup package](https://github.com/lesserkuma/FlashGBX/releases) now includes the CH341 USB serial driver for insideGadgets GBxCart RW devices
+
 ### v2.2 (released 2021-06-03)
 - Added support for insideGadgets 2 MB, 32 KB FRAM, v1.0 *(thanks t5b6_de)*
 - Added support for SD007_TSOP_29LV017D with M29W320DT *(thanks marv17)*

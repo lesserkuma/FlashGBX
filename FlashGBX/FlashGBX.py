@@ -33,7 +33,7 @@ def LoadConfig(args):
 	(config_version, fc_files) = ReadConfigFiles(args=args)
 	if config_version != Util.VERSION:
 		# Rename old files that have since been replaced/renamed/merged
-		deprecated_files = [ "fc_AGB_M36L0R705.txt", "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt" ]
+		deprecated_files = [ "fc_AGB_M36L0R705.txt", "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt", "fc_AGB_MX29LV640_AUDIO.txt" ]
 		for file in deprecated_files:
 			if os.path.exists(config_path + "/" + file):
 				os.rename(config_path + "/" + file, config_path + "/" + file + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".bak")
@@ -79,8 +79,8 @@ def main(portableMode=False):
 	os.environ['QT_MAC_WANTS_LAYER'] = '1'
 	
 	print("{:s} {:s} by Lesserkuma".format(Util.APPNAME, Util.VERSION))
+	print("https://github.com/lesserkuma/FlashGBX")
 	print("\nDISCLAIMER: This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!")
-	print("\nFor troubleshooting please visit https://github.com/lesserkuma/FlashGBX\n")
 	
 	if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 		app_path = os.path.dirname(sys.executable)

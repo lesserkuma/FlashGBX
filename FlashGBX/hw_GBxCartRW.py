@@ -170,6 +170,8 @@ class GbxDevice:
 					self.DEVICE = None
 					return False
 				
+				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
+
 				self.PORT = ports[i]
 				
 				# Load Flash Cartridge Handlers
@@ -1018,14 +1020,16 @@ class GbxDevice:
 			flashcart.Reset(full_reset=False)
 			flashcart.Unlock()
 			if "flash_ids" in flashcart_meta:
-				(verified, cart_flash_id) = flashcart.VerifyFlashID()
-				if verified and cart_flash_id in flashcart_meta["flash_ids"]:
-					flash_id = cart_flash_id
-					flash_id_found = True
-					flash_type = f
-					flash_types.append(flash_type)
-					flashcart.Reset(full_reset=True)
-					dprint("Found the correct cartridge type!")
+				vfid = flashcart.VerifyFlashID()
+				if vfid is not False:
+					(verified, cart_flash_id) = flashcart.VerifyFlashID()
+					if verified and cart_flash_id in flashcart_meta["flash_ids"]:
+						flash_id = cart_flash_id
+						flash_id_found = True
+						flash_type = f
+						flash_types.append(flash_type)
+						flashcart.Reset(full_reset=True)
+						dprint("Found the correct cartridge type!")
 		
 		if self.MODE == "DMG" and not flash_id_found:
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
@@ -1836,9 +1840,20 @@ class GbxDevice:
 		cart_type = copy.deepcopy(supported_carts[args["cart_type"]])
 		if cart_type == "RETAIL" or cart_type == "AUTODETECT": return False # Generic ROM Cartridge is not flashable
 		
+		# Special carts
+		if "Retrostage GameBoy Blaster" in cart_type["names"]:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The Retrostage GameBoy Blaster cartridge is currently not fully supported by FlashGBX. However, you can use the insideGadgets “Flasher” software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> to flash this cartridge.", "abortable":False})
+			return False
+		elif "insideGadgets Power Cart 1 MB, 128 KB SRAM" in cart_type["names"]:
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The insideGadgets Power Cart is currently not fully supported by FlashGBX. However, you can use the dedicated insideGadgets “iG Power Cart Programs” software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> to flash this cartridge.", "abortable":False})
+			return False
+		# Special carts
 		# Firmware check L1
 		if "flash_commands_on_bank_1" in cart_type:
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported by FlashGBX. Please try the official GBxCart RW firmware and interface software instead.", "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported by FlashGBX. Please try the official GBxCart RW firmware and interface software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> instead.", "abortable":False})
+			return False
+		elif cart_type["type"] == "DMG" and "write_pin" in cart_type and cart_type["write_pin"] == "WR+RESET":
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported by FlashGBX. Please try the official GBxCart RW firmware and interface software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> instead.", "abortable":False})
 			return False
 		# Firmware check L1
 
@@ -1856,7 +1871,7 @@ class GbxDevice:
 				try:
 					with open(os.path.splitext(args["path"])[0] + ".map", "rb") as file: args["buffer_map"] = file.read()
 				except:
-					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The GB Memory Cartridge requires a hidden sector file but was not found.\nExpected path: {:s}".format(os.path.splitext(args["path"])[0] + ".map"), "abortable":False})
+					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The GB Memory Cartridge requires a hidden sector file, but it wasn’t found.\nExpected path: {:s}".format(os.path.splitext(args["path"])[0] + ".map"), "abortable":False})
 					return False
 					#with open(args["path"], "rb") as f: rom_data = bytearray(f.read())
 					#gbmem = GBMemory(None, rom_data, None)
