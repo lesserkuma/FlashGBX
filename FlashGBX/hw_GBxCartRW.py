@@ -11,7 +11,6 @@ from .Mapper import DMG_MBC, AGB_GPIO
 from .Flashcart import Flashcart, Flashcart_DMG_MMSA, CFI
 from .Util import ANSI, dprint, bitswap, ParseCFI
 from . import Util
-from . import fw_GBxCartRW_v1_3
 
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
@@ -141,7 +140,6 @@ class GbxDevice:
 					dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
 					self.DEVICE = dev
 				
-				self.DEVICE.timeout = 1
 				dprint("Firmware information:", self.FW)
 				dprint("Baud rate:", self.BAUDRATE)
 
@@ -173,6 +171,7 @@ class GbxDevice:
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 
 				self.PORT = ports[i]
+				self.DEVICE.timeout = 1
 				
 				# Load Flash Cartridge Handlers
 				self.UpdateFlashCarts(flashcarts)
@@ -319,7 +318,11 @@ class GbxDevice:
 	
 	def GetFirmwareUpdaterClass(self):
 		if self.FW["pcb_ver"] == 4: # v1.3
-			return fw_GBxCartRW_v1_3.FirmwareUpdater
+			try:
+				from . import fw_GBxCartRW_v1_3
+				return fw_GBxCartRW_v1_3.FirmwareUpdater
+			except:
+				return False
 		else:
 			return False
 	
@@ -524,7 +527,7 @@ class GbxDevice:
 			self._set_fw_variable("DMG_WRITE_CS_PULSE", 0)
 		
 		header = self.ReadROM(0, 0x180)
-		if len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
+		if header is False or len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
 		if Util.DEBUG:
 			with open("debug_header.bin", "wb") as f: f.write(header)
 		

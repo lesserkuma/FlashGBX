@@ -10,7 +10,6 @@ from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
 from .Util import APPNAME, ANSI, dprint, bitswap, ParseCFI
 from . import Util
-from . import fw_GBxCartRW_v1_3
 
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
@@ -177,8 +176,6 @@ class GbxDevice:
 					#self.DEVICE = dev
 					pass
 				
-				self.DEVICE.timeout = 1
-				
 				if self.DEVICE is None or not self.IsConnected() or self.FW == [] or self.FW[0] == b'':
 					dev.close()
 					self.DEVICE = None
@@ -218,6 +215,7 @@ class GbxDevice:
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 
 				self.PORT = ports[i]
+				self.DEVICE.timeout = 1
 				
 				# Load Flash Cartridge Handlers
 				self.UpdateFlashCarts(flashcarts)
@@ -303,7 +301,11 @@ class GbxDevice:
 	
 	def GetFirmwareUpdaterClass(self):
 		if self.FW[1] == 4: # v1.3
-			return fw_GBxCartRW_v1_3.FirmwareUpdater
+			try:
+				from . import fw_GBxCartRW_v1_3
+				return fw_GBxCartRW_v1_3.FirmwareUpdater
+			except:
+				return False
 		else:
 			return False
 	
@@ -1074,7 +1076,7 @@ class GbxDevice:
 			# Firmware check R26+
 		
 		header = self.ReadROM(0, 0x180)
-		if len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
+		if header is False or len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
 		if Util.DEBUG:
 			with open("debug_header.bin", "wb") as f: f.write(header)
 

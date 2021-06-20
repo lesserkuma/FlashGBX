@@ -18,7 +18,7 @@ for Windows, Linux, macOS
 
 ### Confirmed working reader/writer hardware and firmware versions
 
-- [insideGadgets GBxCart RW v1.3 and v1.4 (Standard and Pro versions)](https://www.gbxcart.com/)
+- [insideGadgets GBxCart RW Mini, v1.3 and v1.4 (Standard and Pro versions)](https://www.gbxcart.com/)
   - Official firmware versions R19 to R30 (other hardware revisions and firmware versions may also work, but are untested)
   - Lesserkuma’s high compatibility firmware version L1
 
@@ -137,6 +137,7 @@ for Windows, Linux, macOS
   - AGB-E05-01 with GL128S
   - AGB-E05-01 with MSP55LV128M
   - AGB-E05-01 with MX29GL128FHT2I-90G
+  - AGB-E05-02 with JS28F128
   - AGB-E05-02 with M29W128FH
   - AGB-E05-02 with M29W128GH
   - AGB-E05-06L with 29LV128DBT2C-90Q
@@ -200,7 +201,7 @@ This software is provided as-is and the developer is not responsible for any dam
 The author would like to thank the following very kind people for their help and contributions (in alphabetical order):
 
 - 90sFlav (flash chip info)
-- AcoVanConis (bug reports)
+- AcoVanConis (bug reports, flash chip info)
 - AlexiG (GBxCart RW hardware, bug reports, flash chip info)
 - AndehX (app icon, flash chip info)
 - antPL (flash chip info)
@@ -212,7 +213,7 @@ The author would like to thank the following very kind people for their help and
 - eveningmoose (flash chip info)
 - Frost Clock (flash chip info)
 - Grender (testing)
-- howie0210 (flash chip info)
+- howie0210 (flash chip info, bug reports)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
 - JFox (help with properly packaging the app for pip)

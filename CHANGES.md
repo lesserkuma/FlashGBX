@@ -1,4 +1,10 @@
 # Release notes
+### v2.4 (released 2021-06-20)
+- Added support for 4050_4400_4000_4350_36L0R_6108 with M36L0R7050B *(thanks Jayro)*
+- Added support for AGB-E05-02 with JS28F128 *(thanks marv17)*
+- Confirmed support for SD007_TSOP_48BALL_V9 with 29LV320CBTC-70G *(thanks AcoVanConis)*
+- Fixed a bug when running FlashGBX without GUI support, the command line interface mode will now launch without extra parameters again *(thanks howie0210)*
+
 ### v2.3 (released 2021-06-08)
 - Added support for AGB-E05-06L with 29LV128DBT2C-90Q *(thanks marv17)*
 - Nintendo Power GB Memory Cartridges will now be unlocked properly even if they’re stuck in erase mode *(thanks Grender for testing)*

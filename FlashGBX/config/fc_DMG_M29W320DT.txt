@@ -3,11 +3,13 @@
 	"names":[
 		"SD007_TSOP_29LV017D with M29W320DT",
 		"SD007_TSOP_48BALL_V10 with M29W320DT",
-		"SD007_TSOP_48BALL_V10 with GL032M10BFIR3"
+		"SD007_TSOP_48BALL_V10 with GL032M10BFIR3",
+		"SD007_TSOP_48BALL_V9 with 29LV320CBTC-70G"
 	],
 	"flash_ids":[
 		[ 0x02, 0x02, 0x7D, 0x7D ],
 		[ 0x20, 0x20, 0xC9, 0xC9 ],
+		[ 0x02, 0x02, 0x7D, 0x7D ],
 		[ 0x02, 0x02, 0x7D, 0x7D ]
 	],
 	"voltage":3.3,

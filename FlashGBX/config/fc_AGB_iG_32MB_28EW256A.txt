@@ -1,10 +1,12 @@
 {
 	"type":"AGB",
 	"names":[
-		"insideGadgets 32 MB (28EW256A) + RTC/Rumble"
+		"insideGadgets 32 MB (28EW256A) + RTC/Rumble",
+		"insideGadgets 32 MB (S29GL512N) + RTC"
 	],
 	"flash_ids":[
-		[ 0x89, 0x00, 0x7E, 0x22 ]
+		[ 0x89, 0x00, 0x7E, 0x22 ],
+		[ 0x01, 0x00, 0x7E, 0x22 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x2000000,

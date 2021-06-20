@@ -1,0 +1,63 @@
+{
+	"type":"AGB",
+	"names":[
+		"4455_4400_4000_4350_36L0R_V3 with M36L0R7050T",
+		"4050_4400_4000_4350_36L0R_V5 with M36L0R7050T",
+		"4050_4400_4000_4350_36L0R_6108 with M36L0R7050B"
+	],
+	"flash_ids":[
+		[ 0x20, 0x00, 0xC4, 0x88 ],
+		[ 0x20, 0x00, 0xC4, 0x88 ],
+		[ 0x20, 0x00, 0xC6, 0x88 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x1000000,
+	"sector_size_from_cfi":true,
+	"reset_every":0x100000,
+	"command_set":"INTEL",
+	"commands":{
+		"reset":[
+			[ 0, 0x50 ],
+			[ 0, 0xFF ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x60 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ "SA", 0xE8 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
+		],
+		"buffer_write_wait_for":[
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ]
+		],
+		"single_write":[
+			[ 0, 0x70 ],
+			[ 0, 0x10 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}
