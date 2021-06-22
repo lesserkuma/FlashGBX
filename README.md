@@ -157,24 +157,29 @@ for Windows, Linux, macOS
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
-## Installing and running
+## Install instructions
 
-### Binaries (Windows)
+The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3.7+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.
+
+### Windows Binaries
 
 Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section:
 
 * Windows Setup: An installer that will add the application to the start menu and optionally create a desktop icon
 * Windows Portable: Have everything in one place including the config files
 
-### Download and run from source (Windows, Linux, macOS)
+### Run using Python (Linux, macOS, Windows)
 
-If you have Python and pip installed, you can use `pip install FlashGBX` to download and install the application, or use `pip install --upgrade FlashGBX` to upgrade from an older version. Then use `python -m FlashGBX` or `python -m FlashGBX --cli` to run it.
+#### Installing or upgrading from an older version
 
-To run FlashGBX in portable mode, you can also download the source code archive and call `python run.py` after installing the prerequisites yourself.
+1. Download and install [Python](https://www.python.org/downloads/)
+2. Open a Terminal or Command Prompt window
+3. Install FlashGBX with this command:<br>`pip3 install -U FlashGBX`<br>If you see an error about a conflict involving PySide2, use these two commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
 
-The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3.7+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.
+#### Running
+Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:<br>`python3 -m FlashGBX`
 
-⚠️ On some platforms you may have to use `pip3`/`python3` instead of `pip`/`python`.
+*To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
 
 ### Troubleshooting
 
@@ -186,7 +191,7 @@ The application should work on pretty much every operating system that supports 
 
 * On some Linux systems like Fedora, you may need to install the `python3-pillow-qt` package manually in order for the GUI mode to work.
 
-* If the `PySide2` package is not available for your system, you can install FlashGBX like so instead: `pip install pyserial Pillow setuptools requests python-dateutil` followed by `pip install --no-deps FlashGBX`.
+* Depending on your system configuration, you may have to use `pip` and `python` commands instead of `pip3` and `python3`.
 
 * On older systems such as MacOS X El Capitan 10.11, you may run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`. Installing [Python 3.7.9](https://www.python.org/downloads/release/python-379/) instead of the latest available version may resolve this issue. If that still doesn’t work, you can try to uninstall PySide2 (`pip uninstall PySide2`) and then run FlashGBX again in command line interface mode.
 
