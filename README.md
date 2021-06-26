@@ -197,7 +197,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 * Depending on your system configuration, you may have to use `pip` and `python` commands instead of `pip3` and `python3`.
 
-* As macOS versions 10.13 and older don’t ship with a driver for the insideGadgets GBxCart RW device, you can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
+* If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW device* installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
 * If you run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`, you can try to uninstall and re-install the Python package *PySide2*, or you can run FlashGBX in command line interface mode using the command `python3 -m FlashGBX --cli`.
 
