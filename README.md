@@ -174,10 +174,14 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 
 1. Download and install [Python](https://www.python.org/downloads/)
 2. Open a Terminal or Command Prompt window
-3. Install FlashGBX with this command:<br>`pip3 install -U FlashGBX`<br>If you see an error about a conflict involving PySide2, use these two commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
+3. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
+* If you see an error about a conflict involving PySide2, use these two commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
+* If you see the error message `No matching distribution found for FlashGBX`, your Python version may be too old (version 3.7 or higher is required)
 
 #### Running
-Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:<br>`python3 -m FlashGBX`
+Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
+
+`python3 -m FlashGBX`
 
 *To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
 
