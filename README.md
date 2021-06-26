@@ -159,8 +159,6 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 ## Installing and running
 
-The application should work on pretty much every operating system that supports Qt-GUI applications built using [Python 3.7+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.
-
 ### Windows Binaries
 
 Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section:
@@ -176,7 +174,9 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 2. Open a Terminal or Command Prompt window
 3. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
 * If you see an error about a conflict involving PySide2, use these two commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
-* If you see the error message `No matching distribution found for FlashGBX`, your Python version may be too old (version 3.7 or higher is required)
+* If you see the error message “No matching distribution found for FlashGBX”, your Python version may be too old (version 3.7 or higher is required)
+
+*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python 3.7+](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
 
 #### Running
 Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
@@ -187,7 +187,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 ### Troubleshooting
 
-* If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device.
+* If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device. An unstable cartridge connection is the most common reason for read or write errors.
 
 * On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
 
@@ -197,7 +197,9 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 * Depending on your system configuration, you may have to use `pip` and `python` commands instead of `pip3` and `python3`.
 
-* On older systems such as MacOS X El Capitan 10.11, you may run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`. Installing [Python 3.7.9](https://www.python.org/downloads/release/python-379/) instead of the latest available version may resolve this issue. If that still doesn’t work, you can try to uninstall PySide2 (`pip uninstall PySide2`) and then run FlashGBX again in command line interface mode.
+* As macOS versions 10.13 and older don’t ship with a driver for the insideGadgets GBxCart RW device, you can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
+
+* If you run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`, you can try to uninstall and re-install the Python package *PySide2*, or you can run FlashGBX in command line interface mode using the command `python3 -m FlashGBX --cli`.
 
 * For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
 
