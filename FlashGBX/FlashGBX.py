@@ -55,7 +55,7 @@ def LoadConfig(args):
 				ret.append([1, "The application was recently updated and some flashcart handler files have been updated as well. You will find backup copies of them in your configuration directory.\n\nUpdated files:\n" + rf_list[:-1]])
 			fc_files = glob.glob("{0:s}/fc_*.txt".format(config_path))
 		else:
-			ret.append([2, "{:s} not found. This is required to load new flash cartridge type configurations after updating.\n".format(app_path + "/res/config.zip")])
+			print("WARNING: {:s} not found. This is required to load new flash cartridge type configurations after updating.".format(app_path + "/res/config.zip"))
 	
 	# Read flash cart types
 	for file in fc_files:

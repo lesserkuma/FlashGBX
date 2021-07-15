@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-from PIL import Image, ImageDraw
+from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 import os, hashlib
 import email.utils

@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import zlib, zipfile, os, serial, struct, time, re, math, platform
+import zipfile, os, serial, struct, time, re, math, platform
 from PySide2 import QtCore, QtWidgets, QtGui
 from . import Util
 

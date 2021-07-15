@@ -1,4 +1,9 @@
 # Release notes
+### v2.5 (released 2021-07-15)
+- Added support for 4350Q2 with 4050V0YBQ1
+- Fixed Real Time Clock register access for MBC3B and MBC30 cartridges on the GBxCart RW v1.4 hardware
+- Added support for SD007_BV5 with 29LV160TE-70PFTN *(thanks RetroGorek)*
+
 ### v2.4 (released 2021-06-20)
 - Added support for 4050_4400_4000_4350_36L0R_6108 with M36L0R7050B *(thanks Jayro)*
 - Added support for AGB-E05-02 with JS28F128 *(thanks marv17)*

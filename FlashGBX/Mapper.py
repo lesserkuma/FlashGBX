@@ -5,7 +5,7 @@
 import time, datetime, struct, math, hashlib
 from dateutil.relativedelta import relativedelta
 from .RomFileDMG import RomFileDMG
-from .Util import ANSI, dprint
+from .Util import dprint
 from . import Util
 
 class DMG_MBC:
@@ -201,37 +201,49 @@ class DMG_MBC3(DMG_MBC):
 	def EnableRAM(self, enable=True):
 		dprint(self.GetName(), "|", enable)
 		commands = [
-			[ 0x6000, 0x01 if enable else 0x00 ],
+			#[ 0x6000, 0x01 if enable else 0x00 ],
 			[ 0x0000, 0x0A if enable else 0x00 ],
 		]
 		self.CartWrite(commands)
 	
 	def HasRTC(self):
 		dprint(self.GetName())
-		self.EnableRAM(enable=True)
-		ram1 = self.CartRead(0xA000, 0x10)
-		self.LatchRTC()
-		self.CartWrite([ [0x4000, 0x08] ])
-		ram2 = self.CartRead(0xA000, 0x10)
+		if self.MBC_ID != 16: return False
 		self.EnableRAM(enable=False)
-		#return (self.MBC_ID == 0x10)
+		self.EnableRAM(enable=True)
+		self.CartWrite([ [0x4000, 0x08] ])
+		self.LatchRTC()
+		ram1 = self.CartRead(0xA000, 0x10)
+		ram2 = ram1
+		t1 = time.time()
+		t2 = 0
+		while t2 < (t1 + 1):
+			self.LatchRTC()
+			ram2 = self.CartRead(0xA000, 0x10)
+			if ram1 != ram2: break
+			t2 = time.time()
+		dprint("RTC_S {:02X} != {:02X}?".format(ram1[0], ram2[0]), ram1 != ram2)
+		time.sleep(0.1)
 		return (ram1 != ram2)
 
 	def GetRTCBufferSize(self):
 		return 0x30
 
 	def LatchRTC(self):
-		self.EnableRAM(enable=True)
-		self.CartWrite([
-			[ 0x6000, 0 ],
-			[ 0x6000, 1 ],
-		])
-		self.CLK_TOGGLE_FNCPTR(5)
+		self.CLK_TOGGLE_FNCPTR(60)
+		self.CartWrite([ [ 0x0000, 0x0A ] ])
+		time.sleep(0.01)
+		self.CLK_TOGGLE_FNCPTR(60)
+		self.CartWrite([ [ 0x6000, 0x00 ] ])
+		self.CLK_TOGGLE_FNCPTR(60)
+		self.CartWrite([ [ 0x6000, 0x01 ] ])
+		time.sleep(0.01)
 
 	def ReadRTC(self):
-		self.EnableRAM(enable=True)
+		#self.EnableRAM(enable=True)
 		buffer = bytearray()
 		for i in range(0x08, 0x0D):
+			self.CLK_TOGGLE_FNCPTR(60)
 			self.CartWrite([ [0x4000, i] ])
 			buffer.extend(struct.pack("<I", self.CartRead(0xA000)))
 		buffer.extend(buffer) # copy
@@ -239,15 +251,12 @@ class DMG_MBC3(DMG_MBC):
 		# Add timestamp of backup time
 		ts = int(time.time())
 		buffer.extend(struct.pack("<Q", ts))
-
-		dstr = ' '.join(format(x, '02X') for x in buffer)
-		dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
-
+		
 		return buffer
 
 	def WriteRTC(self, buffer, advance=False):
 		dprint(buffer)
-		self.LatchRTC()
+		#self.LatchRTC()
 		if advance:
 			try:
 				dt_now = datetime.datetime.fromtimestamp(time.time())
@@ -299,14 +308,76 @@ class DMG_MBC3(DMG_MBC):
 			except Exception as e:
 				print("Couldn’t update the RTC register values\n", e)
 		
+		dprint("New values: RTC_S=0x{:02X}, RTC_M=0x{:02X}, RTC_H=0x{:02X}, RTC_DL=0x{:02X}, RTC_DH=0x{:02X}".format(buffer[0x00], buffer[0x04], buffer[0x08], buffer[0x0C], buffer[0x10]))
+
+		# Unlock and latch RTC
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x0000, 0x0A ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x00 ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x01 ] ])
+		time.sleep(0.01)
+
+		# Halt RTC
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x4000, 0x0C ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0xA000, 0x40 ] ])
+		time.sleep(0.1)
+		
 		# Write to registers
+		for i in range(0x08, 0x0D):
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x4000, i ] ])
+			self.CLK_TOGGLE_FNCPTR(50)
+			data = struct.unpack("<I", buffer[(i-8)*4:(i-8)*4+4])[0] & 0xFF
+			self.CartWrite([ [ 0xA000, data ] ])
+		time.sleep(0.1)
+
+		# Latch RTC
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x00 ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x01 ] ])
+		time.sleep(0.1)
+		return
+		for i in range(0, 5):
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x6000, 0x00 ] ])
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x6000, 0x01 ] ])
+			time.sleep(0.1)
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x4000, 0x0B ] ])
+			time.sleep(0.1)
+			dprint("Day = {:d}".format(self.CartRead(0xA000)))
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x4000, 0x0A ] ])
+			time.sleep(0.1)
+			dprint("Hour = {:d}".format(self.CartRead(0xA000)))
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x4000, 0x09 ] ])
+			time.sleep(0.1)
+			dprint("Minutes = {:d}".format(self.CartRead(0xA000)))
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x4000, 0x08 ] ])
+			time.sleep(0.1)
+			dprint("Seconds = {:d}".format(self.CartRead(0xA000)))
+			time.sleep(0.5)
+		#import sys
+		#sys.exit()
+		return
 		for i in range(0x08, 0x0D):
 			self.CartWrite([ [0x4000, i] ])
 			data = struct.unpack("<I", buffer[(i-8)*4:(i-8)*4+4])[0] & 0xFF
-			dprint("Writing 0x{:X} to 0x{:X}".format(data, i))
+			dprint("Writing 0x{:02X} to 0x{:02X}".format(data, i))
 			self.CartWrite([ [0xA000, data] ])
-			self.CLK_TOGGLE_FNCPTR(5)
-		self.LatchRTC()
+			self.CLK_TOGGLE_FNCPTR(1)
+			time.sleep(0.1)
+		#self.LatchRTC()
+		#self.CLK_TOGGLE_FNCPTR(1)
+		self.EnableRAM(enable=False)
 
 class DMG_MBC5(DMG_MBC):
 	def GetName(self):

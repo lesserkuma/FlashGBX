@@ -2,11 +2,10 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import sys, os, time, datetime, re, json, platform, subprocess, argparse, requests, webbrowser, pkg_resources, traceback
+import sys, os, time, datetime, re, json, platform, subprocess, requests, webbrowser, pkg_resources
 from PySide2 import QtCore, QtWidgets, QtGui
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
-from .PocketCamera import PocketCamera
 from .PocketCameraWindow import PocketCameraWindow
 #from .GBMemoryWindow import GBMemoryWindow
 from .Util import APPNAME, VERSION, VERSION_PEP440, ANSI
@@ -85,7 +84,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.cmbDMGCartridgeTypeResult.currentIndexChanged.connect(self.CartridgeTypeChanged)
 		
 		rowActionsGeneral3 = QtWidgets.QHBoxLayout()
-		self.btnFlashROM = QtWidgets.QPushButton("&Flash ROM")
+		self.btnFlashROM = QtWidgets.QPushButton("&Write ROM")
 		self.btnFlashROM.setStyleSheet("min-height: 17px;")
 		self.connect(self.btnFlashROM, QtCore.SIGNAL("clicked()"), self.FlashROM)
 		rowActionsGeneral3.addWidget(self.btnFlashROM)
@@ -787,9 +786,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			
 			self.lblStatus4a.setText("Done!")
 			if "verified" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["verified"] == True:
-				msgbox.setText("The ROM was flashed and verified successfully!")
+				msgbox.setText("The ROM was written and verified successfully!")
 			else:
-				msgbox.setText("ROM flashing complete!")
+				msgbox.setText("ROM writing complete!")
 			if not dontShowAgain:
 				msgbox.exec()
 				dontShowAgain = cb.isChecked()
@@ -921,7 +920,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		else:
 			detected = self.CONN.AutoDetectFlash(limitVoltage)
 			if len(detected) == 0:
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for flashing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for ROM writing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 				if self.CONN.GetMode() == "DMG":
 					msgbox.setCheckBox(cb)
@@ -1150,9 +1149,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		while path == "":
 			if self.CONN.GetMode() == "DMG":
-				path = QtWidgets.QFileDialog.getOpenFileName(self, "Flash ROM", last_dir, "Game Boy ROM File (*.gb *.gbc *.sgb *.bin);;All Files (*.*)")[0]
+				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy ROM File (*.gb *.gbc *.sgb *.bin);;All Files (*.*)")[0]
 			elif self.CONN.GetMode() == "AGB":
-				path = QtWidgets.QFileDialog.getOpenFileName(self, "Flash ROM", last_dir, "Game Boy Advance ROM File (*.gba *.srl);;All Files (*.*)")[0]
+				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy Advance ROM File (*.gba *.srl);;All Files (*.*)")[0]
 			
 			if (path == ""): return
 		
@@ -1170,7 +1169,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if "flash_size" in carts[cart_type]:
 			if rom_size > carts[cart_type]['flash_size']:
 				msg = "The selected flash cartridge type seems to support ROMs that are up to {:.2f} MB in size, but the file you selected is {:.2f} MB.".format(carts[cart_type]['flash_size'] / 1024 / 1024, os.path.getsize(path)/1024/1024)
-				msg += " You can still give it a try, but it’s possible that it’s too large which may cause the flashing to fail."
+				msg += " You can still give it a try, but it’s possible that it’s too large which may cause the ROM writing to fail."
 				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 				if answer == QtWidgets.QMessageBox.Cancel: return
 		
@@ -1189,7 +1188,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		reverse_sectors = False
 		if 'sector_reversal' in carts[cart_type]:
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The selected flash cartridge type is reported to sometimes have reversed sectors. If the cartridge is not working after flashing, try reversed sectors.")
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The selected flash cartridge type is reported to sometimes have reversed sectors. If the cartridge is not working after writing the ROM, try reversed sectors.")
 			button_normal = msgbox.addButton("Normal", QtWidgets.QMessageBox.ActionRole)
 			button_reversed = msgbox.addButton("Reversed", QtWidgets.QMessageBox.ActionRole)
 			button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
@@ -1465,7 +1464,17 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	
 	def ReadCartridge(self, resetStatus=True):
 		if not self.CheckDeviceAlive(): return
+		self.btnHeaderRefresh.setEnabled(False)
+		self.lblStatus4a.setText("Reading cartridge data...")
+		self.SetProgressBars(min=0, max=0, value=1)
+		qt_app.processEvents()
 		data = self.CONN.ReadInfo(setPinsAsInputs=True)
+		self.btnHeaderRefresh.setEnabled(True)
+		self.btnHeaderRefresh.setFocus()
+		self.SetProgressBars(min=0, max=100, value=0)
+		#if "has_rtc" in data and data["has_rtc"] is True: print("Real Time Clock cartridge detected.")
+		self.lblStatus4a.setText("Ready.")
+		qt_app.processEvents()
 		
 		if data == False or len(data) == 0:
 			self.DisconnectDevice()
@@ -1662,7 +1671,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if args["method"] == "ROM_READ":
 				self.grpStatus.setTitle("Transfer Status (Backup ROM)")
 			elif args["method"] == "ROM_WRITE":
-				self.grpStatus.setTitle("Transfer Status (Flash ROM)")
+				self.grpStatus.setTitle("Transfer Status (Write ROM)")
 			elif args["method"] == "ROM_WRITE_VERIFY":
 				self.grpStatus.setTitle("Transfer Status (Verify Flash)")
 			elif args["method"] == "SAVE_READ":
@@ -1882,8 +1891,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if self.btnHeaderRefresh.isEnabled() and self.grpActions.isEnabled() and e.mimeData().hasUrls:
 			for url in e.mimeData().urls():
 				if platform.system() == 'Darwin':
-					# pylint: disable=undefined-variable
-					fn = str(NSURL.URLWithString_(str(url.toString())).filePathURL().path())
+					fn = str(NSURL.URLWithString_(str(url.toString())).filePathURL().path()) # type: ignore
 				else:
 					fn = str(url.toLocalFile())
 				
@@ -1904,8 +1912,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			e.accept()
 			for url in e.mimeData().urls():
 				if platform.system() == 'Darwin':
-					# pylint: disable=undefined-variable
-					fn = str(NSURL.URLWithString_(str(url.toString())).filePathURL().path())
+					fn = str(NSURL.URLWithString_(str(url.toString())).filePathURL().path()) # type: ignore
 				else:
 					fn = str(url.toLocalFile())
 				

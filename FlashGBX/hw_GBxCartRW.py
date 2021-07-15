@@ -8,7 +8,7 @@ from serial import SerialException
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
 from .Mapper import DMG_MBC, AGB_GPIO
-from .Flashcart import Flashcart, Flashcart_DMG_MMSA, CFI
+from .Flashcart import Flashcart, Flashcart_DMG_MMSA
 from .Util import ANSI, dprint, bitswap, ParseCFI
 from . import Util
 
@@ -156,10 +156,10 @@ class GbxDevice:
 				elif self.FW["fw_ver"] < self.DEVICE_MIN_FW:
 					dev.close()
 					self.DEVICE = None
-					conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version R" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
+					conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version L" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
 					continue
 				#elif self.FW["fw_ver"] < self.DEVICE_MAX_FW:
-				#	conn_msg.append([1, "The GBxCart RW device on port " + ports[i] + " is running an older firmware version. Please consider updating to version R" + str(self.DEVICE_MAX_FW) + " to make use of the latest features.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
+				#	conn_msg.append([1, "The GBxCart RW device on port " + ports[i] + " is running an older firmware version. Please consider updating to version L" + str(self.DEVICE_MAX_FW) + " to make use of the latest features.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
 				elif self.FW["fw_ver"] > self.DEVICE_MAX_FW:
 					conn_msg.append([0, "NOTE: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with, so errors may occur."])
 				
@@ -473,7 +473,7 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["OFW_QUERY_CART_PWR"])
 			if self._read(1) == 0:
 				self._write(self.DEVICE_CMD["OFW_CART_PWR_ON"])
-				time.sleep(0.2)
+				time.sleep(0.1)
 				self.DEVICE.reset_input_buffer() # bug workaround
 
 	def GetMode(self):
@@ -550,7 +550,7 @@ class GbxDevice:
 				data = RomFileDMG(header).GetHeader()
 			
 			_mbc = DMG_MBC().GetInstance(args={"mbc":data["features_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
-			self.INFO["has_rtc"] = _mbc.HasRTC() is True
+			data["has_rtc"] = _mbc.HasRTC() is True
 		
 		elif self.MODE == "AGB":
 			data = RomFileAGB(header).GetHeader()
@@ -1515,7 +1515,7 @@ class GbxDevice:
 			else:
 				_mbc.EnableMapper()
 			
-			if args["rtc"] is True and _mbc.HasRTC():
+			if args["rtc"] is True:
 				extra_size = _mbc.GetRTCBufferSize()
 			
 			_mbc.EnableRAM(enable=True)
@@ -1793,7 +1793,7 @@ class GbxDevice:
 			self.INFO["transferred"] = len(buffer)
 			# Real Time Clock
 			if args["rtc"] is True:
-				if self.MODE == "DMG" and _mbc.HasRTC():
+				if self.MODE == "DMG" and args["rtc"] is True:
 					_mbc.LatchRTC()
 					temp = _mbc.ReadRTC()
 				elif self.MODE == "AGB":
@@ -1810,7 +1810,7 @@ class GbxDevice:
 			if args["rtc"] is True:
 				advance = args["rtc_advance"]
 				dprint("rtc_advance:", advance)
-				if self.MODE == "DMG" and _mbc.HasRTC():
+				if self.MODE == "DMG" and args["rtc"] is True:
 					_mbc.WriteRTC(buffer[-_mbc.GetRTCBufferSize():], advance=advance)
 				elif self.MODE == "AGB":
 					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)

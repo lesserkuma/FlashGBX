@@ -56,7 +56,7 @@ class FlashGBX_CLI():
 		# Ask interactively if no args set
 		if args.action is None:
 			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "debug-test-save"]
-			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Flash ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures\n")
+			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures\n")
 			args.action = input("Enter number 1-7 [1]: ").lower().strip()
 			print("")
 			try:
@@ -252,9 +252,9 @@ class FlashGBX_CLI():
 		if self.CONN.INFO["last_action"] == 4: # Flash ROM
 			self.CONN.INFO["last_action"] = 0
 			if "verified" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["verified"] == True:
-				print("{:s}The ROM was flashed and verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
+				print("{:s}The ROM was written and verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
 			else:
-				print("ROM flashing complete!")
+				print("ROM writing complete!")
 		
 		elif self.CONN.INFO["last_action"] == 1: # Backup ROM
 			self.CONN.INFO["last_action"] = 0
@@ -527,7 +527,7 @@ class FlashGBX_CLI():
 		
 		detected = self.CONN.AutoDetectFlash(limitVoltage)
 		if len(detected) == 0:
-			print("\n{:s}No pre-configured flash cartridge type was detected.{:s} You can still manually specify one using the “--flashcart-handler” command line switch -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for flashing with {:s}.\n".format(ANSI.YELLOW, ANSI.RESET, APPNAME))
+			print("\n{:s}No pre-configured flash cartridge type was detected.{:s} You can still manually specify one using the “--flashcart-handler” command line switch -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for ROM writing with {:s}.\n".format(ANSI.YELLOW, ANSI.RESET, APPNAME))
 			
 			(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage)
 			if cfi_s == "":
@@ -736,7 +736,7 @@ class FlashGBX_CLI():
 			return
 		
 		if args.path == "auto":
-			print("{:s}No ROM file for flashing was selected.{:s}".format(ANSI.RED, ANSI.RESET))
+			print("{:s}No ROM file for writing was selected.{:s}".format(ANSI.RED, ANSI.RESET))
 			return
 		else:
 			path = args.path
@@ -757,7 +757,7 @@ class FlashGBX_CLI():
 		if "flash_size" in carts[cart_type]:
 			if rom_size > carts[cart_type]['flash_size']:
 				msg = "The selected flash cartridge type seems to support ROMs that are up to {:.2f} MB in size, but the file you selected is {:.2f} MB.".format(carts[cart_type]['flash_size'] / 1024 / 1024, os.path.getsize(path)/1024/1024)
-				msg += " It’s possible that it’s too large which may cause the flashing to fail."
+				msg += " It’s possible that it’s too large which may cause the ROM writing to fail."
 				print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
 				answer = input("Do you want to continue? [y/N]: ").strip().lower()
 				print("")
@@ -776,7 +776,7 @@ class FlashGBX_CLI():
 			reverse_sectors = True
 			print("Will be writing to the cartridge with reversed flash sectors.")
 		elif 'sector_reversal' in carts[cart_type]:
-			print("The selected flash cartridge type is reported to sometimes have reversed sectors. You can use the “--reversed-sectors” command line switch if the cartridge is not working after flashing.")
+			print("The selected flash cartridge type is reported to sometimes have reversed sectors. You can use the “--reversed-sectors” command line switch if the cartridge is not working after writing the ROM.")
 		
 		prefer_chip_erase = args.prefer_chip_erase is True
 		if not prefer_chip_erase and 'chip_erase' in carts[cart_type]['commands'] and 'sector_erase' in carts[cart_type]['commands']:

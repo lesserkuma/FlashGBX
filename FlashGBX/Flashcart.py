@@ -3,8 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import time, copy, math, struct
-from .Util import ANSI, dprint, bitswap
-from . import Util
+from .Util import dprint, bitswap
 
 class Flashcart:
 	CONFIG = {}

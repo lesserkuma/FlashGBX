@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import hashlib, re, zlib, sys, string
+import hashlib, re, zlib, string
 
 class RomFileAGB:
 	ROMFILE_PATH = None

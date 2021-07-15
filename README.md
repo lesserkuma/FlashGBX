@@ -99,6 +99,7 @@ for Windows, Linux, macOS
   - SD007_48BALL_64M_V6 with 36VF3204
   - SD007_48BALL_64M_V6 with 29DL163BD-90
   - SD007_48BALL_64M_V8 with M29W160ET
+  - SD007_BV5 with 29LV160TE-70PFTN
   - SD007_BV5_DRV with M29W320DT
   - SD007_BV5_DRV with S29GL032M90TFIR4
   - SD007_BV5_V2 with HY29LV160TT
@@ -126,6 +127,7 @@ for Windows, Linux, macOS
   - 29LV128DBT2C-90Q and ALTERA CPLD
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
+  - 4350Q2 with 4050V0YBQ1
   - 4350Q2 with 4350LLYBQ2
   - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0
   - 4050_4400_4000_4350_36L0R_V5 with 4050L0YTQ2
@@ -189,15 +191,15 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 * If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device. An unstable cartridge connection is the most common reason for read or write errors.
 
+* Depending on your system configuration, you may have to use `pip` and `python` commands instead of `pip3` and `python3`.
+
 * On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
 
 * On some Linux systems, you may need the *XCB Xinerama package* if you see an error regarding failed Qt platform plugin initialization. You can install it with `sudo apt install libxcb-xinerama0` etc.
 
 * On some Linux systems like Fedora, you may need to install the `python3-pillow-qt` package manually in order for the GUI mode to work.
 
-* Depending on your system configuration, you may have to use `pip` and `python` commands instead of `pip3` and `python3`.
-
-* If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW device* installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
+* If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
 * If you run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`, you can try to uninstall and re-install the Python package *PySide2*, or you can run FlashGBX in command line interface mode using the command `python3 -m FlashGBX --cli`.
 

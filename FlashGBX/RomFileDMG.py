@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import hashlib, re, sys, string, datetime
+import hashlib, re, string
 from . import Util
 
 class RomFileDMG:
