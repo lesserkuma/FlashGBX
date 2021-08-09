@@ -303,7 +303,7 @@ class GbxDevice:
 		if self.FW[1] == 4: # v1.3
 			try:
 				from . import fw_GBxCartRW_v1_3
-				return fw_GBxCartRW_v1_3.FirmwareUpdaterWindow
+				return (None, fw_GBxCartRW_v1_3.FirmwareUpdaterWindow)
 			except:
 				return False
 		else:

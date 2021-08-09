@@ -1,12 +1,13 @@
 # Release notes
 ### v2.6 (released 2021-08-09)
-- Bundles GBxCart RW v1.4 firmware version R31+L2
+- Bundles GBxCart RW v1.4 firmware version R31+L2 (fixes a very rare bug with SRAM access on Game Boy cartridges)
 - Added a firmware updater for GBxCart v1.4 devices
 - Configuration path bug fix for systems that do not support PySide2 *(thanks JFox)*
 - Added support for S29GL032N90T and ALTERA CPLD (configured for MBC1) *(thanks t5b6_de)*
 - Flashing rumble enabled Game Boy Advance flash cartridges by insideGadgets is no longer noisy *(thanks AlexiG)*
 - Confirmed support for DMG-GBRW-20 with 29LV320ETMI-70G
 - Confirmed support for AGB-E20-30 with S29GL256N10TFI01
+- Minor bug fixes with the firmware updater *(thanks marv17)*
 
 ### v2.5 (released 2021-07-15)
 - Added support for 4350Q2 with 4050V0YBQ1 *(thanks Shinichi999)*

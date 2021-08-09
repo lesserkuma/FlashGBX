@@ -315,7 +315,7 @@ class GbxDevice:
 		return self.FW["pcb_ver"] in (4, 5)
 
 	def FirmwareUpdateAvailable(self):
-		#if self.FW["pcb_ver"] != 4: return False
+		if self.FW["pcb_ver"] != 5: return False
 		#return self.FW["fw_ver"] < self.DEVICE_MAX_FW
 		return (self.FW["pcb_ver"] in (4, 5) and self.FW["fw_ver"] < self.DEVICE_MAX_FW)
 	
