@@ -75,13 +75,13 @@ class DMG_MBC:
 			if delay is not False: time.sleep(delay)
 
 	def GetName(self):
-		return "Unknown MBC"
+		return "Unknown MBC {:d}".format(self.MBC_ID)
 
 	def GetFullName(self):
 		try:
 			return Util.DMG_Header_Mapper[self.MBC_ID]
 		except:
-			return "Unknown MBC"
+			return "Unknown MBC {:d}".format(self.MBC_ID)
 
 	def GetROMBank(self):
 		return self.CURRENT_ROM_BANK

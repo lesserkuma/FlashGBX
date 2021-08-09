@@ -1,6 +1,6 @@
 # FlashGBX (by Lesserkuma)
 
-for Windows, Linux, macOS
+for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://github.com/lesserkuma/FlashGBX#run-using-python-linux-macos-windows), [macOS](https://github.com/lesserkuma/FlashGBX#run-using-python-linux-macos-windows)
 
 <img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/01.png" alt="FlashGBX on Windows" width="400"><br><img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/02.png" alt="GB Camera Album Viewer"  width="400">
 
@@ -14,13 +14,13 @@ for Windows, Linux, macOS
 - Many reproduction cartridges and flash cartridges can be auto-detected
 - A flash chip query (including Common Flash Interface information) can be performed for flash cartridges
 - Decode and extract Game Boy Camera photos from save data
-- Update firmware of insideGadgets GBxCart RW v1.3 devices
+- Update firmware of insideGadgets GBxCart RW v1.3 and v1.4 devices
 
 ### Confirmed working reader/writer hardware and firmware versions
 
 - [insideGadgets GBxCart RW Mini, v1.3 and v1.4 (Standard and Pro versions)](https://www.gbxcart.com/)
-  - Official firmware versions R19 to R30 (other hardware revisions and firmware versions may also work, but are untested)
-  - Lesserkuma’s high compatibility firmware version L1
+  - Official firmware versions R19 to R31 (other hardware revisions and firmware versions may also work, but are untested)
+  - Lesserkuma’s high compatibility firmware version L1 and L2
 
 ### Currently supported official cartridge memory mappers
 
@@ -84,11 +84,12 @@ for Windows, Linux, macOS
 - Game Boy
 
   - DMG-DHCN-20 with MX29LV320ET
+  - DMG-GBRW-20 with 29LV320ETMI-70G
   - ES29LV160_DRV with 29DL32TF-70
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
   - GB-M968 with MX29LV320ABTC
-  - S29GL032N90T and ALTERA CPLD configured for MBC5
+  - S29GL032N90T and ALTERA CPLD configured for MBC1 or MBC5
   - SD007_48BALL_64M with GL032M11BAIR4
   - SD007_48BALL_64M with M29W640
   - SD007_48BALL_64M_V2 with GL032M11BAIR4
@@ -144,6 +145,7 @@ for Windows, Linux, macOS
   - AGB-E05-02 with M29W128GH
   - AGB-E05-06L with 29LV128DBT2C-90Q
   - AGB-E08-09 with 29LV128DTMC-90Q
+  - AGB-E20-30 with S29GL256N10TFI01
   - AGB-SD-E05 with MSP55LV128
   - B104 with MSP55LV128
   - B11 with 26L6420MC-90

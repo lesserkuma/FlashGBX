@@ -118,11 +118,11 @@ class Flashcart:
 			else:
 				cfi = self.ReadCFI()
 				if cfi is False:
-					print("CFI error") 
+					print("CFI ERROR: Couldn’t retrieve buffer size from the cartridge.")
 					return False
 			if not "buffer_size" in cfi: return False
 			buffer_size = cfi["buffer_size"]
-			dprint("Buffer size was read from Common Flash Interface (CFI) data:", cfi["buffer_size"])
+			dprint("Buffer size was read from CFI data:", cfi["buffer_size"])
 			self.CONFIG["buffer_size"] = buffer_size
 			return buffer_size
 		else:
@@ -142,9 +142,10 @@ class Flashcart:
 		#dprint(full_reset, "reset_every" in self.CONFIG)
 		if full_reset and "reset_every" in self.CONFIG:
 			for j in range(0, self.CONFIG["flash_size"], self.CONFIG["reset_every"]):
+				dprint("reset_every @ 0x{:X}".format(j))
 				for command in self.CONFIG["commands"]["reset"]:
 					self.CartWrite([[j, command[1]]])
-					time.sleep(0.001)
+					time.sleep(0.01)
 		elif "reset" in self.CONFIG["commands"]:
 			self.CartWrite(self.CONFIG["commands"]["reset"])
 			time.sleep(0.001)
@@ -207,11 +208,11 @@ class Flashcart:
 			else:
 				cfi = self.ReadCFI()
 				if cfi is False:
-					print("CFI error") 
+					print("CFI ERROR: Couldn’t retrieve sector size map from the cartridge.")
 					return False
 			sector_size = cfi["erase_sector_blocks"]
 			if cfi["tb_boot_sector_raw"] == 0x03: sector_size.reverse()
-			dprint("Sector map was read from Common Flash Interface (CFI) data:", cfi["erase_sector_blocks"])
+			dprint("Sector size map was read from CFI data:", cfi["erase_sector_blocks"])
 			self.CONFIG["sector_size"] = sector_size
 			return sector_size
 		else:
@@ -239,7 +240,7 @@ class Flashcart:
 							self.CartWrite([[addr, sr_data]])
 					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
-					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["chip_erase_wait_for"][i][2], data, str(wait_for == data)))
+					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["chip_erase_wait_for"][i][2], data, str((wait_for & self.CONFIG["commands"]["chip_erase_wait_for"][i][2]) == data)))
 					wait_for = wait_for & self.CONFIG["commands"]["chip_erase_wait_for"][i][2]
 					if wait_for == data: break
 					time.sleep(0.5)

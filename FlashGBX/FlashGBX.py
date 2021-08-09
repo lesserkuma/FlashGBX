@@ -88,11 +88,10 @@ def main(portableMode=False):
 		app_path = os.path.dirname(os.path.abspath(__file__))
 	
 	try:
-		from . import FlashGBX_GUI
 		from PySide2 import QtCore
 		cp = { "subdir":app_path + "/config", "appdata":QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppConfigLocation) }
 	except:
-		cp = { "subdir":app_path + "/config" }
+		cp = { "subdir":app_path + "/config", "appdata":os.path.expanduser('~') }
 	
 	if portableMode:
 		cfgdir_default = "subdir"
@@ -117,10 +116,10 @@ def main(portableMode=False):
 	parser.add_argument_group('')
 	ap_config = parser.add_argument_group('configuration arguments')
 	if "appdata" in cp: ap_config.add_argument("--cfgdir", choices=["appdata", "subdir"], type=str.lower, default=cfgdir_default, help="sets the config directory to either the OS-provided local app config directory (" + cp['appdata'] + "), or a subdirectory of this application (" + cp['subdir'].replace("\\", "/") + ")")
-
+	
 	ap_cli1 = parser.add_argument_group('main command line interface arguments')
 	ap_cli1.add_argument("--mode", choices=["dmg", "agb"], type=str.lower, default=None, help="set cartridge mode to \"dmg\" (Game Boy) or \"agb\" (Game Boy Advance)")
-	ap_cli1.add_argument("--action", choices=["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "debug-test-save"], type=str.lower, default=None, help="select program action")
+	ap_cli1.add_argument("--action", choices=["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"], type=str.lower, default=None, help="select program action")
 	ap_cli1.add_argument("--overwrite", action="store_true", help="overwrite without asking if target file already exists")
 	ap_cli1.add_argument("path", nargs="?", default="auto", help="target or source file path (optional when reading, required when writing)")
 	
@@ -141,6 +140,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--save-filename-add-datetime", action="store_true", help="adds a timestamp to the file name of save data backups")
 	ap_cli2.add_argument("--gbcamera-palette", choices=["grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3"], type=str.lower, default="grayscale", help="sets the palette of pictures extracted from Game Boy Camera saves")
 	ap_cli2.add_argument("--gbcamera-outfile-format", choices=["png", "bmp", "gif", "jpg"], type=str.lower, default="png", help="sets the file format of saved pictures extracted from Game Boy Camera saves")
+	ap_cli2.add_argument("--fwupdate-port", help="override device port for the firmware updater", default=None)
 	args = parser.parse_args()
 	
 	if "appdata" in cp:

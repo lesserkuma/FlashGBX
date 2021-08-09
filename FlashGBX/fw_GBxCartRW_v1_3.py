@@ -6,7 +6,7 @@ import zipfile, os, serial, struct, time, re, math, platform
 from PySide2 import QtCore, QtWidgets, QtGui
 from . import Util
 
-class FirmwareUpdater(QtWidgets.QDialog):
+class FirmwareUpdaterWindow(QtWidgets.QDialog):
 	APP = None
 	DEVICE = None
 	PORT = ""
@@ -14,6 +14,7 @@ class FirmwareUpdater(QtWidgets.QDialog):
 	def __init__(self, app, app_path, file=None, icon=None, device=None):
 		QtWidgets.QDialog.__init__(self)
 		if icon is not None: self.setWindowIcon(QtGui.QIcon(icon))
+		self.setStyleSheet("QMessageBox { messagebox-text-interaction-flags: 5; }")
 		self.APP = app
 		self.APP_PATH = app_path
 		self.DEVICE = device
@@ -250,7 +251,7 @@ class FirmwareUpdater(QtWidgets.QDialog):
 			chk = chk & 0xFF
 			chk = (~chk + 1) & 0xFF
 			if (chk != data["checksum"]):
-				fncSetStatus("Status: Firmware checksum error.")
+				self.SetStatus("Status: Firmware checksum error.")
 				self.prgStatus.setValue(0)
 				self.btnUpdate.setEnabled(True)
 				self.btnClose.setEnabled(True)
@@ -261,7 +262,7 @@ class FirmwareUpdater(QtWidgets.QDialog):
 				buffer += bytearray(data["data"])
 	
 		if len(buffer) >= 7168:
-			fncSetStatus("Status: Firmware file is too large.")
+			self.SetStatus("Status: Firmware file is too large.")
 			self.prgStatus.setValue(0)
 			self.btnUpdate.setEnabled(True)
 			self.btnClose.setEnabled(True)
@@ -518,7 +519,7 @@ class FirmwareUpdater(QtWidgets.QDialog):
 		self.grpAvailableFwUpdates.setEnabled(True)
 		flash_ok = True
 		text = "The firmware update is complete!"
-		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
+		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 		answer = msgbox.exec()
 		self.reject()
 		return 1

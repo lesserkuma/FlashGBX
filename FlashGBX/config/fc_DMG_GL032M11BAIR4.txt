@@ -19,7 +19,7 @@
 		[0x2000, 8],
 		[0x10000, 63]
 	],
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":120,
 	"mbc":5,
 	"command_set":"AMD",
 	"commands":{

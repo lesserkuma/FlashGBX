@@ -1,6 +1,15 @@
 # Release notes
+### v2.6 (released 2021-08-09)
+- Bundles GBxCart RW v1.4 firmware version R31+L2
+- Added a firmware updater for GBxCart v1.4 devices
+- Configuration path bug fix for systems that do not support PySide2 *(thanks JFox)*
+- Added support for S29GL032N90T and ALTERA CPLD (configured for MBC1) *(thanks t5b6_de)*
+- Flashing rumble enabled Game Boy Advance flash cartridges by insideGadgets is no longer noisy *(thanks AlexiG)*
+- Confirmed support for DMG-GBRW-20 with 29LV320ETMI-70G
+- Confirmed support for AGB-E20-30 with S29GL256N10TFI01
+
 ### v2.5 (released 2021-07-15)
-- Added support for 4350Q2 with 4050V0YBQ1
+- Added support for 4350Q2 with 4050V0YBQ1 *(thanks Shinichi999)*
 - Fixed Real Time Clock register access for MBC3B and MBC30 cartridges on the GBxCart RW v1.4 hardware
 - Added support for SD007_BV5 with 29LV160TE-70PFTN *(thanks RetroGorek)*
 
@@ -23,7 +32,7 @@
 - Added support for SD007_TSOP_29LV017D with M29W320DT *(thanks marv17)*
 - Added support for SD007_TSOP_29LV017D with S29GL032M90T *(thanks marv17)*
 - Fixed detection of Classic NES Series and Famicom Mini game cartridges for Game Boy Advance *(thanks LucentW)*
-- Added support for 29LV128DBT2C-90Q and ALTERA CPLD *(thanks Sgt.DoudouMiel)*
+- Added support for 29LV128DBT2C-90Q and ALTERA CPLD (configured for MBC5) *(thanks Sgt.DoudouMiel)*
 - Added support for 0121 with 0121M0Y0BE *(thanks RetroGorek)*
 - Fixed detection of Pocket Monsters Ruby v1.1 (AGB-AXVJ-JPN) and Pocket Monsters Sapphire v1.1 (AGB-AXPJ-JPN) genuine game cartridges *(thanks Icesythe7)*
 - Fixed flash chip query for flash cartridges that have no CFI data but swapped pins *(thanks marv17)*

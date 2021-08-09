@@ -174,8 +174,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuTools.addAction("Game Boy Camera Album Viewer", lambda: self.ShowPocketCameraWindow())
 		#self.mnuTools.addAction("GB Memory Cartridge Manager", lambda: self.ShowGBMemoryWindow())
 		self.mnuTools.addSeparator()
-		self.mnuTools.addAction("Firmware &Updater", lambda: self.ShowFirmwareUpdateWindow()) # GBxCart RW v1.3
-		self.mnuTools.actions()[2].setEnabled(False)
+		self.mnuTools.addAction("Firmware &Updater", lambda: self.ShowFirmwareUpdateWindow())
+		#self.mnuTools.actions()[2].setEnabled(False)
 		self.btnTools.setMenu(self.mnuTools)
 
 		btnText = "C&onfig"
@@ -558,7 +558,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.btnRestoreRAM.setEnabled(False)
 		self.btnConnect.setText("&Connect")
 		self.lblDevice.setText("Disconnected.")
-		self.mnuTools.actions()[2].setEnabled(False)
+		#self.mnuTools.actions()[2].setEnabled(False)
 	
 	def OpenConfigDir(self):
 		path = 'file://{0:s}'.format(self.CONFIG_PATH)
@@ -656,7 +656,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				print(msg, end="")
 
 				if dev.SupportsFirmwareUpdates():
-					self.mnuTools.actions()[2].setEnabled(True)
+					#self.mnuTools.actions()[2].setEnabled(True)
 					if dev.FirmwareUpdateAvailable():
 						dontShowAgain = str(self.SETTINGS.value("SkipFirmwareUpdate", default="disabled")).lower() == "enabled"
 						if not dontShowAgain or dev.FW_UPDATE_REQ:
@@ -680,7 +680,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 								if answer == QtWidgets.QMessageBox.Yes:
 									self.ShowFirmwareUpdateWindow()
 				else:
-					self.mnuTools.actions()[2].setEnabled(False)
+					#self.mnuTools.actions()[2].setEnabled(False)
+					pass
 
 				return True
 			return False
@@ -918,7 +919,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if answer == QtWidgets.QMessageBox.No:
 			return 0
 		else:
+			self.lblStatus4a.setText("Scanning...")
+			qt_app.processEvents()
 			detected = self.CONN.AutoDetectFlash(limitVoltage)
+			self.lblStatus4a.setText("Ready.")
 			if len(detected) == 0:
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for ROM writing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
@@ -1106,6 +1110,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.lblHeaderROMChecksumResult.setStyleSheet(self.lblHeaderCGBResult.styleSheet())
 		self.lblAGBHeaderROMChecksumResult.setStyleSheet(self.lblHeaderCGBResult.styleSheet())
 		
+		self.lblStatus4a.setText("Preparing...")
+		qt_app.processEvents()
 		args = { "path":path, "mbc":mbc, "rom_banks":rom_banks, "agb_rom_size":rom_size, "fast_read_mode":fast_read_mode, "cart_type":cart_type }
 		self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
@@ -1234,6 +1240,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		#	QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The file you selected could not be read.", QtWidgets.QMessageBox.Ok)
 		#	return
 		
+		self.lblStatus4a.setText("Preparing...")
+		qt_app.processEvents()
 		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":fast_read_mode, "verify_flash":verify_flash }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
@@ -1298,6 +1306,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 		self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 
+		self.lblStatus4a.setText("Preparing...")
+		qt_app.processEvents()
 		args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc }
 		self.CONN.BackupRAM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
@@ -1374,6 +1384,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				rtc_advance = cb.isChecked()
 				rtc = (answer == QtWidgets.QMessageBox.Yes)
 
+		self.lblStatus4a.setText("Preparing...")
+		qt_app.processEvents()
 		args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase }
 		self.CONN.RestoreRAM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
@@ -1822,13 +1834,20 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.TBPROG.setPaused(False)
 	
 	def ShowFirmwareUpdateWindow(self):
-		FirmwareUpdater = self.CONN.GetFirmwareUpdaterClass()
+		if self.CONN is None:
+			try:
+				from . import fw_GBxCartRW_v1_4
+				FirmwareUpdater = fw_GBxCartRW_v1_4.FirmwareUpdaterWindow
+			except:
+				return False
+		else:
+			FirmwareUpdater = self.CONN.GetFirmwareUpdaterClass()[1]
 		self.FWUPWIN = None
 		self.FWUPWIN = FirmwareUpdater(self, app_path=self.APP_PATH, icon=self.windowIcon(), device=self.CONN)
 		self.FWUPWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		self.FWUPWIN.setModal(True)
 		self.FWUPWIN.run()
-
+	
 	def ShowPocketCameraWindow(self):
 		self.CAMWIN = None
 		self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon())

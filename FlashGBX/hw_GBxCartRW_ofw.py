@@ -303,7 +303,7 @@ class GbxDevice:
 		if self.FW[1] == 4: # v1.3
 			try:
 				from . import fw_GBxCartRW_v1_3
-				return fw_GBxCartRW_v1_3.FirmwareUpdater
+				return fw_GBxCartRW_v1_3.FirmwareUpdaterWindow
 			except:
 				return False
 		else:
@@ -742,13 +742,17 @@ class GbxDevice:
 		else:
 			return buffer[0]
 	
+	def CartPowerOff(self):
+		if self.FW["pcb_ver"] == 5:
+			self._write(self.DEVICE_CMD["CART_PWR_OFF"])
+			time.sleep(0.05)
+
 	def CartPowerOn(self):
 		if self.FW[1] == 5:
 			self.write(self.DEVICE_CMD["QUERY_CART_PWR"])
 			ret = self.DEVICE.read(1)
 			if ret == b'\x00':
 				self.set_mode(self.DEVICE_CMD["CART_PWR_ON"])
-				print("POWER ON")
 				time.sleep(0.2)
 				self.DEVICE.reset_input_buffer() # bug workaround
 

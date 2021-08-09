@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import datetime, shutil, platform, os, json, math, traceback, re, time
+import datetime, shutil, platform, os, json, math, traceback, re, time, serial, zipfile
 try:
 	# pylint: disable=import-error
 	import readline
@@ -26,9 +26,11 @@ class FlashGBX_CLI():
 	CONN = None
 	DEVICE = None
 	PROGRESS = None
+	FWUPD_R = False
 	
 	def __init__(self, args):
 		self.ARGS = args
+		self.APP_PATH = args['app_path']
 		self.CONFIG_PATH = args['config_path']
 		self.FLASHCARTS = args["flashcarts"]
 		self.PROGRESS = Util.Progress(self.UpdateProgress)
@@ -55,11 +57,13 @@ class FlashGBX_CLI():
 		
 		# Ask interactively if no args set
 		if args.action is None:
-			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "debug-test-save"]
-			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures\n")
-			args.action = input("Enter number 1-7 [1]: ").lower().strip()
-			print("")
+			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"]
+			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures\n 8) Firmware Update (for GBxCart RW v1.4 only)\n")
+			args.action = input("Enter number 1-8 [1]: ").lower().strip()
 			try:
+				if int(args.action) == 0:
+					print("Canceled.")
+					return
 				args.action = actions[int(args.action) - 1]
 			except:
 				if args.action == "":
@@ -68,7 +72,7 @@ class FlashGBX_CLI():
 					print("Canceled.")
 					return
 		
-		if args.action is None or args.action not in ("gbcamera-extract"):
+		if args.action is None or args.action not in ("gbcamera-extract", "fwupdate-gbxcartrw"):
 			if not self.FindDevices():
 				print("No devices found.")
 				return
@@ -109,7 +113,11 @@ class FlashGBX_CLI():
 				print("\n{:s}Couldn’t parse the save data file.{:s}\n".format(ANSI.RED, ANSI.RESET))
 			return
 		
-		if args.mode is None:
+		if args.action == "fwupdate-gbxcartrw":
+			self.UpdateFirmwareGBxCartRW(pcb=5, port=args.fwupdate_port)
+			return 0
+		
+		elif args.mode is None:
 			print("Select Cartridge Mode:\n 1) Game Boy or Game Boy Color\n 2) Game Boy Advance\n")
 			answer = input("Enter number 1-2 [2]: ").lower().strip()
 			print("")
@@ -385,13 +393,11 @@ class FlashGBX_CLI():
 				str += "{:s}\n".format(Util.DMG_Header_SGB[data['sgb']])
 			else:
 				str += "Unknown (0x{:02X})\n".format(data['sgb'])
-				bad_read = True
 			str += "Game Boy Color:  "
 			if data['cgb'] in Util.DMG_Header_CGB:
 				str += "{:s}\n".format(Util.DMG_Header_CGB[data['cgb']])
 			else:
 				str += "Unknown (0x{:02X})\n".format(data['cgb'])
-				bad_read = True
 			if data["logo_correct"]:
 				str += "Nintendo Logo:   OK\n"
 			else:
@@ -728,7 +734,7 @@ class FlashGBX_CLI():
 			if cart_type == 0:
 				msg_5v = ""
 				if mode == "DMG": msg_5v = "If your flash cartridge requires 5V to work, you can use the “--force-5v” command line switch, however please note that 5V can be unsafe for some flash chips."
-				print("\n{:s}Auto-detection failed. Please use the “--flashcart-handler” command line switch to select the flash cartridge type manually.\n{:s}{:s}{:s}".format(ANSI.RED, ANSI.YELLOW, msg_5v, ANSI.RESET))
+				print("\n{:s}Auto-detection failed. Please use the “--flashcart-handler” command line switch to select the flash cartridge type manually.\n{:s}{:s}{:s}".format(ANSI.RED, ANSI.RESET, msg_5v, ANSI.RESET))
 				return
 			elif cart_type < 0: return
 		elif cart_type == 0 and args.flashcart_handler != "autodetect":
@@ -955,9 +961,24 @@ class FlashGBX_CLI():
 			self.CONN._TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test3.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			with open(self.CONFIG_PATH + "/test3.bin", "rb") as f: test3 = bytearray(f.read())
+			print("\nPower cycling.")
+			self.CONN.CartPowerOff()
+			time.sleep(1)
+			self.CONN.CartPowerOn()
+			time.sleep(0.2)
+			print("\nReading back and comparing data again.")
+			self.CONN._TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test4.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
+			time.sleep(0.1)
+			with open(self.CONFIG_PATH + "/test4.bin", "rb") as f: test4 = bytearray(f.read())
 			print("Restoring original save data.")
 			self.CONN._TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
+			
+			if test3 != test4:
+				diffcount = 0
+				for i in range(0, len(test3)):
+					if test3[i] != test4[i]: diffcount += 1
+				print("\n{:s}Differences found after two consecutive reads: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
 			
 			if mbc == 6:
 				for i in range(0, len(test2)):
@@ -992,7 +1013,79 @@ class FlashGBX_CLI():
 			except:
 				pass
 
-			#input("\nPress ENTER to erase the temporary files.")
 			os.unlink(self.CONFIG_PATH + "/test1.bin")
 			os.unlink(self.CONFIG_PATH + "/test2.bin")
 			os.unlink(self.CONFIG_PATH + "/test3.bin")
+			os.unlink(self.CONFIG_PATH + "/test4.bin")
+
+	def UpdateFirmwareGBxCartRW_PrintText(self, text, enableUI=False, setProgress=None):
+		if setProgress is not None:
+			self.FWUPD_R = True
+			print("\r{:s} ({:d}%)".format(text, int(setProgress)), flush=True, end="")
+		else:
+			if self.FWUPD_R is True:
+				print("")
+			print(text, flush=True)
+	
+	def UpdateFirmwareGBxCartRW(self, pcb=5, port=False):
+		if pcb != 5: return False
+		print("\nFirmware Updater for GBxCart RW v1.4")
+		print("====================================\n")
+		with zipfile.ZipFile(self.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip") as zip:
+			with zip.open("fw.ini") as f: ini_file = f.read()
+			ini_file = ini_file.decode(encoding="utf-8")
+			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
+			fw_ver = self.INI.GetValue("fw_ver")
+			fw_buildts = self.INI.GetValue("fw_buildts")
+			fw_text = self.INI.GetValue("fw_text")
+		
+		print("Available firmware version:\n{:s}\n".format("{:s} (dated {:s})".format(fw_ver, datetime.datetime.fromtimestamp(int(fw_buildts)).astimezone().replace(microsecond=0).isoformat())))
+		print("Please follow these steps to proceed with the firmware update:\n1. Disconnect the USB cable of your GBxCart RW v1.4 device.\n2. On the circuit board of your GBxCart RW v1.4, press and hold down\n   the small button while connecting the USB cable again.\n3. Keep the small button held for at least 2 seconds, then let go of it.\n   If done right, the green LED labeled “Done” should remain lit.\n4. Press ENTER or RETURN to continue.")
+		if len(input("").strip()) != 0:
+			print("Canceled.")
+			return False
+		
+		try:
+			ports = []
+			if port is None or port is False:
+				comports = serial.tools.list_ports.comports()
+				for i in range(0, len(comports)):
+					if comports[i].vid == 0x1A86 and comports[i].pid == 0x7523:
+						ports.append(comports[i].device)
+				if len(ports) == 0:
+					print("No device found.")
+					return False
+				port = ports[0]
+
+			from . import fw_GBxCartRW_v1_4
+			while True:
+				try:
+					print("Using port {:s}.\n".format(port))
+					FirmwareUpdater = fw_GBxCartRW_v1_4.FirmwareUpdater
+					FWUPD = FirmwareUpdater(port=port)
+					ret = FWUPD.WriteFirmware(self.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip", self.UpdateFirmwareGBxCartRW_PrintText)
+					break
+				except serial.serialutil.SerialException:
+					port = input("Couldn’t access port {:s}.\nEnter new port: ".format(port)).strip()
+					if len(port) == 0:
+						print("Canceled.")
+						return False
+					continue
+				except Exception as err:
+					traceback.print_exception(type(err), err, err.__traceback__)
+					print(err)
+					return False
+			
+			if ret == 1:
+				print("The firmware update is complete!")
+				return True
+			elif ret == 3:
+				print("Please re-install the application.")
+				return False
+			else:
+				return False
+		
+		except Exception as err:
+			traceback.print_exception(type(err), err, err.__traceback__)
+			print(err)
+			return False
