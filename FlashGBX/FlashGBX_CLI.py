@@ -105,8 +105,8 @@ class FlashGBX_CLI():
 					return
 				if not os.path.isdir(os.path.dirname(file)):
 					os.makedirs(os.path.dirname(file))
-				for i in range(0, 31):
-					file = os.path.splitext(args.path)[0] + "/IMG_PC{:02d}".format(i) + "." + args.gbcamera_outfile_format
+				for i in range(0, 32):
+					file = os.path.splitext(args.path)[0] + "/IMG_PC{:02d}".format(i+1) + "." + args.gbcamera_outfile_format
 					pc.ExportPicture(i, file)
 				print("The pictures from “{:s}” were extracted to “{:s}”.".format(os.path.abspath(args.path), Util.formatPathOS(os.path.abspath(os.path.dirname(file)), end_sep=True) + "IMG_PC**.{:s}".format(args.gbcamera_outfile_format)))
 			else:

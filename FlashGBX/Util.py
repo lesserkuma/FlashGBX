@@ -7,7 +7,7 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "2.6"
+VERSION_PEP440 = "2.7"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
@@ -56,9 +56,14 @@ class IniSettings():
 			self.FILENAME = path
 			self.SETTINGS = configparser.ConfigParser()
 			self.SETTINGS.optionxform = str
-			self.Reload()
+			try:
+				self.Reload()
+			except configparser.MissingSectionHeaderError:
+				print("Resetting invalid configuration file...")
+				os.unlink(path)
+				path = ""
 		
-		else:
+		if path == "":
 			#buf = io.StringIO(ini)
 			self.FILENAME = False
 			self.SETTINGS = configparser.ConfigParser()

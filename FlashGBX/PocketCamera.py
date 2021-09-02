@@ -19,7 +19,7 @@ class PocketCamera:
 		[ 240, 240, 240,   134, 200, 100,   58, 96, 132,   30, 30, 30 ], # Game Boy Color (USA/EUR)
 	]
 	PALETTE = [ 240, 240, 240,   218, 196, 106,   112, 88, 52,   30, 30, 30 ] # default
-	IMAGES = [None] * 31
+	IMAGES = [None] * 32
 	IMAGES_DELETED = []
 	ORDER = None
 	
@@ -47,9 +47,10 @@ class PocketCamera:
 		self.ORDER = order
 		self.IMAGES_DELETED = deleted
 		
-		self.IMAGES[0] = self.ExtractGameFace()
 		for i in range(0, 30):
-			self.IMAGES[i+1] = self.ExtractPicture(i)
+			self.IMAGES[i] = self.ExtractPicture(i)
+		self.IMAGES[30] = self.ExtractGameFace()
+		self.IMAGES[31] = self.ExtractLastSeen()
 		return True
 	
 	def SetPalette(self, palette):
@@ -66,14 +67,14 @@ class PocketCamera:
 		return (hashlib.sha1(self.IMAGES[index].tobytes()).digest() == b'\xefX\xa8\x12\xa8\x1a\xb1EI\xd8\xf4\xfb\x86\xe9\xec\xb5J_\xb7#')
 	
 	def IsDeleted(self, index):
-		index = self.ORDER[index-1]
+		index = self.ORDER[index]
 		return index in self.IMAGES_DELETED
 	
-	def ConvertPicture(self, buffer):
+	def ConvertPicture(self, buffer, lastseen=False):
 		tile_width = 16
-		tile_height = 14
+		tile_height = 14 if not lastseen else 16
 		
-		img = Image.new(mode='P', size=(128, 112))
+		img = Image.new(mode='P', size=(128, 112 if not lastseen else 128))
 		img.putpalette(self.PALETTE)
 		pixels = img.load()
 		for h in range(tile_height):
@@ -86,16 +87,24 @@ class PocketCamera:
 						lo = (tile[i * 2 + 1] >> (7 - j)) & 1
 						pixels[(w * 8) + j, (h * 8) + i] = (lo << 1 | hi)
 		
-		return img
+		return img.crop((0, 0, 128, 112 if not lastseen else 123))
 	
 	def ExtractGameFace(self):
 		offset = 0x11FC
 		imgbuffer = self.DATA[offset:offset+0x1000]
 		return self.ConvertPicture(imgbuffer)
-		
+	
+	def ExtractLastSeen(self):
+		offset = 0
+		imgbuffer = self.DATA[offset:offset+0x1000]
+		return self.ConvertPicture(imgbuffer, lastseen=True)
+	
 	def ExtractPicture(self, index):
-		index = self.ORDER[index]
-		offset = 0x2000 + (index * 0x1000)
+		if index <= 30:
+			index = self.ORDER[index]
+			offset = 0x2000 + (index * 0x1000)
+		elif index == 31:
+			offset = 0
 		imgbuffer = self.DATA[offset:offset+0x1000]
 		return self.ConvertPicture(imgbuffer)
 	
@@ -108,6 +117,9 @@ class PocketCamera:
 		if index == 0:
 			pic = self.GetPicture(0)
 			pnginfo.add_text("Title", "Game Face")
+		elif index == 31:
+			pic = self.GetPicture(31)
+			pnginfo.add_text("Title", "Last Seen Image")
 		else:
 			pic = self.GetPicture(index)
 			pnginfo.add_text("Title", "Photo {:02d}".format(index))

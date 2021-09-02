@@ -11,7 +11,7 @@ from .PocketCamera import PocketCamera
 class PocketCameraWindow(QtWidgets.QDialog):
 	CUR_PIC = None
 	CUR_THUMBS = None
-	CUR_INDEX = 1
+	CUR_INDEX = 0
 	CUR_BICUBIC = True
 	CUR_FILE = ""
 	CUR_EXPORT_PATH = ""
@@ -142,10 +142,14 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			self.grpPhotoThumbsLayout.addLayout(rowsPhotos[row])
 		
 		rowActionsGeneral3 = QtWidgets.QHBoxLayout()
-		self.btnShowGameFace = QtWidgets.QPushButton("Load &Game Face")
+		self.btnShowGameFace = QtWidgets.QPushButton("&Game Face")
 		self.btnShowGameFace.setStyleSheet("padding: 5px 10px;")
 		self.btnShowGameFace.clicked.connect(self.btnShowGameFace_Clicked)
 		rowActionsGeneral3.addWidget(self.btnShowGameFace)
+		self.btnShowLastSeen = QtWidgets.QPushButton("&Last Seen Image")
+		self.btnShowLastSeen.setStyleSheet("padding: 5px 10px;")
+		self.btnShowLastSeen.clicked.connect(self.btnShowLastSeen_Clicked)
+		rowActionsGeneral3.addWidget(self.btnShowLastSeen)
 		self.grpPhotoThumbsLayout.addStretch()
 		self.grpPhotoThumbsLayout.addLayout(rowActionsGeneral3)
 
@@ -212,14 +216,14 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.CUR_FILE = file
 		if self.CUR_EXPORT_PATH == "":
 			self.CUR_EXPORT_PATH = os.path.dirname(self.CUR_FILE)
-		self.UpdateViewer(1)
+		self.UpdateViewer(0)
 		self.SetColors()
 		
 		return True
 	
 	def lblPhoto_Clicked(self, event, index):
 		if event.button() == QtCore.Qt.LeftButton:
-			self.CUR_INDEX = index + 1
+			self.CUR_INDEX = index
 			self.UpdateViewer(self.CUR_INDEX)
 	
 	def lblPhotoViewer_Clicked(self, event):
@@ -235,8 +239,12 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			self.APP.SETTINGS.setValue("LastDirSaveDataDMG", os.path.dirname(path))
 	
 	def btnShowGameFace_Clicked(self, event):
-		self.UpdateViewer(0)
-		self.CUR_INDEX = 0
+		self.UpdateViewer(30)
+		self.CUR_INDEX = 30
+	
+	def btnShowLastSeen_Clicked(self, event):
+		self.UpdateViewer(31)
+		self.CUR_INDEX = 31
 	
 	def btnSaveAll_Clicked(self, event):
 		if self.CUR_PC is None: return
@@ -245,7 +253,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		if path == "": return
 		self.CUR_EXPORT_PATH = os.path.dirname(path)
 		
-		for i in range(0, 31):
+		for i in range(0, 32):
 			file = os.path.splitext(path)[0] + "{:02d}".format(i) + os.path.splitext(path)[1]
 			if os.path.exists(file):
 				answer = QtWidgets.QMessageBox.warning(self, "FlashGBX", "There are already pictures that use the same file names. If you continue, these files will be overwritten.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -254,8 +262,8 @@ class PocketCameraWindow(QtWidgets.QDialog):
 				elif answer == QtWidgets.QMessageBox.Cancel:
 					return
 
-		for i in range(0, 31):
-			file = os.path.splitext(path)[0] + "{:02d}".format(i) + os.path.splitext(path)[1]
+		for i in range(0, 32):
+			file = os.path.splitext(path)[0] + "{:02d}".format(i+1) + os.path.splitext(path)[1]
 			self.SavePicture(i, path=file)
 	
 	def btnSavePhoto_Clicked(self, event):
@@ -276,14 +284,14 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		cam = self.CUR_PC
 		self.CUR_THUMBS = [None] * 30
 		for i in range(0, 30):
-			pic = cam.GetPicture(i+1).convert("RGBA")
+			pic = cam.GetPicture(i).convert("RGBA")
 			self.lblPhoto[i].setToolTip("")
-			if cam.IsEmpty(i+1):
+			if cam.IsEmpty(i):
 				pass
 				#draw = ImageDraw.Draw(pic, "RGBA")
 				#draw.line([0, 0, 128, 112], fill=(255, 0, 0), width=8)
 				#draw.line([0, 112, 128, 0], fill=(255, 0, 0), width=8)
-			elif cam.IsDeleted(i+1):
+			elif cam.IsDeleted(i):
 				draw_bg = Image.new("RGBA", pic.size)
 				draw = ImageDraw.Draw(draw_bg)
 				draw.line([0, 0, 128, 112], fill=(255, 0, 0, 192), width=8)
@@ -303,18 +311,18 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		for i in range(0, 30):
 			self.lblPhoto[i].setStyleSheet("border-top: 1px solid #adadad; border-left: 1px solid #adadad; border-bottom: 1px solid #ffffff; border-right: 1px solid #ffffff;")
 		
-		if index == 0:
-			self.CUR_PIC = ImageQt(cam.GetPicture(0).convert("RGBA").resize((256, 224), resampler))
+		if index >= 30:
+			self.CUR_PIC = ImageQt(cam.GetPicture(index).convert("RGBA").resize((256, 224), Image.BICUBIC if index == 31 else resampler))
 		else:
 			self.CUR_PIC = ImageQt(cam.GetPicture(index).convert("RGBA").resize((256, 224), resampler))
-			self.lblPhoto[index - 1].setStyleSheet("border: 3px solid green; padding: 1px;")
+			self.lblPhoto[index].setStyleSheet("border: 3px solid green; padding: 1px;")
 		
 		qpixmap = QtGui.QPixmap.fromImage(self.CUR_PIC)
 		self.lblPhotoViewer.setPixmap(qpixmap)
 	
 	def SavePicture(self, index, path=""):
 		if path == "":
-			path = self.CUR_EXPORT_PATH + "/IMG_PC{:02d}.png".format(index)
+			path = self.CUR_EXPORT_PATH + "/IMG_PC{:02d}.png".format(index+1)
 			path = QtWidgets.QFileDialog.getSaveFileName(self, "Save Photo", path, "PNG files (*.png);;BMP files (*.bmp);;GIF files (*.gif);;JPEG files (*.jpg);;All files (*.*)")[0]
 			if path != "": self.CUR_EXPORT_PATH = os.path.dirname(path)
 		if path == "": return

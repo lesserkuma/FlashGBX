@@ -116,6 +116,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - SD007_TSOP_48BALL with K8D3216UTC
   - SD007_TSOP_48BALL with M29W160ET
   - SD007_TSOP_48BALL with L160DB12VI
+  - SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G
   - SD007_TSOP_48BALL_V10 with GL032M10BFIR3
   - SD007_TSOP_48BALL_V10 with M29W320DT
 
@@ -145,6 +146,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - AGB-E05-02 with M29W128GH
   - AGB-E05-06L with 29LV128DBT2C-90Q
   - AGB-E08-09 with 29LV128DTMC-90Q
+  - AGB-E20-30 with M29W128GH
   - AGB-E20-30 with S29GL256N10TFI01
   - AGB-SD-E05 with MSP55LV128
   - B104 with MSP55LV128
@@ -225,9 +227,11 @@ The author would like to thank the following very kind people for their help and
 - djedditt (testing)
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
+- endrift (research, mGBA emulator)
 - eveningmoose (flash chip info)
 - Frost Clock (flash chip info)
 - Grender (testing)
+- hiks (flash chip info)
 - howie0210 (flash chip info, bug reports)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
@@ -238,8 +242,11 @@ The author would like to thank the following very kind people for their help and
 - LucentW (flash chip info, testing, bug reports)
 - marv17 (flash chip info, testing, bug reports, feature suggestions)
 - Mr_V (flash chip info, testing)
+- orangeglo (GB Memory Cartridge samples)
 - paarongiroux (bug reports)
 - Paradoxical (flash chip info)
+- Rairch (bug reports)
+- Raphaël BOICHOT (feature suggestions)
 - RetroGorek (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
 - Sgt.DoudouMiel (flash chip info)

@@ -3,9 +3,7 @@
 	"names":[
 		"S29GL032N90T and ALTERA CPLD (MBC1)"
 	],
-	"flash_ids":[
-		[ 0x02, 0x02, 0x7D, 0x7D ]
-	],
+	"flash_ids":[],
 	"manual_select":true,
 	"voltage":3.3,
 	"flash_size":0x80000,

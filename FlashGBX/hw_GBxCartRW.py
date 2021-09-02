@@ -311,12 +311,10 @@ class GbxDevice:
 			return "{:s} – Firmware {:s} ({:s})".format(self.GetFullName(), self.GetFirmwareVersion(), self.PORT)
 
 	def SupportsFirmwareUpdates(self):
-		#if self.FW["pcb_ver"] != 4: return False
 		return self.FW["pcb_ver"] in (4, 5)
 
 	def FirmwareUpdateAvailable(self):
 		if self.FW["pcb_ver"] != 5: return False
-		#return self.FW["fw_ver"] < self.DEVICE_MAX_FW
 		return (self.FW["pcb_ver"] in (4, 5) and self.FW["fw_ver"] < self.DEVICE_MAX_FW)
 	
 	def GetFirmwareUpdaterClass(self):
@@ -520,14 +518,14 @@ class GbxDevice:
 	
 	def ReadInfo(self, setPinsAsInputs=False):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
+		data = {}
+		self.POS = 0
+		
 		if self.FW["pcb_ver"] == 5:
 			self._write(self.DEVICE_CMD["OFW_CART_MODE"]) # Reset LEDs
 			self._read(1)
 			self.CartPowerOn()
-		
-		data = {}
-		self.POS = 0
-		
+
 		if self.MODE == "DMG":
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
 			self._write(self.DEVICE_CMD["DMG_MBC_RESET"], wait=True)
@@ -536,21 +534,19 @@ class GbxDevice:
 		elif self.MODE == "AGB":
 			if self.FW["pcb_ver"] == 5 and self.FW["fw_ver"] > 1:
 				self._write(self.DEVICE_CMD["AGB_BOOTUP_SEQUENCE"], wait=True)
-		
+
 		header = self.ReadROM(0, 0x180)
-		if header is False or len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
+		if header is False or len(header) != 0x180:
+			print("{:s}\n{:s}Couldn’t read the cartridge information. Please try again.{:s}".format(str(header), ANSI.RED, ANSI.RESET))
+			return False
 		if Util.DEBUG:
 			with open("debug_header.bin", "wb") as f: f.write(header)
 		
-		# Check for DACS
-		dacs_8m = False
-		if self.FW["pcb_ver"] != 5 or self.FW["fw_ver"] == 1:
+		# Unlock DACS carts on older firmware
+		if self.MODE == "AGB" and (self.FW["pcb_ver"] != 5 or self.FW["fw_ver"] == 1):
 			if header[0x04:0x04+0x9C] == bytearray([0x00] * 0x9C):
-				self.ReadROM(0x1FFFFE0, 20) # Unlock DACS
+				self.ReadROM(0x1FFFFE0, 20)
 				header = self.ReadROM(0, 0x180)
-		temp = self.ReadROM(0x1FFE000, 0x0C)
-		if temp == b"AGBFLASHDACS":
-			dacs_8m = True
 		
 		# Parse ROM header
 		if self.MODE == "DMG":
@@ -571,17 +567,19 @@ class GbxDevice:
 				time.sleep(0.1)
 				header = self.ReadROM(0, 0x180)
 				data = RomFileAGB(header).GetHeader()
-
+			
+			# Check where the ROM data repeats
 			size_check = header[0xA0:0xA0+16]
 			currAddr = 0x400000
 			while currAddr < 0x2000000:
-				buffer = self.ReadROM(currAddr + 0x0000A0, 64)[:16]
+				buffer = self.ReadROM(currAddr + 0xA0, 64)[:16]
 				if buffer == size_check: break
 				currAddr += 0x400000
 			data["rom_size"] = currAddr
+
 			if (data["3d_memory"] == True):
 				data["rom_size"] = 0x4000000
-			elif dacs_8m:
+			elif (self.ReadROM(0x1FFE000, 0x0C) == b"AGBFLASHDACS"):
 				data["dacs_8m"] = True
 			
 			if data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
@@ -630,7 +628,6 @@ class GbxDevice:
 			if self.INFO["action"] in (self.ACTIONS["ROM_READ"], self.ACTIONS["SAVE_READ"], self.ACTIONS["ROM_WRITE_VERIFY"]) and not self.NO_PROG_UPDATE:
 				self.SetProgress({"action":"READ", "bytes_added":len(temp)})
 		
-		#with open("debug.bin", "ab") as f: f.write(buffer)
 		return buffer
 
 	def ReadROM_3DMemory(self, address, length, max_length=512):
@@ -656,7 +653,6 @@ class GbxDevice:
 				self.SetProgress({"action":"READ", "bytes_added":buffer_size})
 			self._write(0)
 
-		#dprint(hex(len(buffer)))
 		return buffer
 
 	def ReadRAM(self, address, length, command=None, max_length=512):
@@ -2051,7 +2047,7 @@ class GbxDevice:
 		if "flash_ids" in cart_type:
 			(verified, flash_id) = flashcart.VerifyFlashID()
 			if not verified:
-				print("WARNING: This cartridge’s Flash ID ({:s}) didn’t match the cartridge type selection.".format(' '.join(format(x, '02X') for x in flash_id)))
+				print("NOTE: This cartridge’s Flash ID ({:s}) doesn’t match the cartridge type selection.".format(' '.join(format(x, '02X') for x in flash_id)))
 				#return False
 		# ↑↑↑ Read Flash ID
 		

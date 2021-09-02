@@ -171,11 +171,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if platform.system() == "Darwin": btnWidth += 12
 		self.btnTools.setMaximumWidth(btnWidth)
 		self.mnuTools = QtWidgets.QMenu()
-		self.mnuTools.addAction("Game Boy Camera Album Viewer", lambda: self.ShowPocketCameraWindow())
-		#self.mnuTools.addAction("GB Memory Cartridge Manager", lambda: self.ShowGBMemoryWindow())
+		self.mnuTools.addAction("Game Boy &Camera Album Viewer", lambda: self.ShowPocketCameraWindow())
 		self.mnuTools.addSeparator()
 		self.mnuTools.addAction("Firmware &Updater", lambda: self.ShowFirmwareUpdateWindow())
-		#self.mnuTools.actions()[2].setEnabled(False)
 		self.btnTools.setMenu(self.mnuTools)
 
 		btnText = "C&onfig"
@@ -247,39 +245,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 		QtCore.QTimer.singleShot(1, lambda: [ self.UpdateCheck(), self.FindDevices() ])
 
-		#debug
-		if Util.DEBUG:
-			pass
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/NP M-MENU MENU (メダロット).gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/NP M-MENU MENU (テトリス).gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/NP M-MENU MENU (ドンキコング).gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/BOMBERMAN QUEST.gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/TIMENETPAST.gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/Andere/SMBDX.gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/Andere/SUPERMARIOLAND3_DRMARIO_YOSSYNOCOOKIE_[GBMA][E0194C36].gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/Andere/NINPOWER (Blank).GBC"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/Andere/NP_1MB_ROM_Backup_2021-04-08_10-38-59.gb"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/Andere/test.gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/Andere/GBNP10.gb"
-			
-			#self.STATUS["tempfile"] = self.CONFIG_PATH + "/gbmemory.gbc"
-			#self.STATUS["tempfile"] = "E:/Downloads/Web/GBNP_mbc2.gb"
-			#self.STATUS["tempfile"] = "TETRIS.GB"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/BOMBERMAN QUEST.gbc"
-			#self.STATUS["tempfile"] = "E:/Spiele/Game Boy/!Eigene Dumps/Japanisch/GB Memory/TIMENETPAST.gbc"
-			
-			#map_file = os.path.splitext(self.STATUS["tempfile"])[0] + ".map"
-			#sav_file = os.path.splitext(self.STATUS["tempfile"])[0] + ".sav"
-			#map_file = None
-			#sav_file = None
-
-			#args = { "buffer":rom_data, "buffer_map":map_data, "cart_type":cart_type, "override_voltage":False, "prefer_chip_erase":True, "reverse_sectors":False, "fast_read_mode":True, "verify_flash":True }
-			#self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
-			#self.STATUS["operation"] = None
-			#return
-
-			#self.ShowGBMemoryWindow(rom=self.STATUS["tempfile"], map=map_file, sav=sav_file)
-	
 	def GuiCreateGroupBoxDMGCartInfo(self):
 		self.grpDMGCartridgeInfo = QtWidgets.QGroupBox("Game Boy Cartridge Information")
 		self.grpDMGCartridgeInfo.setMinimumWidth(280)
@@ -570,7 +535,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			else:
 				subprocess.Popen(["xdg-open", path])
 		except:
-			QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Your configuration files are stored in\n" + path, QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Your configuration files are stored at\n{:s}".format(path), QtWidgets.QMessageBox.Ok)
 	
 	def ConnectDevice(self):
 		if self.CONN is not None:
@@ -656,7 +621,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				print(msg, end="")
 
 				if dev.SupportsFirmwareUpdates():
-					#self.mnuTools.actions()[2].setEnabled(True)
 					if dev.FirmwareUpdateAvailable():
 						dontShowAgain = str(self.SETTINGS.value("SkipFirmwareUpdate", default="disabled")).lower() == "enabled"
 						if not dontShowAgain or dev.FW_UPDATE_REQ:
@@ -924,7 +888,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			detected = self.CONN.AutoDetectFlash(limitVoltage)
 			self.lblStatus4a.setText("Ready.")
 			if len(detected) == 0:
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for ROM writing with " + APPNAME + ".\n\nWould you like " + APPNAME + " to run a flash chip query? This may help adding support for your flash cartridge in the future.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No pre-configured flash cartridge type was detected. You can still try and manually select one from the list -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for ROM writing with {:s}.\n\nWould you like {:s} to run a flash chip query? This may help adding support for your flash cartridge in the future.".format(APPNAME, APPNAME), standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 				if self.CONN.GetMode() == "DMG":
 					msgbox.setCheckBox(cb)
@@ -937,9 +901,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if answer == QtWidgets.QMessageBox.Yes:
 					(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage)
 					if cfi_s == "":
-						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre>This cartridge does not provide Common Flash Interface (CFI) information.", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>{:s}</pre>This cartridge does not provide Common Flash Interface (CFI) information.".format(flash_id), QtWidgets.QMessageBox.Ok)
 					else:
-						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>" + flash_id + "</pre><pre>" + str(cfi_s) + "</pre>", QtWidgets.QMessageBox.Ok)
+						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Flash chip query result: <pre>{:s}</pre><pre>{:s}</pre>".format(flash_id, str(cfi_s)), QtWidgets.QMessageBox.Ok)
 						with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])
 				return 0
 			else:
@@ -966,7 +930,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					cart_text += "- " + cart_types[0][detected[i]] + "\n"
 				
 				if manual_select:
-					msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nHowever, there are differences between these cartridge types that cannot be detected automatically, so please select the correct cartridge type manually."
+					msg_text = "Your cartridge responds to flash commands used by:\n{:s}\nHowever, there are differences between these cartridge types that cannot be detected automatically, so please select the correct cartridge type manually.".format(cart_text)
 					cart_type = 0
 				else:
 					if size_undetected:
@@ -979,15 +943,15 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 									break
 					
 					if len(detected) == 1:
-						msg_text = "The following flash cartridge type was detected:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
+						msg_text = "The following flash cartridge type was detected:\n{:s}\nThe supported ROM size is up to {:d} MB.".format(cart_text, int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
 					else:
 						if size_undetected is True:
-							msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nA compatible entry from this list will now be auto-selected, but you may need to manually adjust the ROM size selection.\n\nIMPORTANT: While these cartridges share the same electronic signature, their supported ROM size can differ. As the size can not be detected automatically at this time, please select it manually."
+							msg_text = "Your cartridge responds to flash commands used by:\n{:s}\nA compatible entry from this list will now be auto-selected, but you may need to manually adjust the ROM size selection.\n\nIMPORTANT: While these cartridges share the same electronic signature, their supported ROM size can differ. As the size can not be detected automatically at this time, please select it manually.".format(cart_text)
 						else:
-							msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nA compatible entry from this list will now be auto-selected.\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
+							msg_text = "Your cartridge responds to flash commands used by:\n{:s}\nA compatible entry from this list will now be auto-selected.\nThe supported ROM size is up to {:d} MB.".format(cart_text, int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
 					
 					if sectors_undetected and "sector_size_from_cfi" not in cart_types[1][cart_type]:
-						msg_text = msg_text + "\n\n{:s}IMPORTANT:{:s} While these share most of their attributes, some of them can not be automatically detected. If you encounter any errors while writing a ROM, please manually select the correct type based on the flash chip markings of your cartridge. Enabling the “Prefer chip erase mode” config option can also help.".format(ANSI.RED, ANSI.RESET)
+						msg_text = msg_text + "\n\n" + "IMPORTANT: While these share most of their attributes, some of them can not be automatically detected. If you encounter any errors while writing a ROM, please manually select the correct type based on the flash chip markings of your cartridge. Enabling the “Prefer chip erase mode” config option can also help."
 				
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
 				if cart_type != 0:
@@ -1027,27 +991,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						if cart_types[1][index]["flash_size"] == (Util.DMG_Header_ROM_Sizes_Flasher_Map[i] * 0x4000):
 							self.cmbHeaderROMSizeResult.setCurrentIndex(i)
 					self.STATUS["cart_type"] = cart_types[1][index]
-			
-			if False: # TODO # "dmg-mmsa-jpn" in cart_types[1][index]:
-				#setCurrentIndex(Util.DMG_Header_RAM_Sizes_Map.index(0x101))
-				self.cmbHeaderROMSizeResult.setCurrentIndex(Util.DMG_Header_ROM_Sizes_Flasher_Map.index(64)) # 1 MB
-				self.cmbHeaderRAMSizeResult.setCurrentIndex(Util.DMG_Header_RAM_Sizes_Flasher_Map.index(128*1024)) # 128 KB
-				self.cmbHeaderFeaturesResult.setCurrentIndex(list(Util.DMG_Header_Mapper.keys()).index(0x105)) # G-MMC1
-				if ("operation" not in self.STATUS or self.STATUS["operation"] != "GBMEMORY_FLASH_ROM") and self.CONN.IsSupportedMbc(0x105):
-					answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Cartridge type “{:s}” was selected.\nLoad all contents from the cartridge and open the GB Memory Cartridge Manager?".format(cart_types[0][index]), QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
-					if answer == QtWidgets.QMessageBox.Yes:
-						fast_read_mode = self.SETTINGS.value("FastReadMode", default="disabled")
-						if fast_read_mode and fast_read_mode.lower() == "enabled":
-							fast_read_mode = True
-						else:
-							fast_read_mode = False
-						
-						if not self.CheckDeviceAlive(): return
-						self.STATUS["operation"] = "GBMEMORY_INITIAL_DUMP" # GB Memory Step 1
-						self.STATUS["tempfile"] = self.CONFIG_PATH + "/gbmemory.gbc"
-						args = { "path":self.STATUS["tempfile"], "mbc":0x105, "rom_banks":64, "fast_read_mode":fast_read_mode, "cart_type":index }
-						self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
-						return
 		
 		elif self.CONN.GetMode() == "AGB":
 			cart_types = self.CONN.GetSupportedCartridgesAGB()
@@ -1298,6 +1241,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				rtc = False
 			else:
 				msg = "A Real Time Clock cartridge was detected. Do you want the cartridge’s Real Time Clock register values also to be saved?"
+				if self.CONN.GetMode() == "AGB":
+					msg += "\n\nNote that these values may not yet be supported by emulators."
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 				answer = msgbox.exec()
@@ -1446,7 +1391,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		if not dontShowAgain and mode is not None:
 			cb = QtWidgets.QCheckBox("Don’t show this message again.", checked=False)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The mode will now be changed to " + {"DMG":"Game Boy", "AGB":"Game Boy Advance"}[setTo] + " mode. To be safe, cartridges should only be exchanged while the device is not powered on." + voltageWarning, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The mode will now be changed to " + {"DMG":"Game Boy", "AGB":"Game Boy Advance"}[setTo] + " mode. To be safe, cartridges should only be exchanged while they are not receiving power by the device." + voltageWarning, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 			msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
 			if self.CONN.CanSetVoltageAutomatically(): msgbox.setCheckBox(cb)
 			answer = msgbox.exec()
@@ -1464,15 +1409,16 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		elif self.optAGB.isChecked() and (mode == "DMG" or mode == None):
 			self.CONN.SetMode("AGB")
 		
-		self.ReadCartridge()
+		ok = self.ReadCartridge()
 		qt_app.processEvents()
-		self.btnHeaderRefresh.setEnabled(True)
-		self.btnBackupROM.setEnabled(True)
-		self.btnFlashROM.setEnabled(True)
-		self.btnBackupRAM.setEnabled(True)
-		self.btnRestoreRAM.setEnabled(True)
-		self.grpDMGCartridgeInfo.setEnabled(True)
-		self.grpAGBCartridgeInfo.setEnabled(True)
+		if ok is not False:
+			self.btnHeaderRefresh.setEnabled(True)
+			self.btnBackupROM.setEnabled(True)
+			self.btnFlashROM.setEnabled(True)
+			self.btnBackupRAM.setEnabled(True)
+			self.btnRestoreRAM.setEnabled(True)
+			self.grpDMGCartridgeInfo.setEnabled(True)
+			self.grpAGBCartridgeInfo.setEnabled(True)
 	
 	def ReadCartridge(self, resetStatus=True):
 		if not self.CheckDeviceAlive(): return
@@ -1490,6 +1436,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		if data == False or len(data) == 0:
 			self.DisconnectDevice()
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "Invalid response from the device.", QtWidgets.QMessageBox.Ok)
 			return False
 		
 		if self.CONN.CheckROMStable() is False:
@@ -1668,7 +1615,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.FinishOperation()
 		
 		if not data['logo_correct'] and data['empty'] == False:
-			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The Nintendo Logo check failed which usually means that the cartridge couldn’t be read correctly. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The Nintendo Logo check failed which usually means that the cartridge can’t be read correctly. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
 		
 		if data['game_title'][:11] == "YJencrypted":
 			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "This cartridge may be protected against reading or writing a ROM. If you don’t want to risk this cartridge to render itself unusable, please do not try to write a new ROM to it.", QtWidgets.QMessageBox.Ok)

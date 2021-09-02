@@ -1,4 +1,10 @@
 # Release notes
+### v2.7 (released 2021-09-02)
+- Added support for AGB-E20-30 with M29W128GH *(thanks hiks)*
+- Added support for SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G *(thanks marv17)*
+- Fixed a bug with parsing an invalid settings.ini *(thanks Rairch)*
+- Added the image that was last seen by the GB Camera Sensor to the GB Camera Album Viewer *(thanks Raphaël BOICHOT for the suggestion)*
+
 ### v2.6 (released 2021-08-09)
 - Bundles GBxCart RW v1.4 firmware version R31+L2 (fixes a very rare bug with SRAM access on Game Boy cartridges)
 - Added a firmware updater for GBxCart v1.4 devices

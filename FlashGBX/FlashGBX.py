@@ -80,7 +80,7 @@ def main(portableMode=False):
 	
 	print("{:s} {:s} by Lesserkuma".format(Util.APPNAME, Util.VERSION))
 	print("https://github.com/lesserkuma/FlashGBX")
-	print("\nDISCLAIMER: This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!")
+	#print("\nDISCLAIMER: This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!")
 	
 	if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 		app_path = os.path.dirname(sys.executable)
@@ -89,9 +89,9 @@ def main(portableMode=False):
 	
 	try:
 		from PySide2 import QtCore
-		cp = { "subdir":app_path + "/config", "appdata":QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppConfigLocation) }
+		cp = { "subdir":app_path + "/config", "appdata":QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppConfigLocation) + '/FlashGBX' }
 	except:
-		cp = { "subdir":app_path + "/config", "appdata":os.path.expanduser('~') }
+		cp = { "subdir":app_path + "/config", "appdata":os.path.expanduser('~') + '/FlashGBX' }
 	
 	if portableMode:
 		cfgdir_default = "subdir"
@@ -102,7 +102,7 @@ def main(portableMode=False):
 	"  Backup the ROM of a Game Boy Advance cartridge:\n\t{:s} --mode agb --action backup-rom\n\n".format(sys.argv[0]) + \
 	"  Backup Save Data from a Game Boy cartridge:\n\t{:s} --mode dmg --action backup-save\n\n".format(sys.argv[0]) + \
 	"  Write a Game Boy Advance ROM relying on auto-detecting the flash cartridge:\n\t{:s} --mode agb --action flash-rom ROM.gba\n\n".format(sys.argv[0]) + \
-	"  Extract Game Boy Camera pictures as .png files from a save data file:\n\t{:s} --mode dmg --action gbcamera-extract --gbcamera-outfile-format png --path GAMEBOYCAMERA.sav\n\n".format(sys.argv[0])
+	"  Extract Game Boy Camera pictures as .png files from a save data file:\n\t{:s} --mode dmg --action gbcamera-extract --gbcamera-outfile-format png GAMEBOYCAMERA.sav\n\n".format(sys.argv[0])
 
 	parser = argparse.ArgumentParser(formatter_class=ArgParseCustomFormatter, epilog=examples)
 	try:

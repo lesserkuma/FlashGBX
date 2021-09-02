@@ -1,0 +1,88 @@
+{
+	"type":"AGB",
+	"names":[
+		"AGB-E20-30 with M29W128GH"
+	],
+	"flash_ids":[
+		[ 0x20, 0x00, 0x7E, 0x22 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x1000000,
+	"sector_size":0x20000,
+	"chip_erase_timeout":300,
+	"single_write_first_256_bytes":true,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
+		],
+		"sector_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFFFF, 0xFFFF ]
+		],
+		"chip_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFFFF, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ "SA", 0x25 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0x29 ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", "PD", 0xFFFF ]
+		],
+		"single_write":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}
