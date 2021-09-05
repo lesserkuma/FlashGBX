@@ -24,31 +24,30 @@ class RomFileDMG:
 			self.ROMFILE = bytearray(f.read(0x1000))
 	
 	def CalcChecksumHeader(self, fix=False):
-		buffer = self.ROMFILE
 		checksum = 0
 		for i in range(0x134, 0x14D):
-			checksum = checksum - buffer[i] - 1
+			checksum = checksum - self.ROMFILE[i] - 1
 		checksum = checksum & 0xFF
 		
-		if fix: buffer[0x14D] = checksum
+		if fix: self.ROMFILE[0x14D] = checksum
 		return checksum
 	
 	def CalcChecksumGlobal(self, fix=False):
-		buffer = self.ROMFILE
 		checksum = 0
-		for i in range(0, len(buffer), 2):
+		for i in range(0, len(self.ROMFILE), 2):
 			if i != 0x14E:
-				checksum = checksum + buffer[i + 1]
-				checksum = checksum + buffer[i]
+				checksum = checksum + self.ROMFILE[i + 1]
+				checksum = checksum + self.ROMFILE[i]
 		
 		if fix:
-			buffer[0x14E] = checksum >> 8
-			buffer[0x14F] = checksum & 0xFF
+			self.ROMFILE[0x14E] = checksum >> 8
+			self.ROMFILE[0x14F] = checksum & 0xFF
 		return checksum & 0xFFFF
 	
-	def FixChecksums(self):
+	def FixHeader(self):
 		self.CalcChecksumHeader(True)
 		self.CalcChecksumGlobal(True)
+		return self.ROMFILE[0:0x200]
 	
 	def GetHeader(self):
 		buffer = self.ROMFILE

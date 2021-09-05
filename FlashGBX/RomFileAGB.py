@@ -24,21 +24,20 @@ class RomFileAGB:
 			self.ROMFILE = bytearray(f.read())
 	
 	def CalcChecksumHeader(self, fix=False):
-		buffer = self.ROMFILE
 		checksum = 0
 		for i in range(0xA0, 0xBD):
-			checksum = checksum - buffer[i]
+			checksum = checksum - self.ROMFILE[i]
 		checksum = (checksum - 0x19) & 0xFF
 		
-		if fix: buffer[0x14D] = checksum
+		if fix: self.ROMFILE[0xBD] = checksum
 		return checksum
 	
 	def CalcChecksumGlobal(self):
-		buffer = self.ROMFILE
-		return (zlib.crc32(buffer) & 0xffffffff)
+		return (zlib.crc32(self.ROMFILE) & 0xFFFFFFFF)
 	
-	def FixChecksums(self):
+	def FixHeader(self):
 		self.CalcChecksumHeader(True)
+		return self.ROMFILE[0:0x200]
 	
 	def GetHeader(self):
 		buffer = self.ROMFILE

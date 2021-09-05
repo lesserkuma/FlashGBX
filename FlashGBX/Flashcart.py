@@ -152,6 +152,7 @@ class Flashcart:
 	
 	def VerifyFlashID(self):
 		if "read_identifier" not in self.CONFIG["commands"]: return False
+		if len(self.CONFIG["flash_ids"]) == 0: return False
 		self.Reset()
 		self.Unlock()
 		self.CartWrite(self.CONFIG["commands"]["read_identifier"])

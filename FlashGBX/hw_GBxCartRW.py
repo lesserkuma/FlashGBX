@@ -1038,7 +1038,7 @@ class GbxDevice:
 			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM)
 			flashcart.Reset(full_reset=False)
 			flashcart.Unlock()
-			if "flash_ids" in flashcart_meta:
+			if "flash_ids" in flashcart_meta and len(flashcart_meta["flash_ids"]) > 0:
 				vfid = flashcart.VerifyFlashID()
 				if vfid is not False:
 					(verified, cart_flash_id) = flashcart.VerifyFlashID()
@@ -1865,6 +1865,14 @@ class GbxDevice:
 		if len(data_import) % 0x8000 > 0:
 			data_import += bytearray([0xFF] * (0x8000 - len(data_import) % 0x8000))
 		
+		# Fix header
+		if "fix_header" in args and args["fix_header"]:
+			if self.MODE == "DMG":
+				temp = RomFileDMG(data_import[0:0x200]).FixHeader()
+			elif self.MODE == "AGB":
+				temp = RomFileAGB(data_import[0:0x200]).FixHeader()
+			data_import[0:0x200] = temp
+		
 		supported_carts = list(self.SUPPORTED_CARTS[self.MODE].values())
 		cart_type = copy.deepcopy(supported_carts[args["cart_type"]])
 		if cart_type == "RETAIL" or cart_type == "AUTODETECT": return False # Generic ROM Cartridge is not flashable
@@ -2201,15 +2209,7 @@ class GbxDevice:
 			
 			start_address = 0
 			end_address = buffer_pos
-			'''
-			dacs = False
-			if "agb-ghtj-jpn" in flashcart.CONFIG: # DACS
-				start_address = 0x1F00000
-				end_address = 0x1FFC000
-				dacs = True
-				#data_import = data_import[start_address:end_address]
-			verify_args.update({"verify_flash":data_import, "dacs":dacs, "start_address":start_address, "end_address":end_address, "rom_banks":rom_banks, "path":"", "rtc_area":flashcart.HasRTC()})
-			'''
+			
 			verify_args.update({"verify_flash":data_import, "rom_banks":rom_banks, "path":"", "rtc_area":flashcart.HasRTC()})
 			self.ReadROM(0, 4) # dummy read
 			verified_size = self._BackupROM(verify_args)

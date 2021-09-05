@@ -116,7 +116,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			self.DEVICE = device
 		else:
 			self.APP.QT_APP.processEvents()
-			text = "This Firmware Updater is for insideGadgets GBxCart RW v1.4 devices only. Please only proceed if your device matches this hardware revision.\n\nIf you want to update another GBxCart RW hardware revision, please use the official firmware updater by insideGadgets instead."
+			text = "This Firmware Updater is for insideGadgets GBxCart RW v1.4 devices only. Please only proceed if your device matches this hardware revision.\n\nGBxCart RW v1.3 can be updated only after connecting to it first. If you want to update another GBxCart RW hardware revision, please use the official firmware updater by insideGadgets instead."
 			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 			msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
 			answer = msgbox.exec()

@@ -2,6 +2,8 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 # Partly based on work from Alex from insideGadgets (www.insidegadgets.com), code used with permission
+# This code is used for official firmware of GBxCart v1.3 only and this code is pure chaos, sorry
+# Refer to hw_GBxCartRW.py for the much cleaner rewrite (used for GBxCart RW v1.4 and firmware L1 on v1.3)
 
 import time, math, struct, traceback, zlib, copy, hashlib, os
 import serial, serial.tools.list_ports
@@ -1797,7 +1799,7 @@ class GbxDevice:
 			i = i - len(data_import)
 			if i > 0: data_import += bytearray([0xFF] * i)
 			
-			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_flash=args["verify_flash"])
+			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_flash=args["verify_flash"], fix_header=args["fix_header"])
 		
 		# Reset pins to avoid save data loss
 		self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
@@ -1805,7 +1807,7 @@ class GbxDevice:
 	
 	#######################################################################################################################################
 	
-	def _FlashROM(self, buffer=bytearray(), start_addr=0, cart_type=None, voltage=3.3, signal=None, prefer_chip_erase=False, reverse_sectors=False, fast_read_mode=False, verify_flash=False):
+	def _FlashROM(self, buffer=bytearray(), start_addr=0, cart_type=None, voltage=3.3, signal=None, prefer_chip_erase=False, reverse_sectors=False, fast_read_mode=False, verify_flash=False, fix_header=False):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
 		if self.INFO == None: self.ReadInfo()
 		self.INFO["last_action"] = 4
@@ -1816,10 +1818,19 @@ class GbxDevice:
 		data_import = copy.copy(buffer)
 		if start_addr > 0:
 			data_import = (b'\xFF' * start_addr) + data_import
+		data_import = bytearray(data_import)
 		
 		if cart_type == "RETAIL" or cart_type == "AUTODETECT": return False # Generic ROM Cartridge is not flashable
 		flashcart_meta = copy.deepcopy(cart_type)
 		
+		# Fix header
+		if fix_header:
+			if self.MODE == "DMG":
+				temp = RomFileDMG(data_import[0:0x200]).FixHeader()
+			elif self.MODE == "AGB":
+				temp = RomFileAGB(data_import[0:0x200]).FixHeader()
+			data_import[0:0x200] = temp
+
 		# Special carts
 		if "Retrostage GameBoy Blaster" in cart_type["names"]:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The Retrostage GameBoy Blaster cartridge is currently not fully supported by FlashGBX. However, you can use the insideGadgets “Flasher” software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> to flash this cartridge.", "abortable":False})

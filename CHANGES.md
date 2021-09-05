@@ -1,4 +1,9 @@
 # Release notes
+### v2.8 (released 2021-09-05)
+- Added an option to fix wrong header checksums when writing a ROM *(thanks Voultar for the suggestion)*
+- Fixed a bug with the auto-detect feature *(thanks Voultar)*
+- Fixed the save data size detection of the Classic NES Series and Famicom Mini game cartridges for Game Boy Advance
+
 ### v2.7 (released 2021-09-02)
 - Added support for AGB-E20-30 with M29W128GH *(thanks hiks)*
 - Added support for SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G *(thanks marv17)*

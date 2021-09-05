@@ -754,7 +754,7 @@ class FlashGBX_CLI():
 			elif os.path.getsize(path) < 0x400:
 				print("{:s}ROM files smaller than 1 KB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
-			with open(path, "rb") as file: buffer = file.read()
+			with open(path, "rb") as file: buffer = bytearray(file.read())
 		except (PermissionError, FileNotFoundError):
 			print("{:s}Couldn’t access file path “{:s}”.{:s}".format(ANSI.RED, args.path, ANSI.RESET))
 			return
@@ -791,6 +791,7 @@ class FlashGBX_CLI():
 		fast_read_mode = args.fast_read_mode is True
 		verify_flash = args.no_verify_flash is False
 		
+		fix_header = False
 		try:
 			if self.CONN.GetMode() == "DMG":
 				hdr = RomFileDMG(path).GetHeader()
@@ -800,6 +801,10 @@ class FlashGBX_CLI():
 				print("{:s}WARNING: The ROM file you selected will not boot on actual hardware due to invalid logo data.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 			if not hdr["header_checksum_correct"]:
 				print("{:s}WARNING: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).{:s}".format(ANSI.YELLOW, hdr["header_checksum_calc"], hdr["header_checksum"], ANSI.RESET))
+				answer = input("Fix the header checksum before continuing? [Y/n]: ").strip().lower()
+				print("")
+				if answer != "n":
+					fix_header = True
 		
 		except:
 			print("{:s}The selected file could not be read.{:s}".format(ANSI.RED, ANSI.RESET))
@@ -812,7 +817,7 @@ class FlashGBX_CLI():
 		print("The following ROM file will now be written to the flash cartridge at {:s}V:\n{:s}".format(str(v), os.path.abspath(path)))
 		
 		print("")
-		self.CONN._TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':fast_read_mode, 'verify_flash':verify_flash }, signal=self.PROGRESS.SetProgress)
+		self.CONN._TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':fast_read_mode, 'verify_flash':verify_flash, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
 		buffer = None
 	
 	def BackupRestoreRAM(self, args, header):
@@ -924,7 +929,6 @@ class FlashGBX_CLI():
 		if self.CONN.GetMode() == "AGB":
 			print("Using Save Type “{:s}”.".format(Util.AGB_Header_Save_Types[save_type]))
 		elif self.CONN.GetMode() == "DMG":
-			#if rtc and header["features_raw"] in (0x10, 0xFD, 0xFE): # RTC of MBC3, TAMA5, HuC-3
 			if rtc and header["features_raw"] in (0x10, 0xFE): # RTC of MBC3, HuC-3
 				print("Real Time Clock register values will also be written if applicable/possible.")
 

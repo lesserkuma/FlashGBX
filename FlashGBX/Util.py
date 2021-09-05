@@ -7,7 +7,7 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "2.7"
+VERSION_PEP440 = "2.8"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 

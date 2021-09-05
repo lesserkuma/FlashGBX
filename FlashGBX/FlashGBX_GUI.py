@@ -7,7 +7,6 @@ from PySide2 import QtCore, QtWidgets, QtGui
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
 from .PocketCameraWindow import PocketCameraWindow
-#from .GBMemoryWindow import GBMemoryWindow
 from .Util import APPNAME, VERSION, VERSION_PEP440, ANSI
 from . import Util
 from . import hw_GBxCartRW, hw_GBxCartRW_ofw
@@ -189,7 +188,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("&Append date && time to filename of save data backups", lambda: self.SETTINGS.setValue("SaveFileNameAddDateTime", str(self.mnuConfig.actions()[1].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("Prefer full &chip erase over sector erase when both available", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Verify flash after writing", lambda: self.SETTINGS.setValue("VerifyFlash", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
-		self.mnuConfig.addAction("Use &fast read mode (experimental)", lambda: self.SETTINGS.setValue("FastReadMode", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled"))) # GBxCart RW
+		self.mnuConfig.addAction("Use &fast read mode", lambda: self.SETTINGS.setValue("FastReadMode", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled"))) # GBxCart RW
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Show &configuration directory", self.OpenConfigDir)
 		self.mnuConfig.actions()[0].setCheckable(True)
@@ -636,7 +635,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 							if dev.FW_UPDATE_REQ:
 								if answer == QtWidgets.QMessageBox.Yes:
 									self.ShowFirmwareUpdateWindow()
-								elif not Util.DEBUG:
+								if not Util.DEBUG:
 									self.DisconnectDevice()
 							else:
 								dontShowAgain = cb.isChecked()
@@ -702,7 +701,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.cmbDevice.clear()
 			self.btnConnect.setEnabled(True)
 		else:
-			self.lblDevice.setText("Select device:")
+			self.lblDevice.setText("Connect to:")
 			self.cmbDevice.clear()
 			self.cmbDevice.addItems(self.DEVICES.keys())
 			self.cmbDevice.setCurrentIndex(0)
@@ -873,7 +872,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "No flash cartridge type configuration files found. Try to restart the application with the “--reset” command line switch to reset the configuration.", QtWidgets.QMessageBox.Ok)
 			return 0
 		
-		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Would you like " + APPNAME + " to try and auto-detect the flash cartridge type?\n(Genuine game cartridges can not be re-written.)", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+		msg = "Would you like " + APPNAME + " to try and auto-detect the flash cartridge type?\n\nNote: Genuine game cartridges can not be re-written."
+		if self.CONN.GetMode() == "DMG":
+			msg += " Reproduction cartridges often use 3.3V, actual flash cartridges may require 5V."
+		
+		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 		msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 		cb = QtWidgets.QCheckBox("Limit voltage to 3.3V", checked=True)
 		if self.CONN.GetMode() == "DMG":
@@ -1168,7 +1171,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		else:
 			verify_flash = False
 		
-		#try:
+		fix_header = False
 		if self.CONN.GetMode() == "DMG":
 			hdr = RomFileDMG(buffer).GetHeader()
 		elif self.CONN.GetMode() == "AGB":
@@ -1177,15 +1180,22 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		if not hdr["header_checksum_correct"]:
-			answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"]), QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
-			if answer == QtWidgets.QMessageBox.Cancel: return
-		#except:
-		#	QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The file you selected could not be read.", QtWidgets.QMessageBox.Ok)
-		#	return
-		
+			msg_text = "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"])
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
+			button_fix = msgbox.addButton("  &Fix and Continue  ", QtWidgets.QMessageBox.ActionRole)
+			button_nofix = msgbox.addButton("  Continue &without fixing  ", QtWidgets.QMessageBox.ActionRole)
+			button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
+			msgbox.setDefaultButton(button_fix)
+			msgbox.setEscapeButton(button_cancel)
+			msgbox.exec()
+			if msgbox.clickedButton() == button_fix:
+				fix_header = True
+			elif msgbox.clickedButton() == button_cancel:
+				return
+
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":fast_read_mode, "verify_flash":verify_flash }
+		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":fast_read_mode, "verify_flash":verify_flash, "fix_header":fix_header }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		buffer = None
@@ -1201,7 +1211,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 			path = self.lblHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii')
 			if path == "" or path == "(No ROM data detected)": path = "ROM"
-			#mbc = Util.DMG_Header_Mapper_MBC[self.cmbHeaderFeaturesResult.currentIndex()]
 			mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
 			try:
 				features = list(Util.DMG_Header_Mapper.keys())[self.cmbHeaderFeaturesResult.currentIndex()]
@@ -1265,7 +1274,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 			if dpath == "": path = self.lblHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			#mbc = Util.DMG_Header_Mapper_MBC[self.cmbHeaderFeaturesResult.currentIndex()]
 			mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
 			try:
 				features = list(Util.DMG_Header_Mapper.keys())[self.cmbHeaderFeaturesResult.currentIndex()]
@@ -1681,7 +1689,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblStatus1aResult.setText("Pending...")
 				self.lblStatus2aResult.setText("Pending...")
 				self.lblStatus3aResult.setText("Pending...")
-				#self.lblStatus3aResult.setText(Util.formatProgressTime(elapsed))
 				self.lblStatus4a.setText("Unlocking flash...")
 				self.lblStatus4aResult.setText("")
 				self.btnCancel.setEnabled(args["abortable"])
@@ -1801,45 +1808,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		self.CAMWIN.setModal(True)
 		self.CAMWIN.run()
-	
-	def ShowGBMemoryWindow(self, rom=None, map=None, sav=None):
-		if "cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]:
-			self.STATUS["operation"] = "GBMEMORY_MANAGER"
-		self.GBMWIN = None
-		# self.GBMWIN = GBMemoryWindow(self, app_path=self.APP_PATH, rom=rom, map=map, sav=sav, icon=self.windowIcon())
-		# self.GBMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		# self.GBMWIN.setModal(True)
-		# self.GBMWIN.run()
-
-	def CommitGBMemory(self, rom_data, map_data, sav_data):
-		if "operation" in self.STATUS and self.STATUS["operation"] == "GBMEMORY_MANAGER": # GB Memory Step 2
-			self.STATUS["operation"] = None # temp
-			if rom_data is None or map_data is None or sav_data is None: return
-			
-			cart_type = cart_type = self.cmbDMGCartridgeTypeResult.currentIndex()
-			fast_read_mode = self.SETTINGS.value("FastReadMode", default="disabled")
-			if fast_read_mode and fast_read_mode.lower() == "enabled":
-				fast_read_mode = True
-			else:
-				fast_read_mode = False
-			verify_flash = self.SETTINGS.value("VerifyFlash", default="enabled")
-			if verify_flash and verify_flash.lower() == "enabled":
-				verify_flash = True
-			else:
-				verify_flash = False
-
-			self.STATUS["tempfile"] = self.CONFIG_PATH + "/gbmemory.gbc"
-			rom_file = self.STATUS["tempfile"]
-			map_file = os.path.splitext(self.STATUS["tempfile"])[0] + ".map"
-			sav_file = os.path.splitext(self.STATUS["tempfile"])[0] + ".sav"
-			with open(rom_file, "wb") as f: f.write(rom_data)
-			with open(map_file, "wb") as f: f.write(map_data)
-			with open(sav_file, "wb") as f: f.write(sav_data)
-			
-			#args = { "buffer":rom_data, "buffer_map":map_data, "cart_type":cart_type, "override_voltage":False, "prefer_chip_erase":True, "reverse_sectors":False, "fast_read_mode":fast_read_mode, "verify_flash":verify_flash }
-			args = { "path":self.STATUS["tempfile"], "cart_type":cart_type, "override_voltage":False, "prefer_chip_erase":True, "reverse_sectors":False, "fast_read_mode":fast_read_mode, "verify_flash":verify_flash }
-			self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
-			self.STATUS["operation"] = "GBMEMORY_FLASH_ROM" # GB Memory Step 3
 
 	def dragEnterEvent(self, e):
 		if self._dragEventHover(e):

@@ -3,7 +3,6 @@
 	"names":[
 		"insideGadgets Power Cart 1 MB, 128 KB SRAM"
 	],
-	"flash_ids":[],
 	"voltage":5,
 	"write_pin":"",
 	"command_set":"",

@@ -254,5 +254,6 @@ The author would like to thank the following very kind people for their help and
 - Super Maker (flash chip info, testing)
 - t5b6_de (flash chip info)
 - Veund (flash chip info)
+- Voultar (bug reports, feature suggestions)
 - Zeii (flash chip info)
 - Zelante (flash chip info)
