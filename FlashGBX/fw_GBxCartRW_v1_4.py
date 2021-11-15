@@ -43,8 +43,6 @@ class FirmwareUpdater():
 			port = ports[0]
 		else:
 			port = self.PORT
-		delay = 0
-		lives = 10
 		data = buffer
 		buffer = bytearray()
 		
@@ -60,9 +58,7 @@ class FirmwareUpdater():
 		fncSetStatus("Updating firmware...", setProgress=0)
 		
 		size = len(data)
-		failed = 0
 		counter = 0
-		last_percent = 0
 		while counter < size:
 			byte = data[counter:counter+1]
 			dev.write(byte)
@@ -74,29 +70,26 @@ class FirmwareUpdater():
 					tmp_byte = 0
 				byte = int.from_bytes(byte, byteorder="little")
 				if counter == 0:
-					fncSetStatus(text="Update failed!".format(counter, byte, tmp_byte), enableUI=True)
+					fncSetStatus(text="Update failed!", enableUI=True)
 				else:
-					fncSetStatus(text="Update failed at offset 0x{:04X}!".format(counter, byte, tmp_byte), enableUI=True)
+					fncSetStatus(text="Update failed at offset 0x{:04X}!".format(counter), enableUI=True)
 				return 2
 			
 			counter += 1
 			percent = float(counter)/size*100
-			#if int(percent) > int(last_percent):
 			fncSetStatus(text="Updating firmware... Do not unplug the device!", setProgress=percent)
-			last_percent = percent
 
 		dev.close()
 		time.sleep(0.8)
 		fncSetStatus("Done.")
 		time.sleep(0.2)
-		flash_ok = True
 		return 1
 
 class FirmwareUpdaterWindow(QtWidgets.QDialog):
 	APP = None
 	DEVICE = None
 	FWUPD = None
-	DEV_NAME = ""
+	DEV_NAME = "GBxCart RW"
 	FW_VER = ""
 	PCB_VER = ""
 
@@ -123,14 +116,6 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			if answer == QtWidgets.QMessageBox.Cancel: return
 			self.FWUPD = FirmwareUpdater(app_path, None)
 
-		with zipfile.ZipFile(app_path + "/res/fw_GBxCart_RW_v1_4.zip") as zip:
-			with zip.open("fw.ini") as f: ini_file = f.read()
-			ini_file = ini_file.decode(encoding="utf-8")
-			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
-			self.OFW_VER = self.INI.GetValue("fw_ver")
-			self.OFW_BUILDTS = self.INI.GetValue("fw_buildts")
-			self.OFW_TEXT = self.INI.GetValue("fw_text")
-		
 		self.layout = QtWidgets.QGridLayout()
 		self.layout.setContentsMargins(-1, 8, -1, 8)
 		self.layout.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
@@ -149,14 +134,6 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		rowDeviceInfo1.addWidget(self.lblDeviceNameResult)
 		rowDeviceInfo1.addStretch(1)
 		self.grpDeviceInfoLayout.addLayout(rowDeviceInfo1)
-		rowDeviceInfo2 = QtWidgets.QHBoxLayout()
-		self.lblDevicePCBVer = QtWidgets.QLabel("PCB version:")
-		self.lblDevicePCBVer.setMinimumWidth(120)
-		self.lblDevicePCBVerResult = QtWidgets.QLabel("v1.4")
-		rowDeviceInfo2.addWidget(self.lblDevicePCBVer)
-		rowDeviceInfo2.addWidget(self.lblDevicePCBVerResult)
-		rowDeviceInfo2.addStretch(1)
-		self.grpDeviceInfoLayout.addLayout(rowDeviceInfo2)
 		rowDeviceInfo3 = QtWidgets.QHBoxLayout()
 		self.lblDeviceFWVer = QtWidgets.QLabel("Firmware version:")
 		self.lblDeviceFWVer.setMinimumWidth(120)
@@ -165,6 +142,20 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		rowDeviceInfo3.addWidget(self.lblDeviceFWVerResult)
 		rowDeviceInfo3.addStretch(1)
 		self.grpDeviceInfoLayout.addLayout(rowDeviceInfo3)
+		rowDeviceInfo2 = QtWidgets.QHBoxLayout()
+		self.lblDevicePCBVer = QtWidgets.QLabel("PCB version:")
+		self.lblDevicePCBVer.setMinimumWidth(120)
+		#self.lblDevicePCBVerResult = QtWidgets.QLabel("v1.4")
+		self.optDevicePCBVer14 = QtWidgets.QRadioButton("v1.4")
+		self.connect(self.optDevicePCBVer14, QtCore.SIGNAL("clicked()"), self.SetPCBVersion)
+		self.optDevicePCBVer14a = QtWidgets.QRadioButton("v1.4a")
+		self.connect(self.optDevicePCBVer14a, QtCore.SIGNAL("clicked()"), self.SetPCBVersion)
+		rowDeviceInfo2.addWidget(self.lblDevicePCBVer)
+		#rowDeviceInfo2.addWidget(self.lblDevicePCBVerResult)
+		rowDeviceInfo2.addWidget(self.optDevicePCBVer14)
+		rowDeviceInfo2.addWidget(self.optDevicePCBVer14a)
+		rowDeviceInfo2.addStretch(1)
+		self.grpDeviceInfoLayout.addLayout(rowDeviceInfo2)
 		self.grpDeviceInfo.setLayout(self.grpDeviceInfoLayout)
 		self.layout_device.addWidget(self.grpDeviceInfo)
 		# ↑↑↑ Current Device Information
@@ -178,7 +169,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		rowDeviceInfo4 = QtWidgets.QHBoxLayout()
 		self.lblDeviceFWVer2 = QtWidgets.QLabel("Firmware version:")
 		self.lblDeviceFWVer2.setMinimumWidth(120)
-		self.lblDeviceFWVer2Result = QtWidgets.QLabel("R31+L2")
+		self.lblDeviceFWVer2Result = QtWidgets.QLabel("(Please choose the PCB version)")
 		rowDeviceInfo4.addWidget(self.lblDeviceFWVer2)
 		rowDeviceInfo4.addWidget(self.lblDeviceFWVer2Result)
 		rowDeviceInfo4.addStretch(1)
@@ -225,10 +216,31 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 
 		self.lblDeviceNameResult.setText(self.DEV_NAME)
 		self.lblDeviceFWVerResult.setText(self.FW_VER)
-		self.lblDevicePCBVerResult.setText(self.PCB_VER)
-
-		self.lblDeviceFWVer2Result.setText("{:s} (dated {:s})".format(self.OFW_VER, datetime.datetime.fromtimestamp(int(self.OFW_BUILDTS)).astimezone().replace(microsecond=0).isoformat()))
+		#self.lblDevicePCBVerResult.setText(self.PCB_VER)
+		if self.PCB_VER == "v1.4":
+			self.optDevicePCBVer14.setChecked(True)
+		elif self.PCB_VER == "v1.4a":
+			self.optDevicePCBVer14a.setChecked(True)
+		self.SetPCBVersion()
 	
+	def SetPCBVersion(self):
+		if self.optDevicePCBVer14.isChecked():
+			file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip"
+		elif self.optDevicePCBVer14a.isChecked():
+			file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4a.zip"
+		else:
+			return
+
+		with zipfile.ZipFile(file_name) as zip:
+			with zip.open("fw.ini") as f: ini_file = f.read()
+			ini_file = ini_file.decode(encoding="utf-8")
+			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
+			self.OFW_VER = self.INI.GetValue("fw_ver")
+			self.OFW_BUILDTS = self.INI.GetValue("fw_buildts")
+			self.OFW_TEXT = self.INI.GetValue("fw_text")
+		
+		self.lblDeviceFWVer2Result.setText("{:s} (dated {:s})".format(self.OFW_VER, datetime.datetime.fromtimestamp(int(self.OFW_BUILDTS)).astimezone().replace(microsecond=0).isoformat()))
+
 	def run(self):
 		try:
 			self.layout.update()
@@ -260,9 +272,20 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		return True
 	
 	def UpdateFirmware(self):
+		if self.optDevicePCBVer14.isChecked():
+			device_name = "v1.4"
+			file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip"
+		elif self.optDevicePCBVer14a.isChecked():
+			device_name = "v1.4a"
+			file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4a.zip"
+		else:
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="Please select the PCB version of your GBxCart RW device.", standardButtons=QtWidgets.QMessageBox.Ok)
+			answer = msgbox.exec()
+			return False
+
 		self.APP.DisconnectDevice()
 
-		text = "Please follow these steps to proceed with the firmware update:<ol><li>Disconnect the USB cable of your GBxCart RW v1.4 device.</li><li>On the circuit board of your GBxCart RW v1.4, press and hold down the small button while connecting the USB cable again.</li><li>Keep the small button held for at least 2 seconds, then let go of it. If done right, the green LED labeled “Done” should remain lit.</li><li>Click OK to continue.</li></ol>"
+		text = "Please follow these steps to proceed with the firmware update:<ol><li>Disconnect the USB cable of your GBxCart RW {:s} device.</li><li>On the circuit board of your GBxCart RW {:s}, press and hold down the small button while connecting the USB cable again.</li><li>Keep the small button held for at least 2 seconds, then let go of it. If done right, the green LED labeled “Done” should remain lit.</li><li>Click OK to continue.</li></ol>".format(device_name, device_name)
 		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 		msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
 		msgbox.setTextFormat(QtCore.Qt.TextFormat.RichText)
@@ -272,7 +295,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.btnClose.setEnabled(False)
 		
 		while True:
-			ret = self.FWUPD.WriteFirmware(self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip", self.SetStatus)
+			ret = self.FWUPD.WriteFirmware(file_name, self.SetStatus)
 			if ret == 1: 
 				text = "The firmware update is complete!"
 				self.btnUpdate.setEnabled(True)

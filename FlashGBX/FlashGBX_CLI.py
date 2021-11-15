@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import datetime, shutil, platform, os, json, math, traceback, re, time, serial, zipfile
+import datetime, shutil, platform, os, json, math, traceback, re, time, serial, zipfile, struct
 try:
 	# pylint: disable=import-error
 	import readline
@@ -14,7 +14,7 @@ except:
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
 from .PocketCamera import PocketCamera
-from .Util import APPNAME, VERSION, ANSI
+from .Util import APPNAME, ANSI
 from . import Util
 from . import hw_GBxCartRW, hw_GBxCartRW_ofw
 hw_devices = [hw_GBxCartRW, hw_GBxCartRW_ofw]
@@ -27,7 +27,8 @@ class FlashGBX_CLI():
 	DEVICE = None
 	PROGRESS = None
 	FWUPD_R = False
-	
+	INI = None
+
 	def __init__(self, args):
 		self.ARGS = args
 		self.APP_PATH = args['app_path']
@@ -58,7 +59,7 @@ class FlashGBX_CLI():
 		# Ask interactively if no args set
 		if args.action is None:
 			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"]
-			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures\n 8) Firmware Update (for GBxCart RW v1.4 only)\n")
+			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures\n 8) Firmware Update (for GBxCart RW v1.4/v1.4a only)\n")
 			args.action = input("Enter number 1-8 [1]: ").lower().strip()
 			try:
 				if int(args.action) == 0:
@@ -175,7 +176,7 @@ class FlashGBX_CLI():
 			self.BackupRestoreRAM(args, header)
 		
 		elif args.action == "debug-test-save":
-   			self.BackupRestoreRAM(args, header)
+			self.BackupRestoreRAM(args, header)
 		
 		elif args.action == "flash-rom":
 			if args.path == "auto":
@@ -223,7 +224,6 @@ class FlashGBX_CLI():
 				print("\033[KErasing flash sector at address 0x{:X}...".format(args["sector_pos"]), end="\r")
 			elif args["action"] == "ABORTING":
 				print("\nStopping...")
-				pass
 			elif args["action"] == "FINISHED":
 				print("\n")
 				self.FinishOperation()
@@ -267,8 +267,8 @@ class FlashGBX_CLI():
 		elif self.CONN.INFO["last_action"] == 1: # Backup ROM
 			self.CONN.INFO["last_action"] = 0
 			if self.CONN.GetMode() == "DMG":
-				print("Checksum: 0x{:04X}".format(self.CONN.INFO["rom_checksum_calc"]))
-				print("SHA-1:    {:s}\n".format(self.CONN.INFO["file_sha1"]))
+				print("CRC32: {:04X}".format(self.CONN.INFO["file_crc32"]))
+				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
 				if self.CONN.INFO["rom_checksum"] == self.CONN.INFO["rom_checksum_calc"]:
 					print("{:s}The ROM backup is complete and the checksum was verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
 				elif "DMG-MMSA-JPN" in self.ARGS["argparsed"].flashcart_handler:
@@ -276,7 +276,7 @@ class FlashGBX_CLI():
 				else:
 					print("{:s}The ROM was dumped, but the checksum is not correct. This may indicate a bad dump, however this can be normal for some reproduction prototypes, patched games and intentional overdumps.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 			elif self.CONN.GetMode() == "AGB":
-				print("CRC32: 0x{:08X}".format(self.CONN.INFO["rom_checksum_calc"]))
+				print("CRC32: {:04X}".format(self.CONN.INFO["file_crc32"]))
 				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
 				if Util.AGB_Global_CRC32 == self.CONN.INFO["rom_checksum_calc"]:
 					print("{:s}The ROM backup is complete and the checksum was verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
@@ -385,60 +385,98 @@ class FlashGBX_CLI():
 	
 	def ReadCartridge(self, data):
 		bad_read = False
-		str = ""
+		s = ""
 		if self.CONN.GetMode() == "DMG":
-			str += "Game Title/Code: {:s}\n".format(data["game_title"])
-			str += "Super Game Boy:  "
+			s += "Game Title/Code: {:s}\n".format(data["game_title"])
+			s += "Revision:        {:s}\n".format(str(data["version"]))
+			s += "Super Game Boy:  "
 			if data['sgb'] in Util.DMG_Header_SGB:
-				str += "{:s}\n".format(Util.DMG_Header_SGB[data['sgb']])
+				s += "{:s}\n".format(Util.DMG_Header_SGB[data['sgb']])
 			else:
-				str += "Unknown (0x{:02X})\n".format(data['sgb'])
-			str += "Game Boy Color:  "
+				s += "Unknown (0x{:02X})\n".format(data['sgb'])
+			s += "Game Boy Color:  "
 			if data['cgb'] in Util.DMG_Header_CGB:
-				str += "{:s}\n".format(Util.DMG_Header_CGB[data['cgb']])
+				s += "{:s}\n".format(Util.DMG_Header_CGB[data['cgb']])
 			else:
-				str += "Unknown (0x{:02X})\n".format(data['cgb'])
+				s += "Unknown (0x{:02X})\n".format(data['cgb'])
+
+			s += "Real Time Clock: "
+			if data['has_rtc']:
+				if 'rtc_buffer' in data:
+					try:
+						if data['features_raw'] == 0x10: # MBC3
+							rtc_s = data["rtc_buffer"][0x00]
+							rtc_m = data["rtc_buffer"][0x04]
+							rtc_h = data["rtc_buffer"][0x08]
+							rtc_d = (data["rtc_buffer"][0x0C] | data["rtc_buffer"][0x10] << 8) & 0x1FF
+							rtc_carry = ((data["rtc_buffer"][0x10] & 0x80) != 0)
+							if rtc_carry: rtc_d += 512
+							if rtc_h > 24 or rtc_m > 60 or rtc_s > 60:
+								s += "Invalid state"
+							else:
+								s += "{:d} days, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s)
+						elif data['features_raw'] == 0xFE: # HuC-3
+							rtc_buffer = struct.unpack("<I", data["rtc_buffer"][0:4])[0]
+							rtc_h = math.floor((rtc_buffer & 0xFFF) / 60)
+							rtc_m = (rtc_buffer & 0xFFF) % 60
+							rtc_d = (rtc_buffer >> 12) & 0xFFF
+							s += "{:d} days, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
+					except:
+						s += "Invalid state"
+				else:
+					s += "OK"
+			else:
+				temp = "Not available"
+				if 'no_rtc_reason' in data:
+					if data["no_rtc_reason"] == -1:
+						temp = "Unknown"
+				if data['features_raw'] == 0xFD: # TAMA5
+					temp = "OK"
+				s += temp
+			s += "\n"
+
 			if data["logo_correct"]:
-				str += "Nintendo Logo:   OK\n"
+				s += "Nintendo Logo:   OK\n"
 			else:
-				str += "Nintendo Logo:   {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "Nintendo Logo:   {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
+
 			if data['header_checksum_correct']:
-				str += "Header Checksum: Valid (0x{:02X})\n".format(data['header_checksum'])
+				s += "Header Checksum: Valid (0x{:02X})\n".format(data['header_checksum'])
 			else:
-				str += "Header Checksum: {:s}Invalid (0x{:02X}){:s}\n".format(ANSI.RED, data['header_checksum'], ANSI.RESET)
+				s += "Header Checksum: {:s}Invalid (0x{:02X}){:s}\n".format(ANSI.RED, data['header_checksum'], ANSI.RESET)
 				bad_read = True
-			str += "ROM Checksum:    0x{:04X}\n".format(data['rom_checksum'])
+			s += "ROM Checksum:    0x{:04X}\n".format(data['rom_checksum'])
 			try:
-				str += "ROM Size:        {:s}\n".format(Util.DMG_Header_ROM_Sizes[data['rom_size_raw']])
+				s += "ROM Size:        {:s}\n".format(Util.DMG_Header_ROM_Sizes[data['rom_size_raw']])
 			except:
-				str += "ROM Size:        {:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "ROM Size:        {:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
 			
 			try:
 				if data['features_raw'] == 0x06: # MBC2
-					str += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[1])
+					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[1])
 				elif data['features_raw'] == 0x22 and data["game_title"] in ("KORO2 KIRBYKKKJ", "KIRBY TNT__KTNE"): # MBC7 Kirby
-					str += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x101)])
+					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x101)])
 				elif data['features_raw'] == 0x22 and data["game_title"] in ("CMASTER____KCEJ"): # MBC7 Command Master
-					str += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x102)])
+					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x102)])
 				elif data['features_raw'] == 0xFD: # TAMA5
-					str += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x103)])
+					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x103)])
 				elif data['features_raw'] == 0x20: # MBC6
-					str += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x104)])
+					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x104)])
 				else:
-					str += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(data['ram_size_raw'])])
+					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(data['ram_size_raw'])])
 			except:
-				str += "Save Type:       Not detected\n"
+				s += "Save Type:       Not detected\n"
 			
 			try:
-				str += "Mapper Type:     {:s}\n".format(Util.DMG_Header_Mapper[data['features_raw']])
+				s += "Mapper Type:     {:s}\n".format(Util.DMG_Header_Mapper[data['features_raw']])
 			except:
-				str += "Mapper Type:     {:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "Mapper Type:     {:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
 
 			if data['logo_correct'] and not self.CONN.IsSupportedMbc(data["features_raw"]):
-				print("{:s}\nWARNING: This cartridge uses a Memory Bank Controller that may not be completely supported yet. A future version of {:s} may add support for it.{:s}".format(ANSI.YELLOW, APPNAME, ANSI.RESET))
+				print("{:s}\nWARNING: This cartridge uses a mapper that may not be completely supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates.{:s}".format(ANSI.YELLOW, APPNAME, self.CONN.GetFullName(), ANSI.RESET))
 			if data['logo_correct'] and data['game_title'] == "NP M-MENU MENU" and self.ARGS["argparsed"].flashcart_handler == "autodetect":
 				cart_types = self.CONN.GetSupportedCartridgesDMG()
 				for i in range(0, len(cart_types[0])):
@@ -446,26 +484,54 @@ class FlashGBX_CLI():
 						self.ARGS["argparsed"].flashcart_handler = cart_types[0][i]
 
 		elif self.CONN.GetMode() == "AGB":
-			str += "Game Title:           {:s}\n".format(data["game_title"])
-			str += "Game Code:            {:s}\n".format(data["game_code"])
-			str += "Revision:             {:d}\n".format(data["version"])
-			if data["logo_correct"]:
-				str += "Nintendo Logo:        OK\n"
+			s += "Game Title:           {:s}\n".format(data["game_title"])
+			s += "Game Code:            {:s}\n".format(data["game_code"])
+			s += "Revision:             {:d}\n".format(data["version"])
+
+			s += "Real Time Clock:      "
+			if data['has_rtc']:
+				if 'rtc_buffer' in data:
+					try:
+						#weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+						rtc_y = (data["rtc_buffer"][0] & 0x0F) + ((data["rtc_buffer"][0] >> 4) * 10)
+						rtc_m = (data["rtc_buffer"][1] & 0x0F) + ((data["rtc_buffer"][1] >> 4) * 10)
+						rtc_d = (data["rtc_buffer"][2] & 0x0F) + ((data["rtc_buffer"][2] >> 4) * 10)
+						#rtc_w = (data["rtc_buffer"][3] & 0x0F) + ((data["rtc_buffer"][3] >> 4) * 10)
+						rtc_h = ((data["rtc_buffer"][4] & 0x0F) + (((data["rtc_buffer"][4] >> 4) & 0x7) * 10))
+						rtc_i = (data["rtc_buffer"][5] & 0x0F) + ((data["rtc_buffer"][5] >> 4) * 10)
+						rtc_s = (data["rtc_buffer"][6] & 0x0F) + ((data["rtc_buffer"][6] >> 4) * 10)
+						s += "20{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(rtc_y, rtc_m, rtc_d, rtc_h, rtc_i, rtc_s)
+					except:
+						s += "Unknown data"
+				else:
+					s += "Detected"
 			else:
-				str += "Nintendo Logo:        {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "Not available"
+				if 'no_rtc_reason' in data:
+					if data['no_rtc_reason'] == 1:
+						s += "Not available / Battery dry"
+					elif data['no_rtc_reason'] == -1:
+						s += "Unknown"
+			s += "\n"
+
+			if data["logo_correct"]:
+				s += "Nintendo Logo:        OK\n"
+			else:
+				s += "Nintendo Logo:        {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
 			if data["96h_correct"]:
-				str += "Cartridge Identifier: OK\n"
+				s += "Cartridge Identifier: OK\n"
 			else:
-				str += "Cartridge Identifier: {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "Cartridge Identifier: {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
+
 			if data['header_checksum_correct']:
-				str += "Header Checksum:      Valid (0x{:02X})\n".format(data['header_checksum'])
+				s += "Header Checksum:      Valid (0x{:02X})\n".format(data['header_checksum'])
 			else:
-				str += "Header Checksum:      {:s}Invalid (0x{:02X}){:s}\n".format(ANSI.RED, data['header_checksum'], ANSI.RESET)
+				s += "Header Checksum:      {:s}Invalid (0x{:02X}){:s}\n".format(ANSI.RED, data['header_checksum'], ANSI.RESET)
 				bad_read = True
 			
-			str += "ROM Checksum:         "
+			s += "ROM Checksum:         "
 			Util.AGB_Global_CRC32 = 0
 			db_agb_entry = None
 			if os.path.exists("{0:s}/db_AGB.json".format(self.CONFIG_PATH)):
@@ -475,23 +541,23 @@ class FlashGBX_CLI():
 					if data["header_sha1"] in db_agb.keys():
 						db_agb_entry = db_agb[data["header_sha1"]]
 					else:
-						str += "Not in database\n"
+						s += "Not in database\n"
 			else:
-				str += "FAIL: Database for Game Boy Advance titles not found in {:s}/db_AGB.json\n".format(self.CONFIG_PATH)
+				s += "FAIL: Database for Game Boy Advance titles not found in {:s}/db_AGB.json\n".format(self.CONFIG_PATH)
 			
 			if db_agb_entry != None:
 				if data["rom_size_calc"] < 0x400000:
-					str += "In database (0x{:06X})\n".format(db_agb_entry['rc'])
+					s += "In database (0x{:06X})\n".format(db_agb_entry['rc'])
 					Util.AGB_Global_CRC32 = db_agb_entry['rc']
-				str += "ROM Size:             {:d} MB\n".format(int(db_agb_entry['rs']/1024/1024))
+				s += "ROM Size:             {:d} MB\n".format(int(db_agb_entry['rs']/1024/1024))
 				data['rom_size'] = db_agb_entry['rs']
 			
 			elif data["rom_size"] != 0:
 				if not data["rom_size"] in Util.AGB_Header_ROM_Sizes_Map:
 					data["rom_size"] = 0x2000000
-				str += "ROM Size:             {:d} MB\n".format(int(data["rom_size"]/1024/1024))
+				s += "ROM Size:             {:d} MB\n".format(int(data["rom_size"]/1024/1024))
 			else:
-				str += "ROM Size:             Not detected\n"
+				s += "ROM Size:             Not detected\n"
 				bad_read = True
 			
 			stok = False
@@ -499,15 +565,15 @@ class FlashGBX_CLI():
 				if db_agb_entry != None:
 					if db_agb_entry['st'] < len(Util.AGB_Header_Save_Types):
 						stok = True
-						str += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[db_agb_entry['st']])
+						s += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[db_agb_entry['st']])
 						data["save_type"] = db_agb_entry['st']
 				if data["dacs_8m"] is True:
-						stok = True
-						str += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[8])
-						data["save_type"] = 8
+					stok = True
+					s += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[8])
+					data["save_type"] = 8
 			
 			if stok is False:
-				str += "Save Type:            Not detected\n"
+				s += "Save Type:            Not detected\n"
 			
 			if data['logo_correct'] and isinstance(db_agb_entry, dict) and "rs" in db_agb_entry and db_agb_entry['rs'] == 0x4000000 and not self.CONN.IsSupported3dMemory():
 				print("{:s}\nWARNING: This cartridge uses a Memory Bank Controller that may not be completely supported yet. A future version of the {:s} device firmware may add support for it.{:s}".format(ANSI.YELLOW, self.CONN.GetFullName(), ANSI.RESET))
@@ -516,87 +582,101 @@ class FlashGBX_CLI():
 				if data["no_rtc_reason"] == 1:
 					print("{:s}NOTE: It seems that this cartridge’s Real Time Clock battery may no longer be functional and needs to be replaced.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 
-		return (bad_read, str, data)
+		return (bad_read, s, data)
 	
-	def CartridgeTypeAutoDetect(self, limitVoltage=True, knownCartCFI=False):
-		cart_type = 0
-		cart_text = ""
-		
+	def DetectCartridge(self, limitVoltage=False):
 		print("Now attempting to auto-detect the flash cartridge type...")
 		if self.CONN.CheckROMStable() is False:
 			print("{:s}Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.{:s}".format(ANSI.RED, ANSI.RESET))
 			return -1
-		
 		if self.CONN.GetMode() in self.FLASHCARTS and len(self.FLASHCARTS[self.CONN.GetMode()]) == 0:
 			print("{:s}No flash cartridge type configuration files found. Try to restart the application with the “--reset” command line switch to reset the configuration.{:s}".format(ANSI.RED, ANSI.RESET))
 			return -2
 		
-		detected = self.CONN.AutoDetectFlash(limitVoltage)
-		if len(detected) == 0:
-			print("\n{:s}No pre-configured flash cartridge type was detected.{:s} You can still manually specify one using the “--flashcart-handler” command line switch -- look for similar PCB text and/or flash chip markings. However, chances are this cartridge is currently not supported for ROM writing with {:s}.\n".format(ANSI.YELLOW, ANSI.RESET, APPNAME))
-			
-			(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage)
-			if cfi_s == "":
-				print("Flash chip query result:\n" + flash_id + "\nThere was no Common Flash Interface (CFI) response from the cartridge. Please clean the cartridge contacts and make sure that the cartridge is seated correctly. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.")
-			else:
-				print("Flash chip query result:\n" + flash_id + "\n" + str(cfi_s))
-				with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])
+		header = self.CONN.ReadInfo()
+		self.ReadCartridge(header)
+		ret = self.CONN.DetectCartridge(limitVoltage=limitVoltage, checkSaveType=True)
+		(header, _, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, _, flash_id) = ret
+
+		# Save Type
+		if save_type is None:
+			save_type = 0
 		
+		# Cart Type
+		cart_type = None
+		msg_cart_type = ""
+		if self.CONN.GetMode() == "DMG":
+			supp_cart_types = self.CONN.GetSupportedCartridgesDMG()
+		elif self.CONN.GetMode() == "AGB":
+			supp_cart_types = self.CONN.GetSupportedCartridgesAGB()
+		
+		if len(cart_types) > 0:
+			cart_type = cart_type_id
+			#self.STATUS["cart_type"] = supp_cart_types[1][cart_type]
+			for i in range(0, len(cart_types)):
+				if cart_types[i] == cart_type_id:
+					msg_cart_type += "- {:s}*\n".format(supp_cart_types[0][cart_types[i]])
+				else:
+					msg_cart_type += "- {:s}\n".format(supp_cart_types[0][cart_types[i]])
+			msg_cart_type = msg_cart_type[:-1]
+		
+		# Messages
+		# Header
+		msg_header_s = "Game Title: {:s}\n".format(header["game_title"])
+
+		# Save Type
+		msg_save_type_s = ""
+		if save_chip is not None:
+			temp = "{:s} ({:s})".format(Util.AGB_Header_Save_Types[save_type], save_chip)
 		else:
-			cart_type = detected[0]
-			size_undetected = False
-			sectors_undetected = False
-			if self.CONN.GetMode() == "DMG": cart_types = self.CONN.GetSupportedCartridgesDMG()
-			elif self.CONN.GetMode() == "AGB": cart_types = self.CONN.GetSupportedCartridgesAGB()
-			size = cart_types[1][detected[0]]["flash_size"]
-			if "manual_select" in cart_types[1][detected[0]]:
-				manual_select = cart_types[1][detected[0]]["manual_select"]
+			if self.CONN.GetMode() == "DMG":
+				temp = "{:s}".format(Util.DMG_Header_RAM_Sizes[save_type])
+			elif self.CONN.GetMode() == "AGB":
+				temp = "{:s}".format(Util.AGB_Header_Save_Types[save_type])
+		if save_type == 0:
+			msg_save_type_s = "Save Type: None or unknown (no save data detected)\n"
+		else:
+			if sram_unstable and "SRAM" in temp:
+				msg_save_type_s = "Save Type: {:s} {:s}(not battery-backed){:s}\n".format(temp, ANSI.RED, ANSI.RESET)
 			else:
-				manual_select = False
-			if "sector_size" in cart_types[1][detected[0]]:
-				sectors = cart_types[1][detected[0]]["sector_size"]
+				msg_save_type_s = "Save Type: {:s}\n".format(temp)
+		
+		# Cart Type
+		msg_cart_type_s = ""
+		msg_flash_size_s = ""
+		if cart_type is not None:
+			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=supp_cart_types[1][cart_type])
+			msg_cart_type_s = "Cartridge Type: Supported flash cartridge – compatible with:\n{:s}\n".format(msg_cart_type)
+
+			if "flash_size" in supp_cart_types[1][cart_type_id]:
+				size = supp_cart_types[1][cart_type_id]["flash_size"]
+				msg_flash_size_s = "ROM Size: {:s}\n".format(Util.formatFileSize(size, asInt=True))
+
+		else:
+			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage)
+			if (len(flash_id.split("\n")) > 2) and ((self.CONN.GetMode() == "DMG") or ("dacs_8m" in header and header["dacs_8m"] is not True)):
+				msg_cart_type_s = "Cartridge Type: Unknown flash cartridge – Please submit the displayed information along with a picture of the cartridge’s circuit board."
+				if ("[     0/90]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (0/90)” a try."
+				elif ("[   AAA/AA]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (AAA/AA)” a try."
+				elif ("[   AAA/A9]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (AAA/A9)” a try."
+				elif ("[WR   / AAA/AA]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/AAA/AA)” a try."
+				elif ("[WR   / AAA/A9]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/AAA/A9)” a try."
+				elif ("[WR   / 555/AA]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/555/AA)” a try."
+				elif ("[WR   / 555/A9]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/555/A9)” a try."
+				msg_cart_type_s += "\n"
 			else:
-				sectors = []
-			
-			for i in range(0, len(detected)):
-				if size != cart_types[1][detected[i]]["flash_size"]:
-					size_undetected = True
-				if "sector_size_from_cfi" not in cart_types[1][detected[i]] and "sector_size" in cart_types[1][detected[i]] and sectors != cart_types[1][detected[i]]["sector_size"]:
-					sectors_undetected = True
-				cart_text += "- " + cart_types[0][detected[i]] + "\n"
-			
-			if manual_select:
-				msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nHowever, there are differences between these cartridge types that cannot be detected automatically, so please select the correct cartridge type manually."
-				cart_type = 0
-			else:
-				if size_undetected:
-					(_, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
-					if isinstance(cfi, dict) and 'device_size' in cfi:
-						for i in range(0, len(detected)):
-							if cfi['device_size'] == cart_types[1][detected[i]]["flash_size"]:
-								cart_type = detected[i]
-								size_undetected = False
-								break
-				
-				if len(detected) == 1:
-					msg_text = "The following flash cartridge type was detected:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
-				else:
-					if size_undetected is True:
-						msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nHowever, you may need to manually adjust the ROM size selection.\n\nIMPORTANT: While these cartridges share the same electronic signature, their supported ROM size can differ. As the size can not be detected automatically at this time, please select it manually."
-					else:
-						msg_text = "Your cartridge responds to flash commands used by:\n" + cart_text + "\nThe supported ROM size is up to {:d} MB.".format(int(cart_types[1][cart_type]['flash_size'] / 1024 / 1024))
-				
-				if sectors_undetected and "sector_size_from_cfi" not in cart_types[1][cart_type]:
-					msg_text = msg_text + "\n\n{:s}IMPORTANT:{:s} While these share most of their attributes, some of them can not be automatically detected. If you encounter any errors while writing a ROM, please manually select the correct type based on the flash chip markings of your cartridge. Unchecking the “Prefer sector erase mode” config option can also help.".format(ANSI.RED, ANSI.RESET)
-			
-			print(msg_text)
-			if knownCartCFI:
-				(flash_id, cfi_s, cfi) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=cart_types[1][cart_type])
-				if cfi_s == "":
-					print("\nFlash chip query result:\n" + flash_id + "\nThere was no Common Flash Interface (CFI) response from the cartridge. If a flash chip exists on the cartridge PCB, it may be too old or require unique unlocking and handling.")
-				else:
-					print("\nFlash chip query result:\n" + flash_id + "\n" + str(cfi_s))
-					with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi['raw'])
+				msg_cart_type_s = "Cartridge Type: Generic ROM Cartridge (not rewritable)\n"
+		
+		msg_flash_id_s = "Flash ID Check:\n{:s}\n".format(flash_id[:-1])
+
+		if cfi_s != "":
+			msg_cfi_s = "Common Flash Interface Data:\n{:s}\n".format(cfi_s)
+		else:
+			msg_cfi_s = "Common Flash Interface Data: No data provided\n"
+		
+		msg = "\n\nThe following cartridge configuration was detected:\n\n"
+		temp = msg + "{:s}{:s}{:s}\n{:s}\n{:s}\n{:s}".format(msg_header_s, msg_flash_size_s, msg_save_type_s, msg_flash_id_s, msg_cfi_s, msg_cart_type_s)
+		print(temp[:-1])
 		
 		return cart_type
 	
@@ -704,7 +784,7 @@ class FlashGBX_CLI():
 					cart_type = i
 					break
 
-		self.CONN._TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_banks':rom_banks, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':fast_read_mode, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
+		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_banks':rom_banks, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':fast_read_mode, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 	
 	def FlashROM(self, args, header):
 		path = ""
@@ -726,11 +806,9 @@ class FlashGBX_CLI():
 				break
 		
 		if cart_type <= 0 and args.flashcart_handler == "autodetect":
-			if args.force_5v is True:
-				cart_type = self.CartridgeTypeAutoDetect(limitVoltage=False)
-			else:
-				cart_type = self.CartridgeTypeAutoDetect()
-			if (cart_type == 1): cart_type = 0
+			#cart_type = self.DetectCartridge(limitVoltage=not args.force_5v)
+			cart_type = self.DetectCartridge()
+			if cart_type is None: cart_type = 0
 			if cart_type == 0:
 				msg_5v = ""
 				if mode == "DMG": msg_5v = "If your flash cartridge requires 5V to work, you can use the “--force-5v” command line switch, however please note that 5V can be unsafe for some flash chips."
@@ -762,7 +840,7 @@ class FlashGBX_CLI():
 		rom_size = len(buffer)
 		if "flash_size" in carts[cart_type]:
 			if rom_size > carts[cart_type]['flash_size']:
-				msg = "The selected flash cartridge type seems to support ROMs that are up to {:.2f} MB in size, but the file you selected is {:.2f} MB.".format(carts[cart_type]['flash_size'] / 1024 / 1024, os.path.getsize(path)/1024/1024)
+				msg = "The selected flash cartridge type seems to support ROMs that are up to {:s} in size, but the file you selected is {:s}.".format(Util.formatFileSize(carts[cart_type]['flash_size']), Util.formatFileSize(os.path.getsize(path)))
 				msg += " It’s possible that it’s too large which may cause the ROM writing to fail."
 				print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
 				answer = input("Do you want to continue? [y/N]: ").strip().lower()
@@ -817,7 +895,7 @@ class FlashGBX_CLI():
 		print("The following ROM file will now be written to the flash cartridge at {:s}V:\n{:s}".format(str(v), os.path.abspath(path)))
 		
 		print("")
-		self.CONN._TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':fast_read_mode, 'verify_flash':verify_flash, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
+		self.CONN.TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':fast_read_mode, 'verify_flash':verify_flash, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
 		buffer = None
 	
 	def BackupRestoreRAM(self, args, header):
@@ -945,24 +1023,27 @@ class FlashGBX_CLI():
 		
 		print("")
 		if args.action == "backup-save":
-			self.CONN._TransferData(args={ 'mode':2, 'path':path, 'mbc':mbc, 'save_type':save_type, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':2, 'path':path, 'mbc':mbc, 'save_type':save_type, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "restore-save":
-			self.CONN._TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "erase-save":
-			self.CONN._TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':True, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':True, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "debug-test-save": # debug
 			self.ARGS["debug"] = True
+			#self.CONN.DetectCartridge()
+			#return
+
 			print("Making a backup of the original save data.")
-			ret = self.CONN._TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
+			ret = self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			if ret is False: return False
 			time.sleep(0.1)
 			print("Writing random data.")
 			test2 = bytearray(os.urandom(os.path.getsize(self.CONFIG_PATH + "/test1.bin")))
 			with open(self.CONFIG_PATH + "/test2.bin", "wb") as f: f.write(test2)
-			self.CONN._TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test2.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test2.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			print("Reading back and comparing data.")
-			self.CONN._TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test3.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test3.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			with open(self.CONFIG_PATH + "/test3.bin", "rb") as f: test3 = bytearray(f.read())
 			print("\nPower cycling.")
@@ -971,18 +1052,23 @@ class FlashGBX_CLI():
 			self.CONN.CartPowerOn()
 			time.sleep(0.2)
 			print("\nReading back and comparing data again.")
-			self.CONN._TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test4.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test4.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			with open(self.CONFIG_PATH + "/test4.bin", "rb") as f: test4 = bytearray(f.read())
 			print("Restoring original save data.")
-			self.CONN._TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			
+			if test2 != test4:
+				diffcount = 0
+				for i in range(0, len(test2)):
+					if test2[i] != test4[i]: diffcount += 1
+				print("\n{:s}Differences found: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
 			if test3 != test4:
 				diffcount = 0
 				for i in range(0, len(test3)):
 					if test3[i] != test4[i]: diffcount += 1
-				print("\n{:s}Differences found after two consecutive reads: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
+				print("\n{:s}Differences found between two consecutive readbacks: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
 			
 			if mbc == 6:
 				for i in range(0, len(test2)):
@@ -1035,16 +1121,29 @@ class FlashGBX_CLI():
 		if pcb != 5: return False
 		print("\nFirmware Updater for GBxCart RW v1.4")
 		print("====================================\n")
-		with zipfile.ZipFile(self.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip") as zip:
-			with zip.open("fw.ini") as f: ini_file = f.read()
+		print("Select your PCB version:\n1) GBxCart RW v1.4\n2) GBxCart RW v1.4a\n")
+		answer = input("Enter number 1-2: ").lower().strip()
+		print("")
+		if answer == "1":
+			device_name = "v1.4"
+			file_name = self.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip"
+		elif answer == "2":
+			device_name = "v1.4a"
+			file_name = self.APP_PATH + "/res/fw_GBxCart_RW_v1_4a.zip"
+		else:
+			print("Canceled.")
+			return
+
+		with zipfile.ZipFile(file_name) as zf:
+			with zf.open("fw.ini") as f: ini_file = f.read()
 			ini_file = ini_file.decode(encoding="utf-8")
 			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
 			fw_ver = self.INI.GetValue("fw_ver")
 			fw_buildts = self.INI.GetValue("fw_buildts")
-			fw_text = self.INI.GetValue("fw_text")
+			#fw_text = self.INI.GetValue("fw_text")
 		
 		print("Available firmware version:\n{:s}\n".format("{:s} (dated {:s})".format(fw_ver, datetime.datetime.fromtimestamp(int(fw_buildts)).astimezone().replace(microsecond=0).isoformat())))
-		print("Please follow these steps to proceed with the firmware update:\n1. Disconnect the USB cable of your GBxCart RW v1.4 device.\n2. On the circuit board of your GBxCart RW v1.4, press and hold down\n   the small button while connecting the USB cable again.\n3. Keep the small button held for at least 2 seconds, then let go of it.\n   If done right, the green LED labeled “Done” should remain lit.\n4. Press ENTER or RETURN to continue.")
+		print("Please follow these steps to proceed with the firmware update:\n1. Disconnect the USB cable of your GBxCart RW {:s} device.\n2. On the circuit board of your GBxCart RW {:s}, press and hold down\n   the small button while connecting the USB cable again.\n3. Keep the small button held for at least 2 seconds, then let go of it.\n   If done right, the green LED labeled “Done” should remain lit.\n4. Press ENTER or RETURN to continue.".format(device_name, device_name))
 		if len(input("").strip()) != 0:
 			print("Canceled.")
 			return False
@@ -1067,7 +1166,7 @@ class FlashGBX_CLI():
 					print("Using port {:s}.\n".format(port))
 					FirmwareUpdater = fw_GBxCartRW_v1_4.FirmwareUpdater
 					FWUPD = FirmwareUpdater(port=port)
-					ret = FWUPD.WriteFirmware(self.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip", self.UpdateFirmwareGBxCartRW_PrintText)
+					ret = FWUPD.WriteFirmware(file_name, self.UpdateFirmwareGBxCartRW_PrintText)
 					break
 				except serial.serialutil.SerialException:
 					port = input("Couldn’t access port {:s}.\nEnter new port: ".format(port)).strip()

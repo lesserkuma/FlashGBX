@@ -16,7 +16,8 @@ class Flashcart:
 	SECTOR_MAP = None
 	CFI = None
 
-	def __init__(self, config={}, cart_write_fncptr=None, cart_read_fncptr=None, progress_fncptr=None):
+	def __init__(self, config=None, cart_write_fncptr=None, cart_read_fncptr=None, progress_fncptr=None):
+		if config is None: config = {}
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
 		self.PROGRESS_FNCPTR = progress_fncptr
@@ -138,10 +139,11 @@ class Flashcart:
 			self.CartWrite(self.CONFIG["commands"]["unlock"])
 			time.sleep(0.001)
 
-	def Reset(self, full_reset=False):
+	def Reset(self, full_reset=False, max_address=0x2000000):
 		#dprint(full_reset, "reset_every" in self.CONFIG)
 		if full_reset and "reset_every" in self.CONFIG:
 			for j in range(0, self.CONFIG["flash_size"], self.CONFIG["reset_every"]):
+				if j >= max_address: break
 				dprint("reset_every @ 0x{:X}".format(j))
 				for command in self.CONFIG["commands"]["reset"]:
 					self.CartWrite([[j, command[1]]])
@@ -307,7 +309,7 @@ class Flashcart:
 			except:
 				dprint("Warning: Sector map is smaller than expected.")
 				self.SECTOR_POS -= 1
-				self.CONFIG["sector_size"][self.SECTOR_POS][0]
+				#self.CONFIG["sector_size"][self.SECTOR_POS][0]
 			return sector_size
 		else:
 			return self.CONFIG["sector_size"]
@@ -437,7 +439,7 @@ class CFI:
 			s += "Buffered write: {:s}\n".format(str(info["buffer_write"]))
 		if info["chip_erase"]: s += "Chip erase: {:d}–{:d} ms\n".format(info["chip_erase_time_avg"], info["chip_erase_time_max"])
 		if info["sector_erase"]: s += "Sector erase: {:d}–{:d} ms\n".format(info["sector_erase_time_avg"], info["sector_erase_time_max"])
-		if info["tb_boot_sector"] is not False: s += "Sector order: {:s}\n".format(str(info["tb_boot_sector"]))
+		if info["tb_boot_sector"] is not False: s += "Sector flags: {:s}\n".format(str(info["tb_boot_sector"]))
 		pos = 0
 		oversize = False
 		s = s[:-1]

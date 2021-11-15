@@ -2,12 +2,12 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback, io
+import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback
 from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "2.8"
+VERSION_PEP440 = "3.0"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
@@ -17,6 +17,7 @@ AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KB)", 
 AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 65536, 131072, 1032192 ]
 AGB_Global_CRC32 = 0
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
+AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000 ]
 
 DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM' }
 DMG_Header_ROM_Sizes = [ "32 KB", "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB" ]
@@ -114,7 +115,6 @@ class Progress():
 	
 	def __init__(self, updater):
 		self.UPDATER = updater
-		pass
 	
 	def SetProgress(self, args):
 		self.MUTEX.acquire(1)
@@ -124,7 +124,10 @@ class Progress():
 			if args["action"] == "INITIALIZE":
 				self.PROGRESS["action"] = args["action"]
 				self.PROGRESS["method"] = args["method"]
-				self.PROGRESS["size"] = args["size"]
+				if "size" in args:
+					self.PROGRESS["size"] = args["size"]
+				else:
+					self.PROGRESS["size"] = 0
 				if "pos" in args:
 					self.PROGRESS["pos"] = args["pos"]
 				else:
@@ -245,22 +248,34 @@ class TAMA5_REG(Enum):
 	MEM_READ_L = 0xC
 	MEM_READ_H = 0xD
 
-def formatFileSize(size, asInt=False):
+def roundup(x):
+	# https://stackoverflow.com/questions/50405017/
+	d = 10 ** 2
+	if x < 0:
+		return math.floor(x * d) / d
+	else:
+		return math.ceil(x * d) / d
+
+def formatFileSize(size, asInt=False, roundUp=False):
 	#size = size / 1024
 	if size == 1:
 		return "{:d} Byte".format(size)
 	elif size < 1024:
 		return "{:d} Bytes".format(size)
 	elif size < 1024 * 1024:
+		val = size/1024
+		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} KB".format(int(size/1024))
+			return "{:d} KB".format(int(val))
 		else:
-			return "{:.1f} KB".format(size/1024)
+			return "{:.1f} KB".format(val)
 	else:
+		val = size/1024/1024
+		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} MB".format(int(size/1024/1024))
+			return "{:d} MB".format(int(val))
 		else:
-			return "{:.2f} MB".format(size/1024/1024)
+			return "{:.2f} MB".format(val)
 
 def formatProgressTimeShort(sec):
 	sec = sec % (24 * 3600)
@@ -378,7 +393,7 @@ def ParseCFI(buffer):
 				except:
 					info["tb_boot_sector"] = "0x{:02X}".format(buffer[pri_address + 0x1E])
 		elif "{:s}{:s}{:s}".format(chr(buffer[0x214]), chr(buffer[0x216]), chr(buffer[0x218])) == "PRI":
-			pass # todo
+			pass # TODO
 		
 		info["device_size"] = int(math.pow(2, buffer[0x4E]))
 		info["buffer_size"] = buffer[0x56] << 8 | buffer[0x54]
@@ -411,12 +426,12 @@ def ParseCFI(buffer):
 	return info
 
 def validate_datetime_format(string, format):
-    try:
-        if string != datetime.datetime.strptime(string, format).strftime(format):
-            raise ValueError
-        return True
-    except ValueError:
-        return False
+	try:
+		if string != datetime.datetime.strptime(string, format).strftime(format):
+			raise ValueError
+		return True
+	except ValueError:
+		return False
 
 def convert_full_half(s, reverse=False):
 	full2half = dict((i + 0xFEE0, i) for i in range(0x21, 0x7F))
@@ -427,6 +442,15 @@ def convert_full_half(s, reverse=False):
 		return s.translate(full2half)
 	else:
 		return s.translate(half2full)
+
+def find_size(data, max_size, min_size=0x20):
+	offset = max_size
+	while offset >= min_size:
+		offset = int(offset / 2)
+		if data[0:offset] != data[offset:offset*2]:
+			offset = offset * 2
+			break
+	return offset
 
 def dprint(*args, **kwargs):
 	if DEBUG:

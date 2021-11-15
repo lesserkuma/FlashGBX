@@ -517,7 +517,6 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.btnUpdate.setEnabled(True)
 		self.btnClose.setEnabled(True)
 		self.grpAvailableFwUpdates.setEnabled(True)
-		flash_ok = True
 		text = "The firmware update is complete!"
 		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 		answer = msgbox.exec()

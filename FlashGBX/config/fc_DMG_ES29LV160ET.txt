@@ -1,41 +1,37 @@
 {
 	"type":"DMG",
 	"names":[
-		"S29GL032N90T and ALTERA CPLD (MBC1)"
+		"0883_DRV with ES29LV160ET"
 	],
-	"manual_select":true,
+	"flash_ids":[
+		[ 0x49, 0xC4, 0x00, 0x01 ]
+	],
 	"voltage":3.3,
-	"flash_size":0x80000,
-	"start_addr":0x4000,
+	"flash_size":0x100000,
+	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"sector_size":[
-		[0x2000, 8],
-		[0x10000, 63]
-	],
-	"chip_erase_timeout":40,
-	"mbc":1,
-	"pulse_reset_after_write":true,
+	"chip_erase_timeout":120,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
-			[ 0x7000, 0xF0 ]
+			[ 0, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x90 ]
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x90 ]
 		],
 		"read_cfi":[
-			[ 0x7AAA, 0x98 ]
+			[ 0x555, 0x98 ]
 		],
 		"chip_erase":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x80 ],
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x10 ]
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x10 ]
 		],
 		"chip_erase_wait_for":[
 			[ null, null, null ],
@@ -46,9 +42,9 @@
 			[ 0, 0xFF, 0xFF ]
 		],
 		"single_write":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0xA0 ],
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0xA0 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[

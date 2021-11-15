@@ -15,7 +15,7 @@ from . import Util
 
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
-	DEVICE_MIN_FW = 19
+	DEVICE_MIN_FW = 26
 	DEVICE_MAX_FW = 30
 	
 	DEVICE_CMD = {
@@ -187,7 +187,7 @@ class GbxDevice:
 					dev.close()
 					self.DEVICE = None
 					return False
-				elif self.FW[0] < self.DEVICE_MIN_FW:
+				elif (self.FW[1] == 4 and self.FW[0] < self.DEVICE_MAX_FW) or (self.FW[0] < self.DEVICE_MIN_FW):
 					#dev.close()
 					#self.DEVICE = None
 					#conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version R" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
@@ -204,7 +204,8 @@ class GbxDevice:
 				if self.FW[1] not in self.PCB_VERSIONS.keys():
 					if Util.DEBUG is True and self.FW[1] == 5:
 						self.PCB_VERSIONS[5] = "v1.4"
-						pass
+					elif Util.DEBUG is True and self.FW[1] == 6:
+						self.PCB_VERSIONS[5] = "v1.4a"
 					else:
 						dev.close()
 						self.DEVICE = None
@@ -213,7 +214,7 @@ class GbxDevice:
 				if (self.FW[1] not in (4, 5, 100)):
 					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3, v1.4 and GBxCart RW Mini. Other revisions are untested and may not be fully compatible."])
 				elif self.FW[1] == 4:
-					conn_msg.append([0, "FlashGBX is now optimized for the custom high compatibility firmware. You can install it from the Tools menu."])
+					conn_msg.append([0, "FlashGBX is now optimized for the custom high compatibility firmware by Lesserkuma. You can install it from the Tools menu."])
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 
 				self.PORT = ports[i]
@@ -240,8 +241,8 @@ class GbxDevice:
 	
 	def UpdateFlashCarts(self, flashcarts):
 		self.SUPPORTED_CARTS = { 
-			"DMG":{ "Generic ROM Cartridge":"RETAIL", "● Auto-Detect Flash Cartridge ●":"AUTODETECT" },
-			"AGB":{ "Generic ROM Cartridge":"RETAIL", "● Auto-Detect Flash Cartridge ●":"AUTODETECT" }
+			"DMG":{ "Generic ROM Cartridge":"RETAIL" },
+			"AGB":{ "Generic ROM Cartridge":"RETAIL" }
 		}
 		for mode in flashcarts.keys():
 			for key in sorted(flashcarts[mode].keys(), key=str.casefold):
@@ -347,6 +348,10 @@ class GbxDevice:
 		else:
 			return True
 	
+	def CanPowerCycleCart(self):
+		_, pcb = self.FW
+		return pcb in (5, 6)
+	
 	def GetSupprtedModes(self):
 		_, pcb = self.FW
 		if pcb == 100:
@@ -451,6 +456,23 @@ class GbxDevice:
 		if wait_for_ack:
 			return self.wait_for_ack()
 	
+	def DetectCartridge(self, mbc=None, limitVoltage=False, checkSaveType=False):
+		self.SIGNAL = None
+		cart_type_id = 0
+		save_type = False
+		save_chip = None
+		sram_unstable = None
+		save_size = None
+
+		# Header
+		info = self.ReadInfo()
+
+		self.INFO["last_action"] = 0
+		self.INFO["action"] = None
+
+		(cart_types, cart_type_id, flash_id, cfi_s, cfi) = self.AutoDetectFlash(limitVoltage=limitVoltage)
+		return (info, save_size, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, cfi, flash_id)
+
 	def ReadRAM_TAMA5(self, rtc=False):
 		buffer = bytearray()
 		self.NO_PROG_UPDATE = True
@@ -562,12 +584,6 @@ class GbxDevice:
 						self.set_number(math.floor(offset / 2), self.DEVICE_CMD["SET_START_ADDRESS"])
 					self.set_mode(self.DEVICE_CMD["GBA_READ_ROM"])
 				buffer = self.read(length, last=True, ask_next_bytes=ask_next_bytes, max_bytes=max_bytes)
-			
-			# simulate bad driver
-			#import random
-			#if random.randint(0, 20) == 5:
-			#	print("{:s}😈 Bad driver attack!{:s}".format(ANSI.RED, ANSI.RESET))
-			#	buffer = False
 			
 			if buffer == False:
 				if lives == 0:
@@ -745,18 +761,10 @@ class GbxDevice:
 			return buffer[0]
 	
 	def CartPowerOff(self):
-		if self.FW["pcb_ver"] == 5:
-			self._write(self.DEVICE_CMD["CART_PWR_OFF"])
-			time.sleep(0.05)
+		return
 
 	def CartPowerOn(self):
-		if self.FW[1] == 5:
-			self.write(self.DEVICE_CMD["QUERY_CART_PWR"])
-			ret = self.DEVICE.read(1)
-			if ret == b'\x00':
-				self.set_mode(self.DEVICE_CMD["CART_PWR_ON"])
-				time.sleep(0.2)
-				self.DEVICE.reset_input_buffer() # bug workaround
+		return
 
 	def SetMode(self, mode):
 		if mode == "DMG":
@@ -835,9 +843,6 @@ class GbxDevice:
 					flash_type = f
 					flash_types.append(flash_type)
 			
-			if not flash_id_found:
-				self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
-		
 		elif self.MODE == "AGB":
 			supported_carts = list(self.SUPPORTED_CARTS['AGB'].values())
 			for f in range(2, len(supported_carts)):
@@ -884,9 +889,43 @@ class GbxDevice:
 					flash_type = f
 					flash_types.append(flash_type)
 		
-		return flash_types
+		# Check flash size
+		flash_type_id = 0
+		cfi_s = ""
+		cfi = None
+		if len(flash_types) > 0:
+			flash_type_id = flash_types[0]
+			if self.MODE == "DMG":
+				supp_flash_types = self.GetSupportedCartridgesDMG()
+			elif self.MODE == "AGB":
+				supp_flash_types = self.GetSupportedCartridgesAGB()
+			
+			(flash_id, cfi_s, cfi) = self.CheckFlashChip(limitVoltage=limitVoltage, cart_type=supp_flash_types[1][flash_type_id])
+			size = supp_flash_types[1][flash_types[0]]["flash_size"]
+			size_undetected = False
+			for i in range(0, len(flash_types)):
+				if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
+					size_undetected = True
+			
+			if size_undetected:
+				if isinstance(cfi, dict) and "device_size" in cfi:
+					for i in range(0, len(flash_types)):
+						if cfi['device_size'] == supp_flash_types[1][flash_types[i]]["flash_size"]:
+							flash_type_id = flash_types[i]
+							size_undetected = False
+							break
+		
+		else:
+			(flash_id, cfi_s, cfi) = self.CheckFlashChip(limitVoltage=limitVoltage)
+		
+		if self.MODE == "DMG" and not flash_id_found:
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
+		
+		return (flash_types, flash_type_id, flash_id, cfi_s, cfi)
+		#return flash_types
 	
 	def CheckFlashChip(self, limitVoltage=False, cart_type=None):
+		flashcart = None
 		flash_id_lines = []
 		flash_commands = [
 			{ 'read_cfi':[[0x555, 0x98]], 'read_identifier':[[ 0x555, 0xAA ], [ 0x2AA, 0x55 ], [ 0x555, 0x90 ]], 'reset':[[ 0x0, 0xF0 ]] },
@@ -959,6 +998,9 @@ class GbxDevice:
 				if cfi_parsed != False:
 					cfi = cfi_parsed
 					cfi["raw"] = buffer
+					if Util.DEBUG:
+						with open("debug_cfi.bin", "wb") as f: f.write(buffer)
+					
 					#cfi["sha1"] = hashlib.sha1(buffer).hexdigest()
 					cfi["bytes"] = ""
 					for i in range(0, 0x400):
@@ -1007,7 +1049,7 @@ class GbxDevice:
 				s += "Buffered write: {:s}\n".format(str(cfi["buffer_write"]))
 			if cfi["chip_erase"]: s += "Chip erase: {:d}–{:d} ms\n".format(cfi["chip_erase_time_avg"], cfi["chip_erase_time_max"])
 			if cfi["sector_erase"]: s += "Sector erase: {:d}–{:d} ms\n".format(cfi["sector_erase_time_avg"], cfi["sector_erase_time_max"])
-			if cfi["tb_boot_sector"] is not False: s += "Sector order: {:s}\n".format(str(cfi["tb_boot_sector"]))
+			if cfi["tb_boot_sector"] is not False: s += "Sector flags: {:s}\n".format(str(cfi["tb_boot_sector"]))
 			pos = 0
 			oversize = False
 			s = s[:-1]
@@ -1045,8 +1087,21 @@ class GbxDevice:
 						for i in range(0, len(method['reset'])):
 							self.gbx_flash_write_address_byte(method['reset'][i][0], method['reset'][i][1])
 			
-			if self.MODE == "DMG":
-				self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
+		if self.MODE == "DMG":
+			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
+
+		if cart_type is not None: # reset cartridge if method is known
+			flashcart_meta = copy.deepcopy(cart_type)
+			if "reset_every" in flashcart_meta:
+				for j in range(0, flashcart_meta["flash_size"], flashcart_meta["reset_every"]):
+					if j >= 0x2000000: break
+					dprint("reset_every @ 0x{:X}".format(j))
+					for command in flashcart_meta["commands"]["reset"]:
+						self.gbx_flash_write_address_byte(j, command[1])
+						time.sleep(0.01)
+			elif "reset" in flashcart_meta["commands"]:
+				for i in range(0, len(flashcart_meta["commands"]["reset"])):
+					self.gbx_flash_write_address_byte(flashcart_meta["commands"]["reset"][i][0], flashcart_meta["commands"]["reset"][i][1])
 		
 		flash_id = ""
 		for i in range(0, len(flash_id_lines)):
@@ -1113,18 +1168,19 @@ class GbxDevice:
 			elif dacs_8m:
 				data["dacs_8m"] = True
 		
+		data["raw"] = header
 		self.INFO = data
 		self.INFO["flash_type"] = 0
 		self.INFO["last_action"] = 0
 		self.INFO["has_rtc"] = False
-		self.INFO["no_rtc_reason"] = None
+		self.INFO["no_rtc_reason"] = -1
 		
 		if self.MODE == "DMG" and setPinsAsInputs: self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
 		return data
 	
 	#################################################################
 
-	def BackupROM(self, fncSetProgress=None, args={}):
+	def BackupROM(self, fncSetProgress=None, args=None):
 		from . import DataTransfer
 		args['mode'] = 1
 		args['port'] = self
@@ -1135,7 +1191,7 @@ class GbxDevice:
 			self.WORKER.setConfig(args)
 		self.WORKER.start()
 	
-	def BackupRAM(self, fncSetProgress=None, args={}):
+	def BackupRAM(self, fncSetProgress=None, args=None):
 		from . import DataTransfer
 		args['mode'] = 2
 		args['port'] = self
@@ -1146,7 +1202,7 @@ class GbxDevice:
 			self.WORKER.setConfig(args)
 		self.WORKER.start()
 	
-	def RestoreRAM(self, fncSetProgress=None, args={}):
+	def RestoreRAM(self, fncSetProgress=None, args=None):
 		from . import DataTransfer
 		args['mode'] = 3
 		args['port'] = self
@@ -1157,7 +1213,7 @@ class GbxDevice:
 			self.WORKER.setConfig(args)
 		self.WORKER.start()
 	
-	def FlashROM(self, fncSetProgress=None, args={}):
+	def FlashROM(self, fncSetProgress=None, args=None):
 		from . import DataTransfer
 		args['mode'] = 4
 		args['port'] = self
@@ -1168,7 +1224,7 @@ class GbxDevice:
 			self.WORKER.setConfig(args)
 		self.WORKER.start()
 	
-	def _TransferData(self, args, signal):
+	def TransferData(self, args, signal):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
 		self.SIGNAL = signal
 		mode = args["mode"]
@@ -1188,7 +1244,7 @@ class GbxDevice:
 		# Firmware check R26+
 		# Firmware check CFW
 		if ("agb_rom_size" in args and args["agb_rom_size"] > 32 * 1024 * 1024) or (self.MODE == "DMG" and "mbc" in args and not self.IsSupportedMbc(args["mbc"])) or (self.MODE == "AGB" and "dacs_8m" in self.INFO and self.INFO["dacs_8m"] is True): # 3D Memory
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the Tools menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please update to the custom high compatibility firmware by Lesserkuma and try again.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check CFW
 
@@ -1256,7 +1312,7 @@ class GbxDevice:
 			if not isinstance(args["cart_type"], dict):
 				for i in range(0, len(supported_carts)):
 					if i == args["cart_type"]: flashcart_meta = supported_carts[i]
-				if flashcart_meta in ("RETAIL", "AUTODETECT"): flashcart_meta = False
+				if flashcart_meta == "RETAIL": flashcart_meta = False
 			else:
 				flashcart_meta = args["cart_type"]
 			
@@ -1391,6 +1447,7 @@ class GbxDevice:
 			
 			self.INFO["rom_checksum_calc"] = chk
 			
+			self.INFO["file_crc32"] = zlib.crc32(data_dump) & 0xFFFFFFFF
 			self.INFO["file_sha1"] = hashlib.sha1(data_dump).hexdigest()
 			self.SetProgress({"action":"FINISHED"})
 		
@@ -1501,11 +1558,11 @@ class GbxDevice:
 
 			# Prepare some stuff
 			if mode == 2: # Backup
-				try:
-					file = open(path, "wb")
-				except PermissionError:
-					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"FlashGBX doesn’t have permission to access this file for writing:\n" + path, "abortable":False})
-					return False
+				#try:
+				#	file = open(path, "wb")
+				#except PermissionError:
+				#	self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"FlashGBX doesn’t have permission to access this file for writing:\n" + path, "abortable":False})
+				#	return False
 				self.SetProgress({"action":"INITIALIZE", "method":"SAVE_READ", "size":save_size})
 			
 			elif mode == 3: # Restore
@@ -1518,8 +1575,11 @@ class GbxDevice:
 				else:
 					with open(path, "rb") as file: data_import = file.read()
 				
-				if save_size > len(data_import):
-					data_import += b'\xFF' * (save_size - len(data_import))
+				#if save_size > len(data_import):
+				#	data_import += b'\xFF' * (save_size - len(data_import))
+				while len(data_import) < save_size:
+					data_import += bytearray(data_import)
+				data_import = data_import[:save_size]
 				
 				self.SetProgress({"action":"INITIALIZE", "method":"SAVE_WRITE", "size":save_size})
 			
@@ -1538,7 +1598,7 @@ class GbxDevice:
 					if endAddr > (startAddr + save_size): endAddr = startAddr + save_size
 					if save_type == 1 or save_type == 2: # EEPROM
 						self.set_number(eeprom_size, self.DEVICE_CMD["GBA_SET_EEPROM_SIZE"])
-					elif (save_type == 5) and bank > 0: # 1M SRAM
+					elif save_type == 5: # 1M SRAM
 						self.gbx_flash_write_address_byte(0x1000000, bank)
 					elif (save_type == 6 or save_type == 7) and bank > 0: # FLASH
 						self.set_number(bank, self.DEVICE_CMD["GBA_FLASH_SET_BANK"])
@@ -1580,7 +1640,7 @@ class GbxDevice:
 								return False
 						
 						data_dump.extend(buffer)
-						file.write(buffer)
+						#file.write(buffer)
 
 					elif mode == 3: # Restore
 						data = data_import[pos:pos+buffer_len]
@@ -1667,29 +1727,7 @@ class GbxDevice:
 						buffer.extend(buffer)
 						ts = int(time.time())
 						buffer.extend(struct.pack("<Q", ts))
-						file.write(buffer)
-					
-					elif mode == 3 and len(data_import) == save_size + 0x30: # Restore
-						pass # not supported yet as it requires clock pulsing
-						'''
-						data = data_import[-0x30:]
-						buffer.append(data[0x00])
-						buffer.append(data[0x04])
-						buffer.append(data[0x08])
-						buffer.append(data[0x0C])
-						buffer.append(data[0x10])
-						
-						# Stop Timer
-						self.cart_write(0, 0x0A)
-						self.cart_write(0x4000, 0x0C)
-						self.cart_write(0xA000, 0x40)
-
-						for i in range(0x8, 0xD):
-							self.cart_write(0x4000, i)
-							self.cart_write(0xA000, buffer[i-8])
-							dprint("RTC", hex(i), hex(buffer[i-8]))
-							time.sleep(0.5)
-						'''
+						#file.write(buffer)
 
 				# RTC for HuC-3+RTC+SRAM+BATTERY
 				elif mbc == 0xFE and args["rtc"]:
@@ -1723,7 +1761,7 @@ class GbxDevice:
 						buffer.extend(struct.pack("<L", rtc))
 						ts = int(time.time())
 						buffer.extend(struct.pack("<Q", ts))
-						file.write(buffer)
+						#file.write(buffer)
 					
 					elif mode == 3 and len(data_import) == save_size + 0x0C: # Restore
 						buffer = data_import[-0x0C:-0x08]
@@ -1764,7 +1802,18 @@ class GbxDevice:
 						self.set_number(0, self.DEVICE_CMD["GBA_FLASH_SET_BANK"])
 			
 			if mode == 2:
-				file.close()
+				if args["path"] is not None:
+					try:
+						file = open(args["path"], "wb")
+					except PermissionError:
+						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"FlashGBX doesn’t have permission to access this file for writing:\n" + path, "abortable":False})
+						return False
+					file.write(data_dump)
+					file.close()
+				else:
+					self.INFO["data"] = data_dump
+				#file.close()
+				self.INFO["file_crc32"] = zlib.crc32(data_dump) & 0xFFFFFFFF
 				self.INFO["file_sha1"] = hashlib.sha1(data_dump).hexdigest()
 			
 			self.INFO["last_action"] = mode
@@ -1784,7 +1833,7 @@ class GbxDevice:
 				cart_type = "RETAIL"
 				for i in range(0, len(supported_carts)):
 					if i == args["cart_type"]: cart_type = supported_carts[i]
-				if cart_type == "RETAIL" or cart_type == "AUTODETECT": return False # Generic ROM Cartridge is not flashable
+				if cart_type == "RETAIL": return False # Generic ROM Cartridge is not flashable
 			else:
 				cart_type = args["cart_type"]
 			
@@ -1820,7 +1869,7 @@ class GbxDevice:
 			data_import = (b'\xFF' * start_addr) + data_import
 		data_import = bytearray(data_import)
 		
-		if cart_type == "RETAIL" or cart_type == "AUTODETECT": return False # Generic ROM Cartridge is not flashable
+		if cart_type == "RETAIL": return False # Generic ROM Cartridge is not flashable
 		flashcart_meta = copy.deepcopy(cart_type)
 		
 		# Fix header
@@ -2359,7 +2408,7 @@ class GbxDevice:
 								while True:
 									wait_for = self.ReadROM(currAddr, 64)
 									wait_for = ((wait_for[1] << 8 | wait_for[0]) & flashcart_meta["commands"]["single_write_wait_for"][i][2])
-									print("SW_SR {:X}=={:X}?".format(wait_for, data))
+									dprint("SW_SR {:X}=={:X}?".format(wait_for, data))
 									time.sleep(0.1)
 									timeout -= 1
 									if timeout < 1:

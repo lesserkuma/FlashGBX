@@ -1,10 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with AT49F040 @ AUDIO"
+		"DIY cart with AT49F040 @ AUDIO",
+		"GB-CART32K-A with SST39SF020A"
 	],
 	"flash_ids":[
-		[ 0x1F, 0x13, 0xFE, 0xFF ]
+		[ 0x1F, 0x13, 0xFE, 0xFF ],
+		[ 0xBF, 0xB6, 0x01, 0xFF ]
 	],
 	"voltage":5,
 	"flash_size":0x8000,

@@ -2,11 +2,13 @@
 	"type":"DMG",
 	"names":[
 		"SD007_48BALL_64M_V3 with 29DL161TD-90",
-		"SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G"
+		"SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G",
+		"SD007_TSOP_64BALL_SOP28 with EN29LV160AB-70TCP"
 	],
 	"flash_ids":[
 		[ 0x04, 0x04, 0x35, 0x35 ],
-		[ 0xC1, 0xC1, 0x4A, 0x4A ]
+		[ 0xC1, 0xC1, 0x4A, 0x4A ],
+		[ 0x7F, 0x7F, 0x4A, 0x4A ]
 	],
 	"voltage":3.3,
 	"flash_size":0x200000,

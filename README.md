@@ -19,8 +19,8 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 ### Confirmed working reader/writer hardware and firmware versions
 
 - [insideGadgets GBxCart RW Mini, v1.3 and v1.4 (Standard and Pro versions)](https://www.gbxcart.com/)
-  - Official firmware versions R19 to R31 (other hardware revisions and firmware versions may also work, but are untested)
-  - Lesserkuma’s high compatibility firmware version L1 and L2
+  - Official firmware versions R30 to R32 (other hardware revisions and firmware versions may also work, but are untested)
+  - Lesserkuma’s high compatibility firmware versions L1 to L3
 
 ### Currently supported official cartridge memory mappers
 
@@ -51,12 +51,14 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 - Game Boy
 
+  - 29LV Series Flash BOY with 29LV160DB
   - BUNG Doctor GB Card 64M
   - DIY cart with AM29F016/AM29F016B
   - DIY cart with AM29F032/AM29F032B
   - DIY cart with AT49F040
   - DIY cart with MBC1 and AM29F080
   - DIY cart with MBC3 and MX29LV640
+  - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
   - insideGadgets 32 KB
   - insideGadgets 512 KB
@@ -83,6 +85,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 - Game Boy
 
+  - 2006_TSOP_64BALL_QFP48 with AL016J55FFAR2
   - DMG-DHCN-20 with MX29LV320ET
   - DMG-GBRW-20 with 29LV320ETMI-70G
   - ES29LV160_DRV with 29DL32TF-70
@@ -117,8 +120,11 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - SD007_TSOP_48BALL with M29W160ET
   - SD007_TSOP_48BALL with L160DB12VI
   - SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G
+  - SD007_TSOP_48BALL_V10 with 29DL32TF-70
   - SD007_TSOP_48BALL_V10 with GL032M10BFIR3
   - SD007_TSOP_48BALL_V10 with M29W320DT
+  - SD007_TSOP_64BALL_SOP28 with EN29LV160AB-70TCP
+  - SD007_TSOP_64BALL_SOP28 with unlabeled flash chip
 
 - Game Boy Advance
 
@@ -199,7 +205,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 * On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
 
-* On some Linux systems, you may need the *XCB Xinerama package* if you see an error regarding failed Qt platform plugin initialization. You can install it with `sudo apt install libxcb-xinerama0` etc.
+* On some Linux systems, you may need the *XCB Xinerama package* if you see an error regarding failed Qt platform plugin initialization. You can install it with `sudo apt install libxcb-xinerama0` etc. It was reported that this additional command is required on MX Linux: `sudo ln -s /usr/lib/x86_64-linux-gnu/libxcb-util.so.0.0.0 /usr/lib/x86_64-linux-gnu/libxcb-util.so.1`
 
 * On some Linux systems like Fedora, you may need to install the `python3-pillow-qt` package manually in order for the GUI mode to work.
 
@@ -227,6 +233,7 @@ The author would like to thank the following very kind people for their help and
 - djedditt (testing)
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
+- EchelonPrime (flash chip info)
 - endrift (research, mGBA emulator)
 - eveningmoose (flash chip info)
 - Frost Clock (flash chip info)
@@ -239,6 +246,7 @@ The author would like to thank the following very kind people for their help and
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
+- Luca DS (flash chip info)
 - LucentW (flash chip info, testing, bug reports)
 - marv17 (flash chip info, testing, bug reports, feature suggestions)
 - Mr_V (flash chip info, testing)
@@ -249,7 +257,9 @@ The author would like to thank the following very kind people for their help and
 - Raphaël BOICHOT (feature suggestions)
 - RetroGorek (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
+- Satumox (bug reports)
 - Sgt.DoudouMiel (flash chip info)
+- Sithdown (flash chip info)
 - skite2001 (flash chip info)
 - Super Maker (flash chip info, testing)
 - t5b6_de (flash chip info)

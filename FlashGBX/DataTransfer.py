@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import sys, traceback
+import traceback
 import PySide2
 
 class DataTransfer(PySide2.QtCore.QThread):
@@ -31,7 +31,7 @@ class DataTransfer(PySide2.QtCore.QThread):
 			
 			else:
 				self.FINISHED = False
-				self.CONFIG['port']._TransferData(self.CONFIG, self.updateProgress)
+				self.CONFIG['port'].TransferData(self.CONFIG, self.updateProgress)
 				self.FINISHED = True
 		
 		except Exception as e:

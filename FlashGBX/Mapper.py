@@ -18,7 +18,8 @@ class DMG_MBC:
 	ROM_BANK_NUM = 0
 	CURRENT_ROM_BANK = 0
 
-	def __init__(self, args={}, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
 		if "mbc" in args: self.MBC_ID = args["mbc"]
 		if "rom_banks" in args: self.ROM_BANK_NUM = args["rom_banks"]
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
@@ -27,7 +28,8 @@ class DMG_MBC:
 		self.ROM_BANK_SIZE = 0x4000
 		self.RAM_BANK_SIZE = 0x2000
 
-	def GetInstance(self, args={}, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def GetInstance(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
 		mbc_id = args["mbc"]
 		if mbc_id in (0x01, 0x02, 0x03):						# 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY',
 			return DMG_MBC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
@@ -211,20 +213,31 @@ class DMG_MBC3(DMG_MBC):
 		if self.MBC_ID != 16: return False
 		self.EnableRAM(enable=False)
 		self.EnableRAM(enable=True)
-		self.CartWrite([ [0x4000, 0x08] ])
+		#self.CartWrite([ [0x4000, 0x08] ])
 		self.LatchRTC()
-		ram1 = self.CartRead(0xA000, 0x10)
-		ram2 = ram1
-		t1 = time.time()
-		t2 = 0
-		while t2 < (t1 + 1):
-			self.LatchRTC()
-			ram2 = self.CartRead(0xA000, 0x10)
-			if ram1 != ram2: break
-			t2 = time.time()
-		dprint("RTC_S {:02X} != {:02X}?".format(ram1[0], ram2[0]), ram1 != ram2)
-		time.sleep(0.1)
-		return (ram1 != ram2)
+
+		skipped = True
+		for i in range(0x08, 0x0D):
+			self.CLK_TOGGLE_FNCPTR(60)
+			self.CartWrite([ [0x4000, i] ])
+			data = self.CartRead(0xA000, 0x800)
+			if data[0] in (0, 0xFF): continue
+			skipped = False
+			if data != bytearray([data[0]] * 0x800): return False
+		return skipped is False
+
+		#ram1 = self.CartRead(0xA000, 0x10)
+		#ram2 = ram1
+		#t1 = time.time()
+		#t2 = 0
+		#while t2 < (t1 + 1):
+		#	self.LatchRTC()
+		#	ram2 = self.CartRead(0xA000, 0x10)
+		#	if ram1 != ram2: break
+		#	t2 = time.time()
+		#dprint("RTC_S {:02X} != {:02X}?".format(ram1[0], ram2[0]), ram1 != ram2)
+		#time.sleep(0.1)
+		#return (ram1 != ram2)
 
 	def GetRTCBufferSize(self):
 		return 0x30
@@ -283,16 +296,18 @@ class DMG_MBC3(DMG_MBC):
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
 						dt_buffer1 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(2000, 1, 1, 0, 0, 0), "%Y-%m-%d %H:%M:%S")
-						dt_buffer2 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(2000, 1, 1, hours, minutes, seconds), "%Y-%m-%d %H:%M:%S")
+						dt_buffer2 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(2000, 1, 1, hours % 24, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
 						dt_buffer2 += datetime.timedelta(days=days)
 						rd = relativedelta(dt_now, dt_then)
 						dt_new = dt_buffer2 + rd
-						#print(dt_then, dt_now, dt_buffer2, dt_new, sep="\n")
+						dprint(dt_then, dt_now, dt_buffer1, dt_buffer2, dt_new, sep="\n")
 						seconds = dt_new.second
 						minutes = dt_new.minute
 						hours = dt_new.hour
-						temp = dt_new - dt_buffer1
-						days = temp.days
+						#temp = dt_new - dt_buffer1
+						#days = temp.days
+						temp = datetime.date.fromtimestamp(timestamp_now) - datetime.date.fromtimestamp(timestamp_then)
+						days = temp.days + days
 						if days >= 512:
 							carry = True
 							days = days % 512
@@ -341,43 +356,6 @@ class DMG_MBC3(DMG_MBC):
 		self.CLK_TOGGLE_FNCPTR(50)
 		self.CartWrite([ [ 0x6000, 0x01 ] ])
 		time.sleep(0.1)
-		return
-		for i in range(0, 5):
-			self.CLK_TOGGLE_FNCPTR(50)
-			self.CartWrite([ [ 0x6000, 0x00 ] ])
-			self.CLK_TOGGLE_FNCPTR(50)
-			self.CartWrite([ [ 0x6000, 0x01 ] ])
-			time.sleep(0.1)
-			self.CLK_TOGGLE_FNCPTR(50)
-			self.CartWrite([ [ 0x4000, 0x0B ] ])
-			time.sleep(0.1)
-			dprint("Day = {:d}".format(self.CartRead(0xA000)))
-			self.CLK_TOGGLE_FNCPTR(50)
-			self.CartWrite([ [ 0x4000, 0x0A ] ])
-			time.sleep(0.1)
-			dprint("Hour = {:d}".format(self.CartRead(0xA000)))
-			self.CLK_TOGGLE_FNCPTR(50)
-			self.CartWrite([ [ 0x4000, 0x09 ] ])
-			time.sleep(0.1)
-			dprint("Minutes = {:d}".format(self.CartRead(0xA000)))
-			self.CLK_TOGGLE_FNCPTR(50)
-			self.CartWrite([ [ 0x4000, 0x08 ] ])
-			time.sleep(0.1)
-			dprint("Seconds = {:d}".format(self.CartRead(0xA000)))
-			time.sleep(0.5)
-		#import sys
-		#sys.exit()
-		return
-		for i in range(0x08, 0x0D):
-			self.CartWrite([ [0x4000, i] ])
-			data = struct.unpack("<I", buffer[(i-8)*4:(i-8)*4+4])[0] & 0xFF
-			dprint("Writing 0x{:02X} to 0x{:02X}".format(data, i))
-			self.CartWrite([ [0xA000, data] ])
-			self.CLK_TOGGLE_FNCPTR(1)
-			time.sleep(0.1)
-		#self.LatchRTC()
-		#self.CLK_TOGGLE_FNCPTR(1)
-		self.EnableRAM(enable=False)
 
 class DMG_MBC5(DMG_MBC):
 	def GetName(self):
@@ -409,7 +387,8 @@ class DMG_MBC5(DMG_MBC):
 		return (start_address, self.ROM_BANK_SIZE)
 
 class DMG_MBC6(DMG_MBC):
-	def __init__(self, args={}, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
 		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=None)
 		self.ROM_BANK_SIZE = 0x2000
 		self.RAM_BANK_SIZE = 0x1000
@@ -446,7 +425,7 @@ class DMG_MBC6(DMG_MBC):
 		start_address = 0x4000
 		return (start_address, self.ROM_BANK_SIZE)
 
-	def GetRAMBanks(self, size): # 0x108000
+	def GetRAMBanks(self, ram_size): # 0x108000
 		return 8 + 128
 
 	def SelectBankRAM(self, index):
@@ -737,7 +716,8 @@ class DMG_M161(DMG_MBC):
 	def GetName(self):
 		return "M161"
 
-	def __init__(self, args={}, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
 		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=None)
 		self.ROM_BANK_SIZE = 0x8000
 		self.ROM_BANK_NUM = 8
@@ -753,7 +733,7 @@ class DMG_M161(DMG_MBC):
 		self.CartWrite(commands)
 		return (0, 0x8000)
 
-class DMG_HuC1(DMG_MBC1):
+class DMG_HuC1(DMG_MBC5):
 	def GetName(self):
 		return "HuC-1"
 
@@ -834,11 +814,6 @@ class DMG_HuC3(DMG_MBC):
 					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
 					timestamp_now = int(time.time())
 					dprint(hours, minutes, days)
-					#debug
-					#timestamp_now = 4102441140 # 2099-12-23 23:59:00
-					timestamp_now = time.time() + (3600 * 24 * 4095) + (3600 * 9)
-					dt_now = datetime.datetime.fromtimestamp(timestamp_now)
-					#debug
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
 						dt_buffer1 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, 1, 1, 0, 0, 0), "%Y-%m-%d %H:%M:%S")
@@ -846,11 +821,13 @@ class DMG_HuC3(DMG_MBC):
 						dt_buffer2 += datetime.timedelta(days=days)
 						rd = relativedelta(dt_now, dt_then)
 						dt_new = dt_buffer2 + rd
-						#print(dt_then, dt_now, dt_buffer1, dt_buffer2, dt_new, sep="\n")
+						dprint(dt_then, dt_now, dt_buffer1, dt_buffer2, dt_new, sep="\n")
 						minutes = dt_new.minute
 						hours = dt_new.hour
-						temp = dt_new - dt_buffer1
-						days = temp.days
+						#temp = dt_new - dt_buffer1
+						#days = temp.days
+						temp = datetime.date.fromtimestamp(timestamp_now) - datetime.date.fromtimestamp(timestamp_then)
+						days = temp.days + days
 						dprint(minutes, hours, days)
 				
 				total_minutes = 60 * hours + minutes
@@ -1012,7 +989,7 @@ class DMG_TAMA5(DMG_MBC):
 					timestamp_now = int(time.time())
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
-						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, months, days, hours, minutes, seconds), "%Y-%m-%d %H:%M:%S")
+						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, months % 12, days % 31, hours % 24, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
 						rd = relativedelta(dt_now, dt_then)
 						dt_new = dt_buffer + rd
 						#print(dt_then, dt_now, dt_buffer, dt_new, sep="\n")
@@ -1089,7 +1066,8 @@ class AGB_GPIO:
 	RTC_WRITE_ALARM = 0x68
 	RTC_READ_ALARM = 0x69
 
-	def __init__(self, args={}, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
 		self.CLK_TOGGLE_FNCPTR = clk_toggle_fncptr
@@ -1222,12 +1200,13 @@ class AGB_GPIO:
 		
 		# Add timestamp of backup time
 		ts = int(time.time())
-		buffer.extend(b'\x01') # 24h mode (TODO: read from status?)
+		buffer.extend(b'\x01') # 24h mode (TODO: read from cart?)
 		buffer.extend(struct.pack("<Q", ts))
 
 		dstr = ' '.join(format(x, '02X') for x in buffer)
 		dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
 		
+		# Digits are BCD (Binary Coded Decimal)
 		#[07] 00 01 27 05 06 30 20
 		#[07] 00 01 27 05 06 30 28
 		# "27 days, 06:51:55"
@@ -1263,7 +1242,7 @@ class AGB_GPIO:
 					#debug
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
-						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(years + 2000, months, days, hours, minutes, seconds), "%Y-%m-%d %H:%M:%S")
+						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(years + 2000, months % 12, days % 31, hours % 60, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
 						rd = relativedelta(dt_now, dt_then)
 						dt_new = dt_buffer + rd
 						#print(dt_then, dt_now, dt_buffer, dt_new, sep="\n")

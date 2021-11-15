@@ -1,4 +1,20 @@
 # Release notes
+### v3.0 (released 2021-11-15)
+- Added support for the GBxCart RW v1.4a hardware revision
+- Bundles GBxCart RW v1.4 firmware version R32+L3 (improves ROM writing speed for Development AGB Cartridge 256M Flash S, E201868)
+- Added support for 0883_DRV with ES29LV160ET *(thanks RetroGorek)*
+- Confirmed support for 2006_TSOP_64BALL_QFP48 with AL016J55FFAR2 *(thanks Sithdown)*
+- Added support for GB-CART32K-A with SST39SF020A *(thanks Icesythe7)*
+- Added support for 29LV Series Flash BOY with 29LV160DB *(thanks Luca DS)*
+- Fixed a bug with reading ROMs of HuC-1 cartridges *(thanks Satumox)*
+- When writing a save data file that is smaller than the selected save type suggests, repeats of the data will now be written instead of blank data; this can be useful for games like „Pokémon Pinball“ on a flash cartridge with larger SRAM/FRAM than required
+- Confirmed support for SD007_TSOP_64BALL_SOP28 with unlabeled flash chip *(thanks marv17)*
+- Added support for SD007_TSOP_64BALL_SOP28 with EN29LV160AB-70TCP *(thanks marv17)*
+- Added support for SD007_TSOP_48BALL_V10 with 29DL32TF-70
+- Improved the auto-detection of flash cartridges
+- Fixed the auto-adjustment of Real Time Clock register values as the day counter was inaccurate
+- Added the detection of a cartridge’s actual save type (requires save data to be present)
+
 ### v2.8 (released 2021-09-05)
 - Added an option to fix wrong header checksums when writing a ROM *(thanks Voultar for the suggestion)*
 - Fixed a bug with the auto-detect feature *(thanks Voultar)*

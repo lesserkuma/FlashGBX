@@ -52,7 +52,10 @@ class RomFileDMG:
 	def GetHeader(self):
 		buffer = self.ROMFILE
 		data = {}
-		data["empty"] = (self.ROMFILE == bytearray([buffer[0]] * len(buffer)))
+		#data["empty"] = (self.ROMFILE == bytearray([buffer[0]] * len(buffer)))
+		if len(buffer) < 0x180: return {}
+		
+		data["empty"] = (buffer[0x104:0x134] == bytearray([buffer[0x104]] * 0x30))
 		data["logo_correct"] = hashlib.sha1(buffer[0x104:0x134]).digest() == bytearray([ 0x07, 0x45, 0xFD, 0xEF, 0x34, 0x13, 0x2D, 0x1B, 0x3D, 0x48, 0x8C, 0xFB, 0xDF, 0x03, 0x79, 0xA3, 0x9F, 0xD5, 0x4B, 0x4C ])
 		data["cgb"] = int(buffer[0x143])
 		data["sgb"] = int(buffer[0x146])
@@ -83,6 +86,7 @@ class RomFileDMG:
 			data["ram_size"] = "?"
 			if buffer[0x149] in Util.DMG_Header_RAM_Sizes:
 				data["ram_size"] = Util.DMG_Header_RAM_Sizes[buffer[0x149]]
+		data["version"] = int(buffer[0x14C])
 		data["header_checksum"] = int(buffer[0x14D])
 		data["header_checksum_calc"] = self.CalcChecksumHeader()
 		data["header_checksum_correct"] = data["header_checksum"] == data["header_checksum_calc"]

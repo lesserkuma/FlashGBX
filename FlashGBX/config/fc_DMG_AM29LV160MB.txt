@@ -4,9 +4,13 @@
 		"SD007_BV5_V3 with AM29LV160MB",
 		"SD007_TSOP_48BALL with L160DB12VI",
 		"SD007_TSOP_48BALL with AM29LV160DB",
+		"2006_TSOP_64BALL_QFP48 with AL016J55FFAR2",
+		"SD007_TSOP_64BALL_SOP28 with unlabeled flash chip",
 		"SD007_TSOP_29LV017D with L017D70VC"
 	],
 	"flash_ids":[
+		[ 0x02, 0x02, 0x4A, 0x4A ],
+		[ 0x02, 0x02, 0x4A, 0x4A ],
 		[ 0x02, 0x02, 0x4A, 0x4A ],
 		[ 0x02, 0x02, 0x4A, 0x4A ],
 		[ 0x02, 0x02, 0x4A, 0x4A ],

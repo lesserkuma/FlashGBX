@@ -16,11 +16,11 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	CUR_FILE = ""
 	CUR_EXPORT_PATH = ""
 	CUR_PC = None
+	CUR_PALETTE = 3
 	APP = None
 	PALETTES = [
 		[ 255, 255, 255,   176, 176, 176,   104, 104, 104,   0, 0, 0 ], # Grayscale
 		[ 208, 217, 60,   120, 164, 106,   84, 88, 84,   36, 70, 36 ], # Game Boy
-		#[ 196, 207, 161,   139, 149, 109,   77, 83, 60,   31, 31, 31 ], # Game Boy Pocket
 		[ 255, 255, 255,   181, 179, 189,   84, 83, 103,   9, 7, 19 ], # Super Game Boy
 		[ 240, 240, 240,   218, 196, 106,   112, 88, 52,   30, 30, 30 ], # Game Boy Color (JPN)
 		[ 240, 240, 240,   220, 160, 160,   136, 78, 78,   30, 30, 30 ], # Game Boy Color (USA Gold)
@@ -76,7 +76,6 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.rowColors1.addWidget(self.optColorCGB1)
 		self.rowColors1.addWidget(self.optColorCGB2)
 		self.rowColors1.addWidget(self.optColorCGB3)
-		self.optColorCGB1.setChecked(True)
 		
 		grpColorsLayout.addLayout(self.rowColors1)
 		
@@ -172,10 +171,18 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			palette = json.loads(palette)
 		except:
 			palette = None
+			self.optColorCGB1.setChecked(True)
+		palette_found = False
 		if palette is not None:
 			for i in range(0, len(self.PALETTES)):
 				if palette == self.PALETTES[i]:
+					if i >= self.rowColors1.count(): continue
 					self.rowColors1.itemAt(i).widget().setChecked(True)
+					self.CUR_PALETTE = i
+					palette_found = True
+		if not palette_found:
+			self.PALETTES.append(palette)
+			self.CUR_PALETTE = len(self.PALETTES) - 1
 		
 		if self.CUR_FILE is not None:
 			self.OpenFile(self.CUR_FILE)
@@ -203,23 +210,28 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		if self.CUR_PC is None: return
 		for i in range(0, self.rowColors1.count()):
 			if self.rowColors1.itemAt(i).widget().isChecked():
-				self.CUR_PC.SetPalette(self.PALETTES[i])
+				self.CUR_PALETTE = i
+		self.CUR_PC.SetPalette(self.PALETTES[self.CUR_PALETTE])
 		self.BuildPhotoList()
 		self.UpdateViewer(self.CUR_INDEX)
 	
 	def OpenFile(self, file):
-		self.CUR_PC = PocketCamera()
-		if self.CUR_PC.LoadFile(file) == False:
+		try:
+			self.CUR_PC = PocketCamera()
+			if self.CUR_PC.LoadFile(file) == False:
+				self.CUR_PC = None
+				QtWidgets.QMessageBox.critical(self, "FlashGBX", "The save data file couldn’t be loaded.", QtWidgets.QMessageBox.Ok)
+				return False
+			self.CUR_FILE = file
+			if self.CUR_EXPORT_PATH == "":
+				self.CUR_EXPORT_PATH = os.path.dirname(self.CUR_FILE)
+			self.UpdateViewer(0)
+			self.SetColors()
+			return True
+		except:
 			self.CUR_PC = None
-			QtWidgets.QMessageBox.warning(self, "FlashGBX", "The save data file couldn’t be loaded.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "FlashGBX", "An error occured while trying to load the save data file.", QtWidgets.QMessageBox.Ok)
 			return False
-		self.CUR_FILE = file
-		if self.CUR_EXPORT_PATH == "":
-			self.CUR_EXPORT_PATH = os.path.dirname(self.CUR_FILE)
-		self.UpdateViewer(0)
-		self.SetColors()
-		
-		return True
 	
 	def lblPhoto_Clicked(self, event, index):
 		if event.button() == QtCore.Qt.LeftButton:

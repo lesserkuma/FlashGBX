@@ -42,7 +42,8 @@ class RomFileAGB:
 	def GetHeader(self):
 		buffer = self.ROMFILE
 		data = {}
-		data["empty"] = (self.ROMFILE == bytearray([buffer[0]] * len(buffer)))
+		#data["empty"] = (self.ROMFILE == bytearray([buffer[0]] * len(buffer)))
+		data["empty"] = (buffer[0x04:0xA0] == bytearray([buffer[0x04]] * 0x9C))
 		data["logo_correct"] = hashlib.sha1(buffer[0x04:0xA0]).digest() == bytearray([ 0x17, 0xDA, 0xA0, 0xFE, 0xC0, 0x2F, 0xC3, 0x3C, 0x0F, 0x6A, 0xBB, 0x54, 0x9A, 0x8B, 0x80, 0xB6, 0x61, 0x3B, 0x48, 0xEE ])
 		game_title = bytearray(buffer[0xA0:0xAC]).decode("ascii", "replace")
 		game_title = re.sub(r"(\x00+)$", "", game_title)
