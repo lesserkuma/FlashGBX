@@ -182,10 +182,12 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 
 #### Installing or upgrading from an older version
 
-1. Download and install [Python](https://www.python.org/downloads/)
+1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or higher)
 2. Open a Terminal or Command Prompt window
 3. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
 * If you see an error about a conflict involving PySide2, use these two commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
+
+* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest)
 
 *FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
 
@@ -243,7 +245,7 @@ The author would like to thank the following very kind people for their help and
 - howie0210 (flash chip info, bug reports)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
-- JFox (help with properly packaging the app for pip)
+- JFox (help with properly packaging the app for pip, Linux help)
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
