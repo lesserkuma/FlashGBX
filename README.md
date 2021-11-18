@@ -213,7 +213,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 * If you run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`, you can try to uninstall and re-install the Python package *PySide2*, or you can run FlashGBX in command line interface mode using the command `python3 -m FlashGBX --cli`.
 
-* If you see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` and can only use CLI mode, this can be an issue with Python version 3.10+. Please try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/) until the issue is fixed by Qt developers.
+* If you see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` and can only use CLI mode, this issue may be related to changes with Python version 3.10+. Please try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/) until the issue is fixed in the PySide2 package.
 
 * For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
 
