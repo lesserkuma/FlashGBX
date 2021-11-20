@@ -67,6 +67,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - insideGadgets 2 MB, 32 KB FRAM, v1.0
   - insideGadgets 4 MB, 128 KB SRAM/FRAM
   - insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC
+  - insideGadgets 4 MB (2× 2 MB), 32 KB FRAM, MBC5
   - Mr Flash 64M
 
 - Game Boy Advance
@@ -185,9 +186,9 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or higher)
 2. Open a Terminal or Command Prompt window
 3. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
-* If you see an error about a conflict involving PySide2, use these two commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
+* If you see an error about a conflict involving PySide2, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`<br>`pip3 install -U PySide2 --ignore-requires-python`
 
-* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest)
+* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
 
 *FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
 
@@ -214,7 +215,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 * If you run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`, you can try to uninstall and re-install the Python package *PySide2*, or you can run FlashGBX in command line interface mode using the command `python3 -m FlashGBX --cli`.
 
-* If you use Python 3.10+ and see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` and can only use CLI mode, try to update the PySide2 package by running `pip3 install -U PySide2=5.15.2 --ignore-requires-python` or try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/).
+* If you use Python 3.10+ and see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` or can only use CLI mode, try to install or update the PySide2 package by running `pip3 install -U PySide2 --ignore-requires-python` or try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/).
 
 * For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
 
