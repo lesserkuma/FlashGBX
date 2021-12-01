@@ -18,9 +18,9 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 ### Confirmed working reader/writer hardware and firmware versions
 
-- [insideGadgets GBxCart RW Mini, v1.3 and v1.4 (Standard and Pro versions)](https://www.gbxcart.com/)
-  - Official firmware versions R30 to R32 (other hardware revisions and firmware versions may also work, but are untested)
-  - Lesserkuma’s high compatibility firmware versions L1 to L3
+- [insideGadgets GBxCart RW v1.3, v1.4 and Mini](https://www.gbxcart.com/)
+  - Official firmware versions R30 to R33 (other hardware revisions and firmware versions may also work, but are untested)
+  - Lesserkuma’s high compatibility firmware versions L1 to L4
 
 ### Currently supported official cartridge memory mappers
 
@@ -58,6 +58,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - DIY cart with AT49F040
   - DIY cart with MBC1 and AM29F080
   - DIY cart with MBC3 and MX29LV640
+  - Ferrante Crafts cart with SST39SF010A
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
   - insideGadgets 32 KB
@@ -122,6 +123,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - SD007_TSOP_48BALL with L160DB12VI
   - SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G
   - SD007_TSOP_48BALL_V10 with 29DL32TF-70
+  - SD007_TSOP_48BALL_V10 with 29LV320CTXEI
   - SD007_TSOP_48BALL_V10 with GL032M10BFIR3
   - SD007_TSOP_48BALL_V10 with M29W320DT
   - SD007_TSOP_64BALL_SOP28 with EN29LV160AB-70TCP
@@ -145,6 +147,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - 4050_4400_4000_4350_36L0R_V5 with M36L0R8060T
   - 4400 with 4400L0ZDQ0
   - 4455_4400_4000_4350_36L0R_V3 with M36L0R7050T
+  - AA1030_TSOP88BALL with M36W0R603
   - AGB-E05-01 with GL128S
   - AGB-E05-01 with MSP55LV128M
   - AGB-E05-01 with MX29GL128FHT2I-90G
@@ -186,7 +189,7 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or higher)
 2. Open a Terminal or Command Prompt window
 3. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
-* If you see an error about a conflict involving PySide2, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`<br>`pip3 install -U PySide2 --ignore-requires-python`
+* If you see an error about a conflict involving PySide2, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`<br>`pip3 install --ignore-requires-python -U PySide2`
 
 * Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
 
@@ -234,6 +237,7 @@ The author would like to thank the following very kind people for their help and
 - antPL (flash chip info)
 - bbsan (flash chip info)
 - ClassicOldSong (bug reports)
+- crizzlycruz (flash chip info)
 - djedditt (testing)
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)

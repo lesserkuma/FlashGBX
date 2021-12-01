@@ -117,7 +117,7 @@ class GbxDevice:
 		"CART_PWR_OFF":'.',
 		"QUERY_CART_PWR":']'
 	}
-	PCB_VERSIONS = {1:'v1.0', 2:'v1.1', 4:'v1.3', 90:'XMAS', 100:'Mini'}
+	PCB_VERSIONS = {1:'v1.0', 2:'v1.1', 4:'v1.3', 90:'XMAS', 100:'Mini v1.0', 101:'Mini v1.0d'}
 	SUPPORTED_CARTS = {}
 	
 	FW = []

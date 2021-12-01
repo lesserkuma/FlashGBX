@@ -15,7 +15,7 @@ from . import Util
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
-	DEVICE_MAX_FW = 3
+	DEVICE_MAX_FW = 4
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -80,7 +80,7 @@ class GbxDevice:
 		"DMG_WRITE_CS_PULSE":[8, 0x09],
 	}
 
-	PCB_VERSIONS = {4:'v1.3', 5:'v1.4', 6:'v1.4a'}
+	PCB_VERSIONS = {4:'v1.3', 5:'v1.4', 6:'v1.4a', 101:'Mini v1.0d'}
 	ACTIONS = {"ROM_READ":1, "SAVE_READ":2, "SAVE_WRITE":3, "ROM_WRITE":4, "ROM_WRITE_VERIFY":4}
 	SUPPORTED_CARTS = {}
 	
@@ -135,7 +135,7 @@ class GbxDevice:
 						self.DEVICE = None
 						self.BAUDRATE = 1000000
 						return False
-				elif max_baud >= 1700000 and self.FW["pcb_ver"] in (5, 6) and self.BAUDRATE < 1700000:
+				elif max_baud >= 1700000 and self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE < 1700000:
 					# Switch to higher baud rate
 					self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
 					self.BAUDRATE = 1700000
@@ -166,7 +166,7 @@ class GbxDevice:
 				elif self.FW["fw_ver"] > self.DEVICE_MAX_FW:
 					conn_msg.append([0, "NOTE: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with, so errors may occur."])
 				
-				if (self.FW["pcb_ver"] not in (4, 5, 6)): # only the v1.3 and v1.4/v1.4a pcb revisions are supported
+				if (self.FW["pcb_ver"] not in (4, 5, 6, 101)): # only the v1.3, v1.4, v1.4a, Mini v1.1 PCB revisions are supported
 					dev.close()
 					self.DEVICE = None
 					return False
@@ -238,7 +238,10 @@ class GbxDevice:
 		return self.FW["pcb_ver"] in (5, 6)
 	
 	def GetSupprtedModes(self):
-		return ["DMG", "AGB"]
+		if self.FW["pcb_ver"] == 101:
+			return ["DMG"]
+		else:
+			return ["DMG", "AGB"]
 	
 	def IsSupportedMbc(self, mbc):
 		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
@@ -247,7 +250,7 @@ class GbxDevice:
 		return True
 	
 	def IsClkConnected(self):
-		return self.FW["pcb_ver"] in (5, 6)
+		return self.FW["pcb_ver"] in (5, 6, 101)
 
 	def UpdateFlashCarts(self, flashcarts):
 		self.SUPPORTED_CARTS = { 
@@ -275,7 +278,7 @@ class GbxDevice:
 	def Close(self):
 		if self.IsConnected():
 			try:
-				if self.FW["pcb_ver"] in (5, 6):
+				if self.FW["pcb_ver"] in (5, 6, 101):
 					self._write(self.DEVICE_CMD["OFW_CART_MODE"])
 					self._read(1)
 					self._write(self.DEVICE_CMD["OFW_CART_PWR_OFF"])
@@ -289,7 +292,7 @@ class GbxDevice:
 		return "GBxCart RW"
 	
 	def GetFirmwareVersion(self, more=False):
-		if self.FW["pcb_ver"] in (5, 6):
+		if self.FW["pcb_ver"] in (5, 6, 101):
 			s = "R{:d}+{:s}{:d}".format(self.FW["ofw_ver"], self.FW["cfw_id"], self.FW["fw_ver"])
 		else:
 			s = "{:s}{:d}".format(self.FW["cfw_id"], self.FW["fw_ver"])
@@ -467,7 +470,7 @@ class GbxDevice:
 			print("Error!")
 
 	def _clk_toggle(self, num):
-		if self.FW["pcb_ver"] not in (5, 6): return False
+		if self.FW["pcb_ver"] not in (5, 6, 101): return False
 		for _ in range(0, num):
 			self._write(self.DEVICE_CMD["CLK_HIGH"])
 			self._write(self.DEVICE_CMD["CLK_LOW"])
@@ -526,7 +529,7 @@ class GbxDevice:
 		self.POS = 0
 		self.SIGNAL = None
 		
-		if self.FW["pcb_ver"] in (5, 6):
+		if self.FW["pcb_ver"] in (5, 6, 101):
 			self._write(self.DEVICE_CMD["OFW_CART_MODE"]) # Reset LEDs
 			self._read(1)
 			self.CartPowerOn()
@@ -537,7 +540,7 @@ class GbxDevice:
 			self._set_fw_variable("DMG_READ_CS_PULSE", 0)
 			self._set_fw_variable("DMG_WRITE_CS_PULSE", 0)
 		elif self.MODE == "AGB":
-			if self.FW["pcb_ver"] in (5, 6) and self.FW["fw_ver"] > 1:
+			if self.FW["pcb_ver"] in (5, 6, 101) and self.FW["fw_ver"] > 1:
 				self._write(self.DEVICE_CMD["AGB_BOOTUP_SEQUENCE"], wait=True)
 
 		header = self.ReadROM(0, 0x180)
@@ -548,7 +551,7 @@ class GbxDevice:
 			with open("debug_header.bin", "wb") as f: f.write(header)
 		
 		# Unlock DACS carts on older firmware
-		if self.MODE == "AGB" and (self.FW["pcb_ver"] not in (5, 6) or self.FW["fw_ver"] == 1):
+		if self.MODE == "AGB" and (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] == 1):
 			if header[0x04:0x04+0x9C] == bytearray([0x00] * 0x9C):
 				self.ReadROM(0x1FFFFE0, 20)
 				header = self.ReadROM(0, 0x180)
@@ -573,7 +576,7 @@ class GbxDevice:
 		
 		elif self.MODE == "AGB":
 			data = RomFileAGB(header).GetHeader()
-			if data["logo_correct"] is False: # try to fix weird bootlegs
+			if data["logo_correct"] is False: # workaround for weird bootlegs
 				self._cart_write(0, 0xFF)
 				time.sleep(0.1)
 				header = self.ReadROM(0, 0x180)
@@ -1018,7 +1021,7 @@ class GbxDevice:
 
 	def WriteROM(self, address, buffer, flash_buffer_size=False, skip_init=False, rumble_stop=False):
 		length = len(buffer)
-		if self.FW["pcb_ver"] not in (5, 6):
+		if self.FW["pcb_ver"] not in (5, 6, 101):
 			max_length = 256
 		else:
 			max_length = 1024
@@ -1268,7 +1271,7 @@ class GbxDevice:
 		return (flash_types, flash_type_id, flash_id, cfi_s, cfi)
 
 	def CheckFlashChip(self, limitVoltage=False, cart_type=None): # aka. the most horribly written function
-		if self.FW["pcb_ver"] in (5, 6):
+		if self.FW["pcb_ver"] in (5, 6, 101):
 			self._write(self.DEVICE_CMD["OFW_CART_MODE"])
 			self._read(1)
 			self.CartPowerOn()
@@ -1916,7 +1919,7 @@ class GbxDevice:
 					if self.MODE == "DMG" and _mbc.GetName() == "MBC7":
 						self.WriteEEPROM_MBC7(address=pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len])
 					elif self.MODE == "DMG" and _mbc.GetName() == "MBC6" and bank > 7: # MBC6 flash save memory
-						if self.FW["pcb_ver"] in (5, 6):
+						if self.FW["pcb_ver"] in (5, 6, 101):
 							self.WriteROM(address=pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len])
 							self._cart_write(pos + buffer_len - 1, 0xF0)
 						else:
@@ -2074,12 +2077,12 @@ class GbxDevice:
 		elif cart_type["type"] == "DMG" and "write_pin" in cart_type and cart_type["write_pin"] == "WR+RESET":
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported by FlashGBX. Please try the official GBxCart RW interface software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> instead.", "abortable":False})
 			return False
-		elif (self.FW["pcb_ver"] not in (5, 6) or self.FW["fw_ver"] < 2) and ("pulse_reset_after_write" in cart_type and cart_type["pulse_reset_after_write"] is True):
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is only supported by FlashGBX using GBxCart RW v1.4 and firmware version R31+L2 or higher. You can also try the official GBxCart RW firmware and interface software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> instead.", "abortable":False})
+		elif (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] < 2) and ("pulse_reset_after_write" in cart_type and cart_type["pulse_reset_after_write"] is True):
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is not supported by FlashGBX using your GBxCart RW hardware revision and/or firmware version. You can also try the official GBxCart RW firmware and interface software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> instead.", "abortable":False})
 			return False
 		# Firmware check L1
 		# Firmware check L2
-		elif (self.FW["pcb_ver"] not in (5, 6) or self.FW["fw_ver"] < 3) and ("command_set" in cart_type and cart_type["command_set"] == "SHARP") and ("buffer_write" in cart_type["commands"]):
+		elif (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] < 3) and ("command_set" in cart_type and cart_type["command_set"] == "SHARP") and ("buffer_write" in cart_type["commands"]):
 			if self.FW["pcb_ver"] in (5, 6):
 				print("NOTE: Update your GBxCart RW firmware to version L3 or higher for a better transfer rate with this cartridge.")
 			del(cart_type["commands"]["buffer_write"])
@@ -2178,7 +2181,7 @@ class GbxDevice:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM flashing.", "abortable":False})
 			return False
 		
-		if command_set_type == "GBMEMORY" and self.FW["pcb_ver"] not in (5, 6):
+		if command_set_type == "GBMEMORY" and self.FW["pcb_ver"] not in (5, 6, 101):
 			self._set_fw_variable("FLASH_WE_PIN", 0x01)
 			dprint("Using GB Memory mode on GBxCart RW v1.3")
 		else:
@@ -2195,7 +2198,7 @@ class GbxDevice:
 					[ "SA", 0xFF ]
 				]
 				dprint("Using Flash2Advance mode with a buffer of {:d} bytes".format(flash_buffer_size))
-			elif command_set_type == "GBMEMORY" and self.FW["pcb_ver"] in (5, 6):
+			elif command_set_type == "GBMEMORY" and self.FW["pcb_ver"] in (5, 6, 101):
 				self._write(0x03) # FLASH_METHOD_DMG_MMSA
 				dprint("Using GB Memory mode on GBxCart RW v1.4")
 			elif flashcart.SupportsBufferWrite() and flash_buffer_size > 0:
@@ -2355,7 +2358,7 @@ class GbxDevice:
 				
 				if command_set_type == "GBMEMORY" and self.FW["pcb_ver"] < 5:
 					status = self.WriteROM_GBMEMORY(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], bank=bank)
-				elif command_set_type == "GBMEMORY" and self.FW["pcb_ver"] in (5, 6):
+				elif command_set_type == "GBMEMORY" and self.FW["pcb_ver"] in (5, 6, 101):
 					status = self.WriteROM(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], flash_buffer_size=flash_buffer_size, skip_init=(skip_init and not self.SKIPPING))
 					self._cart_write(pos + buffer_len - 1, 0xF0)
 				else:
@@ -2440,7 +2443,7 @@ class GbxDevice:
 	def TransferData(self, args, signal):
 		self.ERROR = False
 		if self.IsConnected():
-			if self.FW["pcb_ver"] in (5, 6):
+			if self.FW["pcb_ver"] in (5, 6, 101):
 				self._write(self.DEVICE_CMD["OFW_CART_MODE"])
 				self._read(1)
 				self.CartPowerOn()
@@ -2452,7 +2455,7 @@ class GbxDevice:
 			elif args['mode'] == 3: ret = self._BackupRestoreRAM(args)
 			elif args['mode'] == 4: ret = self._FlashROM(args)
 			
-			if self.FW["pcb_ver"] in (5, 6):
+			if self.FW["pcb_ver"] in (5, 6, 101):
 				if ret is True:
 					self._write(self.DEVICE_CMD["OFW_DONE_LED_ON"])
 				elif self.ERROR is True:

@@ -1,4 +1,13 @@
 # Release notes
+### v3.1 (released 2021-12-01)
+- Added support for the GBxCart RW Mini v1.0d hardware revision
+- Added support for insideGadgets 4 MB (2× 2 MB), 32 KB FRAM, MBC5 flash cartridges *(thanks AlexiG)*
+- Bundles GBxCart RW v1.4 firmware version R33+L4 (fixes an issue with accessing save data of some FRAM cartridge modifications)
+- Added support for SD007_TSOP_48BALL with AM29LV160DT *(thanks crizzlycruz)*
+- Confirmed support for SD007_TSOP_48BALL_V10 with 29LV320CTXEI *(thanks marv17)*
+- Added support for AA1030_TSOP88BALL with M36W0R603 *(thanks LucentW)*
+- Added support for Ferrante Crafts cart with SST39SF010A *(thanks skite2001)*
+
 ### v3.0 (released 2021-11-15)
 - Added support for the GBxCart RW v1.4a hardware revision
 - Bundles GBxCart RW v1.4 firmware version R32+L3 (improves ROM writing speed for Development AGB Cartridge 256M Flash S, E201868)

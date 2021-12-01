@@ -645,11 +645,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.btnConfig.setEnabled(True)
 				self.btnCancel.setEnabled(False)
 
-				if self.CONN.CanPowerCycleCart():
-					self.mnuConfig.actions()[6].setEnabled(True)
-				else:
-					self.mnuConfig.actions()[6].setEnabled(False)
-					self.mnuConfig.actions()[6].setChecked(False)
+				# Firmware Update Menu
+				self.mnuTools.actions()[2].setEnabled(True)
+				if self.CONN.SupportsFirmwareUpdates() is False:
+					self.mnuTools.actions()[2].setEnabled(False)
 
 				self.SetProgressBars(min=0, max=1, value=0)
 
@@ -1727,7 +1726,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		# Save Type
 		msg_save_type_s = ""
-		if not canSkipMessage and save_type is not False:
+		if not canSkipMessage and save_type is not False and save_type is not None:
 			if save_chip is not None:
 				temp = "{:s} ({:s})".format(Util.AGB_Header_Save_Types[save_type], save_chip)
 			else:
@@ -2030,7 +2029,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			except:
 				return False
 		else:
-			FirmwareUpdater = self.CONN.GetFirmwareUpdaterClass()[1]
+			if not self.CONN.SupportsFirmwareUpdates():
+				QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "{:s} currently does not support updaing the firmware of your device.".format(APPNAME), QtWidgets.QMessageBox.Ok)
+				return False
+			else:
+				FirmwareUpdater = self.CONN.GetFirmwareUpdaterClass()[1]
 		self.FWUPWIN = None
 		self.FWUPWIN = FirmwareUpdater(self, app_path=self.APP_PATH, icon=self.windowIcon(), device=self.CONN)
 		self.FWUPWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
