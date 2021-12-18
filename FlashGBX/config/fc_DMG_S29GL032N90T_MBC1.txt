@@ -14,7 +14,7 @@
 		[0x10000, 63]
 	],
 	"chip_erase_timeout":40,
-	"mbc":1,
+	"mbc":0x03,
 	"pulse_reset_after_write":true,
 	"command_set":"AMD",
 	"commands":{

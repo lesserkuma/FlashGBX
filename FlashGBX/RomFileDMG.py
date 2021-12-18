@@ -119,6 +119,12 @@ class RomFileDMG:
 		data["features_raw"] == 0x11 and data["game_title"] == "RTYPE 2 SET" and data["header_checksum"] == 0x32:
 			data["features_raw"] = 0x0B
 
+		# Unlicensed 256M Mapper
+		elif data["game_title"] == "GB HICOL" and data["header_checksum"] == 0x4A:
+			data["features_raw"] = 0x201
+			data["rom_size_raw"] = 0x0A
+			data["ram_size_raw"] = 0x201
+
 		if data["features_raw"] in Util.DMG_Header_Mapper:
 			data["features"] = Util.DMG_Header_Mapper[data["features_raw"]]
 		elif data["logo_correct"]:

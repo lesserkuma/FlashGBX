@@ -6,13 +6,14 @@
 	],
 	"flash_ids":[
 		[ 0x01, 0xAD, 0x00, 0x00 ],
-		[ 0x01, 0xAD, 0x00, 0x00 ]
+		[ 0x01, 0xAD, 0x00, 0x01 ]
 	],
 	"voltage":5,
 	"flash_size":0x200000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
+	"sector_size":0x10000,
 	"chip_erase_timeout":60,
 	"command_set":"AMD",
 	"commands":{
@@ -42,6 +43,22 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ 0, 0xFF, 0xFF ]
+		],
+		"sector_erase":[
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFF, 0xFF ]
 		],
 		"single_write":[
 			[ 0x555, 0xAA ],

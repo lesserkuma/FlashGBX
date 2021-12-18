@@ -587,7 +587,7 @@ class FlashGBX_CLI():
 	def DetectCartridge(self, limitVoltage=False):
 		print("Now attempting to auto-detect the flash cartridge type...")
 		if self.CONN.CheckROMStable() is False:
-			print("{:s}Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.{:s}".format(ANSI.RED, ANSI.RESET))
+			print("{:s}The cartridge connection is unstable!\nPlease clean the cartridge pins, carefully re-align the cartridge and then try again.{:s}".format(ANSI.RED, ANSI.RESET))
 			return -1
 		if self.CONN.GetMode() in self.FLASHCARTS and len(self.FLASHCARTS[self.CONN.GetMode()]) == 0:
 			print("{:s}No flash cartridge type configuration files found. Try to restart the application with the “--reset” command line switch to reset the configuration.{:s}".format(ANSI.RED, ANSI.RESET))
@@ -683,7 +683,7 @@ class FlashGBX_CLI():
 	def BackupROM(self, args, header):
 		mbc = 1
 		rom_banks = 1
-		fast_read_mode = args.fast_read_mode is True
+		#fast_read_mode = args.fast_read_mode is True
 
 		if self.CONN.GetMode() == "DMG":
 			if args.dmg_mbc == "auto":
@@ -708,7 +708,7 @@ class FlashGBX_CLI():
 					print("{:s}Couldn’t determine ROM size, will use 8 MB. It can also be manually set with the “--dmg-romsize” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 					rom_banks = 512
 			else:
-				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb" ]
+				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb" ]
 				rom_banks = Util.DMG_Header_ROM_Sizes_Flasher_Map[sizes.index(args.dmg_romsize) - 1]
 			rom_size = rom_banks * 0x4000
 			
@@ -726,7 +726,7 @@ class FlashGBX_CLI():
 			if args.agb_romsize == "auto":
 				rom_size = header["rom_size"]
 			else:
-				sizes = [ "auto", "4mb", "8mb", "16mb", "32mb", "64mb" ]
+				sizes = [ "auto", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
 				rom_size = Util.AGB_Header_ROM_Sizes_Map[sizes.index(args.agb_romsize) - 1]
 
 			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
@@ -757,7 +757,7 @@ class FlashGBX_CLI():
 			print("{:s}Couldn’t access “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
 			return
 		
-		if fast_read_mode: print("Fast Read Mode enabled.")
+		#if fast_read_mode: print("Fast Read Mode enabled.")
 		s_mbc = ""
 		if self.CONN.GetMode() == "DMG": s_mbc = " using Mapper Type 0x{:X}".format(mbc)
 		if self.CONN.GetMode() == "DMG":
@@ -784,7 +784,7 @@ class FlashGBX_CLI():
 					cart_type = i
 					break
 
-		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_banks':rom_banks, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':fast_read_mode, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
+		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_banks':rom_banks, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 	
 	def FlashROM(self, args, header):
 		path = ""
@@ -866,7 +866,7 @@ class FlashGBX_CLI():
 		if not prefer_chip_erase and 'chip_erase' in carts[cart_type]['commands'] and 'sector_erase' in carts[cart_type]['commands']:
 			print("This flash cartridge supports both Sector Erase and Full Chip Erase methods. You can use the “--prefer-chip-erase” command line switch if necessary.")
 		
-		fast_read_mode = args.fast_read_mode is True
+		#fast_read_mode = args.fast_read_mode is True
 		verify_flash = args.no_verify_flash is False
 		
 		fix_header = False
@@ -889,13 +889,13 @@ class FlashGBX_CLI():
 			return
 		
 		print("")
-		if fast_read_mode: print("Fast Read Mode enabled for flash verification.")
+		#if fast_read_mode: print("Fast Read Mode enabled for flash verification.")
 		v = carts[cart_type]["voltage"]
 		if override_voltage: v = override_voltage
 		print("The following ROM file will now be written to the flash cartridge at {:s}V:\n{:s}".format(str(v), os.path.abspath(path)))
 		
 		print("")
-		self.CONN.TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':fast_read_mode, 'verify_flash':verify_flash, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
+		self.CONN.TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':True, 'verify_flash':verify_flash, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
 		buffer = None
 	
 	def BackupRestoreRAM(self, args, header):
@@ -935,7 +935,7 @@ class FlashGBX_CLI():
 				except:
 					save_type = 0x20000
 			else:
-				sizes = [ "auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5" ]
+				sizes = [ "auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m" ]
 				save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[sizes.index(args.dmg_savesize)]
 
 			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')

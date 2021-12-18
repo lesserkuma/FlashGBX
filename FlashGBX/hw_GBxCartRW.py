@@ -244,7 +244,10 @@ class GbxDevice:
 			return ["DMG", "AGB"]
 	
 	def IsSupportedMbc(self, mbc):
-		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
+		if self.CanPowerCycleCart():
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x201 )
+		else:
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105 )
 	
 	def IsSupported3dMemory(self):
 		return True
@@ -476,6 +479,18 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["CLK_LOW"])
 		return True
 
+	def _cart_powercycle(self, delay=0.1):
+		if self.CanPowerCycleCart():
+			dprint("Power cycling cartridge")
+			self.CartPowerOff(delay=delay)
+			self.CartPowerOn(delay=delay)
+			if self.MODE == "DMG":
+				self._write(self.DEVICE_CMD["SET_MODE_DMG"])
+			elif self.MODE == "AGB":
+				self._write(self.DEVICE_CMD["SET_MODE_AGB"])
+		else:
+			print("{:s}NOTE: Cartridge power cycling is not supported by this device.{:s}".format(ANSI.YELLOW, ANSI.RESET))
+
 	def CartPowerOff(self, delay=0.1):
 		if self.FW["pcb_ver"] in (5, 6):
 			self._write(self.DEVICE_CMD["OFW_CART_PWR_OFF"])
@@ -565,7 +580,7 @@ class GbxDevice:
 				header = self.ReadROM(0, 0x180)
 				data = RomFileDMG(header).GetHeader()
 			
-			_mbc = DMG_MBC().GetInstance(args={"mbc":data["features_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
+			_mbc = DMG_MBC().GetInstance(args={"mbc":data["features_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
 			if checkRtc:
 				data["has_rtc"] = _mbc.HasRTC() is True
 				if data["has_rtc"] is True:
@@ -597,7 +612,7 @@ class GbxDevice:
 				data["dacs_8m"] = True
 			
 			if checkRtc and data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
-				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
+				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
 				has_rtc = _agb_gpio.HasRTC()
 				data["has_rtc"] = has_rtc is True
 				if has_rtc is not True:
@@ -632,6 +647,7 @@ class GbxDevice:
 
 		if self.MODE == "DMG" and mbc is None:
 			mbc = info["features_raw"]
+			if mbc > 0x200: checkSaveType = False
 		
 		# Save Type and Size
 		if checkSaveType:
@@ -1220,7 +1236,7 @@ class GbxDevice:
 					we = 0x03 # FLASH_WE_PIN_WR_RESET
 				self._set_fw_variable("FLASH_WE_PIN", we)
 
-			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM)
+			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle)
 			flashcart.Reset(full_reset=False)
 			flashcart.Unlock()
 			if "flash_ids" in flashcart_meta and len(flashcart_meta["flash_ids"]) > 0:
@@ -1413,7 +1429,7 @@ class GbxDevice:
 							self._cart_write(method['reset'][i][0], method['reset'][i][1], flashcart=True)
 
 				if cart_type is not None: # reset cartridge if method is known
-					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, progress_fncptr=None)
+					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=None)
 					flashcart.Reset(full_reset=False)
 		
 		if "method" in cfi:
@@ -1478,7 +1494,7 @@ class GbxDevice:
 			time.sleep(0.25)
 
 		if cart_type is not None: # reset cartridge if method is known
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, progress_fncptr=None)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=None)
 			flashcart.Reset(full_reset=True)
 
 		flash_id = ""
@@ -1523,7 +1539,7 @@ class GbxDevice:
 		if len(args["path"]) > 0:
 			file = open(args["path"], "wb")
 		
-		self.FAST_READ = args["fast_read_mode"]
+		self.FAST_READ = True #args["fast_read_mode"]
 
 		flashcart = False
 		supported_carts = list(self.SUPPORTED_CARTS[self.MODE].values())
@@ -1534,13 +1550,13 @@ class GbxDevice:
 				if i == args["cart_type"]:
 					try:
 						cart_type["_index"] = cart_type["names"].index(list(self.SUPPORTED_CARTS[self.MODE].keys())[i])
-						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, progress_fncptr=self.SetProgress)
+						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=self.SetProgress)
 					except:
 						pass
 
 		buffer_len = 0x4000
 		if self.MODE == "DMG":
-			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
+			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
 			
 			self._set_fw_variable("DMG_WRITE_CS_PULSE", 0)
@@ -1701,7 +1717,7 @@ class GbxDevice:
 		return True
 
 	def _BackupRestoreRAM(self, args):
-		_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
+		_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
 		self.FAST_READ = False
 		if "rtc" not in args: args["rtc"] = False
 		
@@ -1996,7 +2012,7 @@ class GbxDevice:
 					_mbc.LatchRTC()
 					rtc_buffer = _mbc.ReadRTC()
 				elif self.MODE == "AGB":
-					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
+					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
 					rtc_buffer = _agb_gpio.ReadRTC()
 				self.SetProgress({"action":"UPDATE_POS", "pos":len(buffer)+len(rtc_buffer)})
 			
@@ -2019,11 +2035,12 @@ class GbxDevice:
 				if self.MODE == "DMG" and args["rtc"] is True:
 					_mbc.WriteRTC(buffer[-_mbc.GetRTCBufferSize():], advance=advance)
 				elif self.MODE == "AGB":
-					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
+					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
 					_agb_gpio.WriteRTC(buffer[-0x10:], advance=advance)
 				self.SetProgress({"action":"UPDATE_POS", "pos":len(buffer)})
 		
 		if self.MODE == "DMG":
+			_mbc.SelectBankRAM(0)
 			_mbc.EnableRAM(enable=False)
 		
 		# Clean up
@@ -2034,7 +2051,7 @@ class GbxDevice:
 		return True
 
 	def _FlashROM(self, args):
-		self.FAST_READ = args["fast_read_mode"]
+		self.FAST_READ = True #args["fast_read_mode"]
 		
 		if "buffer" in args:
 			data_import = args["buffer"]
@@ -2068,6 +2085,9 @@ class GbxDevice:
 			return False
 		elif "insideGadgets Power Cart 1 MB, 128 KB SRAM" in cart_type["names"]:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The insideGadgets Power Cart is currently not fully supported by FlashGBX. However, you can use the dedicated insideGadgets “iG Power Cart Programs” software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> to flash this cartridge.", "abortable":False})
+			return False
+		elif "power_cycle" in cart_type and cart_type["power_cycle"] is True and not self.CanPowerCycleCart():
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is not flashable using FlashGBX and your GBxCart RW hardware revision due to missing cartridge power cycling support.", "abortable":False})
 			return False
 		# Special carts
 		# Firmware check L1
@@ -2111,7 +2131,7 @@ class GbxDevice:
 			data_map_import = bytearray(data_map_import)
 			dprint("Hidden sector data loaded")
 		else:
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, progress_fncptr=self.SetProgress)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=self.SetProgress)
 		
 		rumble = "rumble" in flashcart.CONFIG and flashcart.CONFIG["rumble"] is True
 
@@ -2136,7 +2156,7 @@ class GbxDevice:
 				args["mbc"] = mbc
 			else:
 				args["mbc"] = 0x1B # MBC5+SRAM+BATTERY
-			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, clk_toggle_fncptr=self._clk_toggle)
+			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
 
 			# I need a cart for testing before this has a chance to work ↓
 			#self._set_fw_variable("FLASH_COMMANDS_BANK_1", 1 if flashcart.FlashCommandsOnBank1() else 0)

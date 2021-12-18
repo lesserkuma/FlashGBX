@@ -10,16 +10,18 @@ class Flashcart:
 	COMMAND_SET = None
 	CART_WRITE_FNCPTR = None
 	CART_READ_FNCPTR = None
+	CART_POWERCYCLE_FNCPTR = None
 	PROGRESS_FNCPTR = None
 	SECTOR_COUNT = 0
 	SECTOR_POS = 0
 	SECTOR_MAP = None
 	CFI = None
 
-	def __init__(self, config=None, cart_write_fncptr=None, cart_read_fncptr=None, progress_fncptr=None):
+	def __init__(self, config=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, progress_fncptr=None):
 		if config is None: config = {}
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
+		self.CART_POWERCYCLE_FNCPTR = cart_powercycle_fncptr
 		self.PROGRESS_FNCPTR = progress_fncptr
 		self.CONFIG = config
 		if "command_set" in config:
@@ -58,12 +60,12 @@ class Flashcart:
 	def GetMBC(self):
 		if (self.CONFIG["type"].upper() == "AGB") or ("mbc" not in self.CONFIG): return False
 		mbc = self.CONFIG["mbc"]
-		if mbc == 1: mbc = 0x03
-		elif mbc == 2: mbc = 0x06
-		elif mbc == 3: mbc = 0x13
-		elif mbc == 5: mbc = 0x1B
-		elif mbc == 6: mbc = 0x20
-		elif mbc == 7: mbc = 0x22
+		#if mbc == 1: mbc = 0x03
+		#elif mbc == 2: mbc = 0x06
+		#elif mbc == 3: mbc = 0x13
+		#elif mbc == 5: mbc = 0x1B
+		#elif mbc == 6: mbc = 0x20
+		#elif mbc == 7: mbc = 0x22
 		return mbc
 
 	def FlashCommandsOnBank1(self):
@@ -141,7 +143,10 @@ class Flashcart:
 
 	def Reset(self, full_reset=False, max_address=0x2000000):
 		#dprint(full_reset, "reset_every" in self.CONFIG)
-		if full_reset and "reset_every" in self.CONFIG:
+		if full_reset and "power_cycle" in self.CONFIG:
+			self.CART_POWERCYCLE_FNCPTR()
+			time.sleep(0.001)
+		elif full_reset and "reset_every" in self.CONFIG:
 			for j in range(0, self.CONFIG["flash_size"], self.CONFIG["reset_every"]):
 				if j >= max_address: break
 				dprint("reset_every @ 0x{:X}".format(j))

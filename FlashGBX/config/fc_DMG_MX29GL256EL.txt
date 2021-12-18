@@ -1,37 +1,36 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with MBC3 and MX29LV640 @ AUDIO"
+		"SD008-6810-V4 with MX29GL256EL"
 	],
 	"flash_ids":[
-		[ 0xC2, 0xC2, 0xCB, 0xCB ]
+		[ 0xF3, 0xC3, 0x00, 0x01 ]
 	],
 	"voltage":3.3,
-	"flash_size":0x800000,
+	"flash_size":0x2000000,
 	"start_addr":0,
 	"first_bank":1,
-	"mbc":0x13,
-	"write_pin":"AUDIO",
-	"chip_erase_timeout":200,
+	"chip_erase_timeout":120,
+	"reset_every":0x800000,
+	"power_cycle":true,
+	"mbc":0x201,
+	"write_pin":"WR",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
 			[ 0xAAA, 0x90 ]
 		],
-		"read_cfi":[
-			[ 0xAAA, 0x98 ]
-		],
 		"chip_erase":[
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
 			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
 			[ 0xAAA, 0x10 ]
 		],
 		"chip_erase_wait_for":[
@@ -43,8 +42,8 @@
 			[ 0, 0xFF, 0xFF ]
 		],
 		"single_write":[
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA9 ],
+			[ 0x555, 0x56 ],
 			[ 0xAAA, 0xA0 ],
 			[ "PA", "PD" ]
 		],

@@ -12,55 +12,59 @@ class DMG_MBC:
 	MBC_ID = 0
 	CART_WRITE_FNCPTR = None
 	CART_READ_FNCPTR = None
+	CART_POWERCYCLE_FNCPTR = None
 	CLK_TOGGLE_FNCPTR = None
 	ROM_BANK_SIZE = 0
 	RAM_BANK_SIZE = 0
 	ROM_BANK_NUM = 0
 	CURRENT_ROM_BANK = 0
 
-	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
 		if "mbc" in args: self.MBC_ID = args["mbc"]
 		if "rom_banks" in args: self.ROM_BANK_NUM = args["rom_banks"]
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
+		self.CART_POWERCYCLE_FNCPTR = cart_powercycle_fncptr
 		self.CLK_TOGGLE_FNCPTR = clk_toggle_fncptr
 		self.ROM_BANK_SIZE = 0x4000
 		self.RAM_BANK_SIZE = 0x2000
 
-	def GetInstance(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def GetInstance(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
 		mbc_id = args["mbc"]
 		if mbc_id in (0x01, 0x02, 0x03):						# 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY',
-			return DMG_MBC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MBC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x06:									# 0x06:'MBC2+SRAM+BATTERY',
-			return DMG_MBC2(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MBC2(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id in (0x10, 0x13):							# 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY',
-			return DMG_MBC3(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MBC3(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id in (0x19, 0x1B, 0x1C, 0x1E):				# 0x19:'MBC5', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY',
-			return DMG_MBC5(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MBC5(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x20:									# 0x20:'MBC6+FLASH+SRAM+BATTERY',
-			return DMG_MBC6(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MBC6(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x22:									# 0x22:'MBC7+ACCELEROMETER+EEPROM',
-			return DMG_MBC7(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MBC7(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id in (0x101, 0x103):							# 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY',
-			return DMG_MBC1M(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MBC1M(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id in (0x0B, 0x0D):							# 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY',
-			return DMG_MMM01(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_MMM01(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0xFC:									# 0xFC:'GBD+SRAM+BATTERY',
-			return DMG_GBD(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_GBD(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x105:									# 0x105:'G-MMC1+SRAM+BATTERY',
-			return DMG_GMMC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_GMMC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x104:									# 0x104:'M161',
-			return DMG_M161(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_M161(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0xFF:									# 0xFF:'HuC-1+IR+SRAM+BATTERY',
-			return DMG_HuC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_HuC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0xFE:									# 0xFE:'HuC-3+RTC+SRAM+BATTERY',
-			return DMG_HuC3(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_HuC3(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0xFD:									# 0xFD:'TAMA5+RTC+EEPROM'
-			return DMG_TAMA5(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			return DMG_TAMA5(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+		elif mbc_id == 0x201:									# 0x201:'256M Multi Cart',
+			return DMG_256M_Bootleg(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		else:
-			self.__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+			self.__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 			return self
 	
 	def CartRead(self, address, length=0):
@@ -387,9 +391,9 @@ class DMG_MBC5(DMG_MBC):
 		return (start_address, self.ROM_BANK_SIZE)
 
 class DMG_MBC6(DMG_MBC):
-	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
-		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=None)
+		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
 		self.ROM_BANK_SIZE = 0x2000
 		self.RAM_BANK_SIZE = 0x1000
 		self.ROM_BANK_NUM = 128
@@ -716,9 +720,9 @@ class DMG_M161(DMG_MBC):
 	def GetName(self):
 		return "M161"
 
-	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
-		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, clk_toggle_fncptr=None)
+		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
 		self.ROM_BANK_SIZE = 0x8000
 		self.ROM_BANK_NUM = 8
 	
@@ -1043,6 +1047,61 @@ class DMG_TAMA5(DMG_MBC):
 	def WriteWithCSPulse(self):
 		return True
 
+class DMG_256M_Bootleg(DMG_MBC5):
+	def GetName(self):
+		return "256M Multi Cart"
+	
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|", index)
+
+		bank = math.floor(index / 512)
+		if index >= 512:
+			index -= (512 * bank)
+
+		if index == 0:
+			self.CART_POWERCYCLE_FNCPTR()
+			commands = [
+				[ 0x7000, 0x00 ],
+				[ 0x7001, 0x00 ],
+				[ 0x7002, 0x90 + bank ]
+			]
+			self.CartWrite(commands, delay=0.1)
+		
+		commands = [
+			[ 0x2100, index & 0xFF ],
+			[ 0x3000, ((index >> 8) & 0xFF) ],
+		]
+		
+		start_address = 0 if index == 0 else 0x4000
+		self.CartWrite(commands)
+
+		return (start_address, self.ROM_BANK_SIZE)
+
+	def SelectBankRAM(self, index):
+		dprint(self.GetName(), "|", index)
+
+		bank = math.floor(index / 0x10)
+		
+		if index % 4 == 0:
+			self.EnableRAM(enable=False)
+			self.CART_POWERCYCLE_FNCPTR()
+			commands = [
+				[ 0x7000, (0x40 * math.floor(index / 4)) & 0xFF ],
+				[ 0x7001, 0xC0 ],
+				[ 0x7002, 0x90 + bank ]
+			]
+			self.CartWrite(commands, delay=0.01)
+			self.EnableRAM(enable=True)
+			dprint(hex(index), hex(0x90 + bank), hex((0x40 * math.floor(index / 4)) & 0xFF))
+		
+		commands = [
+			[ 0x4000, index % 4 ]
+		]
+		start_address = 0
+		self.CartWrite(commands)
+
+		return (start_address, self.RAM_BANK_SIZE)
+
 
 class AGB_GPIO:
 	CART_WRITE_FNCPTR = None
@@ -1066,10 +1125,11 @@ class AGB_GPIO:
 	RTC_WRITE_ALARM = 0x68
 	RTC_READ_ALARM = 0x69
 
-	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, clk_toggle_fncptr=None):
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
+		self.CART_POWERCYCLE_FNCPTR = cart_powercycle_fncptr
 		self.CLK_TOGGLE_FNCPTR = clk_toggle_fncptr
 		if "rtc" in args: self.RTC = args["rtc"]
 	

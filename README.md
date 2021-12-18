@@ -61,6 +61,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - Ferrante Crafts cart with SST39SF010A
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
+  - HDR Game Boy Camera Flashcart
   - insideGadgets 32 KB
   - insideGadgets 512 KB
   - insideGadgets 1 MB, 128 KB SRAM
@@ -128,6 +129,8 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - SD007_TSOP_48BALL_V10 with M29W320DT
   - SD007_TSOP_64BALL_SOP28 with EN29LV160AB-70TCP
   - SD007_TSOP_64BALL_SOP28 with unlabeled flash chip
+  - SD008-6810-V4 with MX29GL256EL
+  - SD008-6810-V5 with MX29CL256FH
 
 - Game Boy Advance
 
@@ -267,6 +270,7 @@ The author would like to thank the following very kind people for their help and
 - RevZ (Linux help, testing, bug reports, flash chip info)
 - Satumox (bug reports)
 - Sgt.DoudouMiel (flash chip info)
+- Shinichi999 (bug reports)
 - Sithdown (flash chip info)
 - skite2001 (flash chip info)
 - Super Maker (flash chip info, testing)

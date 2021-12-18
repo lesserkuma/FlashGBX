@@ -1268,7 +1268,7 @@ class GbxDevice:
 		self.INFO["last_action"] = mode
 		self.FAST_READ = False
 		if mode == 1: # Backup ROM
-			fast_read_mode = args["fast_read_mode"]
+			fast_read_mode = False #args["fast_read_mode"]
 			buffer_len = 0x1000
 			if self.MODE == "DMG":
 				supported_carts = list(self.SUPPORTED_CARTS['DMG'].values())
@@ -1848,7 +1848,8 @@ class GbxDevice:
 			i = i - len(data_import)
 			if i > 0: data_import += bytearray([0xFF] * i)
 			
-			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_flash=args["verify_flash"], fix_header=args["fix_header"])
+			#self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_flash=args["verify_flash"], fix_header=args["fix_header"])
+			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=False, verify_flash=args["verify_flash"], fix_header=args["fix_header"])
 		
 		# Reset pins to avoid save data loss
 		self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
@@ -1886,6 +1887,9 @@ class GbxDevice:
 			return False
 		elif "insideGadgets Power Cart 1 MB, 128 KB SRAM" in cart_type["names"]:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The insideGadgets Power Cart is currently not fully supported by FlashGBX. However, you can use the dedicated insideGadgets “iG Power Cart Programs” software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a> to flash this cartridge.", "abortable":False})
+			return False
+		elif "power_cycle" in cart_type and cart_type["power_cycle"] is True and not self.CanPowerCycleCart():
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is not flashable using FlashGBX and your GBxCart RW hardware revision due to missing cartridge power cycling support.", "abortable":False})
 			return False
 		# Special carts
 		# Firmware check R20+

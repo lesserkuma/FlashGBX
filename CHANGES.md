@@ -1,4 +1,12 @@
 # Release notes
+### v3.2 (released 2021-12-18)
+- Fixed the configuration files for DIY cart with AM29F016/AM29F016B *(thanks dyf2007)*
+- Added support for SD008-6810-V5 with MX29CL256FH (multigame cartridge with 32 MB of ROM and 512 KB of save data)
+- Added support for SD008-6810-V4 with MX29GL256EL *(thanks LucentW)*
+- Added support for the [HDR Game Boy Camera Flashcart](https://github.com/HDR/Gameboy-Camera-Flashcart) (select manually if auto-detected option doesn’t work)
+- Removed the Fast Read Mode setting which was experimental on old firmware versions and will now always be used on newer firmware versions
+- Fixed a bug with paths that include a percent sign *(thanks Shinichi999)*
+
 ### v3.1 (released 2021-12-01)
 - Added support for the GBxCart RW Mini v1.0d hardware revision
 - Added support for insideGadgets 4 MB (2× 2 MB), 32 KB FRAM, MBC5 flash cartridges *(thanks AlexiG)*

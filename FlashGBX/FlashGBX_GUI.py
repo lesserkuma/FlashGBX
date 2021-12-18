@@ -195,8 +195,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("&Append date && time to filename of save data backups", lambda: self.SETTINGS.setValue("SaveFileNameAddDateTime", str(self.mnuConfig.actions()[1].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("Prefer full &chip erase over sector erase when both available", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Verify flash after writing", lambda: self.SETTINGS.setValue("VerifyFlash", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
-		self.mnuConfig.addAction("Use &fast read mode", lambda: self.SETTINGS.setValue("FastReadMode", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled"))) # GBxCart RW
-		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
+		#self.mnuConfig.addAction("Use &fast read mode", lambda: self.SETTINGS.setValue("FastReadMode", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled"))) # GBxCart RW
+		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Re-&enable suppressed messages", self.ReEnableMessages)
 		self.mnuConfig.addSeparator()
@@ -205,14 +205,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.actions()[1].setCheckable(True)
 		self.mnuConfig.actions()[2].setCheckable(True)
 		self.mnuConfig.actions()[3].setCheckable(True)
-		self.mnuConfig.actions()[4].setCheckable(True) # GBxCart RW
-		self.mnuConfig.actions()[5].setCheckable(True)
+		#self.mnuConfig.actions()[4].setCheckable(True) # GBxCart RW
+		self.mnuConfig.actions()[4].setCheckable(True)
 		self.mnuConfig.actions()[0].setChecked(self.SETTINGS.value("UpdateCheck") == "enabled")
 		self.mnuConfig.actions()[1].setChecked(self.SETTINGS.value("SaveFileNameAddDateTime", default="disabled") == "enabled")
 		self.mnuConfig.actions()[2].setChecked(self.SETTINGS.value("PreferChipErase", default="disabled") == "enabled")
 		self.mnuConfig.actions()[3].setChecked(self.SETTINGS.value("VerifyFlash", default="enabled") == "enabled")
-		self.mnuConfig.actions()[4].setChecked(self.SETTINGS.value("FastReadMode", default="disabled") == "enabled") # GBxCart RW
-		self.mnuConfig.actions()[5].setChecked(self.SETTINGS.value("AutoDetectLimitVoltage", default="disabled") == "enabled")
+		#self.mnuConfig.actions()[4].setChecked(self.SETTINGS.value("FastReadMode", default="disabled") == "enabled") # GBxCart RW
+		self.mnuConfig.actions()[4].setChecked(self.SETTINGS.value("AutoDetectLimitVoltage", default="disabled") == "enabled")
 		
 		self.btnConfig.setMenu(self.mnuConfig)
 		
@@ -638,8 +638,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.cmbDevice.setStyleSheet("QComboBox { border: 0; margin: 0; padding: 0; max-width: 0px; }")
 				self.lblDevice.setText(dev.GetFullNameExtended())
 				print("\nConnected to {:s}".format(dev.GetFullNameExtended(more=True)))
-				self.grpDMGCartridgeInfo.setEnabled(True)
-				self.grpAGBCartridgeInfo.setEnabled(True)
 				self.grpActions.setEnabled(True)
 				self.btnTools.setEnabled(True)
 				self.btnConfig.setEnabled(True)
@@ -927,7 +925,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		if dontShowAgain: self.SETTINGS.setValue("SkipFinishMessage", "enabled")
 		self.SetProgressBars(min=0, max=1, value=1)
-
+	
 	def CartridgeTypeChanged(self, index):
 		if self.CONN.GetMode() == "DMG":
 			cart_types = self.CONN.GetSupportedCartridgesDMG()
@@ -938,7 +936,13 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					for i in range(0, len(Util.DMG_Header_ROM_Sizes_Flasher_Map)):
 						if cart_types[1][index]["flash_size"] == (Util.DMG_Header_ROM_Sizes_Flasher_Map[i] * 0x4000):
 							self.cmbHeaderROMSizeResult.setCurrentIndex(i)
-					self.STATUS["cart_type"] = cart_types[1][index]
+				self.STATUS["cart_type"] = cart_types[1][index]
+				
+				if "mbc" in cart_types[1][index]:
+					mappers = list(Util.DMG_Header_Mapper.keys())
+					for i in range(0, len(mappers)):
+						if cart_types[1][index]["mbc"] == mappers[i]:
+							self.cmbHeaderFeaturesResult.setCurrentIndex(i)
 		
 		elif self.CONN.GetMode() == "AGB":
 			cart_types = self.CONN.GetSupportedCartridgesAGB()
@@ -954,11 +958,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
 		rom_banks = Util.DMG_Header_ROM_Sizes_Flasher_Map[self.cmbHeaderROMSizeResult.currentIndex()]
 		
-		fast_read_mode = self.SETTINGS.value("FastReadMode", default="disabled")
-		if fast_read_mode and fast_read_mode.lower() == "enabled":
-			fast_read_mode = True
-		else:
-			fast_read_mode = False
+		#fast_read_mode = self.SETTINGS.value("FastReadMode", default="disabled")
+		#if fast_read_mode and fast_read_mode.lower() == "enabled":
+		#	fast_read_mode = True
+		#else:
+		#	fast_read_mode = False
 		
 		rom_size = 0
 		cart_type = 0
@@ -999,7 +1003,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		args = { "path":path, "mbc":mbc, "rom_banks":rom_banks, "agb_rom_size":rom_size, "fast_read_mode":fast_read_mode, "cart_type":cart_type }
+		args = { "path":path, "mbc":mbc, "rom_banks":rom_banks, "agb_rom_size":rom_size, "fast_read_mode":True, "cart_type":cart_type }
 		self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		self.STATUS["time_start"] = time.time()
@@ -1102,11 +1106,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			else:
 				prefer_chip_erase = False
 
-		fast_read_mode = self.SETTINGS.value("FastReadMode", default="disabled")
-		if fast_read_mode and fast_read_mode.lower() == "enabled":
-			fast_read_mode = True
-		else:
-			fast_read_mode = False
+		#fast_read_mode = self.SETTINGS.value("FastReadMode", default="disabled")
+		#if fast_read_mode and fast_read_mode.lower() == "enabled":
+		#	fast_read_mode = True
+		#else:
+		#	fast_read_mode = False
 		
 		verify_flash = self.SETTINGS.value("VerifyFlash", default="enabled")
 		if verify_flash and verify_flash.lower() == "enabled":
@@ -1141,7 +1145,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":fast_read_mode, "verify_flash":verify_flash, "fix_header":fix_header }
+		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_flash":verify_flash, "fix_header":fix_header }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		buffer = None
@@ -1410,7 +1414,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			return False
 		
 		if self.CONN.CheckROMStable() is False and resetStatus:
-			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge connection is unstable!\nPlease clean the cartridge pins, carefully re-align the cartridge and then try again.", QtWidgets.QMessageBox.Ok)
 			return
 		
 		if self.CONN.GetMode() == "DMG":
@@ -1662,7 +1666,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	def DetectCartridge(self, canSkipMessage=False):
 		if not self.CheckDeviceAlive(): return
 		if not self.CONN.CheckROMStable():
-			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Unstable ROM reading detected. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge connection is unstable!\nPlease clean the cartridge pins, carefully re-align the cartridge and then try again.", QtWidgets.QMessageBox.Ok)
 			return
 		self.btnHeaderRefresh.setEnabled(False)
 		self.btnDetectCartridge.setEnabled(False)
