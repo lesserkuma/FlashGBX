@@ -22,8 +22,38 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
   - Official firmware versions R30 to R33 (other hardware revisions and firmware versions may also work, but are untested)
   - Lesserkuma’s high compatibility firmware versions L1 to L4
 
-### Currently supported official cartridge memory mappers
+## Installing and running
 
+### Windows Binaries
+
+Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section:
+
+* Windows Setup: An installer that will add the application to the start menu and optionally create a desktop icon
+* Windows Portable: Have everything in one place including the config files
+
+### Run using Python (Linux, macOS, Windows)
+
+#### Installing or upgrading from an older version
+
+1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or higher)
+2. Open a Terminal or Command Prompt window
+3. If your Python version is 3.10 or newer, first run this command:<br>`pip3 install --ignore-requires-python -U PySide2`
+4. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
+* If installation fails and you see an error about a conflict involving PySide2, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
+
+* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
+
+*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
+
+#### Running
+Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
+
+`python3 -m FlashGBX`
+
+*To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
+
+## Cartridge Compatibility
+### Supported official cartridge memory mappers
 - Game Boy
   - All cartridges without memory mapping
   - MBC1
@@ -53,8 +83,8 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
   - 29LV Series Flash BOY with 29LV160DB
   - BUNG Doctor GB Card 64M
-  - DIY cart with AM29F016/AM29F016B
-  - DIY cart with AM29F032/AM29F032B
+  - DIY cart with AM29F016
+  - DIY cart with AM29F032
   - DIY cart with AT49F040
   - DIY cart with MBC1 and AM29F080
   - DIY cart with MBC3 and MX29LV640
@@ -176,35 +206,6 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
-## Installing and running
-
-### Windows Binaries
-
-Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section:
-
-* Windows Setup: An installer that will add the application to the start menu and optionally create a desktop icon
-* Windows Portable: Have everything in one place including the config files
-
-### Run using Python (Linux, macOS, Windows)
-
-#### Installing or upgrading from an older version
-
-1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or higher)
-2. Open a Terminal or Command Prompt window
-3. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
-* If you see an error about a conflict involving PySide2, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`<br>`pip3 install --ignore-requires-python -U PySide2`
-
-* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
-
-*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
-
-#### Running
-Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
-
-`python3 -m FlashGBX`
-
-*To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
-
 ### Troubleshooting
 
 * If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device. An unstable cartridge connection is the most common reason for read or write errors.
@@ -219,15 +220,9 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 * If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
-* If you run into an error that says `TypeError: 'Shiboken.ObjectType' object is not iterable`, you can try to uninstall and re-install the Python package *PySide2*, or you can run FlashGBX in command line interface mode using the command `python3 -m FlashGBX --cli`.
-
 * If you use Python 3.10+ and see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` or can only use CLI mode, try to install or update the PySide2 package by running `pip3 install -U PySide2 --ignore-requires-python` or try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/).
 
 * For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
-
-## DISCLAIMER
-
-This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!
 
 ## Thanks
 
@@ -279,3 +274,7 @@ The author would like to thank the following very kind people for their help and
 - Voultar (bug reports, feature suggestions)
 - Zeii (flash chip info)
 - Zelante (flash chip info)
+
+## DISCLAIMER
+
+This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!
