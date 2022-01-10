@@ -1,39 +1,37 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD008-6810-V4 with MX29GL256EL",
-		"SD008-6810-V4 with unlabeled flash chip"
+		"36VF3204 and ALTERA CPLD (no PCB text)"
 	],
 	"flash_ids":[
-		[ 0xF3, 0xC3, 0x00, 0x01 ],
-		[ 0x8A, 0x8A, 0x00, 0x00 ]
+		[ 0xBF, 0x00, 0x53, 0x73 ]
 	],
 	"voltage":3.3,
-	"flash_size":0x2000000,
-	"start_addr":0,
-	"first_bank":1,
-	"chip_erase_timeout":120,
-	"reset_every":0x800000,
-	"power_cycle":true,
-	"mbc":0x201,
+	"flash_size":0x400000,
+	"start_addr":0x4000,
+	"first_bank":0,
 	"write_pin":"WR",
+	"chip_erase_timeout":5,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
-			[ 0, 0xF0 ]
+			[ 0x4000, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ 0xAAA, 0x90 ]
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0x4AAA, 0x98 ]
 		],
 		"chip_erase":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ 0xAAA, 0x10 ]
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0x80 ],
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0x10 ]
 		],
 		"chip_erase_wait_for":[
 			[ null, null, null ],
@@ -44,9 +42,9 @@
 			[ 0, 0xFF, 0xFF ]
 		],
 		"single_write":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ 0xAAA, 0xA0 ],
+			[ 0x4AAA, 0xA9 ],
+			[ 0x4555, 0x56 ],
+			[ 0x4AAA, 0xA0 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[
@@ -55,5 +53,6 @@
 			[ null, null, null ],
 			[ null, null, null ]
 		]
+
 	}
 }

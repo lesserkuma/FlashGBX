@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"HDR Game Boy Camera Flashcart"
+		"HDR Game Boy Camera Flashcart with AM29F016"
 	],
 	"voltage":5,
 	"flash_size":0x100000,

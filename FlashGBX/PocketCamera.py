@@ -4,7 +4,7 @@
 
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
-import os, hashlib
+import os, hashlib, io, math
 import email.utils
 
 class PocketCamera:
@@ -12,7 +12,6 @@ class PocketCamera:
 	PALETTES = [
 		[ 255, 255, 255,   176, 176, 176,   104, 104, 104,   0, 0, 0 ], # Grayscale
 		[ 208, 217, 60,   120, 164, 106,   84, 88, 84,   36, 70, 36 ], # Game Boy
-		#[ 196, 207, 161,   139, 149, 109,   77, 83, 60,   31, 31, 31 ], # Game Boy Pocket
 		[ 255, 255, 255,   181, 179, 189,   84, 83, 103,   9, 7, 19 ], # Super Game Boy
 		[ 240, 240, 240,   218, 196, 106,   112, 88, 52,   30, 30, 30 ], # Game Boy Color (JPN)
 		[ 240, 240, 240,   220, 160, 160,   136, 78, 78,   30, 30, 30 ], # Game Boy Color (USA Gold)
@@ -108,10 +107,9 @@ class PocketCamera:
 		imgbuffer = self.DATA[offset:offset+0x1000]
 		return self.ConvertPicture(imgbuffer)
 	
-	def ExportPicture(self, index, path):
+	def ExportPicture(self, index, path, scale=1.0, frame=False):
 		pnginfo = PngInfo()
 		pnginfo.add_text("Software", "FlashGBX")
-		pnginfo.add_text("Source", "Pocket Camera")
 		pnginfo.add_text("Creation Time", email.utils.formatdate())
 		
 		if index == 0:
@@ -124,6 +122,16 @@ class PocketCamera:
 			pic = self.GetPicture(index)
 			pnginfo.add_text("Title", "Photo {:02d}".format(index))
 		
+		if frame is not False:
+			frame = Image.open(io.BytesIO(frame)).convert("RGB")
+			if frame.width >= 160 and frame.height >= 144:
+				left = math.floor(frame.width / 2) - 64
+				top = math.floor(frame.height / 2) - 56
+				frame.paste(pic, (left, top))
+				pic = frame
+		
+		pic = pic.resize((pic.width * scale, pic.height * scale), Image.NEAREST)
+
 		ext = os.path.splitext(path)[1]
 		if ext.lower() == ".png":
 			outpic = pic

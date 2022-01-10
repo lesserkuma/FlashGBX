@@ -81,7 +81,7 @@ class GbxDevice:
 	}
 
 	PCB_VERSIONS = {4:'v1.3', 5:'v1.4', 6:'v1.4a', 101:'Mini v1.0d'}
-	ACTIONS = {"ROM_READ":1, "SAVE_READ":2, "SAVE_WRITE":3, "ROM_WRITE":4, "ROM_WRITE_VERIFY":4}
+	ACTIONS = {"ROM_READ":1, "SAVE_READ":2, "SAVE_WRITE":3, "ROM_WRITE":4, "ROM_WRITE_VERIFY":4, "SAVE_WRITE_VERIFY":3}
 	SUPPORTED_CARTS = {}
 	
 	FW = []
@@ -367,8 +367,8 @@ class GbxDevice:
 		if not isinstance(data, bytearray):
 			data = bytearray([data])
 
-		#dstr = ' '.join(format(x, '02X') for x in data)
-		#dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr[:96]))
+		dstr = ' '.join(format(x, '02X') for x in data)
+		dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr[:96]))
 		
 		self.DEVICE.write(data)
 		self.DEVICE.flush()
@@ -479,7 +479,7 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["CLK_LOW"])
 		return True
 
-	def _cart_powercycle(self, delay=0.1):
+	def CartPowerCycle(self, delay=0.1):
 		if self.CanPowerCycleCart():
 			dprint("Power cycling cartridge")
 			self.CartPowerOff(delay=delay)
@@ -580,7 +580,7 @@ class GbxDevice:
 				header = self.ReadROM(0, 0x180)
 				data = RomFileDMG(header).GetHeader()
 			
-			_mbc = DMG_MBC().GetInstance(args={"mbc":data["features_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
+			_mbc = DMG_MBC().GetInstance(args={"mbc":data["features_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 			if checkRtc:
 				data["has_rtc"] = _mbc.HasRTC() is True
 				if data["has_rtc"] is True:
@@ -612,7 +612,7 @@ class GbxDevice:
 				data["dacs_8m"] = True
 			
 			if checkRtc and data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
-				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
+				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 				has_rtc = _agb_gpio.HasRTC()
 				data["has_rtc"] = has_rtc is True
 				if has_rtc is not True:
@@ -874,7 +874,8 @@ class GbxDevice:
 			if isinstance(temp, int): temp = bytearray([temp])
 			if temp is False or len(temp) != length: return bytearray()
 			buffer += temp
-			if self.INFO["action"] == self.ACTIONS["SAVE_READ"] and not self.NO_PROG_UPDATE:
+			#if self.INFO["action"] == self.ACTIONS["SAVE_READ"] and not self.NO_PROG_UPDATE:
+			if not self.NO_PROG_UPDATE:
 				self.SetProgress({"action":"READ", "bytes_added":len(temp)})
 		
 		return buffer
@@ -892,7 +893,8 @@ class GbxDevice:
 			temp = self._read(length)
 			if isinstance(temp, int): temp = bytearray([temp])
 			buffer += temp
-			if self.INFO["action"] == self.ACTIONS["SAVE_READ"] and not self.NO_PROG_UPDATE:
+			#if self.INFO["action"] == self.ACTIONS["SAVE_READ"] and not self.NO_PROG_UPDATE:
+			if not self.NO_PROG_UPDATE:
 				self.SetProgress({"action":"READ", "bytes_added":len(temp)})
 		
 		return buffer
@@ -1236,7 +1238,7 @@ class GbxDevice:
 					we = 0x03 # FLASH_WE_PIN_WR_RESET
 				self._set_fw_variable("FLASH_WE_PIN", we)
 
-			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle)
+			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle)
 			flashcart.Reset(full_reset=False)
 			flashcart.Unlock()
 			if "flash_ids" in flashcart_meta and len(flashcart_meta["flash_ids"]) > 0:
@@ -1429,7 +1431,7 @@ class GbxDevice:
 							self._cart_write(method['reset'][i][0], method['reset'][i][1], flashcart=True)
 
 				if cart_type is not None: # reset cartridge if method is known
-					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=None)
+					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
 					flashcart.Reset(full_reset=False)
 		
 		if "method" in cfi:
@@ -1494,7 +1496,7 @@ class GbxDevice:
 			time.sleep(0.25)
 
 		if cart_type is not None: # reset cartridge if method is known
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=None)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
 			flashcart.Reset(full_reset=True)
 
 		flash_id = ""
@@ -1550,13 +1552,13 @@ class GbxDevice:
 				if i == args["cart_type"]:
 					try:
 						cart_type["_index"] = cart_type["names"].index(list(self.SUPPORTED_CARTS[self.MODE].keys())[i])
-						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=self.SetProgress)
+						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
 					except:
 						pass
 
 		buffer_len = 0x4000
 		if self.MODE == "DMG":
-			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
+			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
 			
 			self._set_fw_variable("DMG_WRITE_CS_PULSE", 0)
@@ -1578,15 +1580,15 @@ class GbxDevice:
 			buffer_len = 0x10000
 			if "agb_rom_size" in args: size = args["agb_rom_size"]
 			if flashcart and "flash_bank_size" in cart_type:
-				if "verify_flash" in args:
-					rom_banks = math.ceil(len(args["verify_flash"]) / cart_type["flash_bank_size"])
+				if "verify_write" in args:
+					rom_banks = math.ceil(len(args["verify_write"]) / cart_type["flash_bank_size"])
 				else:
 					rom_banks = int(min(size, cart_type["flash_size"]) / cart_type["flash_bank_size"])
 			else:
 				rom_banks = 1
 		
-		if "verify_flash" in args:
-			size = len(args["verify_flash"])
+		if "verify_write" in args:
+			size = len(args["verify_write"])
 		else:
 			method = "ROM_READ"
 			self.SetProgress({"action":"INITIALIZE", "method":method, "size":size})
@@ -1658,12 +1660,12 @@ class GbxDevice:
 				buffer[pos_total:pos_total+len(temp)] = temp
 				pos_total += len(temp)
 				
-				if "verify_flash" in args:
-					if pos_total >= len(args["verify_flash"]): break
-					check = args["verify_flash"][pos_total-len(temp):pos_total]
+				if "verify_write" in args:
+					if pos_total >= len(args["verify_write"]): break
+					check = args["verify_write"][pos_total-len(temp):pos_total]
 					if temp[:len(check)] != check:
 						for i in range(0, pos_total):
-							if (i < len(args["verify_flash"]) - 1) and (i < pos_total - 1) and args["verify_flash"][i] != buffer[i]:
+							if (i < len(args["verify_write"]) - 1) and (i < pos_total - 1) and args["verify_write"][i] != buffer[i]:
 								if args["rtc_area"] is True and i in (0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9):
 									dprint("Skipping RTC area at 0x{:X}".format(i))
 								else:
@@ -1677,8 +1679,8 @@ class GbxDevice:
 		
 		if file is not None: file.close()
 		
-		if "verify_flash" in args:
-			return min(pos_total, len(args["verify_flash"]))
+		if "verify_write" in args:
+			return min(pos_total, len(args["verify_write"]))
 		
 		# Hidden sector (GB Memory)
 		if self.MODE == "DMG":
@@ -1717,7 +1719,7 @@ class GbxDevice:
 		return True
 
 	def _BackupRestoreRAM(self, args):
-		_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
+		_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 		self.FAST_READ = False
 		if "rtc" not in args: args["rtc"] = False
 		
@@ -1847,8 +1849,10 @@ class GbxDevice:
 					#with open("debug2.bin", "wb") as f: f.write(buffer)
 		
 		# Main loop
-		self.INFO["action"] = self.ACTIONS[action]
-		self.SetProgress({"action":"INITIALIZE", "method":action, "size":save_size+extra_size})
+		if not (args["mode"] == 2 and "verify_write" in args and args["verify_write"]):
+			self.INFO["action"] = self.ACTIONS[action]
+			self.SetProgress({"action":"INITIALIZE", "method":action, "size":save_size+extra_size})
+		
 		buffer_offset = 0
 		for bank in range(0, ram_banks):
 			if self.MODE == "DMG":
@@ -2003,6 +2007,7 @@ class GbxDevice:
 				pos += buffer_len
 				buffer_offset += buffer_len
 		
+		verified = False
 		if args["mode"] == 2: # Backup
 			self.INFO["transferred"] = len(buffer)
 			rtc_buffer = None
@@ -2012,7 +2017,7 @@ class GbxDevice:
 					_mbc.LatchRTC()
 					rtc_buffer = _mbc.ReadRTC()
 				elif self.MODE == "AGB":
-					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
+					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 					rtc_buffer = _agb_gpio.ReadRTC()
 				self.SetProgress({"action":"UPDATE_POS", "pos":len(buffer)+len(rtc_buffer)})
 			
@@ -2027,6 +2032,9 @@ class GbxDevice:
 			self.INFO["file_crc32"] = zlib.crc32(buffer) & 0xFFFFFFFF
 			self.INFO["file_sha1"] = hashlib.sha1(buffer).hexdigest()
 
+			if "verify_write" in args and args["verify_write"] not in (None, False):
+				return True
+
 		elif args["mode"] == 3: # Restore
 			self.INFO["transferred"] = len(buffer)
 			if args["rtc"] is True:
@@ -2035,9 +2043,39 @@ class GbxDevice:
 				if self.MODE == "DMG" and args["rtc"] is True:
 					_mbc.WriteRTC(buffer[-_mbc.GetRTCBufferSize():], advance=advance)
 				elif self.MODE == "AGB":
-					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
+					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 					_agb_gpio.WriteRTC(buffer[-0x10:], advance=advance)
 				self.SetProgress({"action":"UPDATE_POS", "pos":len(buffer)})
+
+			# ↓↓↓ Write verify
+			if "verify_write" in args and args["verify_write"] is True and args["erase"] is not True:
+				_mbc.SelectBankRAM(0)
+				self.SetProgress({"action":"INITIALIZE", "method":"SAVE_WRITE_VERIFY", "size":buffer_offset})
+
+				verify_args = copy.copy(args)
+				start_address = 0
+				end_address = buffer_offset
+				
+				path = args["path"] # backup path
+				verify_args.update({"mode":2, "verify_write":buffer, "path":None})
+				self.ReadROM(0, 4) # dummy read
+				self.INFO["data"] = None
+				self._BackupRestoreRAM(verify_args)
+
+				if args["mbc"] == 6: # MBC2
+					for i in range(0, len(self.INFO["data"])):
+						self.INFO["data"][i] &= 0x0F
+						buffer[i] &= 0x0F
+
+				args["path"] = path # restore path
+				if self.CANCEL is True:
+					pass
+				elif (self.INFO["data"] != buffer[:buffer_offset]):
+					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The save data was written completely, but verification of written data failed.", "abortable":False})
+					return False
+				else:
+					verified = True
+			# ↑↑↑ Write verify
 		
 		if self.MODE == "DMG":
 			_mbc.SelectBankRAM(0)
@@ -2047,7 +2085,7 @@ class GbxDevice:
 		self.INFO["last_action"] = self.INFO["action"]
 		self.INFO["action"] = None
 		self.INFO["last_path"] = args["path"]
-		self.SetProgress({"action":"FINISHED"})
+		self.SetProgress({"action":"FINISHED", "verified":verified})
 		return True
 
 	def _FlashROM(self, args):
@@ -2131,7 +2169,7 @@ class GbxDevice:
 			data_map_import = bytearray(data_map_import)
 			dprint("Hidden sector data loaded")
 		else:
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self._cart_powercycle, progress_fncptr=self.SetProgress)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
 		
 		rumble = "rumble" in flashcart.CONFIG and flashcart.CONFIG["rumble"] is True
 
@@ -2156,7 +2194,7 @@ class GbxDevice:
 				args["mbc"] = mbc
 			else:
 				args["mbc"] = 0x1B # MBC5+SRAM+BATTERY
-			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self._cart_powercycle, clk_toggle_fncptr=self._clk_toggle)
+			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 
 			# I need a cart for testing before this has a chance to work ↓
 			#self._set_fw_variable("FLASH_COMMANDS_BANK_1", 1 if flashcart.FlashCommandsOnBank1() else 0)
@@ -2413,7 +2451,7 @@ class GbxDevice:
 
 		# ↓↓↓ Flash verify
 		verified = False
-		if "verify_flash" in args and args["verify_flash"] is True:
+		if "verify_write" in args and args["verify_write"] is True:
 			self.SetProgress({"action":"INITIALIZE", "method":"ROM_WRITE_VERIFY", "size":buffer_pos})
 			
 			verify_args = copy.copy(args)
@@ -2425,7 +2463,7 @@ class GbxDevice:
 			start_address = 0
 			end_address = buffer_pos
 
-			verify_args.update({"verify_flash":data_import, "rom_banks":rom_banks, "path":"", "rtc_area":flashcart.HasRTC()})
+			verify_args.update({"verify_write":data_import, "rom_banks":rom_banks, "path":"", "rtc_area":flashcart.HasRTC()})
 			self.ReadROM(0, 4) # dummy read
 			verified_size = self._BackupROM(verify_args)
 			if self.CANCEL is True:

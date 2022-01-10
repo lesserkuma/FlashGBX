@@ -1,4 +1,12 @@
 # Release notes
+### v3.3 (released 2022-01-10)
+- Added support for Flash2Advance 128M with 2× 28F640J3A120 *(thanks twitnic)*
+- Added support for 36VF3204 and ALTERA CPLD (no PCB text) *(thanks Herax and Davidish)*
+- Added support for SD008-6810-V4 with unlabeled flash chip *(thanks LucentW)*
+- Will now check written save data for errors if the verification option is enabled (requires GBxCart RW firmware L1 or higher)
+- Added a zoom factor setting for extracted Game Boy Camera pictures
+- Extracted Game Boy Camera pictures can now have a frame around them; this frame can be customized by placing a file called `pc_frame.png` (must be at least 160×144 pixels) into the configuration directory
+
 ### v3.2 (released 2021-12-18)
 - Fixed the configuration files for DIY cart with AM29F016/AM29F016B *(thanks dyf2007)*
 - Added support for SD008-6810-V5 with MX29CL256FH (multigame cartridge with 32 MB of ROM and 512 KB of save data)

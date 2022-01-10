@@ -2,7 +2,7 @@
 	"type":"DMG",
 	"names":[
 		"insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC",
-		"DIY cart with AM29F032/AM29F032B @ AUDIO"
+		"DIY cart with AM29F032 @ AUDIO"
 	],
 	"flash_ids":[
 		[ 0x04, 0xD4, 0x00, 0x00 ],

@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import functools, os, json, platform
+import functools, os, json, platform, shutil, hashlib
 from PIL.ImageQt import ImageQt
 from PIL import Image, ImageDraw
 from PySide2 import QtCore, QtWidgets, QtGui
@@ -12,11 +12,12 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	CUR_PIC = None
 	CUR_THUMBS = None
 	CUR_INDEX = 0
-	CUR_BICUBIC = True
+	CUR_BICUBIC = False
 	CUR_FILE = ""
-	CUR_EXPORT_PATH = ""
+	CUR_EXPORT_PATH = "."
 	CUR_PC = None
 	CUR_PALETTE = 3
+	CONFIG_PATH = "."
 	APP = None
 	PALETTES = [
 		[ 255, 255, 255,   176, 176, 176,   104, 104, 104,   0, 0, 0 ], # Grayscale
@@ -27,11 +28,12 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		[ 240, 240, 240,   134, 200, 100,   58, 96, 132,   30, 30, 30 ], # Game Boy Color (USA/EUR)
 	]
 	
-	def __init__(self, app, file=None, icon=None):
+	def __init__(self, app, file=None, icon=None, config_path="."):
 		QtWidgets.QDialog.__init__(self)
 		self.setAcceptDrops(True)
 		if icon is not None: self.setWindowIcon(QtGui.QIcon(icon))
 		self.CUR_FILE = file
+		self.CONFIG_PATH = config_path
 		self.setWindowTitle("FlashGBX – GB Camera Album Viewer")
 		self.setWindowFlags((self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint) & ~QtCore.Qt.WindowContextHelpButtonHint)
 		
@@ -44,43 +46,37 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.layout_photos = QtWidgets.QHBoxLayout()
 		
 		# Options
-		self.grpColors = QtWidgets.QGroupBox("Color palette")
-		grpColorsLayout = QtWidgets.QVBoxLayout()
-		grpColorsLayout.setContentsMargins(-1, 3, -1, -1)
-		self.rowColors1 = QtWidgets.QHBoxLayout()
-		self.optColorBW = QtWidgets.QRadioButton("&Grayscale")
-		self.optColorBW.setToolTip("Generic grayscale palette")
-		self.connect(self.optColorBW, QtCore.SIGNAL("clicked()"), self.SetColors)
-		self.optColorDMG = QtWidgets.QRadioButton("&DMG")
-		self.optColorDMG.setToolTip("Original Game Boy screen palette")
-		self.connect(self.optColorDMG, QtCore.SIGNAL("clicked()"), self.SetColors)
-		#self.optColorMGB = QtWidgets.QRadioButton("&MGB")
-		#self.optColorMGB.setToolTip("Game Boy Pocket palette")
-		#self.connect(self.optColorMGB, QtCore.SIGNAL("clicked()"), self.SetColors)
-		self.optColorSGB = QtWidgets.QRadioButton("&SGB")
-		self.optColorSGB.setToolTip("Super Game Boy palette")
-		self.connect(self.optColorSGB, QtCore.SIGNAL("clicked()"), self.SetColors)
-		self.optColorCGB1 = QtWidgets.QRadioButton("CGB &1")
-		self.optColorCGB1.setToolTip("Japanese Pocket Camera palette")
-		self.connect(self.optColorCGB1, QtCore.SIGNAL("clicked()"), self.SetColors)
-		self.optColorCGB2 = QtWidgets.QRadioButton("CGB &2")
-		self.optColorCGB2.setToolTip("Golden Limited Edition Game Boy Camera palette")
-		self.connect(self.optColorCGB2, QtCore.SIGNAL("clicked()"), self.SetColors)
-		self.optColorCGB3 = QtWidgets.QRadioButton("CGB &3")
-		self.optColorCGB3.setToolTip("Non-Japanese Game Boy Camera palette")
-		self.connect(self.optColorCGB3, QtCore.SIGNAL("clicked()"), self.SetColors)
-		self.rowColors1.addWidget(self.optColorBW)
-		self.rowColors1.addWidget(self.optColorDMG)
-		#self.rowColors1.addWidget(self.optColorMGB)
-		self.rowColors1.addWidget(self.optColorSGB)
-		self.rowColors1.addWidget(self.optColorCGB1)
-		self.rowColors1.addWidget(self.optColorCGB2)
-		self.rowColors1.addWidget(self.optColorCGB3)
+		self.grpOptions = QtWidgets.QGroupBox("Options")
+		grpOptionsLayout = QtWidgets.QVBoxLayout()
+		grpOptionsLayout.setContentsMargins(-1, 3, -1, -1)
+		self.rowOptions1 = QtWidgets.QHBoxLayout()
+		self.lblColor = QtWidgets.QLabel("Color Palette:")
+		self.cmbColor = QtWidgets.QComboBox()
+		self.cmbColor.setStyleSheet("combobox-popup: 0;")
+		self.cmbColor.view().setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+		self.cmbColor.addItems(["Grayscale", "Original Game Boy", "Super Game Boy", "Game Boy Color (Pocket Camera)", "Game Boy Color (Game Boy Camera Gold)", "Game Boy Color (Game Boy Camera)"])
+		self.cmbColor.currentIndexChanged.connect(self.SetColors)
+		self.cmbColor.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+		self.cmbColor.setCurrentIndex(-1)
+		self.rowOptions1.addWidget(self.lblColor)
+		self.rowOptions1.addWidget(self.cmbColor)
+		self.rowOptions1.addStretch(1)
 		
-		grpColorsLayout.addLayout(self.rowColors1)
+		self.lblZoom = QtWidgets.QLabel("Saved Picture Zoom:")
+		self.spnZoom = QtWidgets.QSpinBox()
+		self.spnZoom.setRange(1, 10)
+		self.spnZoom.setSuffix("×")
+		self.rowOptions1.addWidget(self.lblZoom)
+		self.rowOptions1.addWidget(self.spnZoom)
+		self.rowOptions1.addStretch(1)
 		
-		self.grpColors.setLayout(grpColorsLayout)
-		self.layout_options1.addWidget(self.grpColors)
+		self.chkFrame = QtWidgets.QCheckBox("Save With &Frame")
+		self.rowOptions1.addWidget(self.chkFrame)
+		
+		grpOptionsLayout.addLayout(self.rowOptions1)
+		self.grpOptions.setLayout(grpOptionsLayout)
+
+		self.layout_options1.addWidget(self.grpOptions)
 
 		rowActionsGeneral1 = QtWidgets.QHBoxLayout()
 		self.btnOpenSRAM = QtWidgets.QPushButton("&Open Save Data File")
@@ -166,18 +162,26 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		
 		self.APP = app
 		
+		try:
+			self.spnZoom.setValue(int(self.APP.SETTINGS.value("PocketCameraZoom")))
+		except:
+			self.spnZoom.setValue(2)
+		self.chkFrame.setChecked(self.APP.SETTINGS.value("PocketCameraFrame", default="disabled") == "enabled")
+
 		palette = self.APP.SETTINGS.value("PocketCameraPalette")
 		try:
 			palette = json.loads(palette)
 		except:
 			palette = None
-			self.optColorCGB1.setChecked(True)
+			#self.optColorCGB1.setChecked(True)
+			self.cmbColor.setCurrentIndex(3)
 		palette_found = False
 		if palette is not None:
 			for i in range(0, len(self.PALETTES)):
 				if palette == self.PALETTES[i]:
-					if i >= self.rowColors1.count(): continue
-					self.rowColors1.itemAt(i).widget().setChecked(True)
+					#if i >= self.rowOptions1.count(): continue
+					#self.rowOptions1.itemAt(i).widget().setChecked(True)
+					self.cmbColor.setCurrentIndex(i)
 					self.CUR_PALETTE = i
 					palette_found = True
 		if not palette_found:
@@ -187,9 +191,9 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		if self.CUR_FILE is not None:
 			self.OpenFile(self.CUR_FILE)
 
-		export_path = self.APP.SETTINGS.value("LastDirPocketCamera")
-		if export_path is not None:
-			self.CUR_EXPORT_PATH = export_path
+		self.CUR_EXPORT_PATH = self.APP.SETTINGS.value("LastDirPocketCamera")
+		if self.CUR_EXPORT_PATH is None:
+			self.CUR_EXPORT_PATH = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 		
 		self.SetColors()
 		
@@ -208,9 +212,10 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	
 	def SetColors(self):
 		if self.CUR_PC is None: return
-		for i in range(0, self.rowColors1.count()):
-			if self.rowColors1.itemAt(i).widget().isChecked():
-				self.CUR_PALETTE = i
+		#for i in range(0, self.rowOptions1.count()):
+			#if self.rowOptions1.itemAt(i).widget().isChecked():
+			#	self.CUR_PALETTE = i
+		self.CUR_PALETTE = self.cmbColor.currentIndex()
 		self.CUR_PC.SetPalette(self.PALETTES[self.CUR_PALETTE])
 		self.BuildPhotoList()
 		self.UpdateViewer(self.CUR_INDEX)
@@ -245,6 +250,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	
 	def btnOpenSRAM_Clicked(self):
 		last_dir = self.APP.SETTINGS.value("LastDirSaveDataDMG")
+		if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 		path = QtWidgets.QFileDialog.getOpenFileName(self, "Open GB Camera Save Data File", last_dir, "Save Data File (*.sav);;All Files (*.*)")[0]
 		if (path == ""): return
 		if self.OpenFile(path) is True:
@@ -286,9 +292,12 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.reject()
 	
 	def hideEvent(self, event):
-		for i in range(0, self.rowColors1.count()):
-			if self.rowColors1.itemAt(i).widget().isChecked():
-				self.APP.SETTINGS.setValue("PocketCameraPalette", json.dumps(self.PALETTES[i]))
+		#for i in range(0, self.rowOptions1.count()):
+		#	if self.rowOptions1.itemAt(i).widget().isChecked():
+		#		self.APP.SETTINGS.setValue("PocketCameraPalette", json.dumps(self.PALETTES[i]))
+		self.APP.SETTINGS.setValue("PocketCameraPalette", json.dumps(self.PALETTES[self.cmbColor.currentIndex()]))
+		self.APP.SETTINGS.setValue("PocketCameraZoom", str(self.spnZoom.value()))
+		self.APP.SETTINGS.setValue("PocketCameraFrame", str(self.chkFrame.isChecked()).lower().replace("true", "enabled").replace("false", "disabled"))
 		self.APP.SETTINGS.setValue("LastDirPocketCamera", self.CUR_EXPORT_PATH)
 		self.APP.activateWindow()
 	
@@ -340,7 +349,17 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		if path == "": return
 		
 		cam = self.CUR_PC
-		cam.ExportPicture(index, path)
+
+		frame = False
+		if self.chkFrame.isChecked():
+			frame = True
+			own_frame = self.CONFIG_PATH + "/pc_frame.png"
+			if not os.path.exists(own_frame):
+				shutil.copy(self.APP.APP_PATH + "/res/pc_frame.png", own_frame)
+			with open(own_frame, "rb") as f: frame = f.read()
+		
+		if index == 31: frame = False # last seen image
+		cam.ExportPicture(index=index, path=path, scale=self.spnZoom.value(), frame=frame)
 	
 	def dragEnterEvent(self, e):
 		if self._dragEventHover(e):

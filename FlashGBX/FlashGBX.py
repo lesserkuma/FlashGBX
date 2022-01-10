@@ -99,10 +99,10 @@ def main(portableMode=False):
 		cfgdir_default = "appdata"
 	
 	examples = "\nexamples:\n" + \
-	"  Backup the ROM of a Game Boy Advance cartridge:\n\t{:s} --mode agb --action backup-rom\n\n".format(sys.argv[0]) + \
-	"  Backup Save Data from a Game Boy cartridge:\n\t{:s} --mode dmg --action backup-save\n\n".format(sys.argv[0]) + \
-	"  Write a Game Boy Advance ROM relying on auto-detecting the flash cartridge:\n\t{:s} --mode agb --action flash-rom ROM.gba\n\n".format(sys.argv[0]) + \
-	"  Extract Game Boy Camera pictures as .png files from a save data file:\n\t{:s} --mode dmg --action gbcamera-extract --gbcamera-outfile-format png GAMEBOYCAMERA.sav\n\n".format(sys.argv[0])
+	"  Backup the ROM of a Game Boy Advance cartridge:\n\t{:s} --mode agb --action backup-rom\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:]) + \
+	"  Backup Save Data from a Game Boy cartridge:\n\t{:s} --mode dmg --action backup-save\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:]) + \
+	"  Write a Game Boy Advance ROM relying on auto-detecting the flash cartridge:\n\t{:s} --mode agb --action flash-rom ROM.gba\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:]) + \
+	"  Extract Game Boy Camera pictures as .png files from a save data file:\n\t{:s} --mode dmg --action gbcamera-extract --gbcamera-outfile-format png GAMEBOYCAMERA.sav\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:])
 
 	parser = argparse.ArgumentParser(formatter_class=ArgParseCustomFormatter, epilog=examples)
 	try:
@@ -136,7 +136,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--prefer-chip-erase", action="store_true", help="prefer full chip erase over sector erase when both available")
 	ap_cli2.add_argument("--reversed-sectors", action="store_true", help="use reversed flash sectors if possible")
 	ap_cli2.add_argument("--force-5v", action="store_true", help="force 5V when writing Game Boy flash cartridges")
-	ap_cli2.add_argument("--no-verify-flash", action="store_true", help="do not verify written ROM data")
+	ap_cli2.add_argument("--no-verify-write", action="store_true", help="do not verify written data")
 	ap_cli2.add_argument("--save-filename-add-datetime", action="store_true", help="adds a timestamp to the file name of save data backups")
 	ap_cli2.add_argument("--gbcamera-palette", choices=["grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3"], type=str.lower, default="grayscale", help="sets the palette of pictures extracted from Game Boy Camera saves")
 	ap_cli2.add_argument("--gbcamera-outfile-format", choices=["png", "bmp", "gif", "jpg"], type=str.lower, default="png", help="sets the file format of saved pictures extracted from Game Boy Camera saves")

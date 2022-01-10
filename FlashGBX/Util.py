@@ -7,7 +7,7 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.2"
+VERSION_PEP440 = "3.3"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
@@ -432,16 +432,6 @@ def validate_datetime_format(string, format):
 		return True
 	except ValueError:
 		return False
-
-def convert_full_half(s, reverse=False):
-	full2half = dict((i + 0xFEE0, i) for i in range(0x21, 0x7F))
-	full2half[0x3000] = 0x20
-	half2full = dict((i, i + 0xFEE0) for i in range(0x21, 0x7F))
-	half2full[0x20] = 0x3000
-	if reverse is False:
-		return s.translate(full2half)
-	else:
-		return s.translate(half2full)
 
 def find_size(data, max_size, min_size=0x20):
 	offset = max_size

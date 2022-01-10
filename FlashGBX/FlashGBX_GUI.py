@@ -17,6 +17,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	SETTINGS = None
 	DEVICES = {}
 	FLASHCARTS = { "DMG":{}, "AGB":{} }
+	APP_PATH = ""
 	CONFIG_PATH = ""
 	TBPROG = None # Windows 7+ Taskbar Progress Bar
 	PROGRESS = None
@@ -72,7 +73,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.connect(self.btnHeaderRefresh, QtCore.SIGNAL("clicked()"), self.ReadCartridge)
 		rowActionsGeneral1.addWidget(self.btnHeaderRefresh)
 
-		self.btnDetectCartridge = QtWidgets.QPushButton("Detect &Cartridge")
+		self.btnDetectCartridge = QtWidgets.QPushButton("Detect &Flash Cart")
 		self.btnDetectCartridge.setStyleSheet("min-height: 17px;")
 		self.connect(self.btnDetectCartridge, QtCore.SIGNAL("clicked()"), self.DetectCartridge)
 		rowActionsGeneral1.addWidget(self.btnDetectCartridge)
@@ -194,7 +195,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("Check for &updates at application startup", lambda: [ self.SETTINGS.setValue("UpdateCheck", str(self.mnuConfig.actions()[0].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")), self.UpdateCheck() ])
 		self.mnuConfig.addAction("&Append date && time to filename of save data backups", lambda: self.SETTINGS.setValue("SaveFileNameAddDateTime", str(self.mnuConfig.actions()[1].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("Prefer full &chip erase over sector erase when both available", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
-		self.mnuConfig.addAction("&Verify flash after writing", lambda: self.SETTINGS.setValue("VerifyFlash", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
+		self.mnuConfig.addAction("&Verify data after writing", lambda: self.SETTINGS.setValue("VerifyWrittenData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		#self.mnuConfig.addAction("Use &fast read mode", lambda: self.SETTINGS.setValue("FastReadMode", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled"))) # GBxCart RW
 		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addSeparator()
@@ -210,7 +211,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.actions()[0].setChecked(self.SETTINGS.value("UpdateCheck") == "enabled")
 		self.mnuConfig.actions()[1].setChecked(self.SETTINGS.value("SaveFileNameAddDateTime", default="disabled") == "enabled")
 		self.mnuConfig.actions()[2].setChecked(self.SETTINGS.value("PreferChipErase", default="disabled") == "enabled")
-		self.mnuConfig.actions()[3].setChecked(self.SETTINGS.value("VerifyFlash", default="enabled") == "enabled")
+		self.mnuConfig.actions()[3].setChecked(self.SETTINGS.value("VerifyWrittenData", default="enabled") == "enabled")
 		#self.mnuConfig.actions()[4].setChecked(self.SETTINGS.value("FastReadMode", default="disabled") == "enabled") # GBxCart RW
 		self.mnuConfig.actions()[4].setChecked(self.SETTINGS.value("AutoDetectLimitVoltage", default="disabled") == "enabled")
 		
@@ -865,7 +866,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 					if answer == QtWidgets.QMessageBox.Yes:
 						self.CAMWIN = None
-						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"])
+						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"], config_path=self.CONFIG_PATH)
 						self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 						self.CAMWIN.setModal(True)
 						self.CAMWIN.run()
@@ -882,8 +883,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if "save_erase" in self.CONN.INFO and self.CONN.INFO["save_erase"]:
 				msg_text = "The save data was erased."
 				del(self.CONN.INFO["save_erase"])
+			elif "verified" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["verified"] == True:
+				msg_text = "The save data was written and verified successfully!"
 			else:
-				msg_text = "The save data was restored!"
+				msg_text = "Save data wrtiting complete!"
 			msgbox.setText(msg_text)
 			if not dontShowAgain:
 				msgbox.exec()
@@ -1112,11 +1115,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		#else:
 		#	fast_read_mode = False
 		
-		verify_flash = self.SETTINGS.value("VerifyFlash", default="enabled")
-		if verify_flash and verify_flash.lower() == "enabled":
-			verify_flash = True
+		verify_write = self.SETTINGS.value("VerifyWrittenData", default="enabled")
+		if verify_write and verify_write.lower() == "enabled":
+			verify_write = True
 		else:
-			verify_flash = False
+			verify_write = False
 		
 		fix_header = False
 		if len(buffer) >= 0x1000:
@@ -1145,7 +1148,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_flash":verify_flash, "fix_header":fix_header }
+		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		buffer = None
@@ -1272,6 +1275,12 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The size of this file is not supported.", QtWidgets.QMessageBox.Ok)
 				return
 		
+		verify_write = self.SETTINGS.value("VerifyWrittenData", default="enabled")
+		if verify_write and verify_write.lower() == "enabled":
+			verify_write = True
+		else:
+			verify_write = False
+		
 		rtc = False
 		rtc_advance = False
 		if self.CONN.INFO["has_rtc"]: # features in (0x10, 0xFD, 0xFE): # RTC of MBC3, TAMA5, HuC-3
@@ -1291,7 +1300,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase }
+		args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase, "verify_write":verify_write }
 		self.CONN.RestoreRAM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		self.STATUS["time_start"] = time.time()
@@ -1414,7 +1423,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			return False
 		
 		if self.CONN.CheckROMStable() is False and resetStatus:
-			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge connection is unstable!\nPlease clean the cartridge pins, carefully re-align the cartridge and then try again.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge connection is unstable!\nPlease clean the cartridge pins, carefully realign the cartridge and then try again.", QtWidgets.QMessageBox.Ok)
 			return
 		
 		if self.CONN.GetMode() == "DMG":
@@ -1666,7 +1675,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	def DetectCartridge(self, canSkipMessage=False):
 		if not self.CheckDeviceAlive(): return
 		if not self.CONN.CheckROMStable():
-			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge connection is unstable!\nPlease clean the cartridge pins, carefully re-align the cartridge and then try again.", QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge connection is unstable!\nPlease clean the cartridge pins, carefully realign the cartridge and then try again.", QtWidgets.QMessageBox.Ok)
 			return
 		self.btnHeaderRefresh.setEnabled(False)
 		self.btnDetectCartridge.setEnabled(False)
@@ -1884,6 +1893,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.grpStatus.setTitle("Transfer Status (Backup Save Data)")
 			elif args["method"] == "SAVE_WRITE":
 				self.grpStatus.setTitle("Transfer Status (Write Save Data)")
+			elif args["method"] == "SAVE_WRITE_VERIFY":
+				self.grpStatus.setTitle("Transfer Status (Verify Save Data)")
 		
 		if "error" in args:
 			self.lblStatus4a.setText("Failed!")
@@ -2046,7 +2057,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	
 	def ShowPocketCameraWindow(self):
 		self.CAMWIN = None
-		self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon())
+		self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), config_path=self.CONFIG_PATH)
 		self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		self.CAMWIN.setModal(True)
 		self.CAMWIN.run()

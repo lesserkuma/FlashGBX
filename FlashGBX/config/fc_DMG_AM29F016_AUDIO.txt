@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with AM29F016/AM29F016B @ AUDIO"
+		"DIY cart with AM29F016 @ AUDIO"
 	],
 	"flash_ids":[
 		[ 0x01, 0xAD, 0x00, 0x00 ],

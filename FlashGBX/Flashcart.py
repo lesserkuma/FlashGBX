@@ -161,6 +161,7 @@ class Flashcart:
 		if "read_identifier" not in self.CONFIG["commands"]: return False
 		if len(self.CONFIG["flash_ids"]) == 0: return False
 		self.Reset()
+		rom = list(self.CartRead(0, len(self.CONFIG["flash_ids"][0])))
 		self.Unlock()
 		self.CartWrite(self.CONFIG["commands"]["read_identifier"])
 		time.sleep(0.001)
@@ -168,7 +169,10 @@ class Flashcart:
 		self.Reset()
 		dprint("Flash ID: {:s}".format(' '.join(format(x, '02X') for x in cart_flash_id)))
 		verified = True
-		if cart_flash_id not in self.CONFIG["flash_ids"]:
+		if (rom == cart_flash_id):
+			dprint("ROM data matched Flash ID response.")
+			verified = False
+		elif cart_flash_id not in self.CONFIG["flash_ids"]:
 			dprint("This Flash ID does not exist in flashcart handler file.")
 			verified = False
 		return (verified, cart_flash_id)

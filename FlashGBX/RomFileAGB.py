@@ -90,6 +90,3 @@ class RomFileAGB:
 			data["dacs_8m"] = True
 		
 		return data
-
-	def GetData(self):
-		return self.ROMFILE

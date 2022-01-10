@@ -59,7 +59,7 @@ class FlashGBX_CLI():
 		# Ask interactively if no args set
 		if args.action is None:
 			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"]
-			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures\n 8) Firmware Update (for GBxCart RW v1.4/v1.4a only)\n")
+			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures From Existing Save Data Backup\n 8) Firmware Update (for GBxCart RW v1.4/v1.4a only)\n")
 			args.action = input("Enter number 1-8 [1]: ").lower().strip()
 			try:
 				if int(args.action) == 0:
@@ -108,7 +108,7 @@ class FlashGBX_CLI():
 					os.makedirs(os.path.dirname(file))
 				for i in range(0, 32):
 					file = os.path.splitext(args.path)[0] + "/IMG_PC{:02d}".format(i+1) + "." + args.gbcamera_outfile_format
-					pc.ExportPicture(i, file)
+					pc.ExportPicture(i, file, scale=1)
 				print("The pictures from “{:s}” were extracted to “{:s}”.".format(os.path.abspath(args.path), Util.formatPathOS(os.path.abspath(os.path.dirname(file)), end_sep=True) + "IMG_PC**.{:s}".format(args.gbcamera_outfile_format)))
 			else:
 				print("\n{:s}Couldn’t parse the save data file.{:s}\n".format(ANSI.RED, ANSI.RESET))
@@ -216,6 +216,8 @@ class FlashGBX_CLI():
 			if args["action"] == "INITIALIZE":
 				if args["method"] == "ROM_WRITE_VERIFY":
 					print("\n\nThe newly written ROM data will now be checked for errors.\n")
+				elif args["method"] == "SAVE_WRITE_VERIFY":
+					print("\n\nThe newly written save data will now be checked for errors.\n")
 			elif args["action"] == "ERASE":
 				print("\033[KPlease wait while the flash chip is being erased... (Elapsed time: {:s})".format(Util.formatProgressTime(elapsed)), end="\r")
 			elif args["action"] == "UNLOCK":
@@ -302,9 +304,9 @@ class FlashGBX_CLI():
 								return
 							if not os.path.isdir(os.path.dirname(file)):
 								os.makedirs(os.path.dirname(file))
-							for i in range(0, 31):
+							for i in range(0, 32):
 								file = os.path.splitext(self.CONN.INFO["last_path"])[0] + "/IMG_PC{:02d}".format(i) + "." + self.ARGS["argparsed"].gbcamera_outfile_format
-								pc.ExportPicture(i, file)
+								pc.ExportPicture(i, file, scale=1)
 							print("The pictures were extracted.")
 					print("")
 			
@@ -867,7 +869,7 @@ class FlashGBX_CLI():
 			print("This flash cartridge supports both Sector Erase and Full Chip Erase methods. You can use the “--prefer-chip-erase” command line switch if necessary.")
 		
 		#fast_read_mode = args.fast_read_mode is True
-		verify_flash = args.no_verify_flash is False
+		verify_write = args.no_verify_write is False
 		
 		fix_header = False
 		try:
@@ -895,7 +897,7 @@ class FlashGBX_CLI():
 		print("The following ROM file will now be written to the flash cartridge at {:s}V:\n{:s}".format(str(v), os.path.abspath(path)))
 		
 		print("")
-		self.CONN.TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':True, 'verify_flash':verify_flash, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
+		self.CONN.TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':True, 'verify_write':verify_write, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
 		buffer = None
 	
 	def BackupRestoreRAM(self, args, header):
@@ -1025,7 +1027,8 @@ class FlashGBX_CLI():
 		if args.action == "backup-save":
 			self.CONN.TransferData(args={ 'mode':2, 'path':path, 'mbc':mbc, 'save_type':save_type, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "restore-save":
-			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
+			verify_write = args.no_verify_write is False
+			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc, 'verify_write':verify_write }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "erase-save":
 			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':True, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "debug-test-save": # debug

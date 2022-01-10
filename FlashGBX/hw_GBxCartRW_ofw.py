@@ -1247,7 +1247,7 @@ class GbxDevice:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please update to the custom high compatibility firmware by Lesserkuma and try again.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check CFW
-
+		
 		# Enable TAMA5
 		if self.MODE == "DMG" and "mbc" in args and args["mbc"] == 0xFD:
 			self.ReadInfo()
@@ -1848,8 +1848,8 @@ class GbxDevice:
 			i = i - len(data_import)
 			if i > 0: data_import += bytearray([0xFF] * i)
 			
-			#self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_flash=args["verify_flash"], fix_header=args["fix_header"])
-			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=False, verify_flash=args["verify_flash"], fix_header=args["fix_header"])
+			#self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_write=args["verify_write"], fix_header=args["fix_header"])
+			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=False, verify_write=args["verify_write"], fix_header=args["fix_header"])
 		
 		# Reset pins to avoid save data loss
 		self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
@@ -1857,7 +1857,7 @@ class GbxDevice:
 	
 	#######################################################################################################################################
 	
-	def _FlashROM(self, buffer=bytearray(), start_addr=0, cart_type=None, voltage=3.3, signal=None, prefer_chip_erase=False, reverse_sectors=False, fast_read_mode=False, verify_flash=False, fix_header=False):
+	def _FlashROM(self, buffer=bytearray(), start_addr=0, cart_type=None, voltage=3.3, signal=None, prefer_chip_erase=False, reverse_sectors=False, fast_read_mode=False, verify_write=False, fix_header=False):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
 		if self.INFO == None: self.ReadInfo()
 		self.INFO["last_action"] = 4
@@ -2449,7 +2449,7 @@ class GbxDevice:
 		
 		# Verify Flash
 		verified = False
-		if verify_flash:
+		if verify_write:
 			rom_size = len(data_import)
 			buffer_len = 0x1000
 			if self.MODE == "DMG":

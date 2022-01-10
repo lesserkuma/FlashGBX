@@ -106,6 +106,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
   - Development AGB Cartridge 128M Flash S, E201850
   - Development AGB Cartridge 256M Flash S, E201868
+  - Flash2Advance 128M (with 2× 28F640J3A120)
   - Flash2Advance 256M (with 2× 28F128J3A150)
   - Flash2Advance Ultra 64M (with 2× 28F320C3B)
   - insideGadgets 16 MB, 64K EEPROM with Solar Sensor and RTC options
@@ -119,6 +120,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 - Game Boy
 
   - 2006_TSOP_64BALL_QFP48 with AL016J55FFAR2
+  - 36VF3204 and ALTERA CPLD (no PCB text)
   - DMG-DHCN-20 with MX29LV320ET
   - DMG-GBRW-20 with 29LV320ETMI-70G
   - ES29LV160_DRV with 29DL32TF-70
@@ -224,6 +226,10 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
 
+## Miscellaneous
+
+* To use your own frame around extracted Game Boy Camera pictures, place a file called `pc_frame.png` (must be at least 160×144 pixels) into the configuration directory. (GUI mode only)
+
 ## Thanks
 
 The author would like to thank the following very kind people for their help and contributions (in alphabetical order):
@@ -236,6 +242,7 @@ The author would like to thank the following very kind people for their help and
 - bbsan (flash chip info)
 - ClassicOldSong (bug reports)
 - crizzlycruz (flash chip info)
+- Davidish (flash chip info)
 - djedditt (testing)
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
@@ -244,6 +251,7 @@ The author would like to thank the following very kind people for their help and
 - eveningmoose (flash chip info)
 - Frost Clock (flash chip info)
 - Grender (testing)
+- Herax (flash chip info)
 - hiks (flash chip info)
 - howie0210 (flash chip info, bug reports)
 - Icesythe7 (feature suggestions, testing, bug reports)
@@ -270,6 +278,7 @@ The author would like to thank the following very kind people for their help and
 - skite2001 (flash chip info)
 - Super Maker (flash chip info, testing)
 - t5b6_de (flash chip info)
+- twitnic (flash chip info)
 - Veund (flash chip info)
 - Voultar (bug reports, feature suggestions)
 - Zeii (flash chip info)

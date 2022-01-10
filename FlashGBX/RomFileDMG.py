@@ -131,6 +131,3 @@ class RomFileDMG:
 			print("{:s}WARNING: Unknown memory bank controller type 0x{:02X}{:s}".format(Util.ANSI.YELLOW, data["features_raw"], Util.ANSI.RESET))
 
 		return data
-	
-	def GetData(self):
-		return self.ROMFILE
