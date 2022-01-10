@@ -886,7 +886,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			elif "verified" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["verified"] == True:
 				msg_text = "The save data was written and verified successfully!"
 			else:
-				msg_text = "Save data wrtiting complete!"
+				msg_text = "Save data writing complete!"
 			msgbox.setText(msg_text)
 			if not dontShowAgain:
 				msgbox.exec()
