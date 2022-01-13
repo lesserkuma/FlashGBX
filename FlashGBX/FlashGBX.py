@@ -99,11 +99,11 @@ def main(portableMode=False):
 		cfgdir_default = "appdata"
 	
 	examples = "\nexamples:\n" + \
-	"  Backup the ROM of a Game Boy Advance cartridge:\n\t{:s} --mode agb --action backup-rom\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:]) + \
-	"  Backup Save Data from a Game Boy cartridge:\n\t{:s} --mode dmg --action backup-save\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:]) + \
-	"  Write a Game Boy Advance ROM relying on auto-detecting the flash cartridge:\n\t{:s} --mode agb --action flash-rom ROM.gba\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:]) + \
-	"  Extract Game Boy Camera pictures as .png files from a save data file:\n\t{:s} --mode dmg --action gbcamera-extract --gbcamera-outfile-format png GAMEBOYCAMERA.sav\n\n".format(sys.argv[0][sys.argv[0].replace("\\", "/").rindex("/")+1:])
-
+	"  Backup the ROM of a Game Boy Advance cartridge:\n\tFlashGBX --mode agb --action backup-rom\n\n" + \
+	"  Backup Save Data from a Game Boy cartridge:\n\tFlashGBX --mode dmg --action backup-save\n\n" + \
+	"  Write a Game Boy Advance ROM relying on auto-detecting the flash cartridge:\n\tFlashGBX --mode agb --action flash-rom ROM.gba\n\n" + \
+	"  Extract Game Boy Camera pictures as .png files from a save data file:\n\tFlashGBX --mode dmg --action gbcamera-extract --gbcamera-outfile-format png GAMEBOYCAMERA.sav\n\n"
+	
 	parser = argparse.ArgumentParser(formatter_class=ArgParseCustomFormatter, epilog=examples)
 	try:
 		parser._action_groups[1].title = "general arguments"
