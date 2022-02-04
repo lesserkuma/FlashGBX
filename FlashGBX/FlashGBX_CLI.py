@@ -273,10 +273,10 @@ class FlashGBX_CLI():
 				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
 				if self.CONN.INFO["rom_checksum"] == self.CONN.INFO["rom_checksum_calc"]:
 					print("{:s}The ROM backup is complete and the checksum was verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
-				elif "DMG-MMSA-JPN" in self.ARGS["argparsed"].flashcart_handler:
+				elif ("DMG-MMSA-JPN" in self.ARGS["argparsed"].flashcart_handler) or ("features_raw" in self.CONN.INFO and self.CONN.INFO["features_raw"] in (0x105, 0x202)):
 					print("The ROM backup is complete!")
 				else:
-					print("{:s}The ROM was dumped, but the checksum is not correct. This may indicate a bad dump, however this can be normal for some reproduction prototypes, patched games and intentional overdumps.{:s}".format(ANSI.YELLOW, ANSI.RESET))
+					print("{:s}The ROM was dumped, but the checksum is not correct. This may indicate a bad dump, however this can be normal for some reproduction prototypes, unlicensed games, patched games and intentional overdumps.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 			elif self.CONN.GetMode() == "AGB":
 				print("CRC32: {:04X}".format(self.CONN.INFO["file_crc32"]))
 				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
@@ -285,7 +285,7 @@ class FlashGBX_CLI():
 				elif Util.AGB_Global_CRC32 == 0:
 					print("The ROM backup is complete! As there is no known checksum for this ROM in the database, verification was skipped.")
 				else:
-					print("{:s}The ROM backup is complete, but the checksum doesn’t match the known database entry. This may indicate a bad dump, however this can be normal for some reproduction cartridges, prototypes, patched games and intentional overdumps.{:s}".format(ANSI.YELLOW, ANSI.RESET))
+					print("{:s}The ROM backup is complete, but the checksum doesn’t match the known database entry. This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 		
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.CONN.INFO["last_action"] = 0
@@ -508,12 +508,15 @@ class FlashGBX_CLI():
 				else:
 					s += "Detected"
 			else:
-				s += "Not available"
 				if 'no_rtc_reason' in data:
 					if data['no_rtc_reason'] == 1:
 						s += "Not available / Battery dry"
 					elif data['no_rtc_reason'] == -1:
 						s += "Unknown"
+					else:
+						s += "Not available"
+				else:
+					s += "Not available"
 			s += "\n"
 
 			if data["logo_correct"]:
@@ -667,7 +670,7 @@ class FlashGBX_CLI():
 				elif ("[WR   / 555/A9]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/555/A9)” a try."
 				msg_cart_type_s += "\n"
 			else:
-				msg_cart_type_s = "Cartridge Type: Generic ROM Cartridge (not rewritable)\n"
+				msg_cart_type_s = "Cartridge Type: Generic ROM Cartridge (not rewritable or not auto-detectable)\n"
 		
 		msg_flash_id_s = "Flash ID Check:\n{:s}\n".format(flash_id[:-1])
 
@@ -684,7 +687,7 @@ class FlashGBX_CLI():
 	
 	def BackupROM(self, args, header):
 		mbc = 1
-		rom_banks = 1
+		rom_size = 0
 		#fast_read_mode = args.fast_read_mode is True
 
 		if self.CONN.GetMode() == "DMG":
@@ -705,14 +708,15 @@ class FlashGBX_CLI():
 			
 			if args.dmg_romsize == "auto":
 				try:
-					rom_banks = Util.DMG_Header_ROM_Sizes_Flasher_Map[header["rom_size_raw"]]
+					#rom_banks = Util.DMG_Header_ROM_Sizes_Flasher_Map[header["rom_size_raw"]]
+					rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[header["rom_size_raw"]]
 				except:
 					print("{:s}Couldn’t determine ROM size, will use 8 MB. It can also be manually set with the “--dmg-romsize” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
-					rom_banks = 512
+					#rom_banks = 512
+					rom_size = 8 * 1024 * 1024
 			else:
 				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb" ]
-				rom_banks = Util.DMG_Header_ROM_Sizes_Flasher_Map[sizes.index(args.dmg_romsize) - 1]
-			rom_size = rom_banks * 0x4000
+				rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[sizes.index(args.dmg_romsize) - 1]
 			
 			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
 			if path == "": path = "ROM"
@@ -786,7 +790,7 @@ class FlashGBX_CLI():
 					cart_type = i
 					break
 
-		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_banks':rom_banks, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
+		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_size':rom_size, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 	
 	def FlashROM(self, args, header):
 		path = ""

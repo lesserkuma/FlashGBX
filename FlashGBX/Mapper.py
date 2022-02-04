@@ -14,21 +14,22 @@ class DMG_MBC:
 	CART_READ_FNCPTR = None
 	CART_POWERCYCLE_FNCPTR = None
 	CLK_TOGGLE_FNCPTR = None
-	ROM_BANK_SIZE = 0
-	RAM_BANK_SIZE = 0
+	ROM_BANK_SIZE = 0x4000
+	RAM_BANK_SIZE = 0x2000
 	ROM_BANK_NUM = 0
 	CURRENT_ROM_BANK = 0
 
 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
 		if "mbc" in args: self.MBC_ID = args["mbc"]
-		if "rom_banks" in args: self.ROM_BANK_NUM = args["rom_banks"]
+		if "rom_banks" in args:
+			self.ROM_BANK_NUM = args["rom_banks"]
+		elif "rom_size" in args:
+			self.ROM_BANK_NUM = math.ceil(args["rom_size"] / self.ROM_BANK_SIZE)
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
 		self.CART_POWERCYCLE_FNCPTR = cart_powercycle_fncptr
 		self.CLK_TOGGLE_FNCPTR = clk_toggle_fncptr
-		self.ROM_BANK_SIZE = 0x4000
-		self.RAM_BANK_SIZE = 0x2000
 
 	def GetInstance(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
@@ -63,6 +64,8 @@ class DMG_MBC:
 			return DMG_TAMA5(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x201:									# 0x201:'256M Multi Cart',
 			return DMG_Unlicensed_256M(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+		elif mbc_id == 0x202:									# 0x202:'Wisdom Tree Mapper',
+			return DMG_Unlicensed_WisdomTree(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		else:
 			self.__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 			return self
@@ -474,7 +477,7 @@ class DMG_MBC6(DMG_MBC):
 		self.CartWrite(cmds)
 		self.SelectBankFlash(self.GetROMBank())
 		self.CartWrite([[ 0x4000, 0x30 ]])
-		while True: # TODO: error handling
+		while True:
 			sr = self.CartRead(0x4000)
 			dprint("Status Register Check: 0x{:X} == 0x80? {:s}".format(sr, str(sr == 0x80)))
 			if sr == 0x80: break
@@ -722,13 +725,15 @@ class DMG_M161(DMG_MBC):
 
 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
-		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
 		self.ROM_BANK_SIZE = 0x8000
-		self.ROM_BANK_NUM = 8
+		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
 	
 	def ResetBeforeBankChange(self, index):
 		return True
 	
+	#def GetROMSize(self):
+	#	return self.ROM_BANK_SIZE * math.floor(self.ROM_BANK_NUM / 2)
+
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
 		commands = [
@@ -1101,6 +1106,26 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 		self.CartWrite(commands)
 
 		return (start_address, self.RAM_BANK_SIZE)
+
+class DMG_Unlicensed_WisdomTree(DMG_MBC):
+	def GetName(self):
+		return "Wisdom Tree"
+
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
+		self.ROM_BANK_SIZE = 0x8000
+		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
+	
+	#def GetROMSize(self):
+	#	return self.ROM_BANK_SIZE * math.floor(self.ROM_BANK_NUM / 2)
+
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|", index)
+		commands = [
+			[ index, 0 ]
+		]
+		self.CartWrite(commands)
+		return (0, 0x8000)
 
 
 class AGB_GPIO:

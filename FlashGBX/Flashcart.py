@@ -39,11 +39,12 @@ class Flashcart:
 				length = 1
 		return self.CART_READ_FNCPTR(address, length)
 	
-	def CartWrite(self, commands, sram=False):
+	def CartWrite(self, commands, flashcart=True, sram=False):
+		if "command_set" in self.CONFIG and self.CONFIG["command_set"] == "DMG-MBC5-32M-FLASH": flashcart = False
 		for command in commands:
 			address = command[0]
 			value = command[1]
-			self.CART_WRITE_FNCPTR(address, value, flashcart=True, sram=sram)
+			self.CART_WRITE_FNCPTR(address, value, flashcart=flashcart, sram=sram)
 
 	def GetCommandSetType(self):
 		return self.CONFIG["_command_set"].upper()
@@ -111,6 +112,10 @@ class Flashcart:
 	def WEisWR_RESET(self):
 		if "write_pin" not in self.CONFIG: return False
 		return (self.CONFIG["write_pin"] == "WR+RESET")
+
+	def GetFlashSize(self):
+		if "flash_size" not in self.CONFIG: return False
+		return self.CONFIG["flash_size"]
 
 	def GetBufferSize(self):
 		if "buffer_size" in self.CONFIG:

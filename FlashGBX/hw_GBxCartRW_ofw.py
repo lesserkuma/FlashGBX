@@ -115,7 +115,9 @@ class GbxDevice:
 		"CLK_LOW":'[',
 		"CART_PWR_ON":'/',
 		"CART_PWR_OFF":'.',
-		"QUERY_CART_PWR":']'
+		"QUERY_CART_PWR":']',
+		"AUDIO_HIGH":'8',
+		"AUDIO_LOW":'9',
 	}
 	PCB_VERSIONS = {1:'v1.0', 2:'v1.1', 4:'v1.3', 90:'XMAS', 100:'Mini v1.0', 101:'Mini v1.0d'}
 	SUPPORTED_CARTS = {}
@@ -194,7 +196,6 @@ class GbxDevice:
 					#continue
 					self.FW_UPDATE_REQ = True
 				elif self.FW[0] < self.DEVICE_MAX_FW:
-					# TODO: not showing this for now
 					#conn_msg.append([1, "The GBxCart RW device on port " + ports[i] + " is running an older firmware version. Please consider updating to version R" + str(self.DEVICE_MAX_FW) + " to make use of the latest features.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
 					pass
 				elif self.FW[0] > self.DEVICE_MAX_FW:
@@ -1273,7 +1274,7 @@ class GbxDevice:
 			if self.MODE == "DMG":
 				supported_carts = list(self.SUPPORTED_CARTS['DMG'].values())
 				mbc = args["mbc"]
-				bank_count = args["rom_banks"]
+				bank_count = int(args["rom_size"] / 0x4000)
 				
 				if mbc == 0x104: # M161
 					bank_count = 8
@@ -1457,6 +1458,7 @@ class GbxDevice:
 			data_dump = bytearray()
 			data_import = bytearray()
 			self.ReadROM(0, 64) # fix
+			audio_low = False
 			
 			startAddr = 0
 			if self.MODE == "DMG":
@@ -1500,7 +1502,19 @@ class GbxDevice:
 				if transfer_size >= save_size:
 					transfer_size = save_size
 					bank_size = save_size
-			
+
+				# Check for DMG-MBC5-32M-FLASH
+				self.cart_write(0x2000, 0x00)
+				self.cart_write(0x4000, 0x90)
+				flash_id = self.ReadROM(0x4000, 2)
+				if flash_id == bytearray([0xB0, 0x88]): audio_low = True
+				self.cart_write(0x4000, 0xF0)
+				self.cart_write(0x4000, 0xFF)
+				self.cart_write(0x2000, 0x01)
+				if audio_low:
+					dprint("DMG-MBC5-32M-FLASH Development Cartridge detected")
+					self.set_mode(self.DEVICE_CMD["AUDIO_LOW"])
+
 			elif self.MODE == "AGB":
 				bank_size = 0x10000
 				save_type = args["save_type"]
@@ -1816,6 +1830,7 @@ class GbxDevice:
 				self.INFO["file_crc32"] = zlib.crc32(data_dump) & 0xFFFFFFFF
 				self.INFO["file_sha1"] = hashlib.sha1(data_dump).hexdigest()
 			
+			if audio_low: self.set_mode(self.DEVICE_CMD["AUDIO_HIGH"])
 			self.INFO["last_action"] = mode
 			self.SetProgress({"action":"FINISHED"})
 		
@@ -2056,6 +2071,12 @@ class GbxDevice:
 			
 			dprint("Chip erase took {:d} seconds".format(math.ceil(time.time() - time_start)))
 		
+		elif "sector_erase" in flashcart_meta["commands"] and prefer_chip_erase is True:
+			flash_size = flashcart_meta["flash_size"]
+			if flash_size is not False and len(data_import) < flash_size:
+				# Pad with FF till the end
+				data_import += bytearray([0xFF] * (flash_size - len(data_import)))
+
 		self.set_number(0, self.DEVICE_CMD["SET_START_ADDRESS"])
 		
 		# Write Flash
@@ -2230,7 +2251,7 @@ class GbxDevice:
 							currAddr += 32
 							pos += 32
 						
-						else: # TODO
+						else:
 							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the Tools menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							return False
 					
@@ -2337,7 +2358,7 @@ class GbxDevice:
 								currAddr += 256
 								pos += 256
 						
-						else: # TODO
+						else:
 							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the Tools menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							return False
 				

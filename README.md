@@ -88,6 +88,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with AT49F040
   - DIY cart with MBC1 and AM29F080
   - DIY cart with MBC3 and MX29LV640
+  - DMG-MBC5-32M-FLASH Development Cartridge, E201264
   - Ferrante Crafts cart with SST39SF010A
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
@@ -104,6 +105,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 - Game Boy Advance
 
+  - Development AGB Cartridge 64M Flash S, E201843
   - Development AGB Cartridge 128M Flash S, E201850
   - Development AGB Cartridge 256M Flash S, E201868
   - Flash2Advance 128M (with 2× 28F640J3A120)
@@ -147,6 +149,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_BV5_V3 with HY29LV160BT-70
   - SD007_BV5_V3 with AM29LV160MB
   - SD007_K8D3216_32M with MX29LV160CT
+  - SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85¹
   - SD007_TSOP_29LV017D with L017D70VC
   - SD007_TSOP_29LV017D with S29GL032M90T
   - SD007_TSOP_48BALL with 36VF3204
@@ -155,12 +158,16 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_TSOP_48BALL with M29W160ET
   - SD007_TSOP_48BALL with L160DB12VI
   - SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G
+  - SD007_TSOP_48BALL_V10 with 29DL164BE-70P
   - SD007_TSOP_48BALL_V10 with 29DL32TF-70
   - SD007_TSOP_48BALL_V10 with 29LV320CTXEI
   - SD007_TSOP_48BALL_V10 with GL032M10BFIR3
   - SD007_TSOP_48BALL_V10 with M29W320DT
+  - SD007_TSOP_64BALL_SOJ28 with 29DL164BE-70P
+  - SD007_TSOP_64BALL_SOJ28 with unlabeled flash chip
   - SD007_TSOP_64BALL_SOP28 with EN29LV160AB-70TCP
   - SD007_TSOP_64BALL_SOP28 with unlabeled flash chip
+  - SD008-6810-512S with MSP55LV512
   - SD008-6810-V4 with MX29GL256EL
   - SD008-6810-V5 with MX29CL256FH
 
@@ -173,6 +180,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 29LV128DBT2C-90Q and ALTERA CPLD
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
+  - 4000L0ZBQ0 DRV with 3000L0YBQ0
   - 4350Q2 with 4050V0YBQ1
   - 4350Q2 with 4350LLYBQ2
   - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0
@@ -208,6 +216,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
+*¹ = Cannot be auto-detected, select cartridge type manually*
+
 ### Troubleshooting
 
 * If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device. An unstable cartridge connection is the most common reason for read or write errors.
@@ -223,6 +233,8 @@ Many different reproduction cartridges share their flash chip command set, so ev
 * If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
 * If you use Python 3.10+ and see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` or can only use CLI mode, try to install or update the PySide2 package by running `pip3 install -U PySide2 --ignore-requires-python` or try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/).
+
+* If your Game Boy Camera cartridge is not reading, make sure it’s connected the correct way around; screws go up.
 
 * For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
 
@@ -254,9 +266,11 @@ The author would like to thank the following very kind people for their help and
 - Herax (flash chip info)
 - hiks (flash chip info)
 - howie0210 (flash chip info, bug reports)
+- iamevn (flash chip info)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
 - JFox (help with properly packaging the app for pip, Linux help)
+- joyrider3774 (flash chip info)
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
@@ -276,11 +290,13 @@ The author would like to thank the following very kind people for their help and
 - Shinichi999 (bug reports)
 - Sithdown (flash chip info)
 - skite2001 (flash chip info)
+- Smelly-Ghost (testing)
 - Super Maker (flash chip info, testing)
 - t5b6_de (flash chip info)
 - twitnic (flash chip info)
 - Veund (flash chip info)
 - Voultar (bug reports, feature suggestions)
+- x7l7j8cc (flash chip info)
 - Zeii (flash chip info)
 - Zelante (flash chip info)
 

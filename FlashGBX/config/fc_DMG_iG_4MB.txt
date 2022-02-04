@@ -22,7 +22,7 @@
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
-			[ 0x000, 0xF0 ]
+			[ 0, 0xF0 ]
 		],
 		"read_identifier":[
 			[ 0xAAA, 0xAA ],

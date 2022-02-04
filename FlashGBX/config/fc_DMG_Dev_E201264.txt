@@ -1,0 +1,44 @@
+{
+	"type":"DMG",
+	"names":[
+		"DMG-MBC5-32M-FLASH Development Cartridge"
+	],
+	"flash_ids":[
+		[ 0xB0, 0x88 ]
+	],
+	"voltage":5,
+	"mbc":0x1B,
+	"flash_size":0x400000,
+	"start_addr":0x4000,
+	"first_bank":0,
+	"write_pin":"AUDIO",
+	"chip_erase_timeout":100,
+	"sector_size":0x10000,
+	"wait_read_status_register":true,
+	"command_set":"DMG-MBC5-32M-FLASH",
+	"commands":{
+		"unlock":[
+			[ 0x2000, 0x00, 1 ],
+			[ 0x3000, 0x00, 1 ]
+		],
+		"reset":[
+			[ 0x4000, 0xFF ]
+		],
+		"read_status_register":[
+			[ 0x4000, 0x70 ]
+		],
+		"read_identifier":[
+			[ 0x4000, 0x90 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x70 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ]
+		]
+	}
+}

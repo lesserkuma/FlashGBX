@@ -7,7 +7,8 @@
 		"2006_TSOP_64BALL_QFP48 with AL016J55FFAR2",
 		"SD007_TSOP_64BALL_SOP28 with unlabeled flash chip",
 		"SD007_TSOP_29LV017D with L017D70VC",
-		"SD007_TSOP_48BALL with AM29LV160DT"
+		"SD007_TSOP_48BALL with AM29LV160DT",
+		"SD007_TSOP_64BALL_SOJ28 with unlabeled flash chip"
 	],
 	"flash_ids":[
 		[ 0x02, 0x02, 0x4A, 0x4A ],
@@ -16,9 +17,11 @@
 		[ 0x02, 0x02, 0x4A, 0x4A ],
 		[ 0x02, 0x02, 0x4A, 0x4A ],
 		[ 0x02, 0xC8, 0x00, 0x00 ],
-		[ 0x02, 0x02, 0xC4, 0xC4 ]
+		[ 0x02, 0x02, 0xC4, 0xC4 ],
+		[ 0x02, 0x02, 0x4A, 0x4A ]
 	],
 	"voltage":3.3,
+	"voltage_variants":true,
 	"flash_size":0x200000,
 	"start_addr":0,
 	"first_bank":1,

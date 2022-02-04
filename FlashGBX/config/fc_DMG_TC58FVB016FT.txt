@@ -1,0 +1,46 @@
+{
+	"type":"DMG",
+	"names":[
+		"SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85"
+	],
+	"voltage":3.3,
+	"flash_size":0x200000,
+	"start_addr":0,
+	"first_bank":1,
+	"write_pin":"WR",
+	"chip_erase_timeout":60,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"chip_erase":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

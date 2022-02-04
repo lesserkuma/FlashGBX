@@ -1,0 +1,81 @@
+{
+	"type":"AGB",
+	"names":[
+		"Development AGB Cartridge 64M Flash S, E201843"
+	],
+	"flash_ids":[
+		[ 0xB0, 0x00, 0xE2, 0x00 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x800000,
+	"chip_erase_timeout":100,
+	"sector_size":[
+		[0x10000, 63],
+		[0x02000, 8],
+		[0x10000, 63],
+		[0x02000, 8]
+	],
+	"wait_read_status_register":true,
+	"reset_every":0x400000,
+	"command_set":"SHARP",
+	"commands":{
+		"reset":[
+			[ 0, 0x50 ],
+			[ 0, 0xFF ]
+		],
+		"read_status_register":[
+			[ 0, 0x70 ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ]
+		],
+		"chip_erase":[
+			[ 0, 0x30 ],
+			[ 0, 0xD0 ],
+			[ 0x400000, 0x30 ],
+			[ 0x400000, 0xD0 ],
+			[ 0x800000, 0x30 ],
+			[ 0x800000, 0xD0 ],
+			[ 0xC00000, 0x30 ],
+			[ 0xC00000, 0xD0 ],
+			[ 0, 0x70 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0x80, 0x80 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x60 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x70 ],
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x70 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ]
+		],
+		"single_write":[
+			[ "PA", 0x70 ],
+			[ "PA", 0x40 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ "PA", 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

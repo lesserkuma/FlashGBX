@@ -55,22 +55,6 @@
 			[ null, null, null ],
 			[ "SA", 0xFFFF, 0xFFFF ]
 		],
-		"chip_erase":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
-			[ 0xAAA, 0x10 ]
-		],
-		"chip_erase_wait_for":[
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ 0, 0xFFFF, 0xFFFF ]
-		],
 		"buffer_write":[
 			[ 0xAAA, 0xA9 ],
 			[ 0x555, 0x56 ],

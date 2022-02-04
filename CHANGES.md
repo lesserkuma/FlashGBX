@@ -1,4 +1,16 @@
 # Release notes
+### v3.4 (released 2022-02-04)
+- Confirmed support for SD007_TSOP_64BALL_SOJ28 with unlabeled flash chip *(thanks x7l7j8cc)*
+- Added support for SD008-6810-512S with MSP55LV512
+- Added support for SD007_TSOP_48BALL_V10 with 29DL164BE-70P *(thanks Herax)*
+- Added support for the unlicensed Wisdom Tree mapper *(thanks AlexiG and Smelly-Ghost)*
+- Added support for 4000L0ZBQ0 DRV with 3000L0YBQ0 *(thanks iamevn)*
+- Added support for SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85 *(thanks joyrider3774)* (cannot be auto-detected, select cartridge type manually)
+- Added support for SD007_TSOP_64BALL_SOJ28 with 29DL164BE-70P *(thanks Herax)*
+- Confirmed support for Development AGB Cartridge 64M Flash S, E201843
+- Added support for the DMG-MBC5-32M-FLASH Development Cartridge, E201264 (requires GBxCart RW firmware L1 or higher)
+- If the full chip erase preference is enabled but only sector erase mode is available, the entire chip will now still be erased, so no previous data will remain
+
 ### v3.3 (released 2022-01-10)
 - Added support for Flash2Advance 128M with 2× 28F640J3A120 *(thanks twitnic)*
 - Added support for 36VF3204 and ALTERA CPLD (no PCB text) *(thanks Herax and Davidish)*
