@@ -273,6 +273,7 @@ class Flashcart:
 		#time_start = time.time()
 		#if progress_fnc is not None: progress_fnc({"action":"ERASE", "time_start":time_start, "abortable":False})
 		if "sector_erase" not in self.CONFIG["commands"]: return False
+		if "sector_size" not in self.CONFIG: return False
 		for i in range(0, len(self.CONFIG["commands"]["sector_erase"])):
 			addr = self.CONFIG["commands"]["sector_erase"][i][0]
 			data = self.CONFIG["commands"]["sector_erase"][i][1]

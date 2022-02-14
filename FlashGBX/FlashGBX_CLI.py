@@ -58,6 +58,7 @@ class FlashGBX_CLI():
 		
 		# Ask interactively if no args set
 		if args.action is None:
+			self.ARGS["called_with_args"] = False
 			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"]
 			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures From Existing Save Data Backup\n 8) Firmware Update (for GBxCart RW v1.4/v1.4a only)\n")
 			args.action = input("Enter number 1-8 [1]: ").lower().strip()
@@ -72,6 +73,8 @@ class FlashGBX_CLI():
 				else:
 					print("Canceled.")
 					return
+		else:
+			self.ARGS["called_with_args"] = True
 		
 		if args.action is None or args.action not in ("gbcamera-extract", "fwupdate-gbxcartrw"):
 			if not self.FindDevices():
@@ -273,7 +276,7 @@ class FlashGBX_CLI():
 				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
 				if self.CONN.INFO["rom_checksum"] == self.CONN.INFO["rom_checksum_calc"]:
 					print("{:s}The ROM backup is complete and the checksum was verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
-				elif ("DMG-MMSA-JPN" in self.ARGS["argparsed"].flashcart_handler) or ("features_raw" in self.CONN.INFO and self.CONN.INFO["features_raw"] in (0x105, 0x202)):
+				elif ("DMG-MMSA-JPN" in self.ARGS["argparsed"].flashcart_type) or ("features_raw" in self.CONN.INFO and self.CONN.INFO["features_raw"] in (0x105, 0x202)):
 					print("The ROM backup is complete!")
 				else:
 					print("{:s}The ROM was dumped, but the checksum is not correct. This may indicate a bad dump, however this can be normal for some reproduction prototypes, unlicensed games, patched games and intentional overdumps.{:s}".format(ANSI.YELLOW, ANSI.RESET))
@@ -291,7 +294,7 @@ class FlashGBX_CLI():
 			self.CONN.INFO["last_action"] = 0
 			if not "debug" in self.ARGS and self.CONN.INFO["transferred"] == 131072: # 128 KB
 				with open(self.CONN.INFO["last_path"], "rb") as file: temp = file.read()
-				if temp[0x1FFB1:0x1FFB6] == b'Magic':
+				if temp[0x1FFB1:0x1FFB6] == b'Magic' and not self.ARGS["called_with_args"]:
 					answer = input("Game Boy Camera save data was detected.\nWould you like to extract all pictures to “{:s}” now? [Y/n]: ".format(Util.formatPathOS(os.path.abspath(os.path.splitext(self.CONN.INFO["last_path"])[0]), end_sep=True) + "IMG_PC**.{:s}".format(self.ARGS["argparsed"].gbcamera_outfile_format))).strip().lower()
 					if answer != "n":
 						pc = PocketCamera()
@@ -479,11 +482,11 @@ class FlashGBX_CLI():
 
 			if data['logo_correct'] and not self.CONN.IsSupportedMbc(data["features_raw"]):
 				print("{:s}\nWARNING: This cartridge uses a mapper that may not be completely supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates.{:s}".format(ANSI.YELLOW, APPNAME, self.CONN.GetFullName(), ANSI.RESET))
-			if data['logo_correct'] and data['game_title'] == "NP M-MENU MENU" and self.ARGS["argparsed"].flashcart_handler == "autodetect":
+			if data['logo_correct'] and data['game_title'] == "NP M-MENU MENU" and self.ARGS["argparsed"].flashcart_type == "autodetect":
 				cart_types = self.CONN.GetSupportedCartridgesDMG()
 				for i in range(0, len(cart_types[0])):
 					if "DMG-MMSA-JPN" in cart_types[0][i]:
-						self.ARGS["argparsed"].flashcart_handler = cart_types[0][i]
+						self.ARGS["argparsed"].flashcart_type = cart_types[0][i]
 
 		elif self.CONN.GetMode() == "AGB":
 			s += "Game Title:           {:s}\n".format(data["game_title"])
@@ -774,7 +777,7 @@ class FlashGBX_CLI():
 		print("")
 		
 		cart_type = 0
-		if args.flashcart_handler != "autodetect": 
+		if args.flashcart_type != "autodetect": 
 			if self.CONN.GetMode() == "DMG":
 				carts = self.CONN.GetSupportedCartridgesDMG()[1]
 			elif self.CONN.GetMode() == "AGB":
@@ -783,9 +786,9 @@ class FlashGBX_CLI():
 			for i in range(0, len(carts)):
 				if not "names" in carts[i]: continue
 				if carts[i]["type"] != self.CONN.GetMode(): continue
-				if args.flashcart_handler in carts[i]["names"]:
-					print("Selected flash cartridge type: {:s}".format(args.flashcart_handler))
-					rom_banks = int(carts[i]["flash_size"] / 0x4000)
+				if args.flashcart_type in carts[i]["names"]:
+					print("Selected flash cartridge type: {:s}".format(args.flashcart_type))
+					#rom_banks = int(carts[i]["flash_size"] / 0x4000)
 					rom_size = carts[i]["flash_size"]
 					cart_type = i
 					break
@@ -806,23 +809,23 @@ class FlashGBX_CLI():
 		for i in range(0, len(carts)):
 			if not "names" in carts[i]: continue
 			if carts[i]["type"] != mode: continue
-			if args.flashcart_handler in carts[i]["names"]:
-				print("Selected flash cartridge type: {:s}".format(args.flashcart_handler))
+			if args.flashcart_type in carts[i]["names"]:
+				print("Selected flash cartridge type: {:s}".format(args.flashcart_type))
 				cart_type = i
 				break
 		
-		if cart_type <= 0 and args.flashcart_handler == "autodetect":
+		if cart_type <= 0 and args.flashcart_type == "autodetect":
 			#cart_type = self.DetectCartridge(limitVoltage=not args.force_5v)
 			cart_type = self.DetectCartridge()
 			if cart_type is None: cart_type = 0
 			if cart_type == 0:
 				msg_5v = ""
 				if mode == "DMG": msg_5v = "If your flash cartridge requires 5V to work, you can use the “--force-5v” command line switch, however please note that 5V can be unsafe for some flash chips."
-				print("\n{:s}Auto-detection failed. Please use the “--flashcart-handler” command line switch to select the flash cartridge type manually.\n{:s}{:s}{:s}".format(ANSI.RED, ANSI.RESET, msg_5v, ANSI.RESET))
+				print("\n{:s}Auto-detection failed. Please use the “--flashcart-type” command line switch to select the flash cartridge type manually.\n{:s}{:s}{:s}".format(ANSI.RED, ANSI.RESET, msg_5v, ANSI.RESET))
 				return
 			elif cart_type < 0: return
-		elif cart_type == 0 and args.flashcart_handler != "autodetect":
-			print("{:s}Couldn’t find the selected flash cartridge type “{:s}”. Please make sure the correct cartridge mode is selected and copy the exact name from the configuration files located in {:s}.{:s}".format(ANSI.RED, args.flashcart_handler, self.CONFIG_PATH, ANSI.RESET))
+		elif cart_type == 0 and args.flashcart_type != "autodetect":
+			print("{:s}Couldn’t find the selected flash cartridge type “{:s}”. Please make sure the correct cartridge mode is selected and copy the exact name from the configuration files located in {:s}.{:s}".format(ANSI.RED, args.flashcart_type, self.CONFIG_PATH, ANSI.RESET))
 			return
 		
 		if args.path == "auto":

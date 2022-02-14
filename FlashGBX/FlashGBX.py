@@ -52,7 +52,7 @@ def LoadConfig(args):
 					zip.extract(zfile, config_path + "/")
 			
 			if rf_list != "":
-				ret.append([1, "The application was recently updated and some flashcart handler files have been updated as well. You will find backup copies of them in your configuration directory.\n\nUpdated files:\n" + rf_list[:-1]])
+				ret.append([1, "The application was recently updated and some flashcart type files have been updated as well. You will find backup copies of them in your configuration directory.\n\nUpdated files:\n" + rf_list[:-1]])
 			fc_files = glob.glob("{0:s}/fc_*.txt".format(config_path))
 		else:
 			print("WARNING: {:s} not found. This is required to load new flash cartridge type configurations after updating.".format(app_path + "/res/config.zip"))
@@ -65,7 +65,7 @@ def LoadConfig(args):
 			try:
 				specs = json.loads(specs_int)
 			except:
-				ret.append([2, "The flashchip handler file “{:s}” could not be parsed and needs to be fixed before it can be used.".format(os.path.basename(file))])
+				ret.append([2, "The flashchip type file “{:s}” could not be parsed and needs to be fixed before it can be used.".format(os.path.basename(file))])
 				continue
 			for name in specs["names"]:
 				if not specs["type"] in flashcarts: continue # only DMG and AGB are supported right now
@@ -132,7 +132,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--store-rtc", action="store_true", help="store RTC register values if supported")
 	ap_cli2.add_argument("--ignore-bad-header", action="store_true", help="don’t stop if invalid data found in cartridge header data")
 	#ap_cli2.add_argument("--fast-read-mode", action="store_true", help="enable experimental fast read mode for GBxCart RW v1.3")
-	ap_cli2.add_argument("--flashcart-handler", type=str, default="autodetect", help="name of flash cart; see txt files in config directory")
+	ap_cli2.add_argument("--flashcart-type", type=str, default="autodetect", help="name of flash cart; see txt files in config directory")
 	ap_cli2.add_argument("--prefer-chip-erase", action="store_true", help="prefer full chip erase over sector erase when both available")
 	ap_cli2.add_argument("--reversed-sectors", action="store_true", help="use reversed flash sectors if possible")
 	ap_cli2.add_argument("--force-5v", action="store_true", help="force 5V when writing Game Boy flash cartridges")

@@ -650,6 +650,14 @@ class GbxDevice:
 			mbc = info["features_raw"]
 			if mbc > 0x200: checkSaveType = False
 		
+		(cart_types, cart_type_id, flash_id, cfi_s, cfi) = self.AutoDetectFlash(limitVoltage=limitVoltage)
+		supported_carts = list(self.SUPPORTED_CARTS[self.MODE].values())
+		cart_type = supported_carts[cart_type_id]
+		if self.MODE == "DMG" and "command_set" in cart_type and cart_type["command_set"] == "DMG-MBC5-32M-FLASH":
+			checkSaveType = False
+		elif self.MODE == "AGB" and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] == 1:
+			checkSaveType = False
+
 		# Save Type and Size
 		if checkSaveType:
 			max_size = 0x20000
@@ -697,11 +705,11 @@ class GbxDevice:
 				# Check for FLASH
 				ret = self.ReadFlashSaveID()
 				if ret is not False:
-					(_, flash_id, _) = ret
+					(_, flash_save_id, _) = ret
 					try:
-						if flash_id != 0 and flash_id in Util.AGB_Flash_Save_Chips:
-							save_size = Util.AGB_Flash_Save_Chips_Sizes[list(Util.AGB_Flash_Save_Chips).index(flash_id)]
-							save_chip = Util.AGB_Flash_Save_Chips[flash_id]
+						if flash_save_id != 0 and flash_save_id in Util.AGB_Flash_Save_Chips:
+							save_size = Util.AGB_Flash_Save_Chips_Sizes[list(Util.AGB_Flash_Save_Chips).index(flash_save_id)]
+							save_chip = Util.AGB_Flash_Save_Chips[flash_save_id]
 							if save_size == 131072:
 								save_type = 7
 							elif save_size == 65536:
@@ -738,8 +746,6 @@ class GbxDevice:
 		self._write(self.DEVICE_CMD["DMG_MBC_RESET"], wait=True)
 		self.INFO["last_action"] = 0
 		self.INFO["action"] = None
-
-		(cart_types, cart_type_id, flash_id, cfi_s, cfi) = self.AutoDetectFlash(limitVoltage=limitVoltage)
 
 		return (info, save_size, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, cfi, flash_id)
 	
@@ -2259,6 +2265,14 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
 		# ↑↑↑ Set Voltage
 		
+		# ↓↓↓ Pad data for full chip erase on sector erase mode
+		if not flashcart.SupportsChipErase() and flashcart.SupportsSectorErase() and args["prefer_chip_erase"] is True:
+			flash_size = flashcart.GetFlashSize()
+			if flash_size is not False and len(data_import) < flash_size:
+				# Pad with FF till the end
+				data_import += bytearray([0xFF] * (flash_size - len(data_import)))
+		# ↑↑↑ Pad data for full chip erase on sector erase mode
+
 		# ↓↓↓ Flashcart configuration
 		if self.MODE == "DMG":
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
@@ -2391,7 +2405,7 @@ class GbxDevice:
 		# ↓↓↓ Read Sector Map
 		sector_map = flashcart.GetSectorMap()
 		smallest_sector_size = 0x2000
-		if sector_map is not None:
+		if sector_map is not None and sector_map is not False:
 			smallest_sector_size = flashcart.GetSmallestSectorSize()
 			dprint("Sector map:", sector_map)
 			sector_size = 0
@@ -2407,7 +2421,7 @@ class GbxDevice:
 		# ↓↓↓ Chip erase
 		chip_erase = False
 		if flashcart.SupportsChipErase():
-			if flashcart.SupportsSectorErase() and args["prefer_chip_erase"] is False:
+			if flashcart.SupportsSectorErase() and args["prefer_chip_erase"] is False and flashcart.GetSectorMap() is not False:
 				chip_erase = False
 			else:
 				chip_erase = True
@@ -2416,11 +2430,6 @@ class GbxDevice:
 				if flashcart.ChipErase() is False:
 					return False
 				#_mbc.SelectBankROM(0)
-		elif flashcart.SupportsSectorErase() and args["prefer_chip_erase"] is True:
-			flash_size = flashcart.GetFlashSize()
-			if flash_size is not False and len(data_import) < flash_size:
-				# Pad with FF till the end
-				data_import += bytearray([0xFF] * (flash_size - len(data_import)))
 		elif flashcart.SupportsSectorErase() is False:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"No erase method available.", "abortable":False})
 			return False

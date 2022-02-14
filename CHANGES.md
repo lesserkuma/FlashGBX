@@ -1,4 +1,9 @@
 # Release notes
+### v3.5 (released 2022-02-14)
+- Fixed a bug related to the 100BS6600_48BALL_V4 with 6600M0U0BE cartridge when using the Detect Flash Cart button *(thanks to redalchemy)*
+- Fixed a bug with the full chip erase feature via sector erase mode
+- When reading save data from a Game Boy Camera or Pocket Camera cartridge via custom command line switches, you will no longer be asked if you’d also like to extract pictures. This is to make it easier to use FlashGBX for scripting. You can still use `--action gbcamera-extract` to extract pictures in a second step, or use the interactive mode.
+
 ### v3.4 (released 2022-02-04)
 - Confirmed support for SD007_TSOP_64BALL_SOJ28 with unlabeled flash chip *(thanks x7l7j8cc)*
 - Added support for SD008-6810-512S with MSP55LV512
