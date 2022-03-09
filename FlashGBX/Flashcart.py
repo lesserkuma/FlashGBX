@@ -78,16 +78,22 @@ class Flashcart:
 	def HasRTC(self):
 		return ("rtc" in self.CONFIG and self.CONFIG["rtc"] is True)
 
+	def HasDoubleDie(self):
+		return ("double_die" in self.CONFIG and self.CONFIG["double_die"] is True)
+	
 	def SupportsBufferWrite(self):
 		buffer_size = self.GetBufferSize()
 		if buffer_size is False:
 			return False
 		else:
-			return True
-		#return ("buffer_write" in self.CONFIG["commands"])
+			#return True
+			return ("buffer_write" in self.CONFIG["commands"])
 
 	def SupportsSingleWrite(self):
 		return ("single_write" in self.CONFIG["commands"])
+	
+	#def SupportsFujitsuFastWrite(self):
+	#	return ("fast_write" in self.CONFIG["commands"])
 	
 	def SupportsChipErase(self):
 		return ("chip_erase" in self.CONFIG["commands"])
@@ -412,8 +418,8 @@ class CFI:
 						info["tb_boot_sector"] = "{:s} (0x{:02X})".format(temp[buffer[pri_address + 0x1E]], buffer[pri_address + 0x1E])
 					except:
 						info["tb_boot_sector"] = "0x{:02X}".format(buffer[pri_address + 0x1E])
-			elif "{:s}{:s}{:s}".format(chr(buffer[0x214]), chr(buffer[0x216]), chr(buffer[0x218])) == "PRI":
-				pass # todo
+			#elif "{:s}{:s}{:s}".format(chr(buffer[0x214]), chr(buffer[0x216]), chr(buffer[0x218])) == "PRI":
+			#	pass
 			
 			info["device_size"] = int(math.pow(2, buffer[0x4E]))
 			info["buffer_size"] = buffer[0x56] << 8 | buffer[0x54]

@@ -986,7 +986,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 			path = self.lblAGBHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii') + "_" + self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
 			if path == "_": path = self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or self.lblHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
+			if path == "" or self.lblAGBHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 			rom_size = Util.AGB_Header_ROM_Sizes_Map[self.cmbAGBHeaderROMSizeResult.currentIndex()]
 			path = path + ".gba"
@@ -999,6 +999,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.lblHeaderROMChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
 		self.lblAGBHeaderROMChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
 		
+		self.grpDMGCartridgeInfo.setEnabled(False)
+		self.grpAGBCartridgeInfo.setEnabled(False)
+		self.grpActions.setEnabled(False)
+		self.btnTools.setEnabled(False)
+		self.btnConfig.setEnabled(False)
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
 		args = { "path":path, "mbc":mbc, "rom_size":rom_size, "agb_rom_size":rom_size, "fast_read_mode":True, "cart_type":cart_type }
@@ -1012,6 +1017,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		#	self.ShowGBMemoryWindow()
 		#	return
 		
+		just_erase = False
 		path = ""
 		if dpath != "":
 			text = "The following ROM file will now be written to the flash cartridge:\n" + dpath
@@ -1047,29 +1053,35 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			elif self.CONN.GetMode() == "AGB":
 				self.cmbAGBCartridgeTypeResult.setCurrentIndex(cart_type)
 		
-		while path == "":
+		if (path == ""):
 			if self.CONN.GetMode() == "DMG":
 				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy ROM File (*.gb *.gbc *.sgb *.bin);;All Files (*.*)")[0]
 			elif self.CONN.GetMode() == "AGB":
-				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy Advance ROM File (*.gba *.srl);;All Files (*.*)")[0]
+				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy Advance ROM File (*.gba *.srl *.bin);;All Files (*.*)")[0]
+		
+		if (path == ""):
+			msg = "No ROM file was selected. Do you want to wipe the ROM contents of the cartridge instead?"
+			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+			if answer == QtWidgets.QMessageBox.No: return
+			just_erase = True
+			path = False
+			buffer = bytearray()
+		
+		if not just_erase:
+			self.SETTINGS.setValue(setting_name, os.path.dirname(path))
+			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
+				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MB are not supported.", QtWidgets.QMessageBox.Ok)
+				return
 			
-			if (path == ""): return
-		
-		self.SETTINGS.setValue(setting_name, os.path.dirname(path))
-		
-		if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
-			QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MB are not supported.", QtWidgets.QMessageBox.Ok)
-			return
-		
-		with open(path, "rb") as file: buffer = bytearray(file.read(0x1000))
-		rom_size = os.stat(path).st_size
-		if "flash_size" in carts[cart_type]:
-			if rom_size > carts[cart_type]['flash_size']:
-				msg = "The selected flash cartridge type seems to support ROMs that are up to {:s} in size, but the file you selected is {:s}.".format(Util.formatFileSize(carts[cart_type]['flash_size']), Util.formatFileSize(os.path.getsize(path), roundUp=True))
-				msg += " You can still give it a try, but it’s possible that it’s too large which may cause the ROM writing to fail."
-				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
-				if answer == QtWidgets.QMessageBox.Cancel: return
-		
+			with open(path, "rb") as file: buffer = bytearray(file.read(0x1000))
+			rom_size = os.stat(path).st_size
+			if "flash_size" in carts[cart_type]:
+				if rom_size > carts[cart_type]['flash_size']:
+					msg = "The selected flash cartridge type seems to support ROMs that are up to {:s} in size, but the file you selected is {:s}.".format(Util.formatFileSize(carts[cart_type]['flash_size']), Util.formatFileSize(os.path.getsize(path), roundUp=True))
+					msg += " You can still give it a try, but it’s possible that it’s too large which may cause the ROM writing to fail."
+					answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
+					if answer == QtWidgets.QMessageBox.Cancel: return
+			
 		override_voltage = False
 		if 'voltage_variants' in carts[cart_type] and carts[cart_type]['voltage'] == 3.3:
 			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The selected flash cartridge type usually flashes fine with 3.3V, however sometimes it may require 5V. Which mode should be used?")
@@ -1115,7 +1127,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			verify_write = False
 		
 		fix_header = False
-		if len(buffer) >= 0x1000:
+		if not just_erase and len(buffer) >= 0x1000:
 			if self.CONN.GetMode() == "DMG":
 				hdr = RomFileDMG(buffer).GetHeader()
 			elif self.CONN.GetMode() == "AGB":
@@ -1139,9 +1151,19 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				elif msgbox.clickedButton() == button_nofix:
 					pass
 		
+		self.grpDMGCartridgeInfo.setEnabled(False)
+		self.grpAGBCartridgeInfo.setEnabled(False)
+		self.grpActions.setEnabled(False)
+		self.btnTools.setEnabled(False)
+		self.btnConfig.setEnabled(False)
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
+		if just_erase:
+			prefer_chip_erase = True
+			verify_write = False
+			args = { "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
+		else:
+			args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		buffer = None
@@ -1157,7 +1179,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 			path = self.lblHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or path == "(No ROM data detected)": path = "ROM"
+			if path == "" or self.lblHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
 			mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
 			try:
 				features = list(Util.DMG_Header_Mapper.keys())[self.cmbHeaderFeaturesResult.currentIndex()]
@@ -1173,7 +1195,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
 			path = self.lblAGBHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii') + "_" + self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
 			if path == "_": path = self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or path.startswith("(No ROM data detected)"): path = "ROM"
+			if path == "" or self.lblAGBHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
 			mbc = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
@@ -1207,6 +1229,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 		self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 
+		self.grpDMGCartridgeInfo.setEnabled(False)
+		self.grpAGBCartridgeInfo.setEnabled(False)
+		self.grpActions.setEnabled(False)
+		self.btnTools.setEnabled(False)
+		self.btnConfig.setEnabled(False)
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
 		args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc }
@@ -1291,6 +1318,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				rtc_advance = cb.isChecked()
 				rtc = (answer == QtWidgets.QMessageBox.Yes)
 
+		self.grpDMGCartridgeInfo.setEnabled(False)
+		self.grpAGBCartridgeInfo.setEnabled(False)
+		self.grpActions.setEnabled(False)
+		self.btnTools.setEnabled(False)
+		self.btnConfig.setEnabled(False)
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
 		args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase, "verify_write":verify_write }
@@ -1305,17 +1337,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if not self.CONN.IsConnected():
 					self.DisconnectDevice()
 					self.DEVICES = {}
-					dontShowAgain = str(self.SETTINGS.value("AutoReconnect", default="disabled")).lower() == "enabled"
-					if not dontShowAgain:
-						cb = QtWidgets.QCheckBox("Always try to reconnect without asking", checked=False)
-						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The connection to the device was lost. Do you want to try and reconnect to the first device found? The cartridge information will also be reset and read again.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-						msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
-						msgbox.setCheckBox(cb)
-						answer = msgbox.exec()
-						dontShowAgain = cb.isChecked()
-						if dontShowAgain: self.SETTINGS.setValue("AutoReconnect", "enabled")
-						if answer == QtWidgets.QMessageBox.No:
-							return False
 					if self.FindDevices(True):
 						if setMode is not False: mode = setMode
 						if mode == "DMG": self.optDMG.setChecked(True)
@@ -2041,8 +2062,20 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.FWUPWIN.run()
 	
 	def ShowPocketCameraWindow(self):
+		data = None
+		if self.CONN is not None:
+			if self.CONN.GetMode() is None:
+				self.optDMG.setChecked(True)
+				self.SetMode()
+			if self.CONN.GetMode() == "DMG":
+				header = self.CONN.ReadInfo(setPinsAsInputs=True)
+				if header["features_raw"] == 252: # GBD
+					args = { "path":None, "mbc":252, "save_type":128*1024, "rtc":False }
+					self.CONN.BackupRAM(fncSetProgress=False, args=args)
+					data = self.CONN.INFO["data"]
+		
 		self.CAMWIN = None
-		self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), config_path=self.CONFIG_PATH)
+		self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=data, config_path=self.CONFIG_PATH)
 		self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		self.CAMWIN.setModal(True)
 		self.CAMWIN.run()

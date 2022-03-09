@@ -28,6 +28,22 @@
 		"read_cfi":[
 			[ 0x555, 0x98 ]
 		],
+		"chip_erase":[
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
 		"sector_erase":[
 			[ 0x555, 0xAA ],
 			[ 0x2AA, 0x55 ],

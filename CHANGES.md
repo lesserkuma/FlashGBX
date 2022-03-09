@@ -1,4 +1,17 @@
 # Release notes
+### v3.6 (released 2022-03-09)
+- When opening Game Boy Camera Album Viewer manually, the save data will now automatically be loaded if a Game Boy Camera or Pocket Camera cartridge is connected
+- Fixed a bug with the insideGadgets 4 MB (S29GL032M) cartridge *(thanks frarees)*
+- Fixed a “MemoryError” bug when writing a smaller ROM to the 100BS6600_48BALL_V4 with 6600M0U0BE cartridge with full chip erase mode enabled
+- Added support for Flash Advance Card 64M with 28F640J3A120 *(thanks manuelcm1)*
+- Fixed a bug with writing ROMs to insideGadgets rumble cartridges on the GBxCart RW v1.3 hardware running the L1 firmware *(thanks DevDavisNunez)*
+- In GUI mode, flashable cartridges can now completely be wiped of their ROM data by not selecting any file when using the Write ROM feature *(thanks daidianren for the suggestion)*
+- Fixed a bug introduced in v3.4 with making a ROM backup of Nintendo Power GB Memory cartridges
+- Bundles GBxCart RW v1.4 firmware version R34+L5 (enables support for some more flash cartridges)
+- Added support for DIY cartridges with the AT49F040 flash chip for up to 512 KB of ROM data (requires at least GBxCart RW revision v1.4 and firmware version R34+L5) *(thanks Timville)*
+- Added support for the insideGadgets 512 KB flash cartridge (requires at least GBxCart RW revision v1.4 and firmware version R34+L5) *(thanks Timville and marv17)*
+- Added support for 100SOP with MSP55LV100S *(thanks Jayro)*
+
 ### v3.5 (released 2022-02-14)
 - Fixed a bug related to the 100BS6600_48BALL_V4 with 6600M0U0BE cartridge when using the Detect Flash Cart button *(thanks to redalchemy)*
 - Fixed a bug with the full chip erase feature via sector erase mode
@@ -49,7 +62,7 @@
 - Added support for GB-CART32K-A with SST39SF020A *(thanks Icesythe7)*
 - Added support for 29LV Series Flash BOY with 29LV160DB *(thanks Luca DS)*
 - Fixed a bug with reading ROMs of HuC-1 cartridges *(thanks Satumox)*
-- When writing a save data file that is smaller than the selected save type suggests, repeats of the data will now be written instead of blank data; this can be useful for games like „Pokémon Pinball“ on a flash cartridge with larger SRAM/FRAM than required
+- When writing a save data file that is smaller than the selected save type suggests, repeats of the data will now be written instead of blank data; this can be useful for games like “Pokémon Pinball” on a flash cartridge with larger SRAM/FRAM than required
 - Confirmed support for SD007_TSOP_64BALL_SOP28 with unlabeled flash chip *(thanks marv17)*
 - Added support for SD007_TSOP_64BALL_SOP28 with EN29LV160AB-70TCP *(thanks marv17)*
 - Added support for SD007_TSOP_48BALL_V10 with 29DL32TF-70

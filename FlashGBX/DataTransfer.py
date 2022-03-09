@@ -36,5 +36,5 @@ class DataTransfer(PySide2.QtCore.QThread):
 		
 		except Exception as e:
 			traceback.print_exc()
-			self.updateProgress.emit({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An error has occured!\nPlease try to reconnect the hardware and restart the application.\n\n{:s}: {:s}".format(type(e).__name__, str(e)), "abortable":False})
+			self.updateProgress.emit({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An unresolvable error has occured. See console output for more information. Reconnect the device, restart the software and try again.\n\n{:s}: {:s}".format(type(e).__name__, str(e)), "abortable":False})
 			self.FINISHED = True

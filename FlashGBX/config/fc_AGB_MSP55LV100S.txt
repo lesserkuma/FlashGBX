@@ -1,0 +1,89 @@
+{
+	"type":"AGB",
+	"names":[
+		"100SOP with MSP55LV100S"
+	],
+	"flash_ids":[
+		[ 0x02, 0x01, 0x7D, 0x7E ]
+	],
+	"voltage":3.3,
+	"flash_size":0x4000000,
+	"flash_bank_size":0x2000000,
+	"flash_bank_select_type":1,
+	"buffer_size":32,
+	"double_die":true,
+	"sector_size":0x20000,
+	"reset_every":0x400000,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0F0 ]
+		],
+		"read_identifier":[
+			[ 0xAAA, 0xAAA9 ],
+			[ 0x555, 0x5556 ],
+			[ 0xAAA, 0x9090 ]
+		],
+		"read_cfi":[
+			[ 0xAA, 0x9898 ]
+		],
+		"sector_erase":[
+			[ 0xAAA, 0xAAA9 ],
+			[ 0x555, 0x5556 ],
+			[ 0xAAA, 0x8080 ],
+			[ 0xAAA, 0xAAA9 ],
+			[ 0x555, 0x5556 ],
+			[ "SA", 0x3030 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFFFF, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ 0xAAA, 0xAAA9 ],
+			[ 0x555, 0x5556 ],
+			[ "SA", 0x2526 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0x292A ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", "PD", 0xFFFF ]
+		],
+		"fast_write":[
+			[ 0xAAA, 0xAAA9 ],
+			[ 0x555, 0x5556 ],
+			[ 0xAAA, 0x2020 ],
+			[ "PA", 0xA0A0 ],
+			[ 0, 0xF0F0 ]
+		],
+		"fast_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "PA", "PD", 0xFFFF ],
+			[ null, null, null ]
+		],
+		"single_write":[
+			[ 0xAAA, 0xAAA9 ],
+			[ 0x555, 0x5556 ],
+			[ 0xAAA, 0xA0A0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "PA", "PD", 0xFFFF ]
+		]
+	}
+}

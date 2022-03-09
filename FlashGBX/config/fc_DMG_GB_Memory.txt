@@ -7,7 +7,7 @@
 		[ 0xC2, 0x89 ]
 	],
 	"voltage":5,
-	"mbc":0x1B,
+	"mbc":0x105,
 	"flash_size":0x100000,
 	"start_addr":0,
 	"first_bank":1,

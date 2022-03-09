@@ -1,0 +1,75 @@
+{
+	"type":"AGB",
+	"names":[
+		"Flash Advance Card 64M with 28F640J3A120"
+	],
+	"flash_ids":[
+		[ 0x89, 0x00, 0x17, 0x00 ]
+	],
+	"voltage":3.3,
+	"flash_size":0x800000,
+	"sector_size":0x20000,
+	"buffer_size":32,
+	"wait_read_status_register":true,
+	"command_set":"INTEL",
+	"commands":{
+		"unlock":[
+			[ 0x130ECA8, 0x5354, 1 ],
+			[ 0x002468A, 0x1234, 5 ],
+			[ 0x000ECA8, 0x5354, 1 ],
+			[ 0x002468A, 0x5354, 1 ],
+			[ 0x002468A, 0x5678, 5 ],
+			[ 0x130ECA8, 0x5354, 1 ],
+			[ 0x002468A, 0x5354, 1 ],
+			[ 0x0ECA800, 0x5678, 1 ],
+			[ 0x00268A0, 0x1234, 1 ],
+			[ 0x002468A, 0xABCD, 5 ],
+			[ 0x130ECA8, 0x5354, 1 ],
+			[ 0x1E2468A, 0x9413, 1 ]
+		],
+		"reset":[
+			[ 0, 0x50 ],
+			[ 0, 0xFF ]
+		],
+		"read_status_register":[
+			[ 0, 0x70 ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ]
+		],
+		"sector_erase":[
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0x70 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0x80 ]
+		],
+		"buffer_write":[
+			[ "SA", 0xE8 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
+		],
+		"buffer_write_wait_for":[
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ]
+		],
+		"single_write":[
+			[ 0, 0x70 ],
+			[ 0, 0x10 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

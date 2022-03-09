@@ -212,10 +212,10 @@ class GbxDevice:
 						self.DEVICE = None
 						continue
 				
-				if (self.FW[1] not in (4, 5, 100)):
-					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3, v1.4 and GBxCart RW Mini. Other revisions are untested and may not be fully compatible."])
+				if (self.FW[1] not in (4, 5)):
+					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3 and v1.4. Other revisions are untested and may not be fully compatible."])
 				elif self.FW[1] == 4:
-					conn_msg.append([0, "FlashGBX is now optimized for the custom high compatibility firmware by Lesserkuma. You can install it from the Tools menu."])
+					conn_msg.append([0, "NOTE: FlashGBX is now optimized for the custom high compatibility firmware by Lesserkuma. You can install it in GUI mode from the Tools menu."])
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 
 				self.PORT = ports[i]
@@ -235,9 +235,6 @@ class GbxDevice:
 					conn_msg.append([3, "A critical error occured while trying to access the GBxCart RW device on port " + ports[i] + ".\n\n" + str(e)])
 				continue		
 		
-		#conn_msg.append([0, "NOTE: This is a third party tool for GBxCart RW by insideGadgets. Visit https://www.gbxcart.com/ for more information."])
-		#self.set_mode(self.DEVICE_CMD['CLK_LOW'])
-		#self.wait_for_ack()
 		return conn_msg
 	
 	def UpdateFlashCarts(self, flashcarts):
@@ -355,7 +352,7 @@ class GbxDevice:
 	
 	def GetSupprtedModes(self):
 		_, pcb = self.FW
-		if pcb == 100:
+		if pcb in (100, 101):
 			return ["DMG"]
 		else:
 			return ["DMG", "AGB"]
@@ -926,7 +923,6 @@ class GbxDevice:
 		#return flash_types
 	
 	def CheckFlashChip(self, limitVoltage=False, cart_type=None):
-		flashcart = None
 		flash_id_lines = []
 		flash_commands = [
 			{ 'read_cfi':[[0x555, 0x98]], 'read_identifier':[[ 0x555, 0xAA ], [ 0x2AA, 0x55 ], [ 0x555, 0x90 ]], 'reset':[[ 0x0, 0xF0 ]] },
@@ -1196,12 +1192,15 @@ class GbxDevice:
 		from . import DataTransfer
 		args['mode'] = 2
 		args['port'] = self
-		if self.WORKER is None:
-			self.WORKER = DataTransfer.DataTransfer(args)
-			self.WORKER.updateProgress.connect(fncSetProgress)
+		if fncSetProgress is False:
+			self.TransferData(args=args, signal=None)
 		else:
-			self.WORKER.setConfig(args)
-		self.WORKER.start()
+			if self.WORKER is None:
+				self.WORKER = DataTransfer.DataTransfer(args)
+				self.WORKER.updateProgress.connect(fncSetProgress)
+			else:
+				self.WORKER.setConfig(args)
+			self.WORKER.start()
 	
 	def RestoreRAM(self, fncSetProgress=None, args=None):
 		from . import DataTransfer
@@ -1923,7 +1922,7 @@ class GbxDevice:
 			return False
 		# Firmware check R25+
 		# Firmware check R28+
-		if (int(self.FW[0]) >= 28) and self.MODE == "AGB" and (([ 0x89, 0x00, 0x89, 0x00, 0x18, 0x00, 0x18, 0x00 ] in flashcart_meta["flash_ids"])): # Flash2Advance
+		if (int(self.FW[0]) >= 28) and self.MODE == "AGB" and ("flash_ids" in flashcart_meta and ([ 0x89, 0x00, 0x89, 0x00, 0x18, 0x00, 0x18, 0x00 ] in flashcart_meta["flash_ids"])): # Flash2Advance
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the Tools menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check R25+
@@ -1939,6 +1938,7 @@ class GbxDevice:
 			del flashcart_meta["commands"]["buffer_write"]
 		elif self.MODE == "AGB" and "single_write" in flashcart_meta["commands"] and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] != [['SA', 0xE8], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0xD0], ['SA', 0xFF]]:
 			print("NOTE: Update your GBxCart RW firmware to version L1 or higher for a better transfer rate with this cartridge.")
+			del flashcart_meta["commands"]["buffer_write"]
 
 		#if "dmg-mmsa-jpn" in flashcart_meta:
 		#	self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Flashing GB Memory cartridges is currently only supported via the high compatibility firmware which you can install from the Tools menu.", "abortable":False})
@@ -2427,19 +2427,20 @@ class GbxDevice:
 							if flashcart_meta["commands"]["single_write_wait_for"][i][0] != None:
 								addr = flashcart_meta["commands"]["single_write_wait_for"][i][0]
 								data = flashcart_meta["commands"]["single_write_wait_for"][i][1]
-								if addr == "SA": addr = currAddr
-								time.sleep(0.05)
-								timeout = 100
+								if addr == "SA": addr = int(currAddr)
+								if data == "PD": data = struct.unpack('H', data_import[pos:pos+2])[0]
+								#time.sleep(0.05)
+								timeout = 1000
 								while True:
 									wait_for = self.ReadROM(currAddr, 64)
 									wait_for = ((wait_for[1] << 8 | wait_for[0]) & flashcart_meta["commands"]["single_write_wait_for"][i][2])
 									dprint("SW_SR {:X}=={:X}?".format(wait_for, data))
-									time.sleep(0.1)
 									timeout -= 1
 									if timeout < 1:
 										self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Writing a single word timed out. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.", "abortable":False})
 										return False
 									if wait_for == data: break
+									time.sleep(0.01)
 
 							currAddr += 2
 							pos += 2

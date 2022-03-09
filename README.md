@@ -18,9 +18,9 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 ### Confirmed working reader/writer hardware and firmware versions
 
-- [insideGadgets GBxCart RW v1.3, v1.4 and Mini](https://www.gbxcart.com/)
-  - Official firmware versions R30 to R33 (other hardware revisions and firmware versions may also work, but are untested)
-  - Lesserkuma’s high compatibility firmware versions L1 to L4
+- [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/)
+  - insideGadgets’ firmware version R30 (other hardware revisions and firmware versions may also work, but are untested)
+  - Lesserkuma’s firmware versions L1 to L5
 
 ## Installing and running
 
@@ -111,6 +111,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Flash2Advance 128M (with 2× 28F640J3A120)
   - Flash2Advance 256M (with 2× 28F128J3A150)
   - Flash2Advance Ultra 64M (with 2× 28F320C3B)
+  - Flash Advance Card 64M (with 28F640J3A120)
   - insideGadgets 16 MB, 64K EEPROM with Solar Sensor and RTC options
   - insideGadgets 32 MB, 1M FLASH with RTC option
   - insideGadgets 32 MB, 512K FLASH
@@ -175,6 +176,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
   - 0121 with 0121M0Y0BE
   - 100BS6600_48BALL_V4 with 6600M0U0BE
+  - 100SOP with MSP55LV100S
   - 2006_TSOP_64BALL_6106 with W29GL128SH9B
   - 28F256L03B-DRV with 256L30B
   - 29LV128DBT2C-90Q and ALTERA CPLD
@@ -256,12 +258,14 @@ The author would like to thank the following very kind people for their help and
 - ClassicOldSong (bug reports)
 - crizzlycruz (flash chip info)
 - Davidish (flash chip info)
+- DevDavisNunez (bug reports)
 - djedditt (testing)
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
 - EchelonPrime (flash chip info)
 - endrift (research, mGBA emulator)
 - eveningmoose (flash chip info)
+- frarees (bug reports)
 - Frost Clock (flash chip info)
 - Grender (testing)
 - Herax (flash chip info)
@@ -277,6 +281,7 @@ The author would like to thank the following very kind people for their help and
 - LovelyA72 (flash chip info)
 - Luca DS (flash chip info)
 - LucentW (flash chip info, testing, bug reports)
+- manuelcm1 (flash chip info)
 - marv17 (flash chip info, testing, bug reports, feature suggestions)
 - Mr_V (flash chip info, testing)
 - orangeglo (GB Memory Cartridge samples)
@@ -295,6 +300,7 @@ The author would like to thank the following very kind people for their help and
 - Smelly-Ghost (testing)
 - Super Maker (flash chip info, testing)
 - t5b6_de (flash chip info)
+- Timville (flash chip info)
 - twitnic (flash chip info)
 - Veund (flash chip info)
 - Voultar (bug reports, feature suggestions)

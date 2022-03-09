@@ -1,18 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 4 MB (S29GL032M)",
-		"SD007_BV5_DRV with S29GL032M90TFIR4",
-		"GB-M968 with MX29LV320ABTC",
-		"SD007_BV5_DRV with M29W320DT"
+		"insideGadgets 4 MB (S29GL032M)"
 	],
 	"flash_ids":[
-		[ 0x01, 0x01, 0x7E, 0x7E ],
-		[ 0x01, 0x01, 0x7E, 0x7E ],
-		[ 0xC2, 0xC2, 0xA8, 0xA8 ],
-		[ 0x20, 0x20, 0xCA, 0xCA ]
+		[ 0x01, 0x01, 0x7E, 0x7E ]
 	],
-	"voltage":3.3,
+	"voltage":5,
 	"flash_size":0x400000,
 	"start_addr":0x4000,
 	"first_bank":0,

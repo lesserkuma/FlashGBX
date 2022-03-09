@@ -24,10 +24,14 @@ class PocketCamera:
 	
 	def __init__(self):
 		pass
-		
+	
 	def LoadFile(self, savefile):
-		if os.path.getsize(savefile) != 128*1024: return False
-		with open(savefile, "rb") as file: self.DATA = file.read()
+		if isinstance(savefile, bytearray):
+			self.DATA = savefile
+		else:
+			if os.path.getsize(savefile) != 128*1024: return False
+			with open(savefile, "rb") as file: self.DATA = file.read()
+		
 		if self.DATA[0x1FFB1:0x1FFB6] != b'Magic':
 			self.DATA = None
 			return False

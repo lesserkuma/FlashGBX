@@ -186,7 +186,7 @@ class DMG_MBC1(DMG_MBC):
 		self.CartWrite(commands)
 	
 	def SelectBankROM(self, index):
-		dprint(self.GetName(), "|", index)
+		dprint(self.GetName(), "|", index, hex(index >> 5), hex(index & 0x1F))
 		commands = [
 			[ 0x6000, 0 ],
 			[ 0x4000, index >> 5 ],

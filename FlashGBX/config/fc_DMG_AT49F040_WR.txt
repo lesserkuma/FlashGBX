@@ -1,17 +1,19 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with AT49F040 @ WR"
+		"DIY cart with MBC1 and AT49F040 @ WR"
 	],
 	"flash_ids":[
-		[ 0x1F, 0x13, 0xFE, 0xFF ]
+		[ 0x1F, 0x13 ]
 	],
 	"voltage":5,
-	"flash_size":0x8000,
+	"flash_size":0x80000,
 	"start_addr":0,
 	"first_bank":1,
+	"mbc":0x03,
+	"flash_commands_on_bank_1":true,
 	"write_pin":"WR",
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":15,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
