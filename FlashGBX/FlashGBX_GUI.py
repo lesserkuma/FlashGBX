@@ -1337,6 +1337,18 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if not self.CONN.IsConnected():
 					self.DisconnectDevice()
 					self.DEVICES = {}
+					dontShowAgain = str(self.SETTINGS.value("AutoReconnect", default="disabled")).lower() == "enabled"
+					if not dontShowAgain:
+						cb = QtWidgets.QCheckBox("Always try to reconnect without asking", checked=False)
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The connection to the device was lost. Do you want to try and reconnect to the first device found? The cartridge information will also be reset and read again.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+						msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
+						msgbox.setCheckBox(cb)
+						answer = msgbox.exec()
+						dontShowAgain = cb.isChecked()
+						if dontShowAgain: self.SETTINGS.setValue("AutoReconnect", "enabled")
+						if answer == QtWidgets.QMessageBox.No:
+							return False
+					
 					if self.FindDevices(True):
 						if setMode is not False: mode = setMode
 						if mode == "DMG": self.optDMG.setChecked(True)
