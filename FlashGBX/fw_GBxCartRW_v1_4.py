@@ -145,13 +145,11 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		rowDeviceInfo2 = QtWidgets.QHBoxLayout()
 		self.lblDevicePCBVer = QtWidgets.QLabel("PCB version:")
 		self.lblDevicePCBVer.setMinimumWidth(120)
-		#self.lblDevicePCBVerResult = QtWidgets.QLabel("v1.4")
 		self.optDevicePCBVer14 = QtWidgets.QRadioButton("v1.4")
 		self.connect(self.optDevicePCBVer14, QtCore.SIGNAL("clicked()"), self.SetPCBVersion)
 		self.optDevicePCBVer14a = QtWidgets.QRadioButton("v1.4a")
 		self.connect(self.optDevicePCBVer14a, QtCore.SIGNAL("clicked()"), self.SetPCBVersion)
 		rowDeviceInfo2.addWidget(self.lblDevicePCBVer)
-		#rowDeviceInfo2.addWidget(self.lblDevicePCBVerResult)
 		rowDeviceInfo2.addWidget(self.optDevicePCBVer14)
 		rowDeviceInfo2.addWidget(self.optDevicePCBVer14a)
 		rowDeviceInfo2.addStretch(1)
@@ -216,7 +214,6 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 
 		self.lblDeviceNameResult.setText(self.DEV_NAME)
 		self.lblDeviceFWVerResult.setText(self.FW_VER)
-		#self.lblDevicePCBVerResult.setText(self.PCB_VER)
 		if self.PCB_VER == "v1.4":
 			self.optDevicePCBVer14.setChecked(True)
 		elif self.PCB_VER == "v1.4a":
@@ -239,7 +236,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			self.OFW_BUILDTS = self.INI.GetValue("fw_buildts")
 			self.OFW_TEXT = self.INI.GetValue("fw_text")
 		
-		self.lblDeviceFWVer2Result.setText("{:s} (dated {:s})".format(self.OFW_VER, datetime.datetime.fromtimestamp(int(self.OFW_BUILDTS)).astimezone().replace(microsecond=0).isoformat()))
+		self.lblDeviceFWVer2Result.setText("{:s} ({:s})".format(self.OFW_VER, datetime.datetime.fromtimestamp(int(self.OFW_BUILDTS)).astimezone().replace(microsecond=0).isoformat()))
 
 	def run(self):
 		try:

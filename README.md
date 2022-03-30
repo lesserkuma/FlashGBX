@@ -83,11 +83,14 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
   - 29LV Series Flash BOY with 29LV160DB
   - BUNG Doctor GB Card 64M
+  - DIY cart with AM29F010
   - DIY cart with AM29F016
   - DIY cart with AM29F032
+  - DIY cart with AM29F040
+  - DIY cart with AM29F080
   - DIY cart with AT49F040
-  - DIY cart with MBC1 and AM29F080
-  - DIY cart with MBC3 and MX29LV640
+  - DIY cart with MX29LV640
+  - DIY cart with SST39SF040
   - DMG-MBC5-32M-FLASH Development Cartridge, E201264
   - Ferrante Crafts cart with SST39SF010A
   - GB-CART32K-A with SST39SF020A
@@ -196,6 +199,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - AGB-E05-01 with GL128S
   - AGB-E05-01 with MSP55LV128M
   - AGB-E05-01 with MX29GL128FHT2I-90G
+  - AGB-E05-01 with S29GL064
   - AGB-E05-02 with JS28F128
   - AGB-E05-02 with M29W128FH
   - AGB-E05-02 with M29W128GH
@@ -204,8 +208,10 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - AGB-E20-30 with M29W128GH
   - AGB-E20-30 with S29GL256N10TFI01
   - AGB-SD-E05 with MSP55LV128
+  - B100 with MX29LV640ET
   - B104 with MSP55LV128
   - B11 with 26L6420MC-90
+  - B54 with MX29LV320ET
   - BX2006_0106_NEW with S29GL128N10TFI01
   - BX2006_TSOP_64BALL with GL128S
   - BX2006_TSOP_64BALL with GL256S
@@ -263,6 +269,7 @@ The author would like to thank the following very kind people for their help and
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
 - EchelonPrime (flash chip info)
+- EmperorOfTigers (bug reports)
 - endrift (research, mGBA emulator)
 - eveningmoose (flash chip info)
 - frarees (bug reports)
@@ -276,6 +283,7 @@ The author would like to thank the following very kind people for their help and
 - Jayro (flash chip info)
 - JFox (help with properly packaging the app for pip, Linux help)
 - joyrider3774 (flash chip info)
+- JS7457 (flash chip info)
 - julgr (macOS help, testing)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)

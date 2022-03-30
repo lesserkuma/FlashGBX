@@ -87,7 +87,7 @@ class FlashGBX_CLI():
 				dev = self.DEVICE[1]
 				builddate = dev.GetFWBuildDate()
 				if builddate != "":
-					print("\nConnected to {:s} (dated {:s})".format(dev.GetFullNameExtended(), builddate))
+					print("\nConnected to {:s}".format(dev.GetFullNameExtended(more=True)))
 				else:
 					print("\nConnected to {:s}".format(dev.GetFullNameExtended()))
 		
@@ -482,7 +482,7 @@ class FlashGBX_CLI():
 
 			if data['logo_correct'] and not self.CONN.IsSupportedMbc(data["features_raw"]):
 				print("{:s}\nWARNING: This cartridge uses a mapper that may not be completely supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates.{:s}".format(ANSI.YELLOW, APPNAME, self.CONN.GetFullName(), ANSI.RESET))
-			if data['logo_correct'] and data['game_title'] == "NP M-MENU MENU" and self.ARGS["argparsed"].flashcart_type == "autodetect":
+			if data['logo_correct'] and data['game_title'] in ("NP M-MENU MENU", "DMG MULTI MENU ") and self.ARGS["argparsed"].flashcart_type == "autodetect":
 				cart_types = self.CONN.GetSupportedCartridgesDMG()
 				for i in range(0, len(cart_types[0])):
 					if "DMG-MMSA-JPN" in cart_types[0][i]:
@@ -577,8 +577,8 @@ class FlashGBX_CLI():
 						data["save_type"] = db_agb_entry['st']
 				if data["dacs_8m"] is True:
 					stok = True
-					s += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[8])
-					data["save_type"] = 8
+					s += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[6])
+					data["save_type"] = 6
 			
 			if stok is False:
 				s += "Save Type:            Not detected\n"
@@ -620,7 +620,6 @@ class FlashGBX_CLI():
 		
 		if len(cart_types) > 0:
 			cart_type = cart_type_id
-			#self.STATUS["cart_type"] = supp_cart_types[1][cart_type]
 			for i in range(0, len(cart_types)):
 				if cart_types[i] == cart_type_id:
 					msg_cart_type += "- {:s}*\n".format(supp_cart_types[0][cart_types[i]])
@@ -671,6 +670,8 @@ class FlashGBX_CLI():
 				elif ("[WR   / AAA/A9]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/AAA/A9)” a try."
 				elif ("[WR   / 555/AA]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/555/AA)” a try."
 				elif ("[WR   / 555/A9]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (WR/555/A9)” a try."
+				elif ("[AUDIO/ AAA/AA]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (AUDIO/AAA/AA)” a try."
+				elif ("[AUDIO/ 555/AA]" in flash_id): msg_cart_type_s += " For ROM writing, you can give the option called “Generic Flash Cartridge (AUDIO/555/AA)” a try."
 				msg_cart_type_s += "\n"
 			else:
 				msg_cart_type_s = "Cartridge Type: Generic ROM Cartridge (not rewritable or not auto-detectable)\n"
@@ -691,7 +692,6 @@ class FlashGBX_CLI():
 	def BackupROM(self, args, header):
 		mbc = 1
 		rom_size = 0
-		#fast_read_mode = args.fast_read_mode is True
 
 		if self.CONN.GetMode() == "DMG":
 			if args.dmg_mbc == "auto":
@@ -711,11 +711,9 @@ class FlashGBX_CLI():
 			
 			if args.dmg_romsize == "auto":
 				try:
-					#rom_banks = Util.DMG_Header_ROM_Sizes_Flasher_Map[header["rom_size_raw"]]
 					rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[header["rom_size_raw"]]
 				except:
 					print("{:s}Couldn’t determine ROM size, will use 8 MB. It can also be manually set with the “--dmg-romsize” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
-					#rom_banks = 512
 					rom_size = 8 * 1024 * 1024
 			else:
 				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb" ]
@@ -766,9 +764,12 @@ class FlashGBX_CLI():
 			print("{:s}Couldn’t access “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
 			return
 		
-		#if fast_read_mode: print("Fast Read Mode enabled.")
 		s_mbc = ""
-		if self.CONN.GetMode() == "DMG": s_mbc = " using Mapper Type 0x{:X}".format(mbc)
+		if self.CONN.GetMode() == "DMG":
+			if mbc in Util.DMG_Header_Mapper:
+				s_mbc = " using Mapper Type “{:s}”".format(Util.DMG_Header_Mapper[mbc])
+			else:
+				s_mbc = " using Mapper Type 0x{:X}".format(mbc)
 		if self.CONN.GetMode() == "DMG":
 			print("The ROM will now be read{:s} and saved to “{:s}”.".format(s_mbc, os.path.abspath(path)))
 		else:
@@ -788,7 +789,6 @@ class FlashGBX_CLI():
 				if carts[i]["type"] != self.CONN.GetMode(): continue
 				if args.flashcart_type in carts[i]["names"]:
 					print("Selected flash cartridge type: {:s}".format(args.flashcart_type))
-					#rom_banks = int(carts[i]["flash_size"] / 0x4000)
 					rom_size = carts[i]["flash_size"]
 					cart_type = i
 					break
@@ -815,7 +815,6 @@ class FlashGBX_CLI():
 				break
 		
 		if cart_type <= 0 and args.flashcart_type == "autodetect":
-			#cart_type = self.DetectCartridge(limitVoltage=not args.force_5v)
 			cart_type = self.DetectCartridge()
 			if cart_type is None: cart_type = 0
 			if cart_type == 0:
@@ -875,7 +874,6 @@ class FlashGBX_CLI():
 		if not prefer_chip_erase and 'chip_erase' in carts[cart_type]['commands'] and 'sector_erase' in carts[cart_type]['commands']:
 			print("This flash cartridge supports both Sector Erase and Full Chip Erase methods. You can use the “--prefer-chip-erase” command line switch if necessary.")
 		
-		#fast_read_mode = args.fast_read_mode is True
 		verify_write = args.no_verify_write is False
 		
 		fix_header = False
@@ -898,7 +896,6 @@ class FlashGBX_CLI():
 			return
 		
 		print("")
-		#if fast_read_mode: print("Fast Read Mode enabled for flash verification.")
 		v = carts[cart_type]["voltage"]
 		if override_voltage: v = override_voltage
 		print("The following ROM file will now be written to the flash cartridge at {:s}V:\n{:s}".format(str(v), os.path.abspath(path)))
@@ -958,7 +955,7 @@ class FlashGBX_CLI():
 			if args.agb_savetype == "auto":
 				save_type = header["save_type"]
 			else:
-				sizes = [ "auto", "eeprom4k", "eeprom64k", "sram256k", "sram512k", "sram1m", "flash512k", "flash1m", "dacs8m" ]
+				sizes = [ "auto", "eeprom4k", "eeprom64k", "sram256k", "flash512k", "flash1m", "dacs8m", "sram512k", "sram1m" ]
 				save_type = sizes.index(args.agb_savetype)
 			
 			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
@@ -987,7 +984,11 @@ class FlashGBX_CLI():
 		if (path == ""): return
 		
 		s_mbc = ""
-		if self.CONN.GetMode() == "DMG": s_mbc = " using Mapper Type 0x{:X}".format(mbc)
+		if self.CONN.GetMode() == "DMG":
+			if mbc in Util.DMG_Header_Mapper:
+				s_mbc = " using Mapper Type “{:s}”".format(Util.DMG_Header_Mapper[mbc])
+			else:
+				s_mbc = " using Mapper Type 0x{:X}".format(mbc)
 		if args.action == "backup-save":
 			if not args.overwrite and os.path.exists(os.path.abspath(path)):
 				answer = input("The target file “{:s}” already exists.\nDo you want to overwrite it? [y/N]: ".format(os.path.abspath(path))).strip().lower()
@@ -1040,8 +1041,6 @@ class FlashGBX_CLI():
 			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':True, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "debug-test-save": # debug
 			self.ARGS["debug"] = True
-			#self.CONN.DetectCartridge()
-			#return
 
 			print("Making a backup of the original save data.")
 			ret = self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
@@ -1056,10 +1055,12 @@ class FlashGBX_CLI():
 			self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test3.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			with open(self.CONFIG_PATH + "/test3.bin", "rb") as f: test3 = bytearray(f.read())
-			print("\nPower cycling.")
-			self.CONN.CartPowerOff()
-			time.sleep(1)
-			self.CONN.CartPowerOn()
+			if self.CONN.CanPowerCycleCart():
+				print("\nPower cycling.")
+				self.CONN.CartPowerOff()
+				time.sleep(1)
+				self.CONN.CartPowerOn()
+				self.CONN.ReadInfo(checkRtc=False)
 			time.sleep(0.2)
 			print("\nReading back and comparing data again.")
 			self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test4.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
@@ -1068,6 +1069,11 @@ class FlashGBX_CLI():
 			print("Restoring original save data.")
 			self.CONN.TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
+			
+			if mbc == 6:
+				for i in range(0, len(test2)):
+					test2[i] &= 0x0F
+					test3[i] &= 0x0F
 			
 			if test2 != test4:
 				diffcount = 0
@@ -1079,11 +1085,6 @@ class FlashGBX_CLI():
 				for i in range(0, len(test3)):
 					if test3[i] != test4[i]: diffcount += 1
 				print("\n{:s}Differences found between two consecutive readbacks: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
-			
-			if mbc == 6:
-				for i in range(0, len(test2)):
-					test2[i] &= 0x0F
-					test3[i] &= 0x0F
 			
 			found_offset = test2.find(test3[0:512])
 			if found_offset < 0:
@@ -1150,9 +1151,8 @@ class FlashGBX_CLI():
 			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
 			fw_ver = self.INI.GetValue("fw_ver")
 			fw_buildts = self.INI.GetValue("fw_buildts")
-			#fw_text = self.INI.GetValue("fw_text")
 		
-		print("Available firmware version:\n{:s}\n".format("{:s} (dated {:s})".format(fw_ver, datetime.datetime.fromtimestamp(int(fw_buildts)).astimezone().replace(microsecond=0).isoformat())))
+		print("Available firmware version:\n{:s}\n".format("{:s} ({:s})".format(fw_ver, datetime.datetime.fromtimestamp(int(fw_buildts)).astimezone().replace(microsecond=0).isoformat())))
 		print("Please follow these steps to proceed with the firmware update:\n1. Disconnect the USB cable of your GBxCart RW {:s} device.\n2. On the circuit board of your GBxCart RW {:s}, press and hold down\n   the small button while connecting the USB cable again.\n3. Keep the small button held for at least 2 seconds, then let go of it.\n   If done right, the green LED labeled “Done” should remain lit.\n4. Press ENTER or RETURN to continue.".format(device_name, device_name))
 		if len(input("").strip()) != 0:
 			print("Canceled.")

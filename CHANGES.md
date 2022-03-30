@@ -1,4 +1,19 @@
 # Release notes
+### v3.7 (released 2022-03-30)
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums (improves support for Classic NES Series, NES Classics and Famicom Mini cartridges)
+- When writing new ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN), hidden sector data will now be auto-generated if it’s not provided by the user in form of a .map file
+- Erasing save data of Game Boy Advance cartridges with the 512K FLASH and 1M FLASH save types is now faster
+- Windows Setup Package: Updated the CH340/CH341 driver to the latest version (01/18/2022, 3.7.2022.01)
+- Fixed a bug introduced in v3.4 that broke writing ROMs to SD008-6810-V5 with MX29CL256FH cartridges
+- Added support for AGB-E05-01 with S29GL064 *(thanks DevDavisNunez)*
+- Added support for DIY carts with MBC1 and AM29F010 @ AUDIO *(thanks JS7457)*
+- Added support for DIY carts with MBC1 and AM29F040 @ AUDIO *(thanks JS7457)*
+- Added support for DIY carts with MBC1 and AM29F080 @ AUDIO *(thanks Timville)*
+- Added support for DIY carts with MBC1 and AT49F040 @ AUDIO *(thanks Timville)*
+- Added support for DIY carts with MBC1 and SST39SF040 @ AUDIO *(thanks Timville)*
+- Added support for B100 with MX29LV640ET *(thanks Mr_V)*
+- Added support for B54 with MX29LV320ET *(thanks Mr_V)*
+
 ### v3.6 (released 2022-03-09)
 - When opening Game Boy Camera Album Viewer manually, the save data will now automatically be loaded if a Game Boy Camera or Pocket Camera cartridge is connected
 - Fixed a bug with the insideGadgets 4 MB (S29GL032M) cartridge *(thanks frarees)*
@@ -6,7 +21,7 @@
 - Added support for Flash Advance Card 64M with 28F640J3A120 *(thanks manuelcm1)*
 - Fixed a bug with writing ROMs to insideGadgets rumble cartridges on the GBxCart RW v1.3 hardware running the L1 firmware *(thanks DevDavisNunez)*
 - In GUI mode, flashable cartridges can now completely be wiped of their ROM data by not selecting any file when using the Write ROM feature *(thanks daidianren for the suggestion)*
-- Fixed a bug introduced in v3.4 with making a ROM backup of Nintendo Power GB Memory cartridges
+- Fixed a bug introduced in v3.4 with making a ROM backup of Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN)
 - Bundles GBxCart RW v1.4 firmware version R34+L5 (enables support for some more flash cartridges)
 - Added support for DIY cartridges with the AT49F040 flash chip for up to 512 KB of ROM data (requires at least GBxCart RW revision v1.4 and firmware version R34+L5) *(thanks Timville)*
 - Added support for the insideGadgets 512 KB flash cartridge (requires at least GBxCart RW revision v1.4 and firmware version R34+L5) *(thanks Timville and marv17)*
@@ -38,7 +53,7 @@
 - Extracted Game Boy Camera pictures can now have a frame around them; this frame can be customized by placing a file called `pc_frame.png` (must be at least 160×144 pixels) into the configuration directory
 
 ### v3.2 (released 2021-12-18)
-- Fixed the configuration files for DIY cart with AM29F016/AM29F016B *(thanks dyf2007)*
+- Fixed the configuration files for DIY carts with AM29F016/AM29F016B *(thanks dyf2007)*
 - Added support for SD008-6810-V5 with MX29CL256FH (multigame cartridge with 32 MB of ROM and 512 KB of save data)
 - Added support for SD008-6810-V4 with MX29GL256EL *(thanks LucentW)*
 - Added support for the [HDR Game Boy Camera Flashcart](https://github.com/HDR/Gameboy-Camera-Flashcart) (select manually if auto-detected option doesn’t work)
@@ -104,7 +119,7 @@
 
 ### v2.3 (released 2021-06-08)
 - Added support for AGB-E05-06L with 29LV128DBT2C-90Q *(thanks marv17)*
-- Nintendo Power GB Memory Cartridges will now be unlocked properly even if they’re stuck in erase mode *(thanks Grender for testing)*
+- Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN) will now be unlocked properly even if they’re stuck in erase mode *(thanks Grender for testing)*
 - Confirmed support for SD007_TSOP_48BALL_V10 with GL032M10BFIR3 *(thanks Mr_V)*
 - Added support for 2006_TSOP_64BALL_6106 with W29GL128SH9B *(thanks marv17)*
 - Fixed support for insideGadgets 1 MB, 128 KB SRAM *(thanks AlexiG)*
@@ -124,11 +139,11 @@
 - Added support for SD007_TSOP_48BALL_V10 with M29W320DT *(thanks Jayro)*
 - Fixed a problem of reading from a certain type of cartridge that uses the GL256S flash chip *(thanks marv17)*
 - Added support for B11 with 26L6420MC-90 *(thanks dyf2007)*
-- Added support for a DIY cart with MBC3 and MX29LV640 *(thanks eveningmoose)*
+- Added support for DIY carts with MBC3 and MX29LV640 *(thanks eveningmoose)*
 
 ### v2.1 (released 2021-05-05)
 - Fixed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17 and 90sFlav)*
-- Added support for a DIY cart with MBC1 and AM29F080 *(thanks skite2001)*
+- Added support for DIY carts with MBC1 and AM29F080 *(thanks skite2001)*
 - Added support for SD007_TSOP_48BALL_V8 with 29LV320CTTC *(thanks Jayro)*
 - Added the MBC5+SRAM mapper type which is officially unused, but is actually used by GB Studio *(thanks Jayro)*
 - The GBxCart RW v1.3 firmware updater should now also work if the device is below firmware version R19
@@ -170,7 +185,7 @@
 - Fixed minor bugs
 
 ### v1.4.1 (released 2021-03-15)
-- Added ROM and map backup support for official Nintendo Power GB Memory cartridges (DMG-MMSA-JPN); save data handling and ROM writing is not supported yet
+- Added ROM and map backup support for official Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN); save data handling and ROM writing is not supported yet
 - Added preliminary support for 4050M0Y0Q0-39VF512 with 4050M0Y0Q0 (requires a future firmware update of GBxCart RW)
 - Added preliminary support for official cartridges with the MBC7 memory bank controller; tested with “Korokoro Kirby” (CGB-KKKJ-JPN) (requires a future firmware update of GBxCart RW)
 - Added support for official cartridges with the M161 memory bank controller; tested with “Mani 4 in 1: Tetris + Alleyway + Yakuman + Tennis” (DMG-601CHN) (requires GBxCart RW firmware R26 or newer)
@@ -276,7 +291,7 @@
 - Renamed config.ini to settings.ini to avoid confusion with the term “config file”
 
 ### v0.8β (released 2020-10-03)
-- Added support for the DIY cart with AM29F016/AM29F016B with AUDIO as WE *(thanks AndehX)*
+- Added support for DIY carts with AM29F016/AM29F016B with AUDIO as WE *(thanks AndehX)*
 - Renamed `VIN` to `AUDIO` in config files and the command line switch `--resetconfig` to `--reset`
 - Added experimental support for GBxCart RW revisions other than v1.3 and fixed a crash when connecting to unknown revisions of the GBxCart RW
 - The app is now available as a package and can be installed directly through *pip* *(thanks JFox)*

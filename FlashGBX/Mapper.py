@@ -708,9 +708,16 @@ class DMG_GMMC1(DMG_MBC5):
 
 	def CalcChecksum(self, buffer):
 		header = RomFileDMG(buffer[:0x180]).GetHeader()
+		target_chk_value = 0
 		if header["game_title"] == "NP M-MENU MENU":
+			target_sha1_value = "15f5d445c0b2fdf4221cf2a986a4a5cb8dfda131"
 			target_chk_value = 0x19E8
-			if hashlib.sha1(buffer[0:0x18000]).hexdigest() != "15f5d445c0b2fdf4221cf2a986a4a5cb8dfda131":
+		elif header["game_title"] == "DMG MULTI MENU ":
+			target_sha1_value = "b8949fb9c4343b2c04ad59064e9d1dd78a131366"
+			target_chk_value = 0xC297
+		
+		if target_chk_value != 0:
+			if hashlib.sha1(buffer[0:0x18000]).hexdigest() != target_sha1_value:
 				return 0
 			elif buffer[0:0x180] == buffer[0x20000:0x20180]:
 				return 1

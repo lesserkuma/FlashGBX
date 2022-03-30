@@ -61,12 +61,6 @@ class Flashcart:
 	def GetMBC(self):
 		if (self.CONFIG["type"].upper() == "AGB") or ("mbc" not in self.CONFIG): return False
 		mbc = self.CONFIG["mbc"]
-		#if mbc == 1: mbc = 0x03
-		#elif mbc == 2: mbc = 0x06
-		#elif mbc == 3: mbc = 0x13
-		#elif mbc == 5: mbc = 0x1B
-		#elif mbc == 6: mbc = 0x20
-		#elif mbc == 7: mbc = 0x22
 		return mbc
 
 	def FlashCommandsOnBank1(self):
@@ -86,7 +80,6 @@ class Flashcart:
 		if buffer_size is False:
 			return False
 		else:
-			#return True
 			return ("buffer_write" in self.CONFIG["commands"])
 
 	def SupportsSingleWrite(self):
@@ -133,6 +126,9 @@ class Flashcart:
 				cfi = self.ReadCFI()
 				if cfi is False:
 					print("CFI ERROR: Couldn’t retrieve buffer size from the cartridge.")
+					if "single_write" in self.CONFIG["commands"]:
+						del(self.CONFIG["commands"]["buffer_write"])
+						print("Buffered write disabled.")
 					return False
 			if not "buffer_size" in cfi: return False
 			buffer_size = cfi["buffer_size"]
@@ -197,11 +193,9 @@ class Flashcart:
 				self.CONFIG["commands"]["read_cfi"] = [ [ 0xAA, 0x98 ] ]
 		
 		if "read_cfi" in self.CONFIG["commands"]:
-			#print(self.CONFIG["commands"]["read_cfi"])
 			self.CartWrite(self.CONFIG["commands"]["read_cfi"])
 			time.sleep(0.1)
 			buffer = self.CartRead(0, 0x400)
-			#print(buffer)
 			self.Reset()
 			cfi = CFI().Parse(buffer)
 			if cfi is not False:
@@ -232,6 +226,9 @@ class Flashcart:
 				cfi = self.ReadCFI()
 				if cfi is False:
 					print("CFI ERROR: Couldn’t retrieve sector size map from the cartridge.")
+					if "chip_erase" in self.CONFIG["commands"]:
+						del(self.CONFIG["commands"]["sector_erase"])
+						print("Sector erase mode disabled.")
 					return False
 			sector_size = cfi["erase_sector_blocks"]
 			if cfi["tb_boot_sector_raw"] == 0x03: sector_size.reverse()
@@ -276,8 +273,6 @@ class Flashcart:
 
 	def SectorErase(self, pos=0, buffer_pos=0):
 		self.Reset(full_reset=False)
-		#time_start = time.time()
-		#if progress_fnc is not None: progress_fnc({"action":"ERASE", "time_start":time_start, "abortable":False})
 		if "sector_erase" not in self.CONFIG["commands"]: return False
 		if "sector_size" not in self.CONFIG: return False
 		for i in range(0, len(self.CONFIG["commands"]["sector_erase"])):
@@ -330,7 +325,6 @@ class Flashcart:
 			except:
 				dprint("Warning: Sector map is smaller than expected.")
 				self.SECTOR_POS -= 1
-				#self.CONFIG["sector_size"][self.SECTOR_POS][0]
 			return sector_size
 		else:
 			return self.CONFIG["sector_size"]
@@ -478,9 +472,6 @@ class CFI:
 		return info
 
 class Flashcart_DMG_MMSA(Flashcart):
-	#def __init__(self, config={}, cart_write_fncptr=None, cart_read_fncptr=None):
-	#	super().__init__(config=config, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr)
-	
 	def ReadCFI(self):
 		return False
 
@@ -494,7 +485,6 @@ class Flashcart_DMG_MMSA(Flashcart):
 		return True
 	
 	def EraseHiddenSector(self, buffer):
-		#time_start = time.time()
 		if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":0, "time_start":time.time(), "abortable":False})
 		
 		self.UnlockForWriting()

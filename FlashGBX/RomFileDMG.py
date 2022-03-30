@@ -33,16 +33,18 @@ class RomFileDMG:
 		return checksum
 	
 	def CalcChecksumGlobal(self, fix=False):
-		checksum = 0
-		for i in range(0, len(self.ROMFILE), 2):
-			if i != 0x14E:
-				checksum = checksum + self.ROMFILE[i + 1]
-				checksum = checksum + self.ROMFILE[i]
-		
+		temp1 = self.ROMFILE[0x14E]
+		temp2 = self.ROMFILE[0x14F]
+		self.ROMFILE[0x14E] = 0
+		self.ROMFILE[0x14F] = 0
+		checksum = sum(self.ROMFILE) & 0xFFFF
 		if fix:
 			self.ROMFILE[0x14E] = checksum >> 8
 			self.ROMFILE[0x14F] = checksum & 0xFF
-		return checksum & 0xFFFF
+		else:
+			self.ROMFILE[0x14E] = temp1
+			self.ROMFILE[0x14F] = temp2
+		return checksum
 	
 	def FixHeader(self):
 		self.CalcChecksumHeader(True)
@@ -78,13 +80,13 @@ class RomFileDMG:
 		data["features"] = "?"
 		data["rom_size_raw"] = int(buffer[0x148])
 		data["rom_size"] = "?"
-		if buffer[0x148] in Util.DMG_Header_ROM_Sizes: data["rom_size"] = Util.DMG_Header_ROM_Sizes[buffer[0x148]]
+		if buffer[0x148] < len(Util.DMG_Header_ROM_Sizes): data["rom_size"] = Util.DMG_Header_ROM_Sizes[buffer[0x148]]
 		data["ram_size_raw"] = int(buffer[0x149])
 		if data["features_raw"] == 0x05 or data["features_raw"] == 0x06:
 			data["ram_size"] = 0x200
 		else:
 			data["ram_size"] = "?"
-			if buffer[0x149] in Util.DMG_Header_RAM_Sizes:
+			if buffer[0x149]  < len(Util.DMG_Header_RAM_Sizes):
 				data["ram_size"] = Util.DMG_Header_RAM_Sizes[buffer[0x149]]
 		data["version"] = int(buffer[0x14C])
 		data["header_checksum"] = int(buffer[0x14D])
@@ -107,6 +109,9 @@ class RomFileDMG:
 		if data["features_raw"] == 0x19 and data["game_title"] == "NP M-MENU MENU" and data["header_checksum"] == 0xD3:
 			data["features_raw"] = 0x105
 			data["ram_size_raw"] = 0x04
+		elif data["features_raw"] == 0x01 and data["game_title"] == "DMG MULTI MENU " and data["header_checksum"] == 0x36:
+			data["features_raw"] = 0x105
+			data["ram_size_raw"] = 0x04
 		
 		# M161 (Mani 4 in 1)
 		elif data["features_raw"] == 0x10 and data["game_title"] == "TETRIS SET" and data["header_checksum"] == 0x3F:
@@ -118,11 +123,15 @@ class RomFileDMG:
 		data["features_raw"] == 0x11 and data["game_title"] == "GANBARUGA SET" and data["header_checksum"] == 0x90 or \
 		data["features_raw"] == 0x11 and data["game_title"] == "RTYPE 2 SET" and data["header_checksum"] == 0x32:
 			data["features_raw"] = 0x0B
-
+		
 		# Unlicensed 256M Mapper
-		elif data["game_title"].upper() == "GB HICOL" and data["header_checksum"] in (0x4A, 0x49, 0xE9):
+		elif (data["game_title"].upper() == "GB HICOL" and data["header_checksum"] in (0x4A, 0x49, 0xE9)) or \
+		(data["game_title"] == "BennVenn" and data["header_checksum"] == 0x48):
 			data["features_raw"] = 0x201
 			data["rom_size_raw"] = 0x0A
+			data["ram_size_raw"] = 0x201
+		elif buffer[0x150:0x160].decode("ascii", "replace") == "256M ROM Builder":
+			data["features_raw"] = 0x201
 			data["ram_size_raw"] = 0x201
 		
 		# Unlicensed Wisdom Tree Mapper

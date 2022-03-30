@@ -119,7 +119,7 @@ class GbxDevice:
 		"AUDIO_HIGH":'8',
 		"AUDIO_LOW":'9',
 	}
-	PCB_VERSIONS = {1:'v1.0', 2:'v1.1', 4:'v1.3', 90:'XMAS', 100:'Mini v1.0', 101:'Mini v1.0d'}
+	PCB_VERSIONS = {1:'v1.0', 2:'v1.1/v1.2', 4:'v1.3', 90:'XMAS', 100:'Mini v1.0', 101:'Mini v1.0d'}
 	SUPPORTED_CARTS = {}
 	
 	FW = []
@@ -212,11 +212,11 @@ class GbxDevice:
 						self.DEVICE = None
 						continue
 				
-				if (self.FW[1] not in (4, 5)):
-					conn_msg.append([0, "NOTE: This version of FlashGBX was developed to be used with GBxCart RW v1.3 and v1.4. Other revisions are untested and may not be fully compatible."])
-				elif self.FW[1] == 4:
-					conn_msg.append([0, "NOTE: FlashGBX is now optimized for the custom high compatibility firmware by Lesserkuma. You can install it in GUI mode from the Tools menu."])
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
+				if (self.FW[1] not in (4, 5)):
+					conn_msg.append([0, "\nNow running in Legacy Mode.\nThis version of FlashGBX was developed to be used with GBxCart RW v1.3 and v1.4.\nOther revisions are untested and may not be fully compatible.\n"])
+				elif self.FW[1] == 4:
+					conn_msg.append([0, "{:s}Now running in Legacy Mode. You can install the optimized firmware version L1 in GUI mode from the “Tools” menu.{:s}".format(ANSI.YELLOW, ANSI.RESET)])
 
 				self.PORT = ports[i]
 				self.DEVICE.timeout = 1
@@ -1120,7 +1120,7 @@ class GbxDevice:
 			return False
 		return True
 	
-	def ReadInfo(self, setPinsAsInputs=False):
+	def ReadInfo(self, setPinsAsInputs=False, checkRtc=False):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
 		data = {}
 		self.POS = 0
@@ -1244,7 +1244,7 @@ class GbxDevice:
 		# Firmware check R26+
 		# Firmware check CFW
 		if ("agb_rom_size" in args and args["agb_rom_size"] > 32 * 1024 * 1024) or (self.MODE == "DMG" and "mbc" in args and not self.IsSupportedMbc(args["mbc"])) or (self.MODE == "AGB" and "dacs_8m" in self.INFO and self.INFO["dacs_8m"] is True): # 3D Memory
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please update to the custom high compatibility firmware by Lesserkuma and try again.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please update to the high compatibility firmware and try again.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check CFW
 		
@@ -1539,19 +1539,19 @@ class GbxDevice:
 					save_size = 32 * 1024
 					read_command = 'GBA_READ_SRAM'
 					write_command = 'GBA_WRITE_SRAM'
-				elif save_type == 4: # SRAM 64 KB
+				elif save_type == 7: # SRAM 64 KB
 					save_size = 64 * 1024
 					read_command = 'GBA_READ_SRAM'
 					write_command = 'GBA_WRITE_SRAM'
-				elif save_type == 5: # SRAM 128 KB
+				elif save_type == 8: # SRAM 128 KB
 					save_size = 128 * 1024
 					read_command = 'GBA_READ_SRAM'
 					write_command = 'GBA_WRITE_SRAM'
 					bank_count = 2
-				elif save_type == 6: # FLASH 64 KB
+				elif save_type == 4: # FLASH 64 KB
 					save_size = 64 * 1024
 					read_command = 'GBA_READ_SRAM'
-				elif save_type == 7: # FLASH 128 KB
+				elif save_type == 5: # FLASH 128 KB
 					save_size = 128 * 1024
 					read_command = 'GBA_READ_SRAM'
 					bank_count = 2
@@ -1560,7 +1560,7 @@ class GbxDevice:
 
 				# Get Save Flash Manufacturer
 				maker_id = None
-				if save_type == 6 or save_type == 7:
+				if save_type == 4 or save_type == 5:
 					maker_id = self.ReadFlashSaveMakerID()
 					if maker_id == "ATMEL" and mode == 3:
 						transfer_size = 128
@@ -1611,9 +1611,9 @@ class GbxDevice:
 					if endAddr > (startAddr + save_size): endAddr = startAddr + save_size
 					if save_type == 1 or save_type == 2: # EEPROM
 						self.set_number(eeprom_size, self.DEVICE_CMD["GBA_SET_EEPROM_SIZE"])
-					elif save_type == 5: # 1M SRAM
+					elif save_type == 8: # 1M SRAM
 						self.gbx_flash_write_address_byte(0x1000000, bank)
-					elif (save_type == 6 or save_type == 7) and bank > 0: # FLASH
+					elif (save_type == 4 or save_type == 5) and bank > 0: # FLASH
 						self.set_number(bank, self.DEVICE_CMD["GBA_FLASH_SET_BANK"])
 				
 				self.set_number(startAddr, self.DEVICE_CMD["SET_START_ADDRESS"])
@@ -1668,7 +1668,7 @@ class GbxDevice:
 								self.wait_for_ack()
 						
 						elif self.MODE == "AGB":
-							if save_type == 6 or save_type == 7: # FLASH
+							if save_type == 4 or save_type == 5: # FLASH
 								if maker_id == "ATMEL":
 									self.gbx_flash_write_data_bytes(self.DEVICE_CMD["GBA_FLASH_WRITE_ATMEL"], data)
 									self.wait_for_ack()
@@ -1809,9 +1809,9 @@ class GbxDevice:
 			
 			elif self.MODE == "AGB":
 				if bank > 0:
-					if (save_type == 5) and bank > 0: # 1M SRAM
+					if (save_type == 8) and bank > 0: # 1M SRAM
 						self.gbx_flash_write_address_byte(0x1000000, 0)
-					elif (save_type == 6 or save_type == 7) and bank > 0: # FLASH
+					elif (save_type == 4 or save_type == 5) and bank > 0: # FLASH
 						self.set_number(0, self.DEVICE_CMD["GBA_FLASH_SET_BANK"])
 			
 			if mode == 2:
@@ -1918,20 +1918,20 @@ class GbxDevice:
 		# Firmware check R23+
 		# Firmware check R25+
 		if self.MODE == "AGB" and "single_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["single_write"] == [['PA', 0x70], ['PA', 0x10], ['PA', 'PD']] and (([ 0xB0, 0x00, 0xE2, 0x00 ] in flashcart_meta["flash_ids"]) or ([ 0xB0, 0x00, 0xB0, 0x00 ] in flashcart_meta["flash_ids"])): # Dev
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the Tools menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the “Tools” menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check R25+
 		# Firmware check R28+
 		if (int(self.FW[0]) >= 28) and self.MODE == "AGB" and ("flash_ids" in flashcart_meta and ([ 0x89, 0x00, 0x89, 0x00, 0x18, 0x00, 0x18, 0x00 ] in flashcart_meta["flash_ids"])): # Flash2Advance
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the Tools menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the “Tools” menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check R25+
 		# Firmware check
 		if self.MODE == "AGB" and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] == [['SA', 0xEA], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0xD0], ['SA', 0xFF]]:
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the Tools menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the “Tools” menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		if self.MODE == "AGB" and "buffer_size" in flashcart_meta and flashcart_meta["buffer_size"] > 256:
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the Tools menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the “Tools” menu or the maker’s website.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		if self.MODE == "DMG" and "single_write" in flashcart_meta["commands"] and "buffer_write" in flashcart_meta["commands"] and flashcart_meta["commands"]["buffer_write"] != [['SA', 0xE8], ['SA', 'BS'], ['PA', 'PD'], ['SA', 0xD0], ['SA', 0xFF]]:
 			print("NOTE: Update your GBxCart RW firmware to version L1 or higher for a better transfer rate with this cartridge.")
@@ -1941,7 +1941,7 @@ class GbxDevice:
 			del flashcart_meta["commands"]["buffer_write"]
 
 		#if "dmg-mmsa-jpn" in flashcart_meta:
-		#	self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Flashing GB Memory cartridges is currently only supported via the high compatibility firmware which you can install from the Tools menu.", "abortable":False})
+		#	self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Flashing GB Memory cartridges is currently only supported via the high compatibility firmware which you can install from the “Tools” menu.", "abortable":False})
 		#	return False
 		# Firmware check
 		#dprint(flashcart_meta)
@@ -2024,7 +2024,7 @@ class GbxDevice:
 		
 		# Check if write command exists and quit if not
 		if "single_write" not in flashcart_meta["commands"] and "buffer_write" not in flashcart_meta["commands"]:
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM flashing, however you can try the high compatibility firmware which is available through the firmware updater in the Tools menu.", "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM writing using the current firmware version. However, it may be supported via the high compatibility firmware which is available in GUI mode from the “Tools” menu.", "abortable":False})
 			return False
 		
 		# Chip Erase
@@ -2252,7 +2252,7 @@ class GbxDevice:
 							pos += 32
 						
 						else:
-							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the Tools menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
+							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							return False
 					
 					elif self.MODE == "AGB":
@@ -2359,7 +2359,7 @@ class GbxDevice:
 								pos += 256
 						
 						else:
-							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the Tools menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
+							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							return False
 				
 				elif "single_write" in flashcart_meta["commands"]:

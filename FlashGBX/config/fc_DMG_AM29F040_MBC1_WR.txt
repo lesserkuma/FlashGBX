@@ -1,37 +1,38 @@
 {
 	"type":"DMG",
 	"names":[
-		"S29GL032N90T and ALTERA CPLD (MBC1)"
+		"DIY cart with MBC1 and AM29F040 @ WR"
 	],
-	"manual_select":true,
-	"voltage":3.3,
+	"flash_ids":[
+		[ 0x01, 0xA4 ]
+	],
+	"voltage":5,
 	"flash_size":0x80000,
-	"start_addr":0x4000,
+	"start_addr":0,
 	"first_bank":1,
-	"write_pin":"WR",
-	"chip_erase_timeout":40,
 	"mbc":0x03,
-	"pulse_reset_after_write":true,
+	"write_pin":"WR",
+	"chip_erase_timeout":15,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
-			[ 0x7000, 0xF0 ]
+			[ 0, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x90 ]
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x90 ]
 		],
 		"read_cfi":[
-			[ 0x7AAA, 0x98 ]
+			[ 0x555, 0x98 ]
 		],
 		"chip_erase":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x80 ],
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0x10 ]
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x10 ]
 		],
 		"chip_erase_wait_for":[
 			[ null, null, null ],
@@ -42,9 +43,9 @@
 			[ 0, 0xFF, 0xFF ]
 		],
 		"single_write":[
-			[ 0x7AAA, 0xA9 ],
-			[ 0x7555, 0x56 ],
-			[ 0x7AAA, 0xA0 ],
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0xA0 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[
