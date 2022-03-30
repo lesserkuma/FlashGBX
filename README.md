@@ -203,6 +203,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - AGB-E05-02 with JS28F128
   - AGB-E05-02 with M29W128FH
   - AGB-E05-02 with M29W128GH
+  - AGB-E05-02 with S29GL032
   - AGB-E05-06L with 29LV128DBT2C-90Q
   - AGB-E08-09 with 29LV128DTMC-90Q
   - AGB-E20-30 with M29W128GH
@@ -297,7 +298,7 @@ The author would like to thank the following very kind people for their help and
 - Paradoxical (flash chip info)
 - Rairch (bug reports)
 - Raphaël BOICHOT (feature suggestions)
-- redalchemy (bug reports)
+- redalchemy (bug reports, flash chip info)
 - RetroGorek (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
 - Satumox (bug reports)

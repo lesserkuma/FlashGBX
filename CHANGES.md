@@ -1,5 +1,5 @@
 # Release notes
-### v3.7 (released 2022-03-30)
+### v3.7 (released 2022-03-31)
 - Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums (improves support for Classic NES Series, NES Classics and Famicom Mini cartridges)
 - When writing new ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN), hidden sector data will now be auto-generated if it’s not provided by the user in form of a .map file
 - Erasing save data of Game Boy Advance cartridges with the 512K FLASH and 1M FLASH save types is now faster
@@ -13,6 +13,8 @@
 - Added support for DIY carts with MBC1 and SST39SF040 @ AUDIO *(thanks Timville)*
 - Added support for B100 with MX29LV640ET *(thanks Mr_V)*
 - Added support for B54 with MX29LV320ET *(thanks Mr_V)*
+- Added support for AGB-E05-02 with S29GL032 *(thanks redalchemy)*
+- Minor bug fixes and improvements
 
 ### v3.6 (released 2022-03-09)
 - When opening Game Boy Camera Album Viewer manually, the save data will now automatically be loaded if a Game Boy Camera or Pocket Camera cartridge is connected

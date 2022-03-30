@@ -732,8 +732,11 @@ class GbxDevice:
 							save_type = 7
 						elif save_size == 32768:
 							save_type = 3
-						else:
+						elif save_size in Util.AGB_Header_Save_Sizes:
 							save_type = Util.AGB_Header_Save_Sizes.index(save_size)
+						else:
+							save_type = None
+							save_size = 0
 					else:
 						dprint("Testing EEPROM")
 						# Check for 4K EEPROM
