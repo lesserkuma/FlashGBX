@@ -270,7 +270,7 @@ The author would like to thank the following very kind people for their help and
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
 - EchelonPrime (flash chip info)
-- EmperorOfTigers (bug reports)
+- EmperorOfTigers (bug reports, flash chip info)
 - endrift (research, mGBA emulator)
 - eveningmoose (flash chip info)
 - frarees (bug reports)
