@@ -1,3 +1,107 @@
 .TH FlashGBX 1
 .SH NAME
-FlashGBX \- Utility for reading and writing Gameboy and Gameboy Advance cartridge data.
+FlashGBX \- Utility for reading and writing Game Boy and Game Boy Advance cartridge data.
+.SH SYNOPSIS
+.B flashgbx
+[\fIOPTIONS\fR] [\fIfile\fR]
+.SH DESCRIPTION
+FlashGBX is a utility for reading and writing ROM, save and RTC data from your Game Boy and Game Boy Advance cartridges. It has both CLI and GUI functionality. It features functionality for exporting GB Camera photos. It queries the chip on the cartiridge to check for compatibility and has a wide range of compatible chips.
+.SH OPTIONS
+.SS General Arguments
+.TP
+.BR \-\-cli
+Force the command line interface mode.
+.TP
+.BR \-\-reset
+Clears all settings such as last used directory information
+.TP
+.BR \-\-debug
+Enable debug messages used for development
+.SS Configuration Arguments
+.TP
+.BR \-\-cfgdir " \fR[\fPappdata\fR|\fPsubdir\fR]"
+Sets the config directory to either the OS-provided local app config directory or a subdirectory of this application
+.SS Main Command Arguments
+.TP
+.BR \-\-mode " \fR[\fPdmg\fR|\fPagb\fR]"
+Set cartridge mode to \"dmg\" (Game Boy) or \"agb\" (Game Boy Advance)
+.TP
+.BR \-\-action " \fR[\fPinfo\fR|\fPbackup-rom\fR|\fPbackup-save\fR|\fPrestore-save\fR|\fPerase-save\fR|\fPgbcamera-extract\fR|\fPfwupdate-gbxcartrw\fR|\fPdebug-test-save\fR]"
+Select program action
+.TP
+.BR \-\-overwrite
+Overwrite without asking if target file already exists
+.SS Optional Command Arguments
+.TP
+.BR \-\-dmg\-romsize " \fR[\fPauto\fR|\fP32kb\fR|\fP64kb\fR|\fP128kb\fR|\fP256kb\fR|\fP512kb\fR|\fP1mb\fR|\fP2mb\fR|\fP4mb\fR|\fP8mb\fR|\fP16mb\fR|\fP32mb\fR]"
+Set the size of the Game Boy cartridge ROM data
+.TP
+.BR \-\-dmg\-mbc " \fR[\fPauto\fR|\fP1\fR|\fP2\fR|\fP3\fR|\fP4\fR|\fP5\fR|\fP6\fR|\fP7\fR]"
+Set the memory bank controller type of the Game Boy Cartridge
+.TP
+.BR \-\-dmg\-savesize " \fR[\fPauto\fR|\fP4k\fR|\fP16k\fR|\fP64k\fR|\fP256k\fR|\fP512k\fR|\fP1m\fR|\fPeeprom2k\fR|\fPeeprom4k\fR|\fPtama5\fR|\fP4m\fR]"
+Set the Game Boy cartridge save data type
+.TP
+.BR \-\-agb\-romsize " \fR[\fPauto\fR|\fP4mb\fR|\fP8mb\fR|\fP16mb\fR|\fP32mb\fR|\fP64mb\fR|\fP128mb\fR|\fP256mb\fR]"
+Set the size of the Game Boy Advance cartridge ROM data
+.TP
+.BR \-\-agb\-savetype " \fR[\fPauto\fR|\fPeeprom4k\fR|\fPeeprom64k\fR|\fPsram256k\fR|\fPflash512k\fR|\fPflash1m\fR|\fPdacs8m\fR|\fPsram512k\fR|\fPsram1m\fR]"
+Set the Game Box Advance save data type
+.TP
+.BR \-\-store\-rtc
+Store RTC register values if supported
+.TP
+.BR \-\-ignore\-bad\-header
+Don't stop if invalid data found in cartridge header data
+.TP
+.BR \-\-flashcart\-type " \fR[\fItype\fP]"
+Name of the flash cart, see txt files in config directory for
+.I type
+options
+.TP
+.BR \-\-prefer\-chip\-erase
+Prefer full chip erase over sector erase when both available
+.TP
+.BR \-\-reversed\-sectors
+Use reversed flash sectors if possible
+.TP
+.BR \-\-force\-5v
+Force 5V when writing Game Boy flash cartridges
+.TP
+.BR \-\-no\-verify\-write
+Do not verify written data
+.TP
+.BR \-\-save\-filename\-add\-datetime
+Adds a timestamp to the file name of the save data backups
+.TP
+.BR \-\-gbcamera\-palette " \fR[\fPgrayscale\fR|\fPdmg\fR|\fPsgb\fR|\fPcgb1\fR|\fPcgb2\fR|\fPcgb3\fR]"
+Sets the palette of the pictures extracted from the Game Boy Camera saves
+.TP
+.BR \-\-gbcamera\-outfile\-format " \fR[\fPpng\fR|\fPbmp\fR|\fPgif\fR|\fPjpg\fR]"
+Sets the file format of the saved pictures from the Game Boy Camera save
+.TP
+.BR \-\-fwupdate\-port
+Override device port for the firmware updater
+
+.SH EXAMPLES
+
+.TP
+.BR flashgbx " \fR\-\-mode agb \-\-action backup\-rom"
+.IP
+Creates a backup of the ROM of a Game Boy Advance cartridge
+
+.TP
+.BR flashgbx " \fR\-\-mode dmg \-\-action backup\-save"
+.IP 
+Creates a backup of the save data from a Game Boy cartridge
+
+.TP
+.BR flashgbx " \fR\-\-mode agb \-\-action flash\-rom ROM.gba"
+.IP
+Writes a Game Boy Advance ROM relying on auto\-detecting the flash cartridge
+
+.TP
+.BR flashgbx " \fR\-\-mode dmg \-\-action gbcamera\-extract \-\-gbcamera\-outfile\-format png GAMEBOYCAMERA.sav"
+.IP
+Extracts Game Boy Camera pictures as .png files from a save data file
+
