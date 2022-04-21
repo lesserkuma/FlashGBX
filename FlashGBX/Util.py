@@ -2,12 +2,12 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback
+import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback, io, struct
 from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.7"
+VERSION_PEP440 = "3.8"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
@@ -19,13 +19,13 @@ AGB_Global_CRC32 = 0
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000 ]
 
-DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper' }
+DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper' }
 DMG_Header_ROM_Sizes = [ "32 KB", "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000 ]
-DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KB)", "64K SRAM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "MBC6 SRAM+FLASH (1.03 MB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KB)" ]
-DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201 ]
-DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000 ] # RAM size in bytes
+DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KB)", "64K SRAM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "MBC6 SRAM+FLASH (1.03 MB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KB)", "Unlicensed 1M EEPROM (128 KB)" ]
+DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203 ]
+DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000 ] # RAM size in bytes
 DMG_Header_SGB = { 0x00:'No support', 0x03:'Supported' }
 DMG_Header_CGB = { 0x00:'No support', 0x80:'Supported', 0xC0:'Required' }
 
@@ -147,7 +147,7 @@ class Progress():
 				self.UPDATER(args)
 				self.PROGRESS = {}
 			
-			elif args["action"] in ("ERASE", "SECTOR_ERASE", "UNLOCK"):
+			elif args["action"] in ("ERASE", "SECTOR_ERASE", "UNLOCK", "UPDATE_RTC"):
 				if "time_start" in self.PROGRESS:
 					args["time_elapsed"] = now - self.PROGRESS["time_start"]
 				elif "time_start" in args:
@@ -247,6 +247,32 @@ class TAMA5_REG(Enum):
 	MEM_READ_L = 0xC
 	MEM_READ_H = 0xD
 
+def isx2bin(buffer):
+	data_input = io.BytesIO(buffer)
+	data_output = bytearray(8 * 1024 * 1024)
+	rom_size = 0
+	temp = 32 * 1024
+	while 1:
+		try:
+			type = struct.unpack('B', data_input.read(1))[0]
+			if type == 4:
+				break
+			elif type != 1:
+				print("WARNING: Unhandled ISX record type 0x{:02X} found. Converted ROM may not be working correctly.".format(type))
+				continue
+			bank = struct.unpack('B', data_input.read(1))[0]
+			offset = struct.unpack('<H', data_input.read(2))[0] % 0x4000
+			realoffset = bank * 16 * 1024 + offset
+			size = struct.unpack('<H', data_input.read(2))[0]
+			data_output[realoffset:realoffset+size] = data_input.read(size)
+			rom_size = max(rom_size, realoffset+size)
+			temp = 32 * 1024
+			while temp < rom_size: temp *= 2
+		except:
+			print("ERROR: Couldn’t convert ISX file correctly.")
+			break
+	return data_output[:temp]
+
 def roundup(x):
 	# https://stackoverflow.com/questions/50405017/
 	d = 10 ** 2
@@ -257,23 +283,23 @@ def roundup(x):
 
 def formatFileSize(size, asInt=False, roundUp=False):
 	if size == 1:
-		return "{:d} Byte".format(size)
+		return "{:d} Byte".format(size)
 	elif size < 1024:
-		return "{:d} Bytes".format(size)
+		return "{:d} Bytes".format(size)
 	elif size < 1024 * 1024:
 		val = size/1024
 		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} KB".format(int(val))
+			return "{:d} KB".format(int(val))
 		else:
-			return "{:.1f} KB".format(val)
+			return "{:.1f} KB".format(val)
 	else:
 		val = size/1024/1024
 		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} MB".format(int(val))
+			return "{:d} MB".format(int(val))
 		else:
-			return "{:.2f} MB".format(val)
+			return "{:.2f} MB".format(val)
 
 def formatProgressTimeShort(sec):
 	sec = sec % (24 * 3600)
@@ -285,20 +311,20 @@ def formatProgressTimeShort(sec):
 
 def formatProgressTime(sec):
 	if int(sec) == 1:
-		return "{:d} second".format(int(sec))
+		return "{:d} second".format(int(sec))
 	elif sec < 60:
-		return "{:d} seconds".format(int(sec))
+		return "{:d} seconds".format(int(sec))
 	elif int(sec) == 60:
-		return "1 minute"
+		return "1 minute"
 	else:
 		min = int(sec / 60)
 		sec = int(sec % 60)
-		s = str(min) + " "
+		s = str(min) + " "
 		if min == 1:
 			s = s + "minute"
 		else:
 			s = s + "minutes"
-		s = s + ", " + str(sec) + " "
+		s = s + ", " + str(sec) + " "
 		if sec == 1:
 			s = s + "second"
 		else:

@@ -16,7 +16,7 @@ from . import Util
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
-	DEVICE_MAX_FW = 5
+	DEVICE_MAX_FW = 6
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -49,6 +49,8 @@ class GbxDevice:
 		"DMG_MBC7_READ_EEPROM":0xB5,
 		"DMG_MBC7_WRITE_EEPROM":0xB6,
 		"DMG_MBC6_MMSA_WRITE_FLASH":0xB7,
+		"DMG_SET_BANK_CHANGE_CMD":0xB8,
+		"DMG_EEPROM_WRITE":0xB9,
 		"AGB_CART_READ":0xC1,
 		"AGB_CART_WRITE":0xC2,
 		"AGB_CART_READ_SRAM":0xC3,
@@ -59,7 +61,7 @@ class GbxDevice:
 		"AGB_CART_READ_3D_MEMORY":0xC8,
 		"AGB_BOOTUP_SEQUENCE":0xC9,
 		"DMG_FLASH_WRITE_BYTE":0xD1,
-		"AGB_FLASH_WRITE_BYTE":0xD2,
+		"AGB_FLASH_WRITE_SHORT":0xD2,
 		"FLASH_PROGRAM":0xD3,
 		"CART_WRITE_FLASH_CMD":0xD4,
 	}
@@ -80,6 +82,8 @@ class GbxDevice:
 		"DMG_READ_CS_PULSE":[8, 0x08],
 		"DMG_WRITE_CS_PULSE":[8, 0x09],
 		"FLASH_DOUBLE_DIE":[8, 0x0A],
+		"DMG_READ_METHOD":[8, 0x0B],
+		"AGB_READ_METHOD":[8, 0x0C],
 	}
 
 	PCB_VERSIONS = {4:'v1.3', 5:'v1.4', 6:'v1.4a', 101:'Mini v1.0d'}
@@ -88,6 +92,7 @@ class GbxDevice:
 	
 	FW = []
 	FW_UPDATE_REQ = False
+	FW_VAR = {}
 	MODE = None
 	PORT = ''
 	DEVICE = None
@@ -187,7 +192,6 @@ class GbxDevice:
 			except SerialException as e:
 				if "Permission" in str(e):
 					conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " couldn’t be accessed. Make sure your user account has permission to use it and it’s not already in use by another application."])
-					print(str(e))
 				else:
 					conn_msg.append([3, "A critical error occured while trying to access the GBxCart RW device on port " + ports[i] + ".\n\n" + str(e)])
 				continue
@@ -247,7 +251,7 @@ class GbxDevice:
 	
 	def IsSupportedMbc(self, mbc):
 		if self.CanPowerCycleCart():
-			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x201, 0x202 )
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x201, 0x202, 0x203, 0x204 )
 		else:
 			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x202 )
 	
@@ -277,6 +281,13 @@ class GbxDevice:
 			self.DEVICE.reset_output_buffer()
 			return self.LoadFirmwareVersion()
 		except SerialException as e:
+			print("Connection lost!")
+			try:
+				if e.args[0].startswith("ClearCommError failed"):
+					self.DEVICE.close()
+					return False
+			except:
+				pass
 			print(str(e))
 			return False
 	
@@ -321,6 +332,9 @@ class GbxDevice:
 		else:
 			return "{:s} – Firmware {:s} ({:s})".format(self.GetFullName(), self.GetFirmwareVersion(), self.PORT)
 
+	def GetOfficialWebsite(self):
+		return "https://www.gbxcart.com/"
+	
 	def SupportsFirmwareUpdates(self):
 		return self.FW["pcb_ver"] in (4, 5, 6)
 
@@ -373,8 +387,8 @@ class GbxDevice:
 		if not isinstance(data, bytearray):
 			data = bytearray([data])
 
-		dstr = ' '.join(format(x, '02X') for x in data)
-		dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr[:96]))
+		#dstr = ' '.join(format(x, '02X') for x in data)
+		#dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr[:96]))
 		
 		self.DEVICE.write(data)
 		self.DEVICE.flush()
@@ -405,6 +419,7 @@ class GbxDevice:
 
 	def _set_fw_variable(self, key, value):
 		dprint("Setting firmware variable {:s} to 0x{:X}".format(key, value))
+		self.FW_VAR[key] = value
 
 		size = 0
 		for (k, v) in self.DEVICE_VAR.items():
@@ -421,14 +436,20 @@ class GbxDevice:
 		buffer.extend(struct.pack(">I", key))
 		buffer.extend(struct.pack(">I", value))
 		self._write(buffer)
-
+	
 	def _cart_read(self, address, length=0, agb_save_flash=False):
 		if self.MODE == "DMG":
 			if length == 0:
 				length = 1
-				return struct.unpack("B", self.ReadROM(address, 1))[0]
+				if address < 0xA000:
+					return struct.unpack("B", self.ReadROM(address, 1))[0]
+				else:
+					return struct.unpack("B", self.ReadRAM(address - 0xA000, 1))[0]
 			else:
-				return self.ReadROM(address, length)
+				if address < 0xA000:
+					return self.ReadROM(address, length)
+				else:
+					return self.ReadRAM(address - 0xA000, length)
 		elif self.MODE == "AGB":
 			if length == 0:
 				length = 2
@@ -440,7 +461,7 @@ class GbxDevice:
 				return self.ReadROM(address, length)
 
 	def _cart_write(self, address, value, flashcart=False, sram=False):
-		dprint("Writing to cartridge: 0x{:X} = 0x{:X}".format(address, value & 0xFF), flashcart, sram)
+		dprint("Writing to cartridge: 0x{:X} = 0x{:X} (flashcart={:s}, sram={:s})".format(address, value & 0xFF, str(flashcart), str(sram)))
 		if self.MODE == "DMG":
 			if flashcart:
 				buffer = bytearray([self.DEVICE_CMD["DMG_FLASH_WRITE_BYTE"]])
@@ -457,7 +478,7 @@ class GbxDevice:
 				self._read(1)
 				return
 			elif flashcart:
-				buffer = bytearray([self.DEVICE_CMD["AGB_FLASH_WRITE_BYTE"]])
+				buffer = bytearray([self.DEVICE_CMD["AGB_FLASH_WRITE_SHORT"]])
 			else:
 				buffer = bytearray([self.DEVICE_CMD["AGB_CART_WRITE"]])
 			
@@ -465,19 +486,33 @@ class GbxDevice:
 			buffer.extend(struct.pack(">H", value & 0xFFFF))
 		self._write(buffer)
 	
-	def _cart_write_flash(self, commands):
+	def _cart_write_flash(self, commands, flashcart=False):
+		if self.FW["fw_ver"] < 6 and not (self.MODE == "AGB" and not flashcart):
+			for command in commands:
+				self._cart_write(command[0], command[1], flashcart=flashcart)
+			return
+		
 		num = len(commands)
 		buffer = bytearray([self.DEVICE_CMD["CART_WRITE_FLASH_CMD"]])
+		if self.FW["fw_ver"] >= 6:
+			buffer.extend(struct.pack("B", 1 if flashcart else 0))
 		buffer.extend(struct.pack("B", num))
 		for i in range(0, num):
-			#dprint("Writing to cartridge: 0x{:X} = 0x{:X}".format(commands[i][0], commands[i][1] & 0xFF))
-			buffer.extend(struct.pack(">I", commands[i][0]))
-			buffer.extend(struct.pack("B", commands[i][1]))
+			dprint("Writing to cartridge: 0x{:X} = 0x{:X} ({:d} of {:d})".format(commands[i][0], commands[i][1], i+1, num))
+			if self.MODE == "AGB" and flashcart:
+				buffer.extend(struct.pack(">I", commands[i][0] >> 1))
+			else:
+				buffer.extend(struct.pack(">I", commands[i][0]))
+			
+			if self.FW["fw_ver"] < 6:
+				buffer.extend(struct.pack("B", commands[i][1]))
+			else:
+				buffer.extend(struct.pack(">H", commands[i][1]))
 		
 		self._write(buffer)
-
-		if self._read(1) != 0x01:
-			print("Error!")
+		ret = self._read(1)
+		if ret != 0x01:
+			print("Error in _cart_write_flash():", ret)
 
 	def _clk_toggle(self, num):
 		if self.FW["pcb_ver"] not in (5, 6, 101): return False
@@ -495,8 +530,6 @@ class GbxDevice:
 				self._write(self.DEVICE_CMD["SET_MODE_DMG"])
 			elif self.MODE == "AGB":
 				self._write(self.DEVICE_CMD["SET_MODE_AGB"])
-		else:
-			print("{:s}NOTE: Cartridge power cycling is not supported by this device.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 
 	def CartPowerOff(self, delay=0.1):
 		if self.FW["pcb_ver"] in (5, 6):
@@ -519,10 +552,14 @@ class GbxDevice:
 		if mode == "DMG":
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
+			self._set_fw_variable("DMG_READ_METHOD", 1)
+			self._set_fw_variable("CART_MODE", 1)
 			self.MODE = "DMG"
 		elif mode == "AGB":
 			self._write(self.DEVICE_CMD["SET_MODE_AGB"])
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_3_3V"])
+			self._set_fw_variable("AGB_READ_METHOD", 0)
+			self._set_fw_variable("CART_MODE", 2)
 			self.MODE = "AGB"
 		self._set_fw_variable(key="ADDRESS", value=0)
 		self.CartPowerOn()
@@ -534,7 +571,7 @@ class GbxDevice:
 		return (list(self.SUPPORTED_CARTS['AGB'].keys()), list(self.SUPPORTED_CARTS['AGB'].values()))
 	
 	def SetProgress(self, args):
-		if self.CANCEL and args["action"] != "ABORT": return
+		if self.CANCEL and args["action"] not in ("ABORT", "FINISHED"): return
 		if args["action"] == "UPDATE_POS":
 			self.POS = args["pos"]
 			self.INFO["transferred"] = args["pos"]
@@ -543,7 +580,9 @@ class GbxDevice:
 		except AttributeError:
 			if self.SIGNAL is not None:
 				self.SIGNAL(args)
-		if args["action"] == "FINISHED": self.SIGNAL = None
+		
+		if args["action"] == "FINISHED":
+			self.SIGNAL = None
 	
 	def ReadInfo(self, setPinsAsInputs=False, checkRtc=True):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
@@ -555,7 +594,7 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["OFW_CART_MODE"]) # Reset LEDs
 			self._read(1)
 			self.CartPowerOn()
-
+		
 		if self.MODE == "DMG":
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
 			self._write(self.DEVICE_CMD["DMG_MBC_RESET"], wait=True)
@@ -566,28 +605,30 @@ class GbxDevice:
 				self._write(self.DEVICE_CMD["AGB_BOOTUP_SEQUENCE"], wait=True)
 
 		header = self.ReadROM(0, 0x180)
+		if Util.DEBUG:
+			with open("debug_header.bin", "wb") as f: f.write(header)
 		if header is False or len(header) != 0x180:
 			print("{:s}\n{:s}Couldn’t read the cartridge information. Please try again.{:s}".format(str(header), ANSI.RED, ANSI.RESET))
 			return False
-		if Util.DEBUG:
-			with open("debug_header.bin", "wb") as f: f.write(header)
-		
-		# Unlock DACS carts on older firmware
-		if self.MODE == "AGB" and (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] == 1):
-			if header[0x04:0x04+0x9C] == bytearray([0x00] * 0x9C):
-				self.ReadROM(0x1FFFFE0, 20)
-				header = self.ReadROM(0, 0x180)
 		
 		# Parse ROM header
 		if self.MODE == "DMG":
 			data = RomFileDMG(header).GetHeader()
-			if data["logo_correct"] is False: # try to fix weird bootlegs
+			if data["game_title"] == "TETRIS" and hashlib.sha1(header).digest() != bytearray([0x1D, 0x69, 0x2A, 0x4B, 0x31, 0x7A, 0xA5, 0xE9, 0x67, 0xEE, 0xC2, 0x2F, 0xCC, 0x32, 0x43, 0x8C, 0xCB, 0xC5, 0x78, 0x0B]): # Sachen
+				header = self.ReadROM(0, 0x280)
+				data = RomFileDMG(header).GetHeader()
+			if data["logo_correct"] is False and not b"Future Console Design" in header: # workaround for strange bootlegs
 				self._cart_write(0, 0xFF)
 				time.sleep(0.1)
-				header = self.ReadROM(0, 0x180)
+				header = self.ReadROM(0, 0x280)
+				data = RomFileDMG(header).GetHeader()
+			if data["mapper_raw"] == 0x203 or b"Future Console Design" in header: # Xploder GB version number
+				self._cart_write(0x0006, 0)
+				header[0:0x10] = self.ReadROM(0x4000, 0x10)
+				header[0xD0:0xE0] = self.ReadROM(0x40D0, 0x10)
 				data = RomFileDMG(header).GetHeader()
 			
-			_mbc = DMG_MBC().GetInstance(args={"mbc":data["features_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
+			_mbc = DMG_MBC().GetInstance(args={"mbc":data["mapper_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 			if checkRtc:
 				data["has_rtc"] = _mbc.HasRTC() is True
 				if data["has_rtc"] is True:
@@ -597,26 +638,35 @@ class GbxDevice:
 				data["has_rtc"] = False
 		
 		elif self.MODE == "AGB":
+			# Unlock DACS carts on older firmware
+			if self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] == 1:
+				if header[0x04:0x04+0x9C] == bytearray([0x00] * 0x9C):
+					self.ReadROM(0x1FFFFE0, 20)
+					header = self.ReadROM(0, 0x180)
+			
 			data = RomFileAGB(header).GetHeader()
-			if data["logo_correct"] is False: # workaround for weird bootlegs
+			if data["logo_correct"] is False: # workaround for strange bootlegs
 				self._cart_write(0, 0xFF)
 				time.sleep(0.1)
 				header = self.ReadROM(0, 0x180)
 				data = RomFileAGB(header).GetHeader()
 			
-			# Check where the ROM data repeats
-			size_check = header[0xA0:0xA0+16]
-			currAddr = 0x400000
-			while currAddr < 0x2000000:
-				buffer = self.ReadROM(currAddr + 0xA0, 64)[:16]
-				if buffer == size_check: break
-				currAddr += 0x400000
-			data["rom_size"] = currAddr
-
-			if (data["3d_memory"] == True):
+			if data["empty"] or data["empty_nocart"]:
+				data["rom_size"] = 0x2000000
+			elif (data["3d_memory"] == True):
 				data["rom_size"] = 0x4000000
-			elif (self.ReadROM(0x1FFE000, 0x0C) == b"AGBFLASHDACS"):
-				data["dacs_8m"] = True
+			else:
+				# Check where the ROM data repeats (for unlicensed carts)
+				size_check = header[0xA0:0xA0+16]
+				currAddr = 0x400000
+				while currAddr < 0x2000000:
+					buffer = self.ReadROM(currAddr + 0xA0, 64)[:16]
+					if buffer == size_check: break
+					currAddr += 0x400000
+				data["rom_size"] = currAddr
+				
+				if (self.ReadROM(0x1FFE000, 0x0C) == b"AGBFLASHDACS"):
+					data["dacs_8m"] = True
 			
 			if checkRtc and data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
 				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
@@ -653,7 +703,7 @@ class GbxDevice:
 		self.INFO["has_rtc"] = has_rtc
 
 		if self.MODE == "DMG" and mbc is None:
-			mbc = info["features_raw"]
+			mbc = info["mapper_raw"]
 			if mbc > 0x200: checkSaveType = False
 		
 		(cart_types, cart_type_id, flash_id, cfi_s, cfi) = self.AutoDetectFlash(limitVoltage=limitVoltage)
@@ -1124,7 +1174,7 @@ class GbxDevice:
 		for i in range(0, num):
 			self._set_fw_variable("TRANSFER_SIZE", length)
 			self._set_fw_variable("ADDRESS", address)
-			#dprint("Now in iteration {:d}".format(i))
+			dprint("Now in iteration {:d}".format(i))
 			
 			if buffer[i*length:i*length+length] == bytearray([0xFF] * length):
 				skip_write = True
@@ -1248,13 +1298,21 @@ class GbxDevice:
 				[ address, length - 1 ],
 				[ address, 0x00 ],
 			])
-			while True:
+			lives = 100
+			while lives > 0:
 				self._cart_write(0x4000, 0x70)
 				sr = self._cart_read(address + length - 1)
 				dprint("sr=0x{:X}".format(sr))
 				if sr & 0x80 == 0x80: break
 				time.sleep(0.001)
+				lives -= 1
 			self._cart_write(0x4000, 0xFF)
+			
+			if lives == 0:
+				self.CANCEL_ARGS = {"info_type":"msgbox_critical", "info_msg":"Flash write error (response = {:s}) in iteration {:d} while trying to write 0x{:X} bytes".format(str(sr), i, length)}
+				self.CANCEL = True
+				self.ERROR = True
+				return False
 			
 			address += length
 			if self.INFO["action"] == self.ACTIONS["ROM_WRITE"] and not self.NO_PROG_UPDATE:
@@ -1263,11 +1321,48 @@ class GbxDevice:
 		self._cart_write(address - 1, 0xFF)
 		self.SKIPPING = skip_write
 	
+	def WriteROM_DMG_EEPROM(self, address, buffer, bank, eeprom_buffer_size=0x80):
+		length = len(buffer)
+		if self.FW["pcb_ver"] not in (5, 6, 101):
+			max_length = 256
+		else:
+			max_length = 1024
+		num = math.ceil(length / max_length)
+		if length > max_length: length = max_length
+		dprint("Writing 0x{:X} bytes to EEPROM in {:d} iteration(s)".format(length, num))
+		
+		for i in range(0, num):
+			self._set_fw_variable("BUFFER_SIZE", eeprom_buffer_size)
+			self._set_fw_variable("TRANSFER_SIZE", length)
+			self._set_fw_variable("ADDRESS", address)
+			dprint("Now in iteration {:d}".format(i))
+			
+			self._write(self.DEVICE_CMD["DMG_EEPROM_WRITE"])
+			self._write(buffer[i*length:i*length+length])
+			ret = self._read(1)
+			if ret not in (0x01, 0x03):
+				self.CANCEL_ARGS = {"info_type":"msgbox_critical", "info_msg":"EEPROM write error (response = {:s}) in iteration {:d} while trying to write 0x{:X} bytes".format(str(ret), i, length)}
+				self.CANCEL = True
+				self.ERROR = True
+				return False
+			
+			address += length
+			if self.INFO["action"] == self.ACTIONS["ROM_WRITE"] and not self.NO_PROG_UPDATE:
+				self.SetProgress({"action":"WRITE", "bytes_added":length})
+		
+		self._cart_write_flash([
+			[0x0006, 0x01],
+			[0x5555, 0xAA],
+			[0x2AAA, 0x55],
+			[0x5555, 0xF0],
+			[0x0006, bank]
+		])
+	
 	def CheckROMStable(self):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
-		buffer1 = self.ReadROM(0x100, 0x40)
+		buffer1 = self.ReadROM(0x80, 0x40)
 		time.sleep(0.05)
-		buffer2 = self.ReadROM(0x100, 0x40)
+		buffer2 = self.ReadROM(0x80, 0x40)
 		return buffer1 == buffer2
 	
 	def AutoDetectFlash(self, limitVoltage=False):
@@ -1277,12 +1372,13 @@ class GbxDevice:
 		flash_id_found = False
 		
 		supported_carts = list(self.SUPPORTED_CARTS[self.MODE].values())
+
 		if self.MODE == "DMG":
 			if limitVoltage:
 				self._write(self.DEVICE_CMD["SET_VOLTAGE_3_3V"])
 			else:
 				self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
-			time.sleep(0.25)
+			time.sleep(0.1)
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
 		elif self.MODE == "DMG":
 			self._write(self.DEVICE_CMD["SET_MODE_AGB"])
@@ -1295,21 +1391,21 @@ class GbxDevice:
 			dprint("*** Now checking: {:s}\n".format(flashcart_meta["names"][0]))
 			
 			if self.MODE == "DMG":
-				if flashcart_meta["write_pin"] == "WR":
-					we = 0x01 # FLASH_WE_PIN_WR
-				elif flashcart_meta["write_pin"] in ("AUDIO", "VIN"):
-					we = 0x02 # FLASH_WE_PIN_AUDIO
-				elif flashcart_meta["write_pin"] == "WR+RESET":
-					we = 0x03 # FLASH_WE_PIN_WR_RESET
-				self._set_fw_variable("FLASH_WE_PIN", we)
+				we = flashcart_meta["write_pin"]
+				if we == "WR":
+					self._set_fw_variable("FLASH_WE_PIN", 0x01) # FLASH_WE_PIN_WR
+				elif we in ("AUDIO", "VIN"):
+					self._set_fw_variable("FLASH_WE_PIN", 0x02) # FLASH_WE_PIN_AUDIO
+				elif we == "WR+RESET":
+					self._set_fw_variable("FLASH_WE_PIN", 0x03) # FLASH_WE_PIN_WR_RESET
 			
-			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle)
+			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle)
 			flashcart.Reset(full_reset=False)
 			flashcart.Unlock()
 			if "flash_ids" in flashcart_meta and len(flashcart_meta["flash_ids"]) > 0:
 				vfid = flashcart.VerifyFlashID()
 				if vfid is not False:
-					(verified, cart_flash_id) = flashcart.VerifyFlashID()
+					(verified, cart_flash_id) = vfid
 					if verified and cart_flash_id in flashcart_meta["flash_ids"]:
 						flash_id = cart_flash_id
 						flash_id_found = True
@@ -1349,10 +1445,20 @@ class GbxDevice:
 		
 		if self.MODE == "DMG" and not flash_id_found:
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
-			time.sleep(0.25)
+			time.sleep(0.1)
 		return (flash_types, flash_type_id, flash_id, cfi_s, cfi)
 
 	def CheckFlashChip(self, limitVoltage=False, cart_type=None): # aka. the most horribly written function
+		if cart_type is not None:
+			if self.MODE == "DMG":
+				if cart_type["write_pin"] == "WR":
+					we = 0x01 # FLASH_WE_PIN_WR
+				elif cart_type["write_pin"] in ("AUDIO", "VIN"):
+					we = 0x02 # FLASH_WE_PIN_AUDIO
+				elif cart_type["write_pin"] == "WR+RESET":
+					we = 0x03 # FLASH_WE_PIN_WR_RESET
+				self._set_fw_variable("FLASH_WE_PIN", we)
+
 		if self.FW["pcb_ver"] in (5, 6, 101):
 			self._write(self.DEVICE_CMD["OFW_CART_MODE"])
 			self._read(1)
@@ -1375,6 +1481,13 @@ class GbxDevice:
 			#{ 'read_cfi':[[0x4000, 0x98]], 'read_identifier':[[ 0x4000, 0x90 ]], 'reset':[[ 0x4000, 0xFF ]] },
 		]
 		
+		if self.MODE == "DMG":
+			if limitVoltage:
+				self._write(self.DEVICE_CMD["SET_VOLTAGE_3_3V"])
+			else:
+				self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
+			time.sleep(0.1)
+
 		check_buffer = self.ReadROM(0, 0x400)
 		d_swap = None
 		cfi_info = ""
@@ -1385,11 +1498,6 @@ class GbxDevice:
 		cfi = {'raw':b''}
 		
 		if self.MODE == "DMG":
-			if limitVoltage:
-				self._write(self.DEVICE_CMD["SET_VOLTAGE_3_3V"])
-			else:
-				self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
-			time.sleep(0.25)
 			rom_string = "[     ROM     ] " + rom_string
 			we_pins = [ "WR", "AUDIO" ]
 		else:
@@ -1414,7 +1522,8 @@ class GbxDevice:
 				buffer = self.ReadROM(0, 0x400)
 				for i in range(0, len(method['reset'])):
 					self._cart_write(method['reset'][i][0], method['reset'][i][1], flashcart=True)
-				if buffer == check_buffer: continue
+				#if buffer == check_buffer: continue
+				if buffer == bytearray([0x00] * len(buffer)): continue
 				
 				magic = "{:s}{:s}{:s}".format(chr(buffer[0x20]), chr(buffer[0x22]), chr(buffer[0x24]))
 				if magic == "QRY": # nothing swapped
@@ -1482,6 +1591,7 @@ class GbxDevice:
 							self._cart_write(method['read_identifier'][i][0], method["read_identifier"][i][1], flashcart=True)
 						flash_id = self.ReadROM(0, 8)
 						if flash_id == check_buffer[:len(flash_id)]: continue
+						if flash_id == bytearray([0x00] * len(flash_id)): continue
 
 						if self.MODE == "DMG":
 							method_string = "[" + we.ljust(5) + "/{:4X}/{:2X}]".format(method['read_identifier'][0][0], method['read_identifier'][0][1])
@@ -1495,7 +1605,7 @@ class GbxDevice:
 							self._cart_write(method['reset'][i][0], method['reset'][i][1], flashcart=True)
 
 				if cart_type is not None: # reset cartridge if method is known
-					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
+					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
 					flashcart.Reset(full_reset=False)
 		
 		if "method" in cfi:
@@ -1543,7 +1653,8 @@ class GbxDevice:
 						flash_id = self.ReadROM(method["start_addr"], 8)
 					else:
 						flash_id = self.ReadROM(0, 8)
-					
+					if flash_id == bytearray([0x00] * len(flash_id)): continue
+
 					for i in range(0, len(method['reset'])):
 						self._cart_write(method['reset'][i][0], method["reset"][i][1], flashcart=True)
 					
@@ -1561,10 +1672,10 @@ class GbxDevice:
 		
 		if self.MODE == "DMG":
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
-			time.sleep(0.25)
+			time.sleep(0.2)
 
 		if cart_type is not None: # reset cartridge if method is known
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
 			flashcart.Reset(full_reset=True)
 
 		flash_id = ""
@@ -1626,13 +1737,18 @@ class GbxDevice:
 				if i == args["cart_type"]:
 					try:
 						cart_type["_index"] = cart_type["names"].index(list(self.SUPPORTED_CARTS[self.MODE].keys())[i])
-						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
+						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
 					except:
 						pass
 
 		buffer_len = 0x4000
 		if self.MODE == "DMG":
-			self.INFO["features_raw"] = args["mbc"]
+			self.INFO["mapper_raw"] = args["mbc"]
+			if not self.IsSupportedMbc(args["mbc"]):
+				msg = "This cartridge uses a mapper that is not supported by {:s} using your {:s} device. An updated hardware revision is required.".format(Util.APPNAME, self.GetFullName())
+				self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":msg, "abortable":False})
+				return False
+			
 			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
 			
@@ -1643,6 +1759,9 @@ class GbxDevice:
 				self._set_fw_variable("DMG_READ_CS_PULSE", 1)
 				_mbc.EnableMapper()
 				self._set_fw_variable("DMG_READ_CS_PULSE", 0)
+			elif _mbc.GetName() == "Sachen":
+				start_bank = int(args["rom_size"] / 0x4000)
+				_mbc.SetStartBank(start_bank)
 			else:
 				_mbc.EnableMapper()
 			
@@ -1701,6 +1820,7 @@ class GbxDevice:
 					cancel_args = {"action":"ABORT", "abortable":False}
 					cancel_args.update(self.CANCEL_ARGS)
 					self.CANCEL_ARGS = {}
+					self.ERROR_ARGS = {}
 					self.SetProgress(cancel_args)
 					try:
 						if file is not None: file.close()
@@ -1770,14 +1890,26 @@ class GbxDevice:
 				file.close()
 		
 		# Calculate Global Checksum
+		self.INFO["file_crc32"] = zlib.crc32(buffer) & 0xFFFFFFFF
+		self.INFO["file_sha1"] = hashlib.sha1(buffer).hexdigest()
+		#self.INFO["file_sha256"] = hashlib.sha256(buffer).hexdigest()
+		#self.INFO["file_md5"] = hashlib.md5(buffer).hexdigest()
 		if self.MODE == "DMG":
 			chk = _mbc.CalcChecksum(buffer)
 		elif self.MODE == "AGB":
-			chk = zlib.crc32(buffer) & 0xFFFFFFFF
-		
+			chk = self.INFO["file_crc32"]
 		self.INFO["rom_checksum_calc"] = chk
-		self.INFO["file_crc32"] = zlib.crc32(buffer) & 0xFFFFFFFF
-		self.INFO["file_sha1"] = hashlib.sha1(buffer).hexdigest()
+		
+		# Check for ROM loops
+		self.INFO["loop_detected"] = False
+		temp = min(0x2000000, len(buffer))
+		while temp > 0x4000:
+			temp = temp >> 1
+			if (buffer[0:0x4000] == buffer[temp:temp+0x4000]):
+				if buffer[0:temp] == buffer[temp:temp*2]:
+					self.INFO["loop_detected"] = temp
+			else:
+				break
 		
 		# ↓↓↓ Switch to first ROM bank
 		if self.MODE == "DMG":
@@ -1807,6 +1939,10 @@ class GbxDevice:
 		extra_size = 0
 		audio_low = False
 		if self.MODE == "DMG":
+			if not self.IsSupportedMbc(args["mbc"]):
+				msg = "This cartridge uses a mapper that is not supported by {:s} using your {:s} device. An updated hardware revision is required.".format(Util.APPNAME, self.GetFullName())
+				self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":msg, "abortable":False})
+				return False
 			save_size = args["save_type"]
 			ram_banks = _mbc.GetRAMBanks(save_size)
 			buffer_len = min(0x200, _mbc.GetRAMBankSize())
@@ -1814,6 +1950,7 @@ class GbxDevice:
 			self._set_fw_variable("DMG_WRITE_CS_PULSE", 0)
 			self._set_fw_variable("DMG_READ_CS_PULSE", 0)
 
+			# Enable mappers
 			if _mbc.GetName() == "TAMA5":
 				self._set_fw_variable("DMG_WRITE_CS_PULSE", 1)
 				self._set_fw_variable("DMG_READ_CS_PULSE", 1)
@@ -1828,6 +1965,32 @@ class GbxDevice:
 				self._set_fw_variable("FLASH_METHOD", 0x04) # FLASH_METHOD_DMG_MBC6
 				self._set_fw_variable("FLASH_WE_PIN", 0x01) # WR
 				_mbc.EnableFlash(enable=True, enable_write=True if (args["mode"] == 3) else False)
+			elif _mbc.GetName() == "Xploder GB":
+				empty_data_byte = 0xFF
+				self._set_fw_variable("FLASH_PULSE_RESET", 0)
+				self._set_fw_variable("FLASH_DOUBLE_DIE", 0)
+				self._write(self.DEVICE_CMD["SET_FLASH_CMD"])
+				self._write(0x00) # FLASH_COMMAND_SET_NONE
+				self._write(0x01) # FLASH_METHOD_UNBUFFERED
+				self._write(0x01) # FLASH_WE_PIN_WR
+				commands = [
+					[ 0x5555, 0xAA ],
+					[ 0x2AAA, 0x55 ],
+					[ 0x5555, 0xA0 ],
+				]
+				for i in range(0, 6):
+					if i >= len(commands):
+						self._write(bytearray(struct.pack(">I", 0)) + bytearray(struct.pack(">H", 0)))
+					else:
+						self._write(bytearray(struct.pack(">I", commands[i][0])) + bytearray(struct.pack(">H", commands[i][1])))
+				self._set_fw_variable("FLASH_COMMANDS_BANK_1", 1)
+				self._write(self.DEVICE_CMD["DMG_SET_BANK_CHANGE_CMD"])
+				self._write(1) # number of commands
+				self._write(bytearray(struct.pack(">I", 0x0006))) # address/value
+				self._write(0) # type = address
+				ret = self._read(1)
+				if ret != 0x01:
+					print("Error in DMG_SET_BANK_CHANGE_CMD:", ret)
 			else:
 				_mbc.EnableMapper()
 			
@@ -1918,7 +2081,7 @@ class GbxDevice:
 			command = commands[args["save_type"]][args["mode"] - 2]
 			if args["rtc"] is True:
 				extra_size = 0x10
-
+		
 		if args["mode"] == 2: # Backup
 			action = "SAVE_READ"
 			buffer = bytearray()
@@ -1927,6 +2090,8 @@ class GbxDevice:
 			self.INFO["save_erase"] = args["erase"]
 			if args["erase"] == True:
 				buffer = bytearray([ empty_data_byte ] * save_size)
+				if self.MODE == "DMG" and _mbc.GetName() == "Xploder GB":
+					buffer[0] = 0x00
 			else:
 				if args["path"] is None:
 					buffer = self.INFO["data"]
@@ -1956,6 +2121,10 @@ class GbxDevice:
 						if ((buffer_offset - 0x8000) % 0x20000) == 0:
 							dprint("Erasing flash sector at position 0x{:X}".format(buffer_offset))
 							_mbc.EraseFlashSector()
+				elif _mbc.GetName() == "Xploder GB":
+					self._set_fw_variable("DMG_ROM_BANK", bank + 8)
+					(start_address, bank_size) = _mbc.SelectBankRAM(bank)
+					end_address = min(save_size, start_address + bank_size)
 				else:
 					self._set_fw_variable("DMG_WRITE_CS_PULSE", 1 if _mbc.WriteWithCSPulse() else 0)
 					(start_address, bank_size) = _mbc.SelectBankRAM(bank)
@@ -1994,6 +2163,7 @@ class GbxDevice:
 					cancel_args = {"action":"ABORT", "abortable":False}
 					cancel_args.update(self.CANCEL_ARGS)
 					self.CANCEL_ARGS = {}
+					self.ERROR_ARGS = {}
 					self.SetProgress(cancel_args)
 					if self.CanPowerCycleCart(): self.CartPowerCycle()
 					return
@@ -2005,6 +2175,8 @@ class GbxDevice:
 						temp = self.ReadROM(address=pos, length=buffer_len, skip_init=False, max_length=max_length)
 					elif self.MODE == "DMG" and _mbc.GetName() == "TAMA5":
 						temp = self.ReadRAM_TAMA5()
+					elif self.MODE == "DMG" and _mbc.GetName() == "Xploder GB":
+						temp = self.ReadROM(address=0x20000+pos, length=buffer_len, skip_init=False, max_length=max_length)
 					elif self.MODE == "AGB" and args["save_type"] in (1, 2): # EEPROM
 						temp = self.ReadRAM(address=int(pos/8), length=buffer_len, command=command, max_length=max_length)
 					elif self.MODE == "AGB" and args["save_type"] == 6: # DACS
@@ -2037,6 +2209,8 @@ class GbxDevice:
 							self.WriteFlash_MBC6(address=pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len], mapper=_mbc)
 					elif self.MODE == "DMG" and _mbc.GetName() == "TAMA5":
 						self.WriteRAM_TAMA5(buffer=buffer[buffer_offset:buffer_offset+buffer_len])
+					elif self.MODE == "DMG" and _mbc.GetName() == "Xploder GB":
+						self.WriteROM_DMG_EEPROM(address=pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len], bank=bank+8)
 					elif self.MODE == "AGB" and args["save_type"] in (1, 2): # EEPROM
 						self.WriteRAM(address=int(pos/8), buffer=buffer[buffer_offset:buffer_offset+buffer_len], command=command)
 					elif self.MODE == "AGB" and args["save_type"] in (4, 5): # FLASH
@@ -2121,17 +2295,18 @@ class GbxDevice:
 				file.close()
 			else:
 				self.INFO["data"] = buffer
+			
 			self.INFO["file_crc32"] = zlib.crc32(buffer) & 0xFFFFFFFF
 			self.INFO["file_sha1"] = hashlib.sha1(buffer).hexdigest()
 
 			if "verify_write" in args and args["verify_write"] not in (None, False):
 				return True
-
+		
 		elif args["mode"] == 3: # Restore
 			self.INFO["transferred"] = len(buffer)
 			if args["rtc"] is True:
 				advance = args["rtc_advance"]
-				dprint("rtc_advance:", advance)
+				self.SetProgress({"action":"UPDATE_RTC", "method":"write"})
 				if self.MODE == "DMG" and args["rtc"] is True:
 					_mbc.WriteRTC(buffer[-_mbc.GetRTCBufferSize():], advance=advance)
 				elif self.MODE == "AGB":
@@ -2174,7 +2349,7 @@ class GbxDevice:
 			_mbc.EnableRAM(enable=False)
 			self._set_fw_variable("DMG_READ_CS_PULSE", 0)
 			if audio_low: self._set_fw_variable("FLASH_WE_PIN", 0x02)
-		
+
 		# Clean up
 		self.INFO["last_action"] = self.INFO["action"]
 		self.INFO["action"] = None
@@ -2239,7 +2414,7 @@ class GbxDevice:
 		# Firmware check L2
 		# Firmware check L5
 		if (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] < 5) and ("flash_commands_on_bank_1" in cart_type and cart_type["flash_commands_on_bank_1"] is True):
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type requires firmware version L5 or higher on the GBxCart RW v1.4 hardware revision. It may also work with older hardware revisions using the official firmware and insideGadgets flasher software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>.", "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type requires at least firmware version L5 on the GBxCart RW v1.4 hardware revision or newer. It may also work with older hardware revisions using the official firmware and insideGadgets flasher software available from <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>.", "abortable":False})
 			return False
 		if (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] < 5) and ("double_die" in cart_type and cart_type["double_die"] is True):
 			if self.FW["pcb_ver"] in (5, 6):
@@ -2256,7 +2431,7 @@ class GbxDevice:
 					pass
 		
 		if cart_type["command_set"] == "GBMEMORY":
-			flashcart = Flashcart_DMG_MMSA(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, progress_fncptr=self.SetProgress)
+			flashcart = Flashcart_DMG_MMSA(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, progress_fncptr=self.SetProgress)
 			if "buffer_map" not in args:
 				if os.path.exists(os.path.splitext(args["path"])[0] + ".map"):
 					with open(os.path.splitext(args["path"])[0] + ".map", "rb") as file: args["buffer_map"] = file.read()
@@ -2280,7 +2455,7 @@ class GbxDevice:
 			data_map_import = bytearray(data_map_import)
 			dprint("Hidden sector data loaded")
 		else:
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
 		
 		rumble = "rumble" in flashcart.CONFIG and flashcart.CONFIG["rumble"] is True
 
@@ -2317,6 +2492,12 @@ class GbxDevice:
 				args["mbc"] = mbc
 			else:
 				args["mbc"] = 0x1B # MBC5+SRAM+BATTERY
+			
+			if not self.IsSupportedMbc(args["mbc"]):
+				msg = "This cartridge uses a mapper that is not supported by {:s} using your {:s} device. An updated hardware revision is required.".format(Util.APPNAME, self.GetFullName())
+				self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":msg, "abortable":False})
+				return False
+			
 			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 
 			self._set_fw_variable("FLASH_PULSE_RESET", 1 if flashcart.PulseResetAfterWrite() else 0)
@@ -2356,6 +2537,8 @@ class GbxDevice:
 		elif command_set_type in ("GBMEMORY", "DMG-MBC5-32M-FLASH"):
 			temp = 0x00
 			dprint("Using GB Memory command set")
+		elif command_set_type == "BLAZE_XPLODER":
+			temp = 0x00
 		else:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM flashing.", "abortable":False})
 			return False
@@ -2427,10 +2610,36 @@ class GbxDevice:
 					dprint("Setting command #{:d} to 0x{:X}=0x{:X}".format(i, address, value))
 					self._write(bytearray(struct.pack(">I", address)) + bytearray(struct.pack(">H", value)))
 			
-			if "flash_commands_on_bank_1" in cart_type and cart_type["flash_commands_on_bank_1"] is True:
-				self._set_fw_variable("FLASH_COMMANDS_BANK_1", 1)
+			if self.FW["fw_ver"] >= 6:
+				if "flash_commands_on_bank_1" in cart_type and cart_type["flash_commands_on_bank_1"] is True:
+					self._set_fw_variable("FLASH_COMMANDS_BANK_1", 1)
+					self._write(self.DEVICE_CMD["DMG_SET_BANK_CHANGE_CMD"])
+					if "bank_switch" in cart_type["commands"]:
+						self._write(len(cart_type["commands"]["bank_switch"])) # number of commands
+						for command in cart_type["commands"]["bank_switch"]:
+							address = command[0]
+							value = command[1]
+							if value == "ID":
+								self._write(bytearray(struct.pack(">I", address))) # address
+								self._write(0) # type = address
+							else:
+								self._write(bytearray(struct.pack(">I", value))) # value
+								self._write(1) # type = value
+						ret = self._read(1)
+						if ret != 0x01:
+							print("Error in DMG_SET_BANK_CHANGE_CMD:", ret)
+					else:
+						self._write(0, wait=True)
+				else:
+					self._set_fw_variable("FLASH_COMMANDS_BANK_1", 0)
+					self._write(self.DEVICE_CMD["DMG_SET_BANK_CHANGE_CMD"])
+					self._write(0, wait=True)
 			else:
-				self._set_fw_variable("FLASH_COMMANDS_BANK_1", 0)
+				if "flash_commands_on_bank_1" in cart_type and cart_type["flash_commands_on_bank_1"] is True:
+					self._set_fw_variable("FLASH_COMMANDS_BANK_1", 1)
+				else:
+					self._set_fw_variable("FLASH_COMMANDS_BANK_1", 0)
+
 		# ↑↑↑ Load commands into firmware
 
 		# ↓↓↓ Unlock cartridge
@@ -2531,6 +2740,7 @@ class GbxDevice:
 					cancel_args = {"action":"ABORT", "abortable":False}
 					cancel_args.update(self.CANCEL_ARGS)
 					self.CANCEL_ARGS = {}
+					self.ERROR_ARGS = {}
 					self.SetProgress(cancel_args)
 					if self.CanPowerCycleCart(): self.CartPowerCycle()
 					return
@@ -2560,6 +2770,8 @@ class GbxDevice:
 					self._cart_write(pos + buffer_len - 1, 0xF0)
 				elif command_set_type == "DMG-MBC5-32M-FLASH":
 					status = self.WriteROM_DMG_MBC5_32M_FLASH(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], bank=bank)
+				elif command_set_type == "BLAZE_XPLODER":
+					status = self.WriteROM_DMG_EEPROM(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], bank=bank)
 				else:
 					status = self.WriteROM(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], flash_buffer_size=flash_buffer_size, skip_init=(skip_init and not self.SKIPPING), rumble_stop=rumble)
 				if status is False:
@@ -2606,8 +2818,14 @@ class GbxDevice:
 			verify_args.update({"verify_write":data_import, "rom_size":len(data_import), "path":"", "rtc_area":flashcart.HasRTC()})
 			self.ReadROM(0, 4) # dummy read
 			verified_size = self._BackupROM(verify_args)
-			if self.CANCEL is True:
-				pass
+			if self.CANCEL:
+				cancel_args = {"action":"ABORT", "abortable":False}
+				cancel_args.update(self.CANCEL_ARGS)
+				self.CANCEL_ARGS = {}
+				self.ERROR_ARGS = {}
+				self.SetProgress(cancel_args)
+				if self.CanPowerCycleCart(): self.CartPowerCycle()
+				return
 			elif (verified_size is not True) and (len(data_import) != verified_size):
 				self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The ROM was written completely, but verification of written data failed at address 0x{:X}.\n\nPlease make sure that the correct cart type was selected, that your cartridge actually does support ROMs that are {:s} in size and that the cartridge contacts are clean, then re-connect the device and try again from the beginning.".format(verified_size, Util.formatFileSize(len(data_import))), "abortable":False})
 				return False

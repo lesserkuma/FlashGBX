@@ -11,7 +11,9 @@ class GBMemoryMap:
 	IS_MENU = False
 	
 	def __init__(self, rom=None):
-		if rom is not None:
+		if rom == bytearray([0xFF] * len(rom)):
+			self.MAP_DATA = bytearray([0x00] * 0x80)
+		elif rom is not None:
 			self.ImportROM(rom)
 	
 	def ImportROM(self, data):
@@ -26,7 +28,7 @@ class GBMemoryMap:
 			data = bytearray(data) + bytearray([0xFF] * (0x20000 - len(data)))
 		
 		if not self.IS_MENU:
-			mbc_type = self.MapperToMBCType(info["rom_header"]["features_raw"])
+			mbc_type = self.MapperToMBCType(info["rom_header"]["mapper_raw"])
 			if mbc_type is False: return
 			if len(data) <= 0x20000:
 				rom_size = 0b010
@@ -127,7 +129,7 @@ class GBMemoryMap:
 				info["ram_start_block"] = int(ram_offset / 0x800)
 				ram_offset += info["ram_data_size"]
 				info["rom_header"] = RomFileDMG(data[info["rom_data_offset"]:info["rom_data_offset"]+0x180]).GetHeader()
-				mbc_type = self.MapperToMBCType(info["rom_header"]["features_raw"])
+				mbc_type = self.MapperToMBCType(info["rom_header"]["mapper_raw"])
 				if mbc_type is False: return
 
 				if info["rom_data_size"] <= 0x20000:
@@ -192,7 +194,7 @@ class GBMemoryMap:
 			mbc_type = 2
 		elif mbc in (0x10, 0x13): # MBC3
 			mbc_type = 3
-		elif mbc in (0x19, 0x1A, 0x1B, 0x1C, 0x1E): # MBC5
+		elif mbc in (0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x105): # MBC5
 			mbc_type = 5
 		else:
 			mbc_type = False
@@ -217,5 +219,6 @@ class GBMemoryMap:
 		return self.IS_MENU
 	
 	def GetMapData(self):
-		if self.MAP_DATA == bytearray([0xFF] * 0x80): return False
+		if self.MAP_DATA == bytearray([0xFF] * 0x80):
+			return False
 		return self.MAP_DATA

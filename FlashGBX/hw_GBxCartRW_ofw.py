@@ -17,7 +17,7 @@ class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 26
 	DEVICE_MAX_FW = 30
-	
+
 	DEVICE_CMD = {
 		"CART_MODE":'C',
 		"GB_MODE":1,
@@ -119,7 +119,7 @@ class GbxDevice:
 		"AUDIO_HIGH":'8',
 		"AUDIO_LOW":'9',
 	}
-	PCB_VERSIONS = {1:'v1.0', 2:'v1.1/v1.2', 4:'v1.3', 90:'XMAS', 100:'Mini v1.0', 101:'Mini v1.0d'}
+	PCB_VERSIONS = {2:'v1.1/v1.2', 4:'v1.3', 90:'XMAS v1.0', 100:'Mini v1.0', 101:'Mini v1.0d'}
 	SUPPORTED_CARTS = {}
 	
 	FW = []
@@ -185,15 +185,14 @@ class GbxDevice:
 					self.DEVICE = None
 					conn_msg.append([0, "Couldn’t communicate with the GBxCart RW device on port " + ports[i] + ". Please disconnect and reconnect the device, then try again."])
 					continue
+				
 				if self.FW[0] == 0:
 					dev.close()
 					self.DEVICE = None
 					return False
-				elif (self.FW[1] == 4 and self.FW[0] < self.DEVICE_MAX_FW) or (self.FW[0] < self.DEVICE_MIN_FW):
-					#dev.close()
-					#self.DEVICE = None
-					#conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version R" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
-					#continue
+				elif (self.FW[1] == 100 and self.FW[0] < 26):
+					self.FW_UPDATE_REQ = True
+				elif (self.FW[1] in (2, 4, 90) and self.FW[0] < self.DEVICE_MAX_FW) or (self.FW[0] < self.DEVICE_MIN_FW):
 					self.FW_UPDATE_REQ = True
 				elif self.FW[0] < self.DEVICE_MAX_FW:
 					#conn_msg.append([1, "The GBxCart RW device on port " + ports[i] + " is running an older firmware version. Please consider updating to version R" + str(self.DEVICE_MAX_FW) + " to make use of the latest features.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
@@ -214,7 +213,7 @@ class GbxDevice:
 				
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 				if (self.FW[1] not in (4, 5)):
-					conn_msg.append([0, "\nNow running in Legacy Mode.\nThis version of FlashGBX was developed to be used with GBxCart RW v1.3 and v1.4.\nOther revisions are untested and may not be fully compatible.\n"])
+					conn_msg.append([0, "\nNow running in Legacy Mode.\nThis version of FlashGBX has been tested with GBxCart RW v1.3 and v1.4.\nOther revisions may not be fully compatible.\n"])
 				elif self.FW[1] == 4:
 					conn_msg.append([0, "{:s}Now running in Legacy Mode. You can install the optimized firmware version L1 in GUI mode from the “Tools” menu.{:s}".format(ANSI.YELLOW, ANSI.RESET)])
 
@@ -230,10 +229,9 @@ class GbxDevice:
 			except SerialException as e:
 				if "Permission" in str(e):
 					conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " couldn’t be accessed. Make sure your user account has permission to use it and it’s not already in use by another application."])
-					print(str(e))
 				else:
 					conn_msg.append([3, "A critical error occured while trying to access the GBxCart RW device on port " + ports[i] + ".\n\n" + str(e)])
-				continue		
+				continue
 		
 		return conn_msg
 	
@@ -290,18 +288,24 @@ class GbxDevice:
 	def GetFullNameExtended(self, more=False):
 		return "{:s} – Firmware {:s} ({:s})".format(self.GetFullName(), self.GetFirmwareVersion(), str(self.PORT))
 	
+	def GetOfficialWebsite(self):
+		return "https://www.gbxcart.com/"
+	
 	def SupportsFirmwareUpdates(self):
-		_, pcb = self.FW
-		if pcb != 4: return False
-		return True
+		fw, pcb = self.FW
+		#return pcb == 4
+		return (pcb in (2, 4, 90, 100) and fw > 3)
 
 	def FirmwareUpdateAvailable(self):
 		fw, pcb = self.FW
-		if pcb != 4: return False
+		#if pcb != 4: return False
+		if pcb not in (2, 4, 90, 100) and fw <= 3: return False
+		if (self.FW[1] == 100 and self.FW[0] >= 26): return False
 		return fw < self.DEVICE_MAX_FW
 	
 	def GetFirmwareUpdaterClass(self):
-		if self.FW[1] == 4: # v1.3
+		_, pcb = self.FW
+		if pcb in (2, 4, 90, 100):
 			try:
 				from . import fw_GBxCartRW_v1_3
 				return (None, fw_GBxCartRW_v1_3.FirmwareUpdaterWindow)
@@ -1449,6 +1453,20 @@ class GbxDevice:
 			
 			self.INFO["file_crc32"] = zlib.crc32(data_dump) & 0xFFFFFFFF
 			self.INFO["file_sha1"] = hashlib.sha1(data_dump).hexdigest()
+			#self.INFO["file_sha256"] = hashlib.sha256(buffer).hexdigest()
+			#self.INFO["file_md5"] = hashlib.md5(buffer).hexdigest()
+
+			# Check for ROM loops
+			self.INFO["loop_detected"] = False
+			temp = min(0x2000000, len(data_dump))
+			while temp > 0x4000:
+				temp = temp >> 1
+				if (data_dump[0:0x4000] == data_dump[temp:temp+0x4000]):
+					if data_dump[0:temp] == data_dump[temp:temp*2]:
+						self.INFO["loop_detected"] = temp
+				else:
+					break
+
 			self.SetProgress({"action":"FINISHED"})
 		
 		#########################################

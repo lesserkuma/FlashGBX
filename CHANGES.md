@@ -1,4 +1,18 @@
 # Release notes
+### v3.8 (released 2022-04-21)
+- Added support for AGB-E05-01 with MSP55LV100G *(thanks EmperorOfTigers)*
+- Added support for DV15 with MSP55LV100G *(thanks zvxr)*
+- Added support for SD007_T40_64BALL_TSOP28 with 29LV016T *(thanks Wkr)*
+- Confirmed support for AGB-E05-03H with M29W128GH *(thanks Wkr)*
+- The integrated firmware updater can now also update the firmware of insideGadgets GBxCart RW v1.1, v1.2, XMAS v1.0 and Mini v1.0 device revisions
+- Added experimental support for writing ISX files to Game Boy flash cartridges
+- Bundles GBxCart RW v1.4 firmware version R34+L6 (changes the way Game Boy cartridges are read and enables support for some more flash cartridges)
+- Added support for the BLAZE Xploder GB unlicensed cheat cartridge (requires firmware version L6+)
+- Added support for the unlicensed Sachen mapper (requires firmware version L6+)
+- Added support for insideGadgets 128 KB flash cartridges *(thanks AlexiG)*
+- Added support for insideGadgets 256 KB flash cartridges *(thanks AlexiG)*
+- Minor bug fixes and improvements
+
 ### v3.7 (released 2022-03-31)
 - Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums (improves support for Classic NES Series, NES Classics and Famicom Mini cartridges)
 - When writing new ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN), hidden sector data will now be auto-generated if it’s not provided by the user in form of a .map file

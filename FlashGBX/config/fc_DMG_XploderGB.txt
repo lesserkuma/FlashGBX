@@ -1,0 +1,55 @@
+{
+	"type":"DMG",
+	"names":[
+		"BLAZE Xploder GB"
+	],
+	"flash_ids":[
+		[ 0xBF, 0x10, 0xFF, 0xFF ]
+	],
+	"voltage":5,
+	"flash_size":0x40000,
+	"start_addr":0x4000,
+	"first_bank":1,
+	"flash_commands_on_bank_1":true,
+	"mbc":0x203,
+	"write_pin":"WR",
+	"read_identifier_at":0x4000,
+	"power_cycle":true,
+	"sector_size":0x4000,
+	"command_set":"BLAZE_XPLODER",
+	"commands":{
+		"reset":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0xF0 ]
+		],
+		"unlock_read":[
+			[ 0x0102, 1, 1 ]
+		],
+		"unlock":[
+			[ 0x0006, 0x01 ]
+		],
+		"bank_switch":[
+			[ 0x0006, "ID" ]
+		],
+		"read_identifier":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x90 ]
+		],
+		"sector_erase":[],
+		"sector_erase_wait_for":[],
+		"single_write":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

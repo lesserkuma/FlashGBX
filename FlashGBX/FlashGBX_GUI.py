@@ -89,6 +89,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		rowActionsGeneral2.addWidget(self.btnBackupRAM)
 		
 		self.cmbDMGCartridgeTypeResult.currentIndexChanged.connect(self.CartridgeTypeChanged)
+		self.cmbHeaderFeaturesResult.currentIndexChanged.connect(self.DMGMapperTypeChanged)
 		
 		rowActionsGeneral3 = QtWidgets.QHBoxLayout()
 		self.btnFlashROM = QtWidgets.QPushButton("&Write ROM")
@@ -665,9 +666,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 								if dontShowAgain: self.SETTINGS.setValue("SkipFirmwareUpdate", "enabled")
 								if answer == QtWidgets.QMessageBox.Yes:
 									self.ShowFirmwareUpdateWindow()
-				else:
-					#self.mnuTools.actions()[2].setEnabled(False)
-					pass
+				elif dev.FW_UPDATE_REQ:
+					text = "A firmware update for your {:s} device is required to use this software. Please visit the official website (<a href=\"{:s}\">{:s}</a>) for updates.<br><br>Current firmware version: {:s}".format(dev.GetFullName(), dev.GetOfficialWebsite(), dev.GetOfficialWebsite(), dev.GetFirmwareVersion())
+					if not Util.DEBUG:
+						self.DisconnectDevice()
+					QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), text, QtWidgets.QMessageBox.Ok)
 
 				return True
 			return False
@@ -755,7 +758,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		dontShowAgain = str(self.SETTINGS.value("SkipFinishMessage", default="disabled")).lower() == "enabled"
 		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Operation complete!", standardButtons=QtWidgets.QMessageBox.Ok)
 		cb = QtWidgets.QCheckBox("Don’t show this message again", checked=False)
-		msgbox.setCheckBox(cb)
 		
 		time_elapsed = None
 		if "time_start" in self.STATUS and self.STATUS["time_start"] > 0:
@@ -791,32 +793,41 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.lblHeaderROMChecksumResult.setStyleSheet("QLabel { color: green; }")
 					self.lblStatus4a.setText("Done!")
 					msg = "The ROM backup is complete and the checksum was verified successfully!"
-					msg += "\n\nCRC32: {:04X}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
 					if time_elapsed is not None: msg += "\n\nTotal time elapsed: {:s}".format(Util.formatProgressTime(time_elapsed))
 					msgbox.setText(msg)
+					msgbox.setCheckBox(cb)
 					if not dontShowAgain:
 						msgbox.exec()
 						dontShowAgain = cb.isChecked()
 				else:
-					self.lblHeaderROMChecksumResult.setText("Invalid (0x{:04X}≠0x{:04X})".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["rom_checksum"]))
-					self.lblHeaderROMChecksumResult.setStyleSheet("QLabel { color: red; }")
 					self.lblStatus4a.setText("Done.")
-					if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("features_raw" in self.CONN.INFO and self.CONN.INFO["features_raw"] in (0x105, 0x202)):
+					if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x105, 0x202, 0x203)):
 						msg = "The ROM backup is complete."
-						msg += "\n\nCRC32: {:04X}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
-						QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok)
+						msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+						msgbox.setText(msg)
+						msgbox.exec()
 					else:
-						msg = "The ROM was dumped, but the checksum is not correct. This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
-						msg += "\n\nCRC32: {:04X}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
-						QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok)
+						self.lblHeaderROMChecksumResult.setText("Invalid (0x{:04X}≠0x{:04X})".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["rom_checksum"]))
+						self.lblHeaderROMChecksumResult.setStyleSheet("QLabel { color: red; }")
+						msg = "The ROM was dumped, but the checksum is not correct."
+						if self.CONN.INFO["loop_detected"] is not False:
+							msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
+						else:
+							msg += " This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
+						msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+						msgbox.setText(msg)
+						msgbox.setIcon(QtWidgets.QMessageBox.Warning)
+						msgbox.exec()
 			elif self.CONN.GetMode() == "AGB":
 				if Util.AGB_Global_CRC32 == self.CONN.INFO["rom_checksum_calc"]:
 					self.lblAGBHeaderROMChecksumResult.setText("Valid (0x{:06X})".format(Util.AGB_Global_CRC32))
 					self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: green; }")
 					self.lblStatus4a.setText("Done!")
 					msg = "The ROM backup is complete and the checksum was verified successfully!"
-					msg += "\n\nCRC32: {:04X}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
 					msgbox.setText(msg)
+					msgbox.setCheckBox(cb)
 					if not dontShowAgain:
 						msgbox.exec()
 						dontShowAgain = cb.isChecked()
@@ -825,17 +836,27 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.lblAGBHeaderROMChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
 					self.lblStatus4a.setText("Done!")
 					msg = "The ROM backup is complete! As there is no known checksum for this ROM in the database, verification was skipped."
-					msg += "\n\nCRC32: {:04X}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
+					if self.CONN.INFO["loop_detected"] is not False:
+						msg += "\n\nNOTE: A data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
+						msgbox.setIcon(QtWidgets.QMessageBox.Warning)
+					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
 					if time_elapsed is not None: msg += "\n\nTotal time elapsed: {:s}".format(Util.formatProgressTime(time_elapsed))
-					QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok)
+					msgbox.setText(msg)
+					msgbox.exec()
 				else:
 					self.lblAGBHeaderROMChecksumResult.setText("Invalid (0x{:06X}≠0x{:06X})".format(self.CONN.INFO["rom_checksum_calc"], Util.AGB_Global_CRC32))
 					self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: red; }")
 					self.lblStatus4a.setText("Done.")
-					msg = "The ROM backup is complete, but the checksum doesn’t match the known database entry. This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
-					msg += "\n\nCRC32: {:04X}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
+					msg = "The ROM backup is complete, but the checksum doesn’t match the known database entry."
+					if self.CONN.INFO["loop_detected"] is not False:
+						msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
+					else:
+						msg += " This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
+					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
 					if time_elapsed is not None: msg += "\n\nTotal time elapsed: {:s}".format(Util.formatProgressTime(time_elapsed))
-					QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok)
+					msgbox.setText(msg)
+					msgbox.setIcon(QtWidgets.QMessageBox.Warning)
+					msgbox.exec()
 		
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.lblStatus4a.setText("Done!")
@@ -853,6 +874,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						return
 			
 			msgbox.setText("The save data backup is complete!")
+			msgbox.setCheckBox(cb)
 			if not dontShowAgain:
 				msgbox.exec()
 				dontShowAgain = cb.isChecked()
@@ -868,6 +890,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			else:
 				msg_text = "Save data writing complete!"
 			msgbox.setText(msg_text)
+			msgbox.setCheckBox(cb)
 			if not dontShowAgain:
 				msgbox.exec()
 				dontShowAgain = cb.isChecked()
@@ -895,6 +918,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 			if time_elapsed is not None: msg += "\n\nTotal time elapsed: {:s}".format(Util.formatProgressTime(time_elapsed))
 			msgbox.setText(msg)
+			msgbox.setCheckBox(cb)
 			if not dontShowAgain:
 				msgbox.exec()
 				dontShowAgain = cb.isChecked()
@@ -908,8 +932,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		if dontShowAgain: self.SETTINGS.setValue("SkipFinishMessage", "enabled")
 		self.SetProgressBars(min=0, max=1, value=1)
+
+	def DMGMapperTypeChanged(self, index):
+		if index in (-1, 0): return
+		#if ((list(Util.DMG_Header_Mapper.items())[index])[0]) == 0x203: # Xploder GB
+		#	self.cmbHeaderROMSizeResult.setCurrentIndex(Util.DMG_Header_ROM_Sizes_Flasher_Map.index(0x40000))
 	
 	def CartridgeTypeChanged(self, index):
+		if index in (-1, 0): return
 		if self.CONN.GetMode() == "DMG":
 			cart_types = self.CONN.GetSupportedCartridgesDMG()
 			if cart_types[1][index] == "RETAIL": # special keyword
@@ -996,7 +1026,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		just_erase = False
 		path = ""
 		if dpath != "":
-			text = "The following ROM file will now be written to the flash cartridge:\n" + dpath
+			ext = os.path.splitext(dpath)[1]
+			if ext.lower() == ".isx":
+				text = "The following ISX file will now be converted to a regular ROM file and then written to the flash cartridge:\n" + dpath
+			else:
+				text = "The following ROM file will now be written to the flash cartridge:\n" + dpath
 			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 			path = dpath
@@ -1029,9 +1063,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			elif self.CONN.GetMode() == "AGB":
 				self.cmbAGBCartridgeTypeResult.setCurrentIndex(cart_type)
 		
+		mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
+		
 		if (path == ""):
 			if self.CONN.GetMode() == "DMG":
-				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy ROM File (*.gb *.gbc *.sgb *.bin);;All Files (*.*)")[0]
+				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy ROM File (*.gb *.gbc *.sgb *.bin *.isx);;All Files (*.*)")[0]
 			elif self.CONN.GetMode() == "AGB":
 				path = QtWidgets.QFileDialog.getOpenFileName(self, "Write ROM", last_dir, "Game Boy Advance ROM File (*.gba *.srl *.bin);;All Files (*.*)")[0]
 		
@@ -1049,7 +1085,13 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MB are not supported.", QtWidgets.QMessageBox.Ok)
 				return
 			
-			with open(path, "rb") as file: buffer = bytearray(file.read(0x1000))
+			with open(path, "rb") as file:
+				ext = os.path.splitext(path)[1]
+				if ext.lower() == ".isx":
+					buffer = bytearray(file.read())
+					buffer = Util.isx2bin(buffer)
+				else:
+					buffer = bytearray(file.read(0x1000))
 			rom_size = os.stat(path).st_size
 			if "flash_size" in carts[cart_type]:
 				if rom_size > carts[cart_type]['flash_size']:
@@ -1057,6 +1099,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					msg += " You can still give it a try, but it’s possible that it’s too large which may cause the ROM writing to fail."
 					answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 					if answer == QtWidgets.QMessageBox.Cancel: return
+			if "mbc" in carts[cart_type]:
+				mbc = carts[cart_type]["mbc"]
 		
 		override_voltage = False
 		if 'voltage_variants' in carts[cart_type] and carts[cart_type]['voltage'] == 3.3:
@@ -1102,10 +1146,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				hdr = RomFileDMG(buffer).GetHeader()
 			elif self.CONN.GetMode() == "AGB":
 				hdr = RomFileAGB(buffer).GetHeader()
-			if not hdr["logo_correct"]:
+			if not hdr["logo_correct"] and mbc != 0x203:
 				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 				if answer == QtWidgets.QMessageBox.Cancel: return
-			if not hdr["header_checksum_correct"]:
+			if not hdr["header_checksum_correct"] and mbc != 0x203:
 				msg_text = "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"])
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
 				button_fix = msgbox.addButton("  &Fix and Continue  ", QtWidgets.QMessageBox.ActionRole)
@@ -1128,9 +1172,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.btnConfig.setEnabled(False)
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		if just_erase:
-			prefer_chip_erase = True
-			verify_write = False
+		if len(buffer) > 0x1000 or just_erase:
+			if just_erase:
+				prefer_chip_erase = True
+				verify_write = False
 			args = { "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
 		else:
 			args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
@@ -1254,7 +1299,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The save data on your cartridge will now be erased.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		else:
-			path = path + ".sav"
+			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path) + ".sav"
 			path = QtWidgets.QFileDialog.getOpenFileName(self, "Restore Save Data", last_dir + "/" + path, "Save Data File (*.sav);;All Files (*.*)")[0]
 			if not path == "": self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 			if (path == ""): return
@@ -1282,7 +1327,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				cb = QtWidgets.QCheckBox("&Adjust RTC", checked=True)
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
-				msgbox.setCheckBox(cb)
+				if erase:
+					cb.setChecked(True)
+				else:
+					msgbox.setCheckBox(cb)
 				answer = msgbox.exec()
 				if answer == QtWidgets.QMessageBox.Cancel: return
 				rtc_advance = cb.isChecked()
@@ -1442,7 +1490,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if data['has_rtc']:
 				if 'rtc_buffer' in data:
 					try:
-						if data['features_raw'] == 0x10: # MBC3
+						if data['mapper_raw'] == 0x10: # MBC3
 							rtc_s = data["rtc_buffer"][0x00]
 							rtc_m = data["rtc_buffer"][0x04]
 							rtc_h = data["rtc_buffer"][0x08]
@@ -1456,7 +1504,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 									self.lblHeaderRtcResult.setText("{:d} day, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s))
 								else:
 									self.lblHeaderRtcResult.setText("{:d} days, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s))
-						elif data['features_raw'] == 0xFE: # HuC-3
+						elif data['mapper_raw'] == 0xFE: # HuC-3
 							rtc_buffer = struct.unpack("<I", data["rtc_buffer"][0:4])[0]
 							rtc_h = math.floor((rtc_buffer & 0xFFF) / 60)
 							rtc_m = (rtc_buffer & 0xFFF) % 60
@@ -1474,7 +1522,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if 'no_rtc_reason' in data:
 					if data["no_rtc_reason"] == -1:
 						self.lblHeaderRtcResult.setText("Unknown")
-				if data['features_raw'] == 0xFD: # TAMA5
+				if data['mapper_raw'] == 0xFD: # TAMA5
 					self.lblHeaderRtcResult.setText("OK")
 			
 			if data['logo_correct']:
@@ -1491,13 +1539,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblHeaderChecksumResult.setStyleSheet("QLabel { color: red; }")
 			self.lblHeaderROMChecksumResult.setText("0x{:04X}".format(data['rom_checksum']))
 			self.lblHeaderROMChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+
 			self.cmbHeaderROMSizeResult.setCurrentIndex(data["rom_size_raw"])
 			for i in range(0, len(Util.DMG_Header_RAM_Sizes_Map)):
 				if data["ram_size_raw"] == Util.DMG_Header_RAM_Sizes_Map[i]:
 					self.cmbHeaderRAMSizeResult.setCurrentIndex(i)
 			i = 0
 			for k in Util.DMG_Header_Mapper.keys():
-				if data["features_raw"] == k:
+				if data["mapper_raw"] == k:
 					self.cmbHeaderFeaturesResult.setCurrentIndex(i)
 					if k == 0x06: # MBC2
 						self.cmbHeaderRAMSizeResult.setCurrentIndex(1)
@@ -1518,12 +1567,12 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				else:
 					self.lblHeaderTitleResult.setText("(No ROM data detected)")
 				self.lblHeaderTitleResult.setStyleSheet("QLabel { color: red; }")
-				self.cmbHeaderROMSizeResult.setCurrentIndex(11)
+				self.cmbHeaderROMSizeResult.setCurrentIndex(0)
 				self.cmbHeaderRAMSizeResult.setCurrentIndex(0)
 				self.cmbHeaderFeaturesResult.setCurrentIndex(0)
 			else:
 				self.lblHeaderTitleResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
-				if data['logo_correct'] and not self.CONN.IsSupportedMbc(data["features_raw"]) and resetStatus:
+				if data['logo_correct'] and not self.CONN.IsSupportedMbc(data["mapper_raw"]) and resetStatus:
 					QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "This cartridge uses a mapper that may not be completely supported by {:s} using the current firmware version of the {:s} device. Please check for firmware updates in the Tools menu or the maker’s website.".format(APPNAME, self.CONN.GetFullName()), QtWidgets.QMessageBox.Ok)
 				if data['logo_correct'] and data['game_title'] in ("NP M-MENU MENU", "DMG MULTI MENU "):
 					cart_types = self.CONN.GetSupportedCartridgesDMG()
@@ -1531,6 +1580,20 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						if "dmg-mmsa-jpn" in cart_types[1][i]:
 							self.cmbDMGCartridgeTypeResult.setCurrentIndex(i)
 			
+			if data["mapper_raw"] == 0x203: # Xploder GB
+				self.lblHeaderRtcResult.setText("")
+				self.lblHeaderLogoValidResult.setText("")
+				self.lblHeaderLogoValidResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+				self.lblHeaderChecksumResult.setText("")
+				self.lblHeaderChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+				self.lblHeaderROMChecksumResult.setText("")
+				self.lblHeaderROMChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+			elif data["mapper_raw"] == 0x204: # Sachen
+				self.lblHeaderRtcResult.setText("")
+				self.lblHeaderRevisionResult.setText("")
+				self.lblHeaderLogoValidResult.setText("")
+				self.lblHeaderLogoValidResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+
 			self.grpAGBCartridgeInfo.setVisible(False)
 			self.grpDMGCartridgeInfo.setVisible(True)
 		
@@ -1627,7 +1690,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				else:
 					self.lblAGBHeaderTitleResult.setText("(No ROM data detected)")
 				self.lblAGBHeaderTitleResult.setStyleSheet("QLabel { color: red; }")
-				self.cmbAGBHeaderROMSizeResult.setCurrentIndex(3)
 				self.cmbAGBSaveTypeResult.setCurrentIndex(0)
 			else:
 				self.lblAGBHeaderTitleResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
@@ -1646,7 +1708,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.grpStatus.setTitle("Transfer Status")
 			self.FinishOperation()
 		
-		if not data['logo_correct'] and data['empty'] == False and resetStatus:
+		if not data['logo_correct'] and data['empty'] == False and resetStatus and not (self.CONN.GetMode() == "DMG" and data["mapper_raw"] in (0x203, 0x204)):
 			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The Nintendo Logo check failed which usually means that the cartridge can’t be read correctly. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
 		
 		if data['game_title'][:11] == "YJencrypted" and resetStatus:
@@ -1852,6 +1914,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				msg_fw = ""
 				button_clipboard = None
 			
+			if self.CONN.GetMode() == "DMG" and limitVoltage and (is_generic or not found_supported):
+				text = "No known flash cartridge type could be detected. The option “Limit voltage to 3.3V when detecting Game Boy flash cartridges” has been enabled which can cause auto-detection to fail. As it is usually not recommended to enable this option, do you now want to disable it and try again?"
+				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), text, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+				if answer == QtWidgets.QMessageBox.Yes:
+					self.SETTINGS.setValue("AutoDetectLimitVoltage", "disabled")
+					self.mnuConfig.actions()[4].setChecked(False)
+					return self.DetectCartridge()
+			
 			temp = "{:s}{:s}{:s}{:s}{:s}{:s}{:s}{:s}".format(msg, msg_header_s, msg_flash_size_s, msg_save_type_s, msg_flash_id_s, msg_cfi_s, msg_cart_type_s_detail, msg_fw)
 			temp = temp[:-4]
 			msgbox.setText(temp)
@@ -1944,6 +2014,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblStatus4a.setText("Unlocking flash...")
 				self.lblStatus4aResult.setText("")
 				self.btnCancel.setEnabled(args["abortable"])
+				self.SetProgressBars(min=0, max=size, value=pos)
+			elif args["action"] == "UPDATE_RTC":
+				self.lblStatus1aResult.setText("Pending...")
+				self.lblStatus2aResult.setText("Pending...")
+				self.lblStatus3aResult.setText("Pending...")
+				self.lblStatus4a.setText("Updating Real Time Clock...")
+				self.lblStatus4aResult.setText("")
+				self.btnCancel.setEnabled(False)
 				self.SetProgressBars(min=0, max=size, value=pos)
 			elif args["action"] == "SECTOR_ERASE":
 				if elapsed >= 1:
@@ -2065,7 +2143,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.SetMode()
 			if self.CONN.GetMode() == "DMG":
 				header = self.CONN.ReadInfo(setPinsAsInputs=True)
-				if header["features_raw"] == 252: # GBD
+				if header["mapper_raw"] == 252: # GBD
 					args = { "path":None, "mbc":252, "save_type":128*1024, "rtc":False }
 					self.CONN.BackupRAM(fncSetProgress=False, args=args)
 					data = self.CONN.INFO["data"]
@@ -2100,7 +2178,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				fn_split = os.path.splitext(os.path.abspath(fn))
 				if fn_split[1].lower() == ".sav":
 					return True
-				elif self.CONN.GetMode() == "DMG" and fn_split[1].lower() in (".gb", ".sgb", ".gbc", ".bin"):
+				elif self.CONN.GetMode() == "DMG" and fn_split[1].lower() in (".gb", ".sgb", ".gbc", ".bin", ".isx"):
 					return True
 				elif self.CONN.GetMode() == "AGB" and fn_split[1].lower() in (".gba", ".srl"):
 					return True
@@ -2120,7 +2198,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					fn = str(url.toLocalFile())
 				
 				fn_split = os.path.splitext(os.path.abspath(fn))
-				if fn_split[1].lower() in (".gb", ".sgb", ".gbc", ".bin", ".gba", ".srl"):
+				if fn_split[1].lower() in (".gb", ".sgb", ".gbc", ".bin", ".isx", ".gba", ".srl"):
 					self.FlashROM(fn)
 				elif fn_split[1].lower() == ".sav":
 					self.WriteRAM(fn)

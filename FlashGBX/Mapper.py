@@ -18,6 +18,7 @@ class DMG_MBC:
 	RAM_BANK_SIZE = 0x2000
 	ROM_BANK_NUM = 0
 	CURRENT_ROM_BANK = 0
+	START_BANK = 0
 
 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
@@ -66,6 +67,10 @@ class DMG_MBC:
 			return DMG_Unlicensed_256M(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x202:									# 0x202:'Wisdom Tree Mapper',
 			return DMG_Unlicensed_WisdomTree(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+		elif mbc_id == 0x203:									# 0x203:'Xploder GB',
+			return DMG_Unlicensed_XploderGB(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+		elif mbc_id == 0x204:									# 0x204:'Sachen',
+			return DMG_Unlicensed_Sachen(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		else:
 			self.__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 			return self
@@ -83,6 +88,9 @@ class DMG_MBC:
 			self.CART_WRITE_FNCPTR(address, value)
 			if delay is not False: time.sleep(delay)
 
+	def GetID(self):
+		return self.MBC_ID
+	
 	def GetName(self):
 		return "Unknown MBC {:d}".format(self.MBC_ID)
 
@@ -145,6 +153,9 @@ class DMG_MBC:
 		start_address = 0
 		self.CartWrite(commands)
 		return (start_address, self.RAM_BANK_SIZE)
+
+	def SetStartBank(self, index):
+		self.START_BANK = index
 	
 	def HasHiddenSector(self):
 		return False
@@ -210,19 +221,19 @@ class DMG_MBC3(DMG_MBC):
 	def EnableRAM(self, enable=True):
 		dprint(self.GetName(), "|", enable)
 		commands = [
-			#[ 0x6000, 0x01 if enable else 0x00 ],
 			[ 0x0000, 0x0A if enable else 0x00 ],
 		]
 		self.CartWrite(commands)
 	
 	def HasRTC(self):
-		dprint(self.GetName())
-		if self.MBC_ID != 16: return False
+		dprint("Checking for RTC")
+		if self.MBC_ID != 16:
+			dprint("No RTC because wrong MBC ID", self.MBC_ID)
+			return False
 		self.EnableRAM(enable=False)
 		self.EnableRAM(enable=True)
-		#self.CartWrite([ [0x4000, 0x08] ])
 		self.LatchRTC()
-
+	
 		skipped = True
 		for i in range(0x08, 0x0D):
 			self.CLK_TOGGLE_FNCPTR(60)
@@ -230,26 +241,20 @@ class DMG_MBC3(DMG_MBC):
 			data = self.CartRead(0xA000, 0x800)
 			if data[0] in (0, 0xFF): continue
 			skipped = False
-			if data != bytearray([data[0]] * 0x800): return False
-		return skipped is False
+			if data != bytearray([data[0]] * 0x800):
+				dprint("No RTC because whole bank is not the same value", data[0])
+				skipped = True
+				break
 
-		#ram1 = self.CartRead(0xA000, 0x10)
-		#ram2 = ram1
-		#t1 = time.time()
-		#t2 = 0
-		#while t2 < (t1 + 1):
-		#	self.LatchRTC()
-		#	ram2 = self.CartRead(0xA000, 0x10)
-		#	if ram1 != ram2: break
-		#	t2 = time.time()
-		#dprint("RTC_S {:02X} != {:02X}?".format(ram1[0], ram2[0]), ram1 != ram2)
-		#time.sleep(0.1)
-		#return (ram1 != ram2)
+		self.EnableRAM(enable=False)
+		self.CartWrite([ [0x4000, 0] ])
+		return skipped is False
 
 	def GetRTCBufferSize(self):
 		return 0x30
 
 	def LatchRTC(self):
+		dprint("Latching RTC")
 		self.CLK_TOGGLE_FNCPTR(60)
 		self.CartWrite([ [ 0x0000, 0x0A ] ])
 		time.sleep(0.01)
@@ -260,7 +265,9 @@ class DMG_MBC3(DMG_MBC):
 		time.sleep(0.01)
 
 	def ReadRTC(self):
-		#self.EnableRAM(enable=True)
+		dprint("Reading RTC")
+		self.EnableRAM(enable=True)
+
 		buffer = bytearray()
 		for i in range(0x08, 0x0D):
 			self.CLK_TOGGLE_FNCPTR(60)
@@ -272,15 +279,17 @@ class DMG_MBC3(DMG_MBC):
 		ts = int(time.time())
 		buffer.extend(struct.pack("<Q", ts))
 		
+		self.EnableRAM(enable=False)
+		self.CartWrite([ [0x4000, 0] ])
 		return buffer
 
 	def WriteRTC(self, buffer, advance=False):
-		dprint(buffer)
-		#self.LatchRTC()
+		dprint("Writing RTC:", buffer)
+		self.EnableRAM(enable=True)
 		if advance:
 			try:
 				dt_now = datetime.datetime.fromtimestamp(time.time())
-				if buffer == bytearray([0xFF] * len(buffer)): # Reset
+				if buffer == bytearray([0x00] * len(buffer)): # Reset
 					seconds = 0
 					minutes = 0
 					hours = 0
@@ -295,10 +304,6 @@ class DMG_MBC3(DMG_MBC):
 					days = days & 0x1FF
 					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
 					timestamp_now = int(time.time())
-					#debug
-					#timestamp_now = 1663106370 # 2022-09-13 23:59:30
-					#dt_now = datetime.datetime.fromtimestamp(timestamp_now)
-					#debug
 					dprint(seconds, minutes, hours, days, carry)
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
@@ -363,6 +368,9 @@ class DMG_MBC3(DMG_MBC):
 		self.CLK_TOGGLE_FNCPTR(50)
 		self.CartWrite([ [ 0x6000, 0x01 ] ])
 		time.sleep(0.1)
+
+		self.CartWrite([ [0x4000, 0] ])
+		self.EnableRAM(enable=False)
 
 class DMG_MBC5(DMG_MBC):
 	def GetName(self):
@@ -817,7 +825,8 @@ class DMG_HuC3(DMG_MBC):
 		if advance:
 			try:
 				dt_now = datetime.datetime.fromtimestamp(time.time())
-				if buffer == bytearray([0xFF] * len(buffer)): # Reset
+				print(buffer)
+				if buffer == bytearray([0x00] * len(buffer)): # Reset
 					hours = 0
 					minutes = 0
 					days = 0
@@ -987,7 +996,7 @@ class DMG_TAMA5(DMG_MBC):
 		if advance:
 			try:
 				dt_now = datetime.datetime.fromtimestamp(time.time())
-				if buffer == bytearray([0xFF] * len(buffer)): # Reset
+				if buffer == bytearray([0x00] * len(buffer)): # Reset
 					seconds = 0
 					minutes = 0
 					hours = 0
@@ -1067,8 +1076,7 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 		dprint(self.GetName(), "|", index)
 
 		flash_bank = math.floor(index / 512)
-		if index >= 512:
-			index -= (512 * flash_bank)
+		index = index % 512
 
 		if index == 0:
 			self.CART_POWERCYCLE_FNCPTR()
@@ -1122,9 +1130,6 @@ class DMG_Unlicensed_WisdomTree(DMG_MBC):
 		if args is None: args = {}
 		self.ROM_BANK_SIZE = 0x8000
 		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
-	
-	#def GetROMSize(self):
-	#	return self.ROM_BANK_SIZE * math.floor(self.ROM_BANK_NUM / 2)
 
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
@@ -1133,6 +1138,44 @@ class DMG_Unlicensed_WisdomTree(DMG_MBC):
 		]
 		self.CartWrite(commands)
 		return (0, 0x8000)
+
+class DMG_Unlicensed_XploderGB(DMG_MBC):
+	def GetName(self):
+		return "Xploder GB"
+	
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
+		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
+		self.RAM_BANK_SIZE = 0x4000
+
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|", index)
+		if index == 0:
+			self.CART_POWERCYCLE_FNCPTR()
+			self.CartRead(0x0102, 1)
+		self.CartWrite([[ 0x0006, index & 0xFF ]])
+		start_address = 0x4000
+		return (start_address, self.ROM_BANK_SIZE)
+
+	def SelectBankRAM(self, index):
+		dprint(self.GetName(), "|", index)
+		if index == 0:
+			self.CART_POWERCYCLE_FNCPTR()
+			self.CartRead(0x0102, 1)
+		return self.SelectBankROM(index + 8)
+
+class DMG_Unlicensed_Sachen(DMG_MBC):
+	def GetName(self):
+		return "Sachen"
+
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|", index)
+		commands = [
+			[ 0x2000, index + self.START_BANK ]
+		]
+		self.CartWrite(commands)
+		start_address = 0x4000
+		return (start_address, self.ROM_BANK_SIZE)
 
 
 class AGB_GPIO:
@@ -1328,16 +1371,11 @@ class AGB_GPIO:
 					seconds = Util.DecodeBCD(buffer[0x06])
 					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
 					timestamp_now = int(time.time())
-					#debug
-					#timestamp_now = 4102441140 # 2099-12-23 23:59:00
-					#dt_now = datetime.datetime.fromtimestamp(timestamp_now)
-					#debug
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
 						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(years + 2000, months % 12, days % 31, hours % 60, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
 						rd = relativedelta(dt_now, dt_then)
 						dt_new = dt_buffer + rd
-						#print(dt_then, dt_now, dt_buffer, dt_new, sep="\n")
 						years = dt_new.year - 2000
 						months = dt_new.month
 						days = dt_new.day
@@ -1380,8 +1418,3 @@ class AGB_GPIO:
 			[ self.GPIO_REG_DAT, 1 ],
 			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
 		])
-		#[0F] 00 01 27 05 08 24 08 51 4B 7C 60 00 00 00 00
-		#[0F] 00 01 27 05 08 25 03 88 4B 7C 60 00 00 00 00
-		#[0F] 00 01 01 05 08 00 15 96 4B 7C 60 00 00 00 00
-		#[0F] 00 01 01 05 08 00 39 BF 4B 7C 60 00 00 00 00
-		#[0F] 00 01 01 05 08 00 46 BB 4B 7C 60 00 00 00 00

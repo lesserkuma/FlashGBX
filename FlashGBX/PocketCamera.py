@@ -137,7 +137,7 @@ class PocketCamera:
 		pic = pic.resize((pic.width * scale, pic.height * scale), Image.NEAREST)
 
 		ext = os.path.splitext(path)[1]
-		if ext.lower() == ".png":
+		if ext == "" or ext.lower() == ".png":
 			outpic = pic
 			outpic.save(path, pnginfo=pnginfo)
 		elif ext.lower() == ".gif":

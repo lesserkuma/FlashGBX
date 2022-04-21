@@ -4,7 +4,7 @@
 		"Generic Flash Cartridge (0/90)"
 	],
 	"voltage":3.3,
-	"chip_erase_timeout":120,
+	"chip_erase_timeout":300,
 	"sector_size_from_cfi":true,
 	"command_set":"INTEL",
 	"commands":{

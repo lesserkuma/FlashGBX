@@ -4,7 +4,7 @@
 		"Generic Flash Cartridge (AAA/AA)"
 	],
 	"voltage":3.3,
-	"chip_erase_timeout":120,
+	"chip_erase_timeout":300,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

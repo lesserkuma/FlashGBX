@@ -10,6 +10,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 	APP = None
 	DEVICE = None
 	PORT = ""
+	FW_FILES = {"v1.1/v1.2":"fw_GBxCart_RW_v1_1_v1_2.zip", "v1.3":"fw_GBxCart_RW_v1_3.zip", "XMAS v1.0":"fw_GBxCart_RW_XMAS_v1_0.zip", "Mini v1.0":"fw_GBxCart_RW_Mini_v1_0.zip"}
 
 	def __init__(self, app, app_path, file=None, icon=None, device=None):
 		QtWidgets.QDialog.__init__(self)
@@ -18,12 +19,13 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.APP = app
 		self.APP_PATH = app_path
 		self.DEVICE = device
+		self.PCB_VER = device.GetPCBVersion()
 		self.PORT = device.GetPort()
 
-		self.setWindowTitle("FlashGBX – Firmware Updater for GBxCart RW v1.3")
+		self.setWindowTitle("FlashGBX – Firmware Updater for GBxCart RW")
 		self.setWindowFlags((self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint) & ~QtCore.Qt.WindowContextHelpButtonHint)
 
-		with zipfile.ZipFile(self.APP_PATH + "/res/fw_GBxCart_RW_v1_3.zip") as zip:
+		with zipfile.ZipFile(self.APP_PATH + "/res/{:s}".format(self.FW_FILES[self.PCB_VER])) as zip:
 			with zip.open("fw.ini") as f: ini_file = f.read()
 			ini_file = ini_file.decode(encoding="utf-8")
 			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
@@ -75,8 +77,8 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.grpAvailableFwUpdates.setMinimumWidth(400)
 		self.grpAvailableFwUpdatesLayout = QtWidgets.QVBoxLayout()
 		self.grpAvailableFwUpdatesLayout.setContentsMargins(-1, 3, -1, -1)
+
 		self.optCFW = QtWidgets.QRadioButton("{:s}".format(self.CFW_VER))
-		self.optCFW.setChecked(True)
 		self.lblCFW_Blerb = QtWidgets.QLabel("{:s}".format(self.CFW_TEXT))
 		self.lblCFW_Blerb.setWordWrap(True)
 		self.lblCFW_Blerb.mousePressEvent = lambda x: [ self.optCFW.setChecked(True) ]
@@ -85,9 +87,6 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.lblOFW_Blerb.setWordWrap(True)
 		self.lblOFW_Blerb.mousePressEvent = lambda x: [ self.optOFW.setChecked(True) ]
 		self.optExternal = QtWidgets.QRadioButton("External firmware file")
-		#self.lblExternal_Blerb = QtWidgets.QLabel("<ul><li>Please check <a href=\"https://www.gbxcart.com/\">gbxcart.com</a> for the latest official firmware version</li></ul>")
-		#self.lblExternal_Blerb.setWordWrap(True)
-		#self.lblExternal_Blerb.mousePressEvent = lambda x: [ self.optOFW.setChecked(True) ]
 		
 		self.rowUpdate = QtWidgets.QHBoxLayout()
 		self.btnUpdate = QtWidgets.QPushButton("Install Firmware Update")
@@ -97,20 +96,22 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.rowUpdate.addStretch()
 		self.rowUpdate.addWidget(self.btnUpdate)
 		self.rowUpdate.addStretch()
-
-		self.grpAvailableFwUpdatesLayout.addWidget(self.optCFW)
-		self.grpAvailableFwUpdatesLayout.addWidget(self.lblCFW_Blerb)
+		
+		if self.PCB_VER == "v1.3":
+			self.grpAvailableFwUpdatesLayout.addWidget(self.optCFW)
+			self.grpAvailableFwUpdatesLayout.addWidget(self.lblCFW_Blerb)
+			self.optCFW.setChecked(True)
+		else:
+			self.optOFW.setChecked(True)
 		self.grpAvailableFwUpdatesLayout.addWidget(self.optOFW)
 		self.grpAvailableFwUpdatesLayout.addWidget(self.lblOFW_Blerb)
 		self.grpAvailableFwUpdatesLayout.addWidget(self.optExternal)
-		#self.grpAvailableFwUpdatesLayout.addWidget(self.lblExternal_Blerb)
 		self.grpAvailableFwUpdatesLayout.addSpacing(3)
 		self.grpAvailableFwUpdatesLayout.addItem(self.rowUpdate)
-		#self.grpAvailableFwUpdatesLayout.addWidget(self.btnUpdate)
 		self.grpAvailableFwUpdates.setLayout(self.grpAvailableFwUpdatesLayout)
 		self.layout_device.addWidget(self.grpAvailableFwUpdates)
 		# ↑↑↑ Available Firmware Updates
-
+		
 		self.grpStatus = QtWidgets.QGroupBox("")
 		self.grpStatusLayout = QtWidgets.QGridLayout()
 		self.prgStatus = QtWidgets.QProgressBar()
@@ -119,7 +120,6 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.prgStatus.setValue(0)
 		self.lblStatus = QtWidgets.QLabel("Status: Ready.")
 
-		#self.grpStatusLayout.addWidget(self.btnUpdate, 0, 0, QtCore.Qt.AlignCenter)
 		self.grpStatusLayout.addWidget(self.prgStatus, 1, 0)
 		self.grpStatusLayout.addWidget(self.lblStatus, 2, 0)
 		
@@ -200,18 +200,18 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			fn = "ofw.hex"
 		else:
 			path = self.APP.SETTINGS.value("LastDirFirmwareUpdate")
-			path = QtWidgets.QFileDialog.getOpenFileName(self, "Choose GBxCart RW v1.3 Firmware File", path, "Firmware Update (*.hex);;All Files (*.*)")[0]
+			path = QtWidgets.QFileDialog.getOpenFileName(self, "Choose GBxCart RW Firmware File", path, "Firmware Update (*.hex);;All Files (*.*)")[0]
 			if path == "": return
-			temp = re.search(r"^(gbxcart_rw_v1\.3_pcb_r.+\.hex)$", os.path.basename(path))
+			temp = re.search(r"^(gbx(?:cart|mas)_rw_.+_pcb_r.+\.hex)$", os.path.basename(path))
 			if temp is None:
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The expected filename for a valid firmware file is <b>gbxcart_rw_v1.3_pcb_r**.hex</b>. Please visit <a href=\"https://www.gbxcart.com/\">gbxcart.com</a> for the latest official firmware updates.", standardButtons=QtWidgets.QMessageBox.Ok)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The expected filename for a valid firmware file is <b>gbx*_rw_*_pcb_r*.hex</b>. Please visit <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com</a> for the latest official firmware updates.", standardButtons=QtWidgets.QMessageBox.Ok)
 				answer = msgbox.exec()
 				return
 			self.APP.SETTINGS.setValue("LastDirFirmwareUpdate", os.path.dirname(path))
-			fw = "{:s}<br><br><b>Please double check that this is a valid firmware file for the GBxCart RW v1.3. If it is invalid or an update for a different device, it may render your device unusable.</b>".format(path)
+			fw = "{:s}<br><br><b>Please double check that this is a valid firmware file for your GBxCart RW. If it is invalid or an update for a different device, it may render your device unusable.</b>".format(path)
 			fn = None
 		
-		text = "The following firmware will now be written to your GBxCart v1.3 device:<br>- {:s}".format(fw)
+		text = "The following firmware will now be written to your GBxCart RW device:<br>- {:s}".format(fw)
 		text += "<br><br>Do you want to continue?"
 		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 		msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
@@ -223,7 +223,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.grpAvailableFwUpdates.setEnabled(False)
 
 		if path == "":
-			with zipfile.ZipFile(self.APP_PATH + "/res/fw_GBxCart_RW_v1_3.zip") as archive:
+			with zipfile.ZipFile(self.APP_PATH + "/res/{:s}".format(self.FW_FILES[self.PCB_VER])) as archive:
 				with archive.open(fn) as f: ihex = f.read().decode("ascii")
 		else:
 			with open(path, "rb") as f: ihex = f.read().decode("ascii")
@@ -298,7 +298,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		if self.ResetAVR(delay) is False:
 			fncSetStatus(text="Status: Bootloader error.", enableUI=True)
 			self.prgStatus.setValue(0)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW v1.3 bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
 			answer = msgbox.exec()
 			return 2
 		
@@ -326,13 +326,13 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				fncSetStatus("Status: Waiting for bootloader... (+{:d}ms)".format(math.ceil(delay * 1000)))
 				if self.ResetAVR(delay) is False:
 					fncSetStatus(text="Status: Bootloader error.", enableUI=True)
-					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW v1.3 bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
 					answer = msgbox.exec()
 					return 2
 				lives -= 1
 				if lives < 0:
 					fncSetStatus(text="Status: Bootloader timeout.", enableUI=True)
-					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW v1.3 bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
 					answer = msgbox.exec()
 					return 2
 				continue

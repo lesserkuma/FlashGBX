@@ -1,12 +1,15 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 512 KB"
+		"insideGadgets 128/256/512 KB"
 	],
 	"flash_ids":[
+		[ 0xBF, 0xB5, 0x01, 0xFF ],
+		[ 0xBF, 0xB6, 0x01, 0xFF ],
 		[ 0xBF, 0xB7, 0x01, 0xFF ]
 	],
 	"voltage":5,
+	"power_cycle":true,
 	"flash_size":0x80000,
 	"start_addr":0,
 	"first_bank":1,

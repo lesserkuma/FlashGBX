@@ -9,6 +9,7 @@ class Flashcart:
 	CONFIG = {}
 	COMMAND_SET = None
 	CART_WRITE_FNCPTR = None
+	CART_WRITE_FAST_FNCPTR = None
 	CART_READ_FNCPTR = None
 	CART_POWERCYCLE_FNCPTR = None
 	PROGRESS_FNCPTR = None
@@ -17,9 +18,10 @@ class Flashcart:
 	SECTOR_MAP = None
 	CFI = None
 
-	def __init__(self, config=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, progress_fncptr=None):
+	def __init__(self, config=None, cart_write_fncptr=None, cart_write_fast_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, progress_fncptr=None):
 		if config is None: config = {}
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
+		self.CART_WRITE_FAST_FNCPTR = cart_write_fast_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
 		self.CART_POWERCYCLE_FNCPTR = cart_powercycle_fncptr
 		self.PROGRESS_FNCPTR = progress_fncptr
@@ -40,12 +42,16 @@ class Flashcart:
 		return self.CART_READ_FNCPTR(address, length)
 	
 	def CartWrite(self, commands, flashcart=True, sram=False):
-		if "command_set" in self.CONFIG and self.CONFIG["command_set"] == "DMG-MBC5-32M-FLASH": flashcart = False
-		for command in commands:
-			address = command[0]
-			value = command[1]
-			self.CART_WRITE_FNCPTR(address, value, flashcart=flashcart, sram=sram)
-
+		if "command_set" in self.CONFIG and self.CONFIG["command_set"] in ("GBMEMORY", "DMG-MBC5-32M-FLASH"): flashcart = False
+		dprint(commands, flashcart, sram)
+		if flashcart and not sram:
+			self.CART_WRITE_FAST_FNCPTR(commands, flashcart=True)
+		else:
+			for command in commands:
+				address = command[0]
+				value = command[1]
+				self.CART_WRITE_FNCPTR(address, value, flashcart=flashcart, sram=sram)
+	
 	def GetCommandSetType(self):
 		return self.CONFIG["_command_set"].upper()
 
@@ -144,6 +150,12 @@ class Flashcart:
 
 	def Unlock(self):
 		self.CartRead(0) # dummy read
+		if "unlock_read" in self.CONFIG["commands"]:
+			for command in self.CONFIG["commands"]["unlock_read"]:
+				for _ in range(0, command[2]):
+					temp = self.CartRead(command[0], command[1])
+					dprint("Reading 0x{:X} bytes from cartridge at 0x{:X} = {:s}".format(command[1], command[0], str(temp)))
+			time.sleep(0.001)
 		if "unlock" in self.CONFIG["commands"]:
 			self.CartWrite(self.CONFIG["commands"]["unlock"])
 			time.sleep(0.001)
@@ -167,13 +179,18 @@ class Flashcart:
 	def VerifyFlashID(self):
 		if "read_identifier" not in self.CONFIG["commands"]: return False
 		if len(self.CONFIG["flash_ids"]) == 0: return False
+		if "power_cycle" in self.CONFIG and self.CONFIG["power_cycle"] is True:
+			self.CART_POWERCYCLE_FNCPTR()
 		self.Reset()
 		rom = list(self.CartRead(0, len(self.CONFIG["flash_ids"][0])))
 		self.Unlock()
 		self.CartWrite(self.CONFIG["commands"]["read_identifier"])
 		time.sleep(0.001)
-		cart_flash_id = list(self.CartRead(0, len(self.CONFIG["flash_ids"][0])))
+		read_identifier_at = 0
+		if "read_identifier_at" in self.CONFIG: read_identifier_at = self.CONFIG["read_identifier_at"]
+		cart_flash_id = list(self.CartRead(read_identifier_at, len(self.CONFIG["flash_ids"][0])))
 		self.Reset()
+		dprint(self.CONFIG["names"], self.CONFIG["commands"]["read_identifier"])
 		dprint("Flash ID: {:s}".format(' '.join(format(x, '02X') for x in cart_flash_id)))
 		verified = True
 		if (rom == cart_flash_id):

@@ -53,7 +53,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 *To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
 
 ## Cartridge Compatibility
-### Supported official cartridge memory mappers
+### Supported cartridge memory mappers
 - Game Boy
   - All cartridges without memory mapping
   - MBC1
@@ -71,17 +71,23 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - HuC-1
   - HuC-3
   - TAMA5
+  - Unlicensed 256M Mapper
+  - Unlicesned Wisdom Tree Mapper
+  - Unlicensed Xploder GB Mapper
+  - Unlicensed Sachen Mapper
 
 - Game Boy Advance
   - All cartridges without memory mapping
   - 8M FLASH DACS
   - 3D Memory (GBA Video)
+  - Unlicensed 2048M Mapper
 
 ### Currently supported flash cartridges
 
 - Game Boy
 
   - 29LV Series Flash BOY with 29LV160DB
+  - BLAZE Xploder GB
   - BUNG Doctor GB Card 64M
   - DIY cart with AM29F010
   - DIY cart with AM29F016
@@ -97,6 +103,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - GB Smart 32M
   - HDR Game Boy Camera Flashcart
   - insideGadgets 32 KB
+  - insideGadgets 128 KB
+  - insideGadgets 256 KB
   - insideGadgets 512 KB
   - insideGadgets 1 MB, 128 KB SRAM
   - insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM
@@ -153,6 +161,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_BV5_V3 with HY29LV160BT-70
   - SD007_BV5_V3 with AM29LV160MB
   - SD007_K8D3216_32M with MX29LV160CT
+  - SD007_T40_64BALL_TSOP28 with 29LV016T
   - SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85¹
   - SD007_TSOP_29LV017D with L017D70VC
   - SD007_TSOP_29LV017D with S29GL032M90T
@@ -197,6 +206,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 4455_4400_4000_4350_36L0R_V3 with M36L0R7050T
   - AA1030_TSOP88BALL with M36W0R603
   - AGB-E05-01 with GL128S
+  - AGB-E05-01 with MSP55LV100G
   - AGB-E05-01 with MSP55LV128M
   - AGB-E05-01 with MX29GL128FHT2I-90G
   - AGB-E05-01 with S29GL064
@@ -204,6 +214,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - AGB-E05-02 with M29W128FH
   - AGB-E05-02 with M29W128GH
   - AGB-E05-02 with S29GL032
+  - AGB-E05-03H with M29W128GH
   - AGB-E05-06L with 29LV128DBT2C-90Q
   - AGB-E08-09 with 29LV128DTMC-90Q
   - AGB-E20-30 with M29W128GH
@@ -218,6 +229,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - BX2006_TSOP_64BALL with GL256S
   - BX2006_TSOPBGA_0106 with M29W640GB6AZA6
   - BX2006_TSOPBGA_0106 with K8D6316UTM-PI07
+  - DV15 with MSP55LV100G
   - GA-07 with unlabeled flash chip
   - GE28F128W30 with 128W30B0
   - M5M29G130AN (no PCB text)
@@ -282,7 +294,7 @@ The author would like to thank the following very kind people for their help and
 - iamevn (flash chip info)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
-- JFox (help with properly packaging the app for pip, Linux help)
+- JFox (help with properly packaging the app for pip, Linux help, bug reports)
 - joyrider3774 (flash chip info)
 - JS7457 (flash chip info)
 - julgr (macOS help, testing)
@@ -308,14 +320,17 @@ The author would like to thank the following very kind people for their help and
 - skite2001 (flash chip info)
 - Smelly-Ghost (testing)
 - Super Maker (flash chip info, testing)
+- Tauwasser (research)
 - t5b6_de (flash chip info)
 - Timville (flash chip info)
 - twitnic (flash chip info)
 - Veund (flash chip info)
 - Voultar (bug reports, feature suggestions)
+- Wkr (flash chip info)
 - x7l7j8cc (flash chip info)
 - Zeii (flash chip info)
 - Zelante (flash chip info)
+- zvxr (flash chip info)
 
 ## DISCLAIMER
 
