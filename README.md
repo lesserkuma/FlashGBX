@@ -20,7 +20,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 - [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/)
   - insideGadgets’ firmware version R30 (other hardware revisions and firmware versions may also work, but are untested)
-  - Lesserkuma’s firmware versions L1 to L5
+  - Lesserkuma’s firmware versions L1 to L6
 
 ## Installing and running
 
