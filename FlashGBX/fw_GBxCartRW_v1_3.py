@@ -193,10 +193,10 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		fw = ""
 		path = ""
 		if self.optCFW.isChecked():
-			fw = "Version {:s}".format(self.CFW_VER)
+			fw = self.CFW_VER
 			fn = "cfw.hex"
 		elif self.optOFW.isChecked():
-			fw = "Version {:s}".format(self.OFW_VER)
+			fw = self.OFW_VER
 			fn = "ofw.hex"
 		else:
 			path = self.APP.SETTINGS.value("LastDirFirmwareUpdate")
@@ -298,7 +298,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		if self.ResetAVR(delay) is False:
 			fncSetStatus(text="Status: Bootloader error.", enableUI=True)
 			self.prgStatus.setValue(0)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ For safety reasons and to avoid potential fire hazards, do not use unauthorized clone hardware that have no electrical fuses, such as the “FLASH&nbsp;BOY” series.".replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
 			answer = msgbox.exec()
 			return 2
 		

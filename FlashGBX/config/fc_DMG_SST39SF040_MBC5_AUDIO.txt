@@ -1,19 +1,19 @@
 {
 	"type":"DMG",
 	"names":[
-		"Ferrante Crafts cart with SST39SF010A",
-		"GB-CART32K-A with SST39SF020A"
+		"Ferrante Crafts cart 512 KB"
 	],
 	"flash_ids":[
-		[ 0xBF, 0xB5, 0x01, 0xFF ],
-		[ 0xBF, 0xB6, 0x01, 0xFF ]
+		[ 0xBF, 0xB7, 0x01, 0xFF ]
 	],
 	"voltage":5,
-	"flash_size":0x8000,
+	"flash_size":0x80000,
 	"start_addr":0,
 	"first_bank":1,
+	"mbc":0x19,
+	"flash_commands_on_bank_1":true,
 	"write_pin":"AUDIO",
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":30,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -23,9 +23,6 @@
 			[ 0x5555, 0xAA ],
 			[ 0x2AAA, 0x55 ],
 			[ 0x5555, 0x90 ]
-		],
-		"read_cfi":[
-			[ 0x5555, 0x98 ]
 		],
 		"chip_erase":[
 			[ 0x5555, 0xAA ],

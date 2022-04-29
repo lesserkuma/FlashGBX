@@ -903,19 +903,20 @@ class GbxDevice:
 				supp_flash_types = self.GetSupportedCartridgesAGB()
 			
 			(flash_id, cfi_s, cfi) = self.CheckFlashChip(limitVoltage=limitVoltage, cart_type=supp_flash_types[1][flash_type_id])
-			size = supp_flash_types[1][flash_types[0]]["flash_size"]
-			size_undetected = False
-			for i in range(0, len(flash_types)):
-				if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
-					size_undetected = True
-			
-			if size_undetected:
-				if isinstance(cfi, dict) and "device_size" in cfi:
-					for i in range(0, len(flash_types)):
-						if cfi['device_size'] == supp_flash_types[1][flash_types[i]]["flash_size"]:
-							flash_type_id = flash_types[i]
-							size_undetected = False
-							break
+			if "flash_size" in supp_flash_types[1][flash_types[0]]:
+				size = supp_flash_types[1][flash_types[0]]["flash_size"]
+				size_undetected = False
+				for i in range(0, len(flash_types)):
+					if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
+						size_undetected = True
+				
+				if size_undetected:
+					if isinstance(cfi, dict) and "device_size" in cfi:
+						for i in range(0, len(flash_types)):
+							if cfi['device_size'] == supp_flash_types[1][flash_types[i]]["flash_size"]:
+								flash_type_id = flash_types[i]
+								size_undetected = False
+								break
 		
 		else:
 			(flash_id, cfi_s, cfi) = self.CheckFlashChip(limitVoltage=limitVoltage)

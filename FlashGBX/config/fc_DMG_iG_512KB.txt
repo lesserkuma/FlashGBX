@@ -10,7 +10,6 @@
 	],
 	"voltage":5,
 	"power_cycle":true,
-	"flash_size":0x80000,
 	"start_addr":0,
 	"first_bank":1,
 	"flash_commands_on_bank_1":true,

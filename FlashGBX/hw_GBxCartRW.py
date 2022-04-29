@@ -895,7 +895,7 @@ class GbxDevice:
 		
 		return buffer
 
-	def ReadROM_3DMemory(self, address, length, max_length=512):
+	def ReadROM_3DMemory(self, address, length, max_length=64):
 		buffer_size = 0x1000
 		num = math.ceil(length / max_length)
 		dprint("Reading 0x{:X} bytes from cartridge ROM in {:d} iteration(s)".format(length, num))
@@ -920,7 +920,7 @@ class GbxDevice:
 
 		return buffer
 
-	def ReadRAM(self, address, length, command=None, max_length=512):
+	def ReadRAM(self, address, length, command=None, max_length=64):
 		num = math.ceil(length / max_length)
 		dprint("Reading 0x{:X} bytes from cartridge RAM in {:d} iteration(s)".format(length, num))
 		if length > max_length: length = max_length
@@ -1414,6 +1414,8 @@ class GbxDevice:
 						flashcart.Reset(full_reset=False)
 						dprint("Found the correct cartridge type!")
 		
+		if self.CanPowerCycleCart(): self.CartPowerCycle()
+
 		# Check flash size
 		flash_type_id = 0
 		cfi_s = ""
@@ -1426,19 +1428,20 @@ class GbxDevice:
 				supp_flash_types = self.GetSupportedCartridgesAGB()
 			
 			(flash_id, cfi_s, cfi) = self.CheckFlashChip(limitVoltage=limitVoltage, cart_type=supp_flash_types[1][flash_type_id])
-			size = supp_flash_types[1][flash_types[0]]["flash_size"]
-			size_undetected = False
-			for i in range(0, len(flash_types)):
-				if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
-					size_undetected = True
-			
-			if size_undetected:
-				if isinstance(cfi, dict) and "device_size" in cfi:
-					for i in range(0, len(flash_types)):
-						if cfi['device_size'] == supp_flash_types[1][flash_types[i]]["flash_size"]:
-							flash_type_id = flash_types[i]
-							size_undetected = False
-							break
+			if "flash_size" in supp_flash_types[1][flash_types[0]]:
+				size = supp_flash_types[1][flash_types[0]]["flash_size"]
+				size_undetected = False
+				for i in range(0, len(flash_types)):
+					if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
+						size_undetected = True
+				
+				if size_undetected:
+					if isinstance(cfi, dict) and "device_size" in cfi:
+						for i in range(0, len(flash_types)):
+							if cfi['device_size'] == supp_flash_types[1][flash_types[i]]["flash_size"]:
+								flash_type_id = flash_types[i]
+								size_undetected = False
+								break
 		
 		else:
 			(flash_id, cfi_s, cfi) = self.CheckFlashChip(limitVoltage=limitVoltage)

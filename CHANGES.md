@@ -1,4 +1,9 @@
 # Release notes
+### v3.9 (released 2022-04-29)
+- Added support for Ferrante Crafts cart 64 KB *(thanks FerrantePescara)*
+- Added support for Ferrante Crafts cart 512 KB *(thanks FerrantePescara)*
+- Fixed a bug with querying MBC3/MBC30 Real Time Clock values *(thanks HDR and AdmirtheSableye)*
+
 ### v3.8 (released 2022-04-21)
 - Added support for AGB-E05-01 with MSP55LV100G *(thanks EmperorOfTigers)*
 - Added support for DV15 with MSP55LV100G *(thanks zvxr)*

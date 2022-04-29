@@ -98,7 +98,9 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with MX29LV640
   - DIY cart with SST39SF040
   - DMG-MBC5-32M-FLASH Development Cartridge, E201264
-  - Ferrante Crafts cart with SST39SF010A
+  - Ferrante Crafts cart 32 KB
+  - Ferrante Crafts cart 64 KB
+  - Ferrante Crafts cart 512 KB
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
   - HDR Game Boy Camera Flashcart
@@ -237,7 +239,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
-*¹ = Cannot be auto-detected, select cartridge type manually*
+*¹ = Cannot always be auto-detected, select cartridge type manually*
 
 ### Troubleshooting
 
@@ -269,6 +271,7 @@ The author would like to thank the following very kind people for their help and
 
 - 90sFlav (flash chip info)
 - AcoVanConis (bug reports, flash chip info)
+- AdmirtheSableye (bug reports)
 - AlexiG (GBxCart RW hardware, bug reports, flash chip info)
 - AndehX (app icon, flash chip info)
 - antPL (flash chip info)
@@ -285,9 +288,11 @@ The author would like to thank the following very kind people for their help and
 - EmperorOfTigers (bug reports, flash chip info)
 - endrift (research, mGBA emulator)
 - eveningmoose (flash chip info)
+- FerrantePescara (flash chip info)
 - frarees (bug reports)
 - Frost Clock (flash chip info)
 - Grender (testing)
+- HDR (testing)
 - Herax (flash chip info)
 - hiks (flash chip info)
 - howie0210 (flash chip info, bug reports)

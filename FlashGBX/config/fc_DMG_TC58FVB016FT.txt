@@ -3,7 +3,10 @@
 	"names":[
 		"SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85"
 	],
-	"voltage":3.3,
+	"flash_ids":[
+		[ 0x98, 0x45, 0x00, 0x2A ]
+	],
+	"voltage":5,
 	"flash_size":0x200000,
 	"start_addr":0,
 	"first_bank":1,
