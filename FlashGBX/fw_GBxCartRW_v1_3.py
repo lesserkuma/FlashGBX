@@ -3,7 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import zipfile, os, serial, struct, time, re, math, platform
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 from . import Util
 
 class FirmwareUpdaterWindow(QtWidgets.QDialog):

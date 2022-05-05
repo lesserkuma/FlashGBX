@@ -37,13 +37,13 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 
 1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or higher)
 2. Open a Terminal or Command Prompt window
-3. If your Python version is 3.10 or newer, first run this command:<br>`pip3 install --ignore-requires-python -U PySide2`
+3. If your Python version is 3.10 or newer, first run this command:<br>`pip3 install --ignore-requires-python -U PySide6`
 4. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
-* If installation fails and you see an error about a conflict involving PySide2, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
+* If installation fails and you see an error about a conflict involving PySide6, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
 
 * Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
 
-*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
+*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide6](https://pypi.org/project/PySide6/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
 
 #### Running
 Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
@@ -255,7 +255,7 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
-* If you use Python 3.10+ and see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` or can only use CLI mode, try to install or update the PySide2 package by running `pip3 install -U PySide2 --ignore-requires-python` or try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/).
+* If you use Python 3.10+ and see the error `Type Error: 'PySide6.QtCore.Qt.WindowType' object cannot be interpreted as an integer` or can only use CLI mode, try to install or update the PySide6 package by running `pip3 install -U PySide6 --ignore-requires-python` or try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/).
 
 * If your Game Boy Camera cartridge is not reading, make sure it’s connected the correct way around; screws go up.
 

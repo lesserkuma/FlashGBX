@@ -77,7 +77,6 @@ def LoadConfig(args):
 class ArgParseCustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
 def main(portableMode=False):
 	if platform.system() == "Windows": os.system("color")
-	os.environ['QT_MAC_WANTS_LAYER'] = '1'
 	
 	print("{:s} {:s} by Lesserkuma".format(Util.APPNAME, Util.VERSION))
 	print("https://github.com/lesserkuma/FlashGBX")
@@ -89,7 +88,7 @@ def main(portableMode=False):
 		app_path = os.path.dirname(os.path.abspath(__file__))
 	
 	try:
-		from PySide2 import QtCore
+		from PySide6 import QtCore
 		cp = { "subdir":app_path + "/config", "appdata":QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppConfigLocation) + '/FlashGBX' }
 	except:
 		cp = { "subdir":app_path + "/config", "appdata":os.path.expanduser('~') + '/FlashGBX' }
@@ -163,7 +162,8 @@ def main(portableMode=False):
 		try:
 			from . import FlashGBX_GUI
 			app = FlashGBX_GUI.FlashGBX_GUI(args)
-		except ModuleNotFoundError:
+		except ModuleNotFoundError as e:
+			print(e)
 			app = None
 		except:
 			exc = traceback.format_exc()

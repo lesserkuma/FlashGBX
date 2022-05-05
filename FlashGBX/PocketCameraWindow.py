@@ -5,7 +5,7 @@
 import functools, os, json, platform, shutil, hashlib
 from PIL.ImageQt import ImageQt
 from PIL import Image, ImageDraw
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 from .PocketCamera import PocketCamera
 
 class PocketCameraWindow(QtWidgets.QDialog):

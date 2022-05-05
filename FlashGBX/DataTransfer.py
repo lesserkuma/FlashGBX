@@ -3,16 +3,16 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import traceback
-import PySide2
+import PySide6
 
-class DataTransfer(PySide2.QtCore.QThread):
+class DataTransfer(PySide6.QtCore.QThread):
 	CONFIG = None
 	FINISHED = False
 	
-	updateProgress = PySide2.QtCore.Signal(object)
+	updateProgress = PySide6.QtCore.Signal(object)
 
 	def __init__(self, config=None):
-		PySide2.QtCore.QThread.__init__(self)
+		PySide6.QtCore.QThread.__init__(self)
 		if config is not None:
 			self.CONFIG = config
 		self.FINISHED = False

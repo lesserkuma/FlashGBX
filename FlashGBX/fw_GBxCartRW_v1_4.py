@@ -3,7 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import zipfile, serial, struct, time, random, hashlib, datetime
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 try:
 	from . import Util
 except ImportError:

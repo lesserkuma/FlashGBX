@@ -3,7 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import sys, os, time, datetime, re, json, platform, subprocess, requests, webbrowser, pkg_resources, struct, math
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
 from .PocketCameraWindow import PocketCameraWindow
@@ -2222,7 +2222,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		# Taskbar Progress on Windows only
 		try:
-			from PySide2.QtWinExtras import QWinTaskbarButton, QtWin
+			from PySide6.QtWinExtras import QWinTaskbarButton, QtWin
 			myappid = 'lesserkuma.flashgbx'
 			QtWin.setCurrentProcessExplicitAppUserModelID(myappid)
 			taskbar_button = QWinTaskbarButton()
@@ -2233,7 +2233,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		except ImportError:
 			pass
 		
-		qt_app.exec_()
+		qt_app.exec()
 
 qt_app = QtWidgets.QApplication(sys.argv)
 qt_app.setApplicationName(APPNAME)
