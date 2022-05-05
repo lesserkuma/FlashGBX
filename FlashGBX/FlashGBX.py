@@ -162,8 +162,7 @@ def main(portableMode=False):
 		try:
 			from . import FlashGBX_GUI
 			app = FlashGBX_GUI.FlashGBX_GUI(args)
-		except ModuleNotFoundError as e:
-			print(e)
+		except ModuleNotFoundError:
 			app = None
 		except:
 			exc = traceback.format_exc()
