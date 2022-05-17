@@ -163,6 +163,36 @@ class RomFileDMG:
 				pass
 			data["version"] = "{:d}.{:d}.{:d}:{:c} ({:02d}:{:02d} {:02d}-{:02d}-{:02d} / {:04X})".format(buffer[0xD8], buffer[0xD9], buffer[0xDA], buffer[0xD7], buffer[0xD0], buffer[0xD1], buffer[0xD2], buffer[0xD3], buffer[0xD4], struct.unpack("<H", buffer[0xD5:0xD7])[0]).replace("\x00", "")
 		
+		# Unlicensed Datel Orbit V2 Mapper
+		elif hashlib.sha1(buffer[0x101:0x134]).digest() == bytearray([ 0xFA, 0x68, 0x5A, 0x37, 0x85, 0xEF, 0x65, 0x23, 0x2D, 0x6F, 0x23, 0xAC, 0x02, 0x05, 0x15, 0x20, 0x8B, 0xDE, 0xC5, 0x23 ]):
+			data["rom_size_raw"] = 0x02
+			data["ram_size_raw"] = 0
+			data["mapper_raw"] = 0x205
+			data["cgb"] = 0x80
+			try:
+				game_title = bytearray(buffer[0x134:0x150]).decode("ascii", "replace").replace("\xFF", "")
+				game_title = re.sub(r"(\x00+)$", "", game_title)
+				game_title = re.sub(r"((_)_+|(\x00)\x00+|(\s)\s+)", "\\2\\3\\4", game_title).replace("\x00", "")
+				game_title = ''.join(filter(lambda x: x in set(string.printable), game_title))
+				data["game_title"] = game_title
+			except:
+				pass
+		
+		# Unlicensed Datel Orbit V2 Mapper (older firmware)
+		elif hashlib.sha1(buffer[0x101:0x140]).digest() == bytearray([ 0xC1, 0xF4, 0x15, 0x4A, 0xEF, 0xCC, 0x5B, 0xE7, 0xEC, 0x83, 0xA8, 0xBB, 0x7B, 0xC0, 0x95, 0x83, 0x35, 0xEC, 0x9A, 0xF2 ]):
+			data["rom_size_raw"] = 0x02
+			data["ram_size_raw"] = 0
+			data["mapper_raw"] = 0x205
+			data["cgb"] = 0x80
+			try:
+				game_title = bytearray(buffer[0x134:0x140]).decode("ascii", "replace").replace("\xFF", "")
+				game_title = re.sub(r"(\x00+)$", "", game_title)
+				game_title = re.sub(r"((_)_+|(\x00)\x00+|(\s)\s+)", "\\2\\3\\4", game_title).replace("\x00", "")
+				game_title = ''.join(filter(lambda x: x in set(string.printable), game_title))
+				data["game_title"] = game_title
+			except:
+				pass
+
 		# Unlicensed Sachen MMC1/MMC2
 		elif len(buffer) >= 0x280:
 			sachen_hash = hashlib.sha1(buffer[0x200:0x280]).digest()

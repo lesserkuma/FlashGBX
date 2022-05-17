@@ -1,4 +1,10 @@
 # Release notes
+### v3.10 (released 2022-05-17)
+- Added support for the Datel Orbit V2 mapper (Action Replay and GameShark) *(thanks Jenetrix)*
+- Fixed verification with AA1030_TSOP88BALL with M36W0R603 *(thanks DevDavisNunez)*
+- Added support for SD007_TSOP_48BALL_V9 with 32M29EWB *(thanks marv17)*
+- Minor bug fixes and improvements
+
 ### v3.9 (released 2022-04-29)
 - Added support for Ferrante Crafts cart 64 KB *(thanks FerrantePescara)*
 - Added support for Ferrante Crafts cart 512 KB *(thanks FerrantePescara)*

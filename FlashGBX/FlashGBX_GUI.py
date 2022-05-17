@@ -543,6 +543,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.SETTINGS.setValue("SkipModeChangeWarning", "disabled")
 		self.SETTINGS.setValue("SkipAutodetectMessage", "disabled")
 		self.SETTINGS.setValue("SkipFinishMessage", "disabled")
+		self.SETTINGS.setValue("SkipCameraSavePopup", "disabled")
 
 	def OpenConfigDir(self):
 		path = 'file://{0:s}'.format(self.CONFIG_PATH)
@@ -802,7 +803,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						dontShowAgain = cb.isChecked()
 				else:
 					self.lblStatus4a.setText("Done.")
-					if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x105, 0x202, 0x203)):
+					if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x105, 0x202, 0x203, 0x205)):
 						msg = "The ROM backup is complete."
 						msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
 						msgbox.setText(msg)
@@ -861,17 +862,27 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.lblStatus4a.setText("Done!")
 			self.CONN.INFO["last_action"] = 0
-			if self.CONN.INFO["transferred"] == 131072: # 128 KB
-				with open(self.CONN.INFO["last_path"], "rb") as file: temp = file.read()
-				if temp[0x1FFB1:0x1FFB6] == b'Magic':
-					answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
-					if answer == QtWidgets.QMessageBox.Yes:
-						self.CAMWIN = None
-						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"], config_path=self.CONFIG_PATH)
-						self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-						self.CAMWIN.setModal(True)
-						self.CAMWIN.run()
-						return
+
+			dontShowAgainCameraSavePopup = str(self.SETTINGS.value("SkipCameraSavePopup", default="disabled")).lower() == "enabled"
+			if not dontShowAgainCameraSavePopup:
+				if self.CONN.INFO["transferred"] == 131072: # 128 KB
+					with open(self.CONN.INFO["last_path"], "rb") as file: temp = file.read()
+					if temp[0x1FFB1:0x1FFB6] == b'Magic':
+						cbCameraSavePopup = QtWidgets.QCheckBox("Don’t show this message again", checked=dontShowAgain)
+						msgboxCameraPopup = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?")
+						msgboxCameraPopup.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+						msgboxCameraPopup.setDefaultButton(QtWidgets.QMessageBox.Yes)
+						msgboxCameraPopup.setCheckBox(cbCameraSavePopup)
+						answer = msgboxCameraPopup.exec()
+						dontShowAgainCameraSavePopup = cbCameraSavePopup.isChecked()
+						if dontShowAgainCameraSavePopup: self.SETTINGS.setValue("SkipCameraSavePopup", "enabled")
+						if answer == QtWidgets.QMessageBox.Yes:
+							self.CAMWIN = None
+							self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"], config_path=self.CONFIG_PATH)
+							self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+							self.CAMWIN.setModal(True)
+							self.CAMWIN.run()
+							return
 			
 			msgbox.setText("The save data backup is complete!")
 			msgbox.setCheckBox(cb)
@@ -1146,10 +1157,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				hdr = RomFileDMG(buffer).GetHeader()
 			elif self.CONN.GetMode() == "AGB":
 				hdr = RomFileAGB(buffer).GetHeader()
-			if not hdr["logo_correct"] and mbc != 0x203:
+			if not hdr["logo_correct"] and mbc not in (0x203, 0x205):
 				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 				if answer == QtWidgets.QMessageBox.Cancel: return
-			if not hdr["header_checksum_correct"] and mbc != 0x203:
+			if not hdr["header_checksum_correct"] and mbc not in (0x203, 0x205):
 				msg_text = "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"])
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
 				button_fix = msgbox.addButton("  &Fix and Continue  ", QtWidgets.QMessageBox.ActionRole)
@@ -1588,6 +1599,15 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblHeaderChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
 				self.lblHeaderROMChecksumResult.setText("")
 				self.lblHeaderROMChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+			elif data["mapper_raw"] == 0x205: # Datel Orbit V2
+				self.lblHeaderRtcResult.setText("")
+				self.lblHeaderRevisionResult.setText("")
+				self.lblHeaderLogoValidResult.setText("")
+				self.lblHeaderLogoValidResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+				self.lblHeaderChecksumResult.setText("")
+				self.lblHeaderChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+				self.lblHeaderROMChecksumResult.setText("")
+				self.lblHeaderROMChecksumResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
 			elif data["mapper_raw"] == 0x204: # Sachen
 				self.lblHeaderRtcResult.setText("")
 				self.lblHeaderRevisionResult.setText("")
@@ -1708,7 +1728,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.grpStatus.setTitle("Transfer Status")
 			self.FinishOperation()
 		
-		if not data['logo_correct'] and data['empty'] == False and resetStatus and not (self.CONN.GetMode() == "DMG" and data["mapper_raw"] in (0x203, 0x204)):
+		if not data['logo_correct'] and data['empty'] == False and resetStatus and not (self.CONN.GetMode() == "DMG" and data["mapper_raw"] in (0x203, 0x204, 0x205)):
 			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The Nintendo Logo check failed which usually means that the cartridge can’t be read correctly. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
 		
 		if data['game_title'][:11] == "YJencrypted" and resetStatus:

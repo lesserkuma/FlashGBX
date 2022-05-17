@@ -17,6 +17,7 @@ class Flashcart:
 	SECTOR_POS = 0
 	SECTOR_MAP = None
 	CFI = None
+	LAST_SR = 0x00
 
 	def __init__(self, config=None, cart_write_fncptr=None, cart_write_fast_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, progress_fncptr=None):
 		if config is None: config = {}
@@ -165,6 +166,7 @@ class Flashcart:
 		if full_reset and "power_cycle" in self.CONFIG:
 			self.CART_POWERCYCLE_FNCPTR()
 			time.sleep(0.001)
+			self.Unlock()
 		elif full_reset and "reset_every" in self.CONFIG:
 			for j in range(0, self.CONFIG["flash_size"], self.CONFIG["reset_every"]):
 				if j >= max_address: break
@@ -264,6 +266,7 @@ class Flashcart:
 			data = self.CONFIG["commands"]["chip_erase"][i][1]
 			if not addr == None:
 				self.CartWrite([[addr, data]])
+			time.sleep(0.1)
 			if self.CONFIG["commands"]["chip_erase_wait_for"][i][0] != None:
 				addr = self.CONFIG["commands"]["chip_erase_wait_for"][i][0]
 				data = self.CONFIG["commands"]["chip_erase_wait_for"][i][1]
@@ -277,13 +280,14 @@ class Flashcart:
 							self.CartWrite([[addr, sr_data]])
 					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
+					self.LAST_SR = wait_for
 					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["chip_erase_wait_for"][i][2], data, str((wait_for & self.CONFIG["commands"]["chip_erase_wait_for"][i][2]) == data)))
 					wait_for = wait_for & self.CONFIG["commands"]["chip_erase_wait_for"][i][2]
 					if wait_for == data: break
 					time.sleep(0.5)
 					timeout -= 0.5
 					if timeout <= 0:
-						self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing the flash chip timed out. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.", "abortable":False})
+						self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing the flash chip timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
 						return False
 		self.Reset(full_reset=True)
 		return True
@@ -320,13 +324,14 @@ class Flashcart:
 							self.CartWrite([[sr_addr, sr_data]])
 					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
+					self.LAST_SR = wait_for
 					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["sector_erase_wait_for"][i][2], data, str(wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2] == data)))
 					wait_for = wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2]
 					time.sleep(0.1)
 					timeout -= 1
 					if timeout < 1:
 						dprint("Timeout error!")
-						self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing a flash chip sector timed out. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.", "abortable":False})
+						self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The sector erase attempt timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
 						return False
 					if wait_for == data: break
 					self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":buffer_pos, "time_start":time.time(), "abortable":True})
@@ -558,12 +563,15 @@ class Flashcart_DMG_MMSA(Flashcart):
 		while lives > 0:
 			if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":0, "time_start":time.time(), "abortable":False})
 			sr = ord(self.CartRead(0))
+			self.LAST_SR = sr
 			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str(sr == 0x80)))
 			if sr == 0x80: break
 			time.sleep(0.5)
 			lives -= 1
 		if lives == 0:
-			raise("Hidden Sector Erase Timeout Error")
+			self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing the hidden sector timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
+			return False
+			#raise("Hidden Sector Erase Timeout Error")
 		
 		# Write Hidden Sector
 		cmds = [
@@ -692,12 +700,15 @@ class Flashcart_DMG_MMSA(Flashcart):
 		while lives > 0:
 			if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "abortable":False})
 			sr = ord(self.CartRead(0))
+			self.LAST_SR = sr
 			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str(sr == 0x80)))
 			if sr == 0x80: break
 			time.sleep(0.5)
 			lives -= 1
 		if lives == 0:
-			raise Exception("Chip Erase Timeout Error")
+			self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing the flash chip timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
+			return False
+			#raise Exception("Chip Erase Timeout Error")
 
 		# Reset flash to read mode
 		cmds = [
@@ -718,7 +729,7 @@ class Flashcart_DMG_MMSA(Flashcart):
 		return True
 
 	def Unlock(self):
-		self.UnlockForWriting()
+		return self.UnlockForWriting()
 
 	def UnlockForWriting(self):
 		time_start = time.time()
@@ -813,10 +824,12 @@ class Flashcart_DMG_MMSA(Flashcart):
 		lives = 10
 		while lives > 0:
 			sr = ord(self.CartRead(0))
+			self.LAST_SR = sr
 			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str(sr == 0x80)))
 			if sr == 0x80: break
 			if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"UNLOCK", "time_start":time_start, "abortable":False})
 			time.sleep(0.5)
 			lives -= 1
 		if lives == 0:
-			raise Exception("Hidden Sector Unlock Timeout Error")
+			self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Unlocking the hidden sector timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
+			return False

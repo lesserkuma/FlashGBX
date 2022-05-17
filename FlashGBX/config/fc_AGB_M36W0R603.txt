@@ -9,7 +9,7 @@
 	"voltage":3.3,
 	"flash_size":0x800000,
 	"sector_size_from_cfi":true,
-	"reset_every":0x100000,
+	"reset_every":0x80000,
 	"command_set":"INTEL",
 	"commands":{
 		"reset":[

@@ -173,6 +173,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_TSOP_48BALL with M29W160ET
   - SD007_TSOP_48BALL with L160DB12VI
   - SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G
+  - SD007_TSOP_48BALL_V9 with 32M29EWB
   - SD007_TSOP_48BALL_V10 with 29DL164BE-70P
   - SD007_TSOP_48BALL_V10 with 29DL32TF-70
   - SD007_TSOP_48BALL_V10 with 29LV320CTXEI
@@ -299,6 +300,7 @@ The author would like to thank the following very kind people for their help and
 - iamevn (flash chip info)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
+- Jenetrix (sample cartridge contribution)
 - JFox (help with properly packaging the app for pip, Linux help, bug reports)
 - joyrider3774 (flash chip info)
 - JS7457 (flash chip info)
@@ -327,7 +329,7 @@ The author would like to thank the following very kind people for their help and
 - Super Maker (flash chip info, testing)
 - Tauwasser (research)
 - t5b6_de (flash chip info)
-- Timville (flash chip info)
+- Timville (sample cartridge contribution, flash chip info)
 - twitnic (flash chip info)
 - Veund (flash chip info)
 - Voultar (bug reports, feature suggestions)

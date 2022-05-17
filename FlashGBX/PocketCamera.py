@@ -116,7 +116,7 @@ class PocketCamera:
 		pnginfo.add_text("Software", "FlashGBX")
 		pnginfo.add_text("Creation Time", email.utils.formatdate())
 		
-		if index == 0:
+		if index == 30:
 			pic = self.GetPicture(0)
 			pnginfo.add_text("Title", "Game Face")
 		elif index == 31:
@@ -124,7 +124,7 @@ class PocketCamera:
 			pnginfo.add_text("Title", "Last Seen Image")
 		else:
 			pic = self.GetPicture(index)
-			pnginfo.add_text("Title", "Photo {:02d}".format(index))
+			pnginfo.add_text("Title", "Photo {:02d}".format(index + 1))
 		
 		if frame is not False:
 			frame = Image.open(io.BytesIO(frame)).convert("RGB")

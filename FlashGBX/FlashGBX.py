@@ -107,6 +107,7 @@ def main(portableMode=False):
 
 	parser = argparse.ArgumentParser(formatter_class=ArgParseCustomFormatter, epilog=examples)
 	try:
+		# pylint: disable=protected-access
 		parser._action_groups[1].title = "general arguments"
 	except:
 		pass

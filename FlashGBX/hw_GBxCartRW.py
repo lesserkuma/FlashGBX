@@ -251,9 +251,9 @@ class GbxDevice:
 	
 	def IsSupportedMbc(self, mbc):
 		if self.CanPowerCycleCart():
-			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x201, 0x202, 0x203, 0x204 )
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x201, 0x202, 0x203, 0x204, 0x205 )
 		else:
-			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x202 )
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x202, 0x205 )
 	
 	def IsSupported3dMemory(self):
 		return True
@@ -535,6 +535,8 @@ class GbxDevice:
 		if self.FW["pcb_ver"] in (5, 6):
 			self._write(self.DEVICE_CMD["OFW_CART_PWR_OFF"])
 			time.sleep(delay)
+		else:
+			self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"])
 	
 	def CartPowerOn(self, delay=0.1):
 		if self.FW["pcb_ver"] in (5, 6):
@@ -686,7 +688,8 @@ class GbxDevice:
 		self.INFO["flash_type"] = 0
 		self.INFO["last_action"] = 0
 		
-		if self.MODE == "DMG" and setPinsAsInputs: self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"])
+		if self.MODE == "DMG": #and setPinsAsInputs:
+			self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"])
 		return data
 	
 	def DetectCartridge(self, mbc=None, limitVoltage=False, checkSaveType=True):
@@ -1321,6 +1324,20 @@ class GbxDevice:
 		self._cart_write(address - 1, 0xFF)
 		self.SKIPPING = skip_write
 	
+	def WriteROM_DMG_DatelOrbitV2(self, address, buffer, bank):
+		length = len(buffer)
+		dprint("Writing 0x{:X} bytes to Datel Orbit V2 cartridge".format(length))
+		for i in range(0, length):
+			self._cart_write(0x7FE1, 2)
+			self._cart_write(0x5555, 0xAA)
+			self._cart_write(0x2AAA, 0x55)
+			self._cart_write(0x5555, 0xA0)
+			self._cart_write(0x7FE1, bank)
+			self._cart_write(address + i, buffer[i])
+			if self.INFO["action"] == self.ACTIONS["ROM_WRITE"] and not self.NO_PROG_UPDATE:
+				self.SetProgress({"action":"WRITE", "bytes_added":1})
+		return True
+	
 	def WriteROM_DMG_EEPROM(self, address, buffer, bank, eeprom_buffer_size=0x80):
 		length = len(buffer)
 		if self.FW["pcb_ver"] not in (5, 6, 101):
@@ -1401,7 +1418,7 @@ class GbxDevice:
 			
 			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle)
 			flashcart.Reset(full_reset=False)
-			flashcart.Unlock()
+			if flashcart.Unlock() is False: return False
 			if "flash_ids" in flashcart_meta and len(flashcart_meta["flash_ids"]) > 0:
 				vfid = flashcart.VerifyFlashID()
 				if vfid is not False:
@@ -1808,6 +1825,7 @@ class GbxDevice:
 				(start_address, bank_size) = _mbc.SelectBankROM(bank)
 				end_address = start_address + bank_size
 				buffer_len = _mbc.GetROMBankSize()
+				dprint("{:X}/{:X}/{:X}".format(start_address, bank_size, buffer_len))
 			elif self.MODE == "AGB" and rom_banks > 1:
 				if cart_type["flash_bank_select_type"] == 1:
 					flashcart.SelectBankROM(bank)
@@ -2352,6 +2370,7 @@ class GbxDevice:
 			_mbc.EnableRAM(enable=False)
 			self._set_fw_variable("DMG_READ_CS_PULSE", 0)
 			if audio_low: self._set_fw_variable("FLASH_WE_PIN", 0x02)
+			self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"]) # Prevent hotplugging corruptions on rare occasions
 
 		# Clean up
 		self.INFO["last_action"] = self.INFO["action"]
@@ -2540,7 +2559,7 @@ class GbxDevice:
 		elif command_set_type in ("GBMEMORY", "DMG-MBC5-32M-FLASH"):
 			temp = 0x00
 			dprint("Using GB Memory command set")
-		elif command_set_type == "BLAZE_XPLODER":
+		elif command_set_type in ("BLAZE_XPLODER", "DATEL_ORBITV2"):
 			temp = 0x00
 		else:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM flashing.", "abortable":False})
@@ -2646,7 +2665,7 @@ class GbxDevice:
 		# ↑↑↑ Load commands into firmware
 
 		# ↓↓↓ Unlock cartridge
-		flashcart.Unlock()
+		if flashcart.Unlock() is False: return False
 		if self.MODE == "DMG" and "flash_commands_on_bank_1" in cart_type and cart_type["flash_commands_on_bank_1"] is True:
 			dprint("Setting ROM bank 1")
 			_mbc.SelectBankROM(1)
@@ -2775,6 +2794,8 @@ class GbxDevice:
 					status = self.WriteROM_DMG_MBC5_32M_FLASH(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], bank=bank)
 				elif command_set_type == "BLAZE_XPLODER":
 					status = self.WriteROM_DMG_EEPROM(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], bank=bank)
+				elif command_set_type == "DATEL_ORBITV2":
+					status = self.WriteROM_DMG_DatelOrbitV2(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], bank=bank)
 				else:
 					status = self.WriteROM(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], flash_buffer_size=flash_buffer_size, skip_init=(skip_init and not self.SKIPPING), rumble_stop=rumble)
 				if status is False:
@@ -2805,7 +2826,7 @@ class GbxDevice:
 		
 		# ↓↓↓ Reset flash
 		flashcart.Reset(full_reset=True)
-		self.SetMode(self.MODE)
+		#self.SetMode(self.MODE)
 		# ↑↑↑ Reset flash
 
 		# ↓↓↓ Flash verify
