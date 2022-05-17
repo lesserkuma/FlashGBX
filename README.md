@@ -305,6 +305,7 @@ The author would like to thank the following very kind people for their help and
 - joyrider3774 (flash chip info)
 - JS7457 (flash chip info)
 - julgr (macOS help, testing)
+- kyokohunter (bug reports)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
 - Luca DS (flash chip info)

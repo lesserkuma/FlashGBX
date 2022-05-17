@@ -3,6 +3,7 @@
 - Added support for the Datel Orbit V2 mapper (Action Replay and GameShark) *(thanks Jenetrix)*
 - Fixed verification with AA1030_TSOP88BALL with M36W0R603 *(thanks DevDavisNunez)*
 - Added support for SD007_TSOP_48BALL_V9 with 32M29EWB *(thanks marv17)*
+- Improved support for Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN) *(thanks kyokohunter)*
 - Minor bug fixes and improvements
 
 ### v3.9 (released 2022-04-29)

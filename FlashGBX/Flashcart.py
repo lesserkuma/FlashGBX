@@ -564,8 +564,8 @@ class Flashcart_DMG_MMSA(Flashcart):
 			if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":0, "time_start":time.time(), "abortable":False})
 			sr = ord(self.CartRead(0))
 			self.LAST_SR = sr
-			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str(sr == 0x80)))
-			if sr == 0x80: break
+			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str((sr & 0x80) == 0x80)))
+			if (sr & 0x80) == 0x80: break
 			time.sleep(0.5)
 			lives -= 1
 		if lives == 0:
@@ -701,8 +701,8 @@ class Flashcart_DMG_MMSA(Flashcart):
 			if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "abortable":False})
 			sr = ord(self.CartRead(0))
 			self.LAST_SR = sr
-			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str(sr == 0x80)))
-			if sr == 0x80: break
+			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str((sr & 0x80) == 0x80)))
+			if (sr & 0x80) == 0x80: break
 			time.sleep(0.5)
 			lives -= 1
 		if lives == 0:
@@ -825,8 +825,8 @@ class Flashcart_DMG_MMSA(Flashcart):
 		while lives > 0:
 			sr = ord(self.CartRead(0))
 			self.LAST_SR = sr
-			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str(sr == 0x80)))
-			if sr == 0x80: break
+			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str((sr & 0x80) == 0x80)))
+			if (sr & 0x80) == 0x80: break
 			if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"UNLOCK", "time_start":time_start, "abortable":False})
 			time.sleep(0.5)
 			lives -= 1
