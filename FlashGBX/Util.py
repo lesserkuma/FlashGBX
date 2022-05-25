@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
@@ -7,7 +7,7 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.10"
+VERSION_PEP440 = "3.11"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
@@ -448,6 +448,172 @@ def ParseCFI(buffer):
 		return False
 	
 	return info
+
+def GetDumpReport(di, device):
+	if di["system"] == "DMG":
+		mode = "DMG"
+		di["system"] = "Game Boy"
+		if di["rom_size"] in DMG_Header_ROM_Sizes_Flasher_Map:
+			di["rom_size"] = "{:s}".format(DMG_Header_ROM_Sizes[DMG_Header_ROM_Sizes_Flasher_Map.index(di["rom_size"])])
+		else:
+			di["rom_size"] = "{:,} bytes".format(di["rom_size"])
+		
+		if di["mapper_type"] in DMG_Header_Mapper:
+			di["mapper_type"] = "{:s}".format(DMG_Header_Mapper[di["mapper_type"]])
+		else:
+			di["mapper_type"] = "0x{:02X}".format(di["mapper_type"])
+	
+	elif di["system"] == "AGB":
+		mode = "AGB"
+		di["system"] = "Game Boy Advance"
+		if di["rom_size"] in AGB_Header_ROM_Sizes_Map:
+			di["rom_size"] = "{:s}".format(AGB_Header_ROM_Sizes[AGB_Header_ROM_Sizes_Map.index(di["rom_size"])])
+		else:
+			di["rom_size"] = "{:,} bytes".format(di["rom_size"])
+	
+	di["cart_type"] = list(device.SUPPORTED_CARTS[mode].keys())[di["cart_type"]]
+	if di["file_name"] is None:
+		di["file_name"] = ""
+	else:
+		di["file_name"] = os.path.split(di["file_name"])[1]
+	di["file_size"] = "{:s} ({:d} bytes)".format(formatFileSize(di["file_size"]), di["file_size"])
+	
+	s = "" \
+		"= FlashGBX Dump Report =\n" \
+	
+	s += "" \
+		"\n== File Information ==\n" \
+		"* File Name:       {file_name:s}\n" \
+		"* File Size:       {file_size:s}\n" \
+		"* CRC32:           {hash_crc32:08x}\n" \
+		"* MD5:             {hash_md5:s}\n" \
+		"* SHA-1:           {hash_sha1:s}\n" \
+		"* SHA-256:         {hash_sha256:s}\n" \
+	.format(file_name=di["file_name"], file_size=di["file_size"], hash_crc32=di["hash_crc32"], hash_md5=di["hash_md5"], hash_sha1=di["hash_sha1"], hash_sha256=di["hash_sha256"])
+
+	s += "" \
+		"\n== General Information ==\n" \
+		"* Hardware:        {hardware:s} – Firmware {firmware:s}\n" \
+		"* Software:        {software:s}\n" \
+		"* OS Platform:     {platform:s}\n" \
+		"* Dump Time:       {timestamp:s}\n" \
+		"* Time Elapsed:    %TIME_ELAPSED% (%TRANSFER_RATE%)\n" \
+		"* Transfer Buffer: {buffer_size:d} bytes\n" \
+	.format(hardware=device.GetFullName(), firmware=device.GetFirmwareVersion(), software="{:s} {:s}".format(APPNAME, VERSION), platform=platform.platform(), buffer_size=di["transfer_size"], timestamp=di["timestamp"])
+	
+	if mode == "DMG":
+		s += "" \
+			"\n== Dumping Settings ==\n" \
+			"* Mode:            {system:s}\n" \
+			"* ROM Size:        {rom_size:s}\n" \
+			"* Mapper Type:     {mapper_type:s}\n" \
+			"* Cartridge Type:  {cart_type:s}\n" \
+		.format(system=di["system"], rom_size=di["rom_size"], mapper_type=di["mapper_type"], cart_type=di["cart_type"])
+	elif mode == "AGB":
+		s += "" \
+			"\n== Dumping Settings ==\n" \
+			"* Mode:            {system:s}\n" \
+			"* ROM Size:        {rom_size:s}\n" \
+			"* Cartridge Type:  {cart_type:s}\n" \
+		.format(system=di["system"], rom_size=di["rom_size"], cart_type=di["cart_type"])
+
+	di["hdr_logo"] = "OK" if di["header"]["logo_correct"] else "Invalid"
+	di["header"]["game_title_raw"] = di["header"]["game_title_raw"].replace("\0", "␀")
+	if mode == "DMG":
+		if di["header"]["cgb"] == 0xC0 or di["header"]["cgb"] == 0x80:
+			di["hdr_target_platform"] = "Game Boy Color"
+		elif di["header"]["old_lic"] == 0x33 and di["header"]["sgb"] == 0x03:
+			di["hdr_target_platform"] = "Super Game Boy"
+		else:
+			di["hdr_target_platform"] = "Game Boy"
+
+		if di["header"]["old_lic"] == 0x33 and di["header"]["sgb"] == 0x03:
+			di["hdr_sgb"] = "Supported"
+		else:
+			di["hdr_sgb"] = "No support" # (146h=0x{:02X}, 14Bh=0x{:02X})".format(di["header"]["sgb"], di["header"]["old_lic"])
+		if di["header"]["cgb"] in DMG_Header_CGB:
+			di["hdr_cgb"] = "{:s}".format(DMG_Header_CGB[di["header"]["cgb"]])
+		else:
+			di["hdr_cgb"] = "Unknown (0x{:02X})".format(di["header"]["cgb"])
+		
+		di["hdr_header_checksum"] = "OK (0x{:02X})".format(di["header"]["header_checksum"]) if di["header"]["header_checksum_correct"] else "Invalid (0x{:02X}≠0x{:02X})".format(di["header"]["header_checksum_calc"], di["header"]["header_checksum"])
+		di["header"]["rom_checksum_calc"] = device.INFO["rom_checksum_calc"]
+		di["header"]["rom_checksum_correct"] = di["header"]["rom_checksum_calc"] == di["header"]["rom_checksum"]
+		di["hdr_rom_checksum"] = "OK (0x{:04X})".format(di["header"]["rom_checksum"]) if di["header"]["rom_checksum_correct"] else "Invalid (0x{:04X}≠0x{:04X})".format(di["header"]["rom_checksum_calc"], di["header"]["rom_checksum"])
+		
+		di["hdr_rom_size"] = di["header"]["rom_size_raw"]
+		if di["hdr_rom_size"] in DMG_Header_ROM_Sizes_Map:
+			di["hdr_rom_size"] = "{:s} (0x{:02X})".format(DMG_Header_ROM_Sizes[DMG_Header_ROM_Sizes_Map.index(di["hdr_rom_size"])], di["hdr_rom_size"])
+		else:
+			di["hdr_rom_size"] = "Unknown (0x{:02X})".format(di["hdr_rom_size"])
+		
+		di["hdr_save_type"] = di["header"]["ram_size_raw"]
+		if di["hdr_save_type"] in DMG_Header_RAM_Sizes_Map:
+			di["hdr_save_type"] = "{:s} (0x{:02X})".format(DMG_Header_RAM_Sizes[DMG_Header_RAM_Sizes_Map.index(di["hdr_save_type"])], di["hdr_save_type"])
+		else:
+			di["hdr_save_type"] = "Unknown (0x{:02X})".format(di["hdr_save_type"])
+		
+		di["hdr_mapper_type"] = di["header"]["mapper_raw"]
+		if di["hdr_mapper_type"] in DMG_Header_Mapper:
+			di["hdr_mapper_type"] = "{:s} (0x{:02X})".format(DMG_Header_Mapper[di["hdr_mapper_type"]], di["hdr_mapper_type"])
+		else:
+			di["hdr_mapper_type"] = "Unknown (0x{:02X})".format(di["hdr_mapper_type"])
+		
+		s += "" \
+			"\n== Parsed Data ==\n" \
+			"* Game Title/Code: {hdr_game_title:s}\n" \
+			"* Revision:        {hdr_revision:s}\n" \
+			"* Super Game Boy:  {hdr_sgb:s}\n" \
+			"* Game Boy Color:  {hdr_cgb:s}\n" \
+			"* Nintendo Logo:   {hdr_logo:s}\n" \
+			"* Header Checksum: {hdr_header_checksum:s}\n" \
+			"* ROM Checksum:    {hdr_rom_checksum:s}\n" \
+			"* ROM Size:        {hdr_rom_size:s}\n" \
+			"* Save Type:       {hdr_save_type:s}\n" \
+			"* Mapper Type:     {hdr_mapper_type:s}\n" \
+			"* Target Platform: {hdr_target_platform:s}\n" \
+		.format(hdr_game_title=di["header"]["game_title_raw"], hdr_revision=str(di["header"]["version"]), hdr_sgb=di["hdr_sgb"], hdr_cgb=di["hdr_cgb"], hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], hdr_rom_checksum=di["hdr_rom_checksum"], hdr_rom_size=di["hdr_rom_size"], hdr_save_type=di["hdr_save_type"], hdr_mapper_type=di["hdr_mapper_type"], hdr_target_platform=di["hdr_target_platform"])
+		if "gbmem" in di and di["gbmem"] is not None:
+			s += "" \
+				"* Map Parameters:  {gbmem:s}\n" \
+			.format(gbmem=''.join(format(x, '02X') for x in di["gbmem"][:0x18]))
+	
+	if mode == "AGB":
+		di["header"]["game_code_raw"] = di["header"]["game_code_raw"].replace("\0", "␀")
+		di["hdr_header_checksum"] = "OK (0x{:02X})".format(di["header"]["header_checksum"]) if di["header"]["header_checksum_correct"] else "Invalid (0x{:02X}≠0x{:02X})".format(di["header"]["header_checksum_calc"], di["header"]["header_checksum"])
+		if "agb_savelib" not in di:
+			di["agb_savelib"] = "None"
+		elif "SRAM_F_" in di["agb_savelib"]:
+			di["agb_savelib"] = "256K SRAM/FRAM ({:s})".format(di["agb_savelib"])
+		elif "SRAM_" in di["agb_savelib"]:
+			di["agb_savelib"] = "256K SRAM ({:s})".format(di["agb_savelib"])
+		elif "EEPROM_V" in di["agb_savelib"]:
+			di["agb_savelib"] = "4K or 64K EEPROM ({:s})".format(di["agb_savelib"])
+		elif "FLASH_V" in di["agb_savelib"] or "FLASH512_V" in di["agb_savelib"]:
+			di["agb_savelib"] = "512K FLASH ({:s})".format(di["agb_savelib"])
+		elif "FLASH1M_V" in di["agb_savelib"] or "FLASH512_V" in di["agb_savelib"]:
+			di["agb_savelib"] = "1M FLASH ({:s})".format(di["agb_savelib"])
+		elif "AGB_8MDACS_DL_V" in di["agb_savelib"]:
+			di["agb_savelib"] = "8M DACS ({:s})".format(di["agb_savelib"])
+		elif di["agb_savelib"] == "N/A":
+			di["agb_savelib"] = "None"
+		else:
+			di["agb_savelib"] = "Unknown ({:s})".format(di["agb_savelib"])
+		s += "" \
+			"\n== Parsed Data ==\n" \
+			"* Game Title:      {hdr_game_title:s}\n" \
+			"* Game Code:       {hdr_game_code:s}\n" \
+			"* Revision:        {hdr_revision:s}\n" \
+			"* Nintendo Logo:   {hdr_logo:s}\n" \
+			"* Header Checksum: {hdr_header_checksum:s}\n" \
+			"* Save Type:       {agb_savetype}\n" \
+		.format(hdr_game_title=di["header"]["game_title_raw"], hdr_game_code=di["header"]["game_code_raw"], hdr_revision=str(di["header"]["version"]), hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], agb_savetype=di["agb_savelib"])
+		if "agb_save_flash_id" in di and di["agb_save_flash_id"] is not None:
+			s += "" \
+				"* Save Flash Chip: {agb_save_flash_chip_name:s} (0x{agb_save_flash_chip_id:04X})\n" \
+			.format(agb_save_flash_chip_name=di["agb_save_flash_id"][2], agb_save_flash_chip_id=di["agb_save_flash_id"][1])
+	
+	return s
 
 def validate_datetime_format(string, format):
 	try:

@@ -754,7 +754,7 @@ class FlashGBX_CLI():
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 			if self.CONN.INFO["cgb"] == 0xC0 or self.CONN.INFO["cgb"] == 0x80:
 				path = path + ".gbc"
-			elif self.CONN.INFO["sgb"] == 0x03:
+			elif self.CONN.INFO["old_lic"] == 0x33 and self.CONN.INFO["sgb"] == 0x03:
 				path = path + ".sgb"
 			else:
 				path = path + ".gb"
@@ -817,7 +817,7 @@ class FlashGBX_CLI():
 			for i in range(0, len(carts)):
 				if not "names" in carts[i]: continue
 				if carts[i]["type"] != self.CONN.GetMode(): continue
-				if args.flashcart_type in carts[i]["names"]:
+				if args.flashcart_type in carts[i]["names"] and "flash_size" in carts[i]:
 					print("Selected flash cartridge type: {:s}".format(args.flashcart_type))
 					rom_size = carts[i]["flash_size"]
 					cart_type = i
@@ -1100,9 +1100,9 @@ class FlashGBX_CLI():
 			with open(self.CONFIG_PATH + "/test3.bin", "rb") as f: test3 = bytearray(f.read())
 			if self.CONN.CanPowerCycleCart():
 				print("\nPower cycling.")
-				self.CONN.CartPowerOff()
-				time.sleep(1)
-				self.CONN.CartPowerOn()
+				for _ in range(0, 5):
+					self.CONN.CartPowerCycle(delay=0.1)
+					time.sleep(0.1)
 				self.CONN.ReadInfo(checkRtc=False)
 			time.sleep(0.2)
 			print("\nReading back and comparing data again.")
@@ -1128,6 +1128,7 @@ class FlashGBX_CLI():
 				for i in range(0, len(test3)):
 					if test3[i] != test4[i]: diffcount += 1
 				print("\n{:s}Differences found between two consecutive readbacks: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
+				input("")
 			
 			found_offset = test2.find(test3[0:512])
 			if found_offset < 0:

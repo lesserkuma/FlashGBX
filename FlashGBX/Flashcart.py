@@ -167,7 +167,7 @@ class Flashcart:
 			self.CART_POWERCYCLE_FNCPTR()
 			time.sleep(0.001)
 			self.Unlock()
-		elif full_reset and "reset_every" in self.CONFIG:
+		elif full_reset and "reset_every" in self.CONFIG and "flash_size" in self.CONFIG:
 			for j in range(0, self.CONFIG["flash_size"], self.CONFIG["reset_every"]):
 				if j >= max_address: break
 				dprint("reset_every @ 0x{:X}".format(j))

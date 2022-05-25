@@ -16,7 +16,7 @@ from . import Util
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
-	DEVICE_MAX_FW = 6
+	DEVICE_MAX_FW = 7
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -97,7 +97,7 @@ class GbxDevice:
 	PORT = ''
 	DEVICE = None
 	WORKER = None
-	INFO = { "action":None, "last_action":None }
+	INFO = { "action":None, "last_action":None, "dump_info":{} }
 	ERROR = False
 	ERROR_ARGS = {}
 	CANCEL = False
@@ -685,6 +685,7 @@ class GbxDevice:
 		dprint("Header data:", data)
 		data["raw"] = header
 		self.INFO = {**self.INFO, **data}
+		self.INFO["dump_info"]["header"] = data
 		self.INFO["flash_type"] = 0
 		self.INFO["last_action"] = 0
 		
@@ -1709,6 +1710,9 @@ class GbxDevice:
 		#self._set_fw_variable("FLASH_WE_PIN", 0x02) # Set AUDIO back to high
 		return (flash_id, cfi_info, cfi)
 	
+	def GetDumpReport(self):
+		return Util.GetDumpReport(self.INFO["dump_info"], self)
+	
 	#################################################################
 	
 	def DoTransfer(self, mode, fncSetProgress, args):
@@ -1762,7 +1766,17 @@ class GbxDevice:
 						pass
 
 		buffer_len = 0x4000
+		
+		#self.INFO["dump_info"]["timestamp"] = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat()
+		self.INFO["dump_info"]["timestamp"] = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
+		self.INFO["dump_info"]["file_name"] = args["path"]
+		self.INFO["dump_info"]["file_size"] = args["rom_size"]
+		self.INFO["dump_info"]["cart_type"] = args["cart_type"]
+		self.INFO["dump_info"]["system"] = self.MODE
 		if self.MODE == "DMG":
+			self.INFO["dump_info"]["rom_size"] = args["rom_size"]
+			self.INFO["dump_info"]["mapper_type"] = args["mbc"]
+			
 			self.INFO["mapper_raw"] = args["mbc"]
 			if not self.IsSupportedMbc(args["mbc"]):
 				msg = "This cartridge uses a mapper that is not supported by {:s} using your {:s} device. An updated hardware revision is required.".format(Util.APPNAME, self.GetFullName())
@@ -1790,10 +1804,12 @@ class GbxDevice:
 			size = _mbc.GetROMSize()
 		
 		elif self.MODE == "AGB":
+			self.INFO["dump_info"]["mapper_type"] = None
 			self._write(self.DEVICE_CMD["SET_MODE_AGB"])
 			buffer_len = 0x10000
 			size = 32 * 1024 * 1024
 			if "agb_rom_size" in args: size = args["agb_rom_size"]
+			self.INFO["dump_info"]["rom_size"] = size
 			
 			if flashcart and "flash_bank_size" in cart_type:
 				if "verify_write" in args:
@@ -1813,6 +1829,7 @@ class GbxDevice:
 		buffer = bytearray(size)
 		max_length = self.MAX_BUFFER_LEN
 		if self.FAST_READ is True: max_length = 0x2000
+		self.INFO["dump_info"]["transfer_size"] = max_length
 		pos_total = 0
 		start_address = 0
 		end_address = size
@@ -1850,7 +1867,7 @@ class GbxDevice:
 					if self.CanPowerCycleCart(): self.CartPowerCycle()
 					return
 				
-				if (self.MODE == "AGB" and self.INFO["3d_memory"]):
+				if (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY"):
 					temp = self.ReadROM_3DMemory(address=pos, length=buffer_len, max_length=max_length)
 				else:
 					temp = self.ReadROM(address=pos, length=buffer_len, skip_init=skip_init, max_length=max_length)
@@ -1864,6 +1881,7 @@ class GbxDevice:
 						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}! Decreasing maximum transfer buffer length to 0x{:X}.".format(len(temp), buffer_len, pos_total, max_length >> 1))
 						max_length >>= 1
 						self.MAX_BUFFER_LEN = max_length
+					self.INFO["dump_info"]["transfer_size"] = max_length
 					skip_init = False
 					self.DEVICE.reset_input_buffer()
 					self.DEVICE.reset_output_buffer()
@@ -1907,18 +1925,44 @@ class GbxDevice:
 				file = open(os.path.splitext(args["path"])[0] + ".map", "wb")
 				temp = _mbc.ReadHiddenSector()
 				self.INFO["hidden_sector"] = temp
+				self.INFO["dump_info"]["gbmem"] = temp
 				file.write(temp)
 				file.close()
 		
 		# Calculate Global Checksum
 		self.INFO["file_crc32"] = zlib.crc32(buffer) & 0xFFFFFFFF
 		self.INFO["file_sha1"] = hashlib.sha1(buffer).hexdigest()
-		#self.INFO["file_sha256"] = hashlib.sha256(buffer).hexdigest()
-		#self.INFO["file_md5"] = hashlib.md5(buffer).hexdigest()
+		self.INFO["file_sha256"] = hashlib.sha256(buffer).hexdigest()
+		self.INFO["file_md5"] = hashlib.md5(buffer).hexdigest()
+		self.INFO["dump_info"]["hash_crc32"] = self.INFO["file_crc32"]
+		self.INFO["dump_info"]["hash_sha1"] = self.INFO["file_sha1"]
+		self.INFO["dump_info"]["hash_sha256"] = self.INFO["file_sha256"]
+		self.INFO["dump_info"]["hash_md5"] = self.INFO["file_md5"]
 		if self.MODE == "DMG":
+			if _mbc.GetName() == "MMM01":
+				self.INFO["dump_info"]["header"] = RomFileDMG(buffer[-0x8000:-0x8000+0x180]).GetHeader(unchanged=True)
+			else:
+				self.INFO["dump_info"]["header"] = RomFileDMG(buffer[:0x180]).GetHeader(unchanged=True)
 			chk = _mbc.CalcChecksum(buffer)
 		elif self.MODE == "AGB":
+			self.INFO["dump_info"]["header"] = RomFileAGB(buffer[:0x180]).GetHeader(unchanged=True)
 			chk = self.INFO["file_crc32"]
+			
+			temp_ver = "N/A"
+			ids = [ b"SRAM_", b"EEPROM_V", b"FLASH_V", b"FLASH512_V", b"FLASH1M_V", b"AGB_8MDACS_DL_V" ]
+			for id in ids:
+				temp_pos = buffer.find(id)
+				if temp_pos > 0:
+					temp_ver = buffer[temp_pos:temp_pos+0x20]
+					temp_ver = temp_ver[:temp_ver.index(0x00)].decode("ascii", "replace")
+					break
+			self.INFO["dump_info"]["agb_savelib"] = temp_ver
+			self.INFO["dump_info"]["agb_save_flash_id"] = None
+			if "FLASH" in temp_ver:
+				agb_save_flash_id = self.ReadFlashSaveID()
+				if agb_save_flash_id is not False and len(agb_save_flash_id) == 3:
+					self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
+		
 		self.INFO["rom_checksum_calc"] = chk
 		
 		# Check for ROM loops
@@ -2591,7 +2635,7 @@ class GbxDevice:
 				dprint("Using Flash2Advance mode with a buffer of {:d} bytes".format(flash_buffer_size))
 			elif command_set_type == "GBMEMORY" and self.FW["pcb_ver"] in (5, 6, 101):
 				self._write(0x03) # FLASH_METHOD_DMG_MMSA
-				dprint("Using GB Memory mode on GBxCart RW v1.4+")
+				dprint("Using GB Memory mode on GBxCart RW v1.4")
 			elif flashcart.SupportsBufferWrite() and flash_buffer_size > 0:
 				self._write(0x02) # FLASH_METHOD_BUFFERED
 				flash_cmds = flashcart.GetCommands("buffer_write")

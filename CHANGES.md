@@ -1,4 +1,9 @@
 # Release notes
+### v3.11 (released 2022-05-25)
+- Added the option to generate ROM dump deports for game preservation purposes *(thanks Hiccup)*
+- Bundles GBxCart RW v1.4 firmware version R35+L7 (improves SRAM access on reproduction cartridges and Game Boy Camera access)
+- Added support for DIY cart with M29F032D @ AUDIO *(thanks Godan)*
+
 ### v3.10 (released 2022-05-17)
 - Added support for the Datel Orbit V2 mapper (Action Replay and GameShark) *(thanks Jenetrix)*
 - Fixed verification with AA1030_TSOP88BALL with M36W0R603 *(thanks DevDavisNunez)*

@@ -196,20 +196,23 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("Prefer full &chip erase over sector erase when both available", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Verify data after writing", lambda: self.SETTINGS.setValue("VerifyWrittenData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
+		self.mnuConfig.addAction("&Generate ROM dump reports", lambda: self.SETTINGS.setValue("GenerateDumpReports", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Re-&enable suppressed messages", self.ReEnableMessages)
 		self.mnuConfig.addSeparator()
-		self.mnuConfig.addAction("Show &configuration directory", self.OpenConfigDir)
+		self.mnuConfig.addAction("Show &configuration directory", self.OpenPath)
 		self.mnuConfig.actions()[0].setCheckable(True)
 		self.mnuConfig.actions()[1].setCheckable(True)
 		self.mnuConfig.actions()[2].setCheckable(True)
 		self.mnuConfig.actions()[3].setCheckable(True)
 		self.mnuConfig.actions()[4].setCheckable(True)
+		self.mnuConfig.actions()[5].setCheckable(True)
 		self.mnuConfig.actions()[0].setChecked(self.SETTINGS.value("UpdateCheck") == "enabled")
 		self.mnuConfig.actions()[1].setChecked(self.SETTINGS.value("SaveFileNameAddDateTime", default="disabled") == "enabled")
 		self.mnuConfig.actions()[2].setChecked(self.SETTINGS.value("PreferChipErase", default="disabled") == "enabled")
 		self.mnuConfig.actions()[3].setChecked(self.SETTINGS.value("VerifyWrittenData", default="enabled") == "enabled")
 		self.mnuConfig.actions()[4].setChecked(self.SETTINGS.value("AutoDetectLimitVoltage", default="disabled") == "enabled")
+		self.mnuConfig.actions()[5].setChecked(self.SETTINGS.value("GenerateDumpReports", default="disabled") == "enabled")
 		
 		self.btnConfig.setMenu(self.mnuConfig)
 		
@@ -545,8 +548,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.SETTINGS.setValue("SkipFinishMessage", "disabled")
 		self.SETTINGS.setValue("SkipCameraSavePopup", "disabled")
 
-	def OpenConfigDir(self):
-		path = 'file://{0:s}'.format(self.CONFIG_PATH)
+	def OpenPath(self, path=None):
+		if path is None: path = self.CONFIG_PATH
+		path = 'file://{0:s}'.format(path)
 		try:
 			if platform.system() == "Windows":
 				os.startfile(path)
@@ -555,7 +559,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			else:
 				subprocess.Popen(["xdg-open", path])
 		except:
-			QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Your configuration files are stored at\n{:s}".format(path), QtWidgets.QMessageBox.Ok)
+			QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "The path is:\n{:s}".format(path), QtWidgets.QMessageBox.Ok)
 	
 	def ConnectDevice(self):
 		if self.CONN is not None:
@@ -761,12 +765,37 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		cb = QtWidgets.QCheckBox("Don’t show this message again", checked=False)
 		
 		time_elapsed = None
+		speed = None
 		if "time_start" in self.STATUS and self.STATUS["time_start"] > 0:
 			time_elapsed = time.time() - self.STATUS["time_start"]
+			speed = "{:.2f} KB/s".format((self.CONN.INFO["transferred"] / 1024.0) / time_elapsed)
 			self.STATUS["time_start"] = 0
 
 		if self.CONN.INFO["last_action"] == 1: # Backup ROM
 			self.CONN.INFO["last_action"] = 0
+			dump_report = False
+			button_dump_report = None
+			dumpinfo_file = ""
+			temp = str(self.SETTINGS.value("GenerateDumpReports", default="disabled")).lower() == "enabled"
+			if temp is True:
+				try:
+					dump_report = self.CONN.GetDumpReport()
+					if dump_report is not False:
+						if time_elapsed is not None and speed is not None:
+							self.lblStatus2aResult.setText(speed)
+							dump_report = dump_report.replace("%TRANSFER_RATE%", speed)
+							dump_report = dump_report.replace("%TIME_ELAPSED%", Util.formatProgressTime(time_elapsed))
+						else:
+							dump_report = dump_report.replace("%TRANSFER_RATE%", "N/A")
+							dump_report = dump_report.replace("%TIME_ELAPSED%", "N/A")
+						dumpinfo_file = os.path.splitext(self.STATUS["last_path"])[0] + ".txt"
+						with open(dumpinfo_file, "wb") as f:
+							f.write(bytearray([ 0xEF, 0xBB, 0xBF ])) # UTF-8 BOM
+							f.write(dump_report.encode("UTF-8"))
+				except Exception as e:
+					print("ERROR: {:s}".format(str(e)))
+			if dump_report is not False and dumpinfo_file != "":
+				button_dump_report = msgbox.addButton("  &Open Dump Report  ", QtWidgets.QMessageBox.ActionRole)
 			
 			if self.CONN.GetMode() == "DMG":
 				if "operation" in self.STATUS and self.STATUS["operation"] == "GBMEMORY_INITIAL_DUMP": # GB Memory Step 1
@@ -858,6 +887,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					msgbox.setText(msg)
 					msgbox.setIcon(QtWidgets.QMessageBox.Warning)
 					msgbox.exec()
+			
+			if msgbox.clickedButton() == button_dump_report:
+				self.OpenPath(dumpinfo_file)
 		
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.lblStatus4a.setText("Done!")
@@ -992,7 +1024,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 			if self.CONN.INFO["cgb"] == 0xC0 or self.CONN.INFO["cgb"] == 0x80:
 				path = path + ".gbc"
-			elif self.CONN.INFO["sgb"] == 0x03:
+			elif self.CONN.INFO["old_lic"] == 0x33 and self.CONN.INFO["sgb"] == 0x03:
 				path = path + ".sgb"
 			else:
 				path = path + ".gb"
@@ -1030,6 +1062,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		self.STATUS["time_start"] = time.time()
+		self.STATUS["last_path"] = path
 	
 	def FlashROM(self, dpath=""):
 		if not self.CheckDeviceAlive(): return
@@ -1194,6 +1227,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.grpStatus.setTitle("Transfer Status")
 		buffer = None
 		self.STATUS["time_start"] = time.time()
+		self.STATUS["last_path"] = path
 	
 	def BackupRAM(self):
 		if not self.CheckDeviceAlive(): return
@@ -1266,6 +1300,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.CONN.BackupRAM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		self.STATUS["time_start"] = time.time()
+		self.STATUS["last_path"] = path
 
 	def WriteRAM(self, dpath="", erase=False):
 		if not self.CheckDeviceAlive(): return
@@ -1358,6 +1393,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.CONN.RestoreRAM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		self.STATUS["time_start"] = time.time()
+		self.STATUS["last_path"] = path
 	
 	def CheckDeviceAlive(self, setMode=False):
 		if self.CONN is not None:
@@ -1713,6 +1749,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.cmbAGBSaveTypeResult.setCurrentIndex(0)
 			else:
 				self.lblAGBHeaderTitleResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
+				if data['logo_correct'] and data['3d_memory'] is True:
+					cart_types = self.CONN.GetSupportedCartridgesAGB()
+					for i in range(0, len(cart_types[0])):
+						if "3d_memory" in cart_types[1][i]:
+							self.cmbAGBCartridgeTypeResult.setCurrentIndex(i)
 			
 			self.grpDMGCartridgeInfo.setVisible(False)
 			self.grpAGBCartridgeInfo.setVisible(True)
@@ -2095,6 +2136,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					elif args["info_type"] == "label":
 						self.lblStatus4a.setText(args["info_msg"])
 				
+				self.ReadCartridge(resetStatus=False)
 				return
 
 			elif args["action"] == "PROGRESS":

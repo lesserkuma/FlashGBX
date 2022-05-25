@@ -563,7 +563,7 @@ class DMG_MBC1M(DMG_MBC1):
 class DMG_MMM01(DMG_MBC):
 	def GetName(self):
 		return "MMM01"
-
+	
 	def CalcChecksum(self, buffer):
 		chk = 0
 		temp_data = buffer[0:-0x8000]

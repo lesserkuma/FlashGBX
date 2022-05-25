@@ -18,9 +18,9 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 ### Confirmed working reader/writer hardware and firmware versions
 
-- [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/)
-  - insideGadgets’ firmware version R30 (other hardware revisions and firmware versions may also work, but are untested)
-  - Lesserkuma’s firmware versions L1 to L6
+- [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/) (other hardware revisions may also work, but are untested)
+  - insideGadgets’ firmware version R30
+  - Lesserkuma’s firmware versions L1 to L7
 
 ## Installing and running
 
@@ -95,6 +95,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with AM29F040
   - DIY cart with AM29F080
   - DIY cart with AT49F040
+  - DIY cart with M29F032D
   - DIY cart with MX29LV640
   - DIY cart with SST39SF040
   - DMG-MBC5-32M-FLASH Development Cartridge, E201264
@@ -292,9 +293,11 @@ The author would like to thank the following very kind people for their help and
 - FerrantePescara (flash chip info)
 - frarees (bug reports)
 - Frost Clock (flash chip info)
+- Godan (flash chip info)
 - Grender (testing)
 - HDR (testing)
 - Herax (flash chip info)
+- Hiccup (help with dump reports)
 - hiks (flash chip info)
 - howie0210 (flash chip info, bug reports)
 - iamevn (flash chip info)
