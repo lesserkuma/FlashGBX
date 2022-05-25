@@ -1,6 +1,6 @@
 # Release notes
 ### v3.11 (released 2022-05-25)
-- Added the option to generate ROM dump deports for game preservation purposes *(thanks Hiccup)*
+- Added the option to generate ROM dump reports for game preservation purposes *(thanks Hiccup)*
 - Bundles GBxCart RW v1.4 firmware version R35+L7 (improves SRAM access on reproduction cartridges and Game Boy Camera access)
 - Added support for DIY cart with M29F032D @ AUDIO *(thanks Godan)*
 
