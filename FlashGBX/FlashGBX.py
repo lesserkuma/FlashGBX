@@ -127,7 +127,7 @@ def main(portableMode=False):
 	
 	ap_cli2 = parser.add_argument_group('optional command line interface arguments')
 	ap_cli2.add_argument("--dmg-romsize", choices=["auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb"], type=str.lower, default="auto", help="set size of Game Boy cartridge ROM data")
-	ap_cli2.add_argument("--dmg-mbc", choices=["auto", "1", "2", "3", "5", "6", "7"], type=str.lower, default="auto", help="set memory bank controller type of Game Boy cartridge")
+	ap_cli2.add_argument("--dmg-mbc", type=str.lower, default="auto", help="set memory bank controller type of Game Boy cartridge")
 	ap_cli2.add_argument("--dmg-savesize", choices=["auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m"], type=str.lower, default="auto", help="set size of Game Boy cartridge save data")
 	ap_cli2.add_argument("--agb-romsize", choices=["auto", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb"], type=str.lower, default="auto", help="set size of Game Boy Advance cartridge ROM data")
 	ap_cli2.add_argument("--agb-savetype", choices=["auto", "eeprom4k", "eeprom64k", "sram256k", "flash512k", "flash1m", "dacs8m", "sram512k", "sram1m"], type=str.lower, default="auto", help="set type of Game Boy Advance cartridge save data")
@@ -138,6 +138,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--reversed-sectors", action="store_true", help="use reversed flash sectors if possible")
 	ap_cli2.add_argument("--force-5v", action="store_true", help="force 5V when writing Game Boy flash cartridges")
 	ap_cli2.add_argument("--no-verify-write", action="store_true", help="do not verify written data")
+	ap_cli2.add_argument("--generate-dump-report", action="store_true", help="generate dump reports when making a ROM backup")
 	ap_cli2.add_argument("--save-filename-add-datetime", action="store_true", help="adds a timestamp to the file name of save data backups")
 	ap_cli2.add_argument("--gbcamera-palette", choices=["grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3"], type=str.lower, default="grayscale", help="sets the palette of pictures extracted from Game Boy Camera saves")
 	ap_cli2.add_argument("--gbcamera-outfile-format", choices=["png", "bmp", "gif", "jpg"], type=str.lower, default="png", help="sets the file format of saved pictures extracted from Game Boy Camera saves")

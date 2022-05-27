@@ -336,6 +336,7 @@ The author would like to thank the following very kind people for their help and
 - Timville (sample cartridge contribution, flash chip info)
 - twitnic (flash chip info)
 - Veund (flash chip info)
+- voltagex (bug reports)
 - Voultar (bug reports, feature suggestions)
 - Wkr (flash chip info)
 - x7l7j8cc (flash chip info)

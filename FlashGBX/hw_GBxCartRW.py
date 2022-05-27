@@ -1990,6 +1990,7 @@ class GbxDevice:
 		# Clean up
 		self.INFO["last_action"] = self.INFO["action"]
 		self.INFO["action"] = None
+		self.INFO["last_path"] = args["path"]
 		self.SetProgress({"action":"FINISHED"})
 		return True
 

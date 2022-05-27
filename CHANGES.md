@@ -1,4 +1,10 @@
 # Release notes
+### v3.12 (released 2022-05-27)
+- Added proper detection of the Sachen 8B-001 mono unlicensed cartridge *(thanks voltagex)*
+- Fixed an issue with dumping large-size GBA Video cartridges in CLI mode
+- Added the option to generate ROM dump reports in CLI mode
+- Minor bug fixes and improvements
+
 ### v3.11 (released 2022-05-25)
 - Added the option to generate ROM dump reports for game preservation purposes *(thanks Hiccup)*
 - Bundles GBxCart RW v1.4 firmware version R35+L7 (improves SRAM access on reproduction cartridges and Game Boy Camera access)
