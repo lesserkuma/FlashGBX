@@ -17,6 +17,7 @@ class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 7
+	DEVICE_LATEST_FW_TS = { 5:1653902765, 6:1653902765 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -340,7 +341,7 @@ class GbxDevice:
 
 	def FirmwareUpdateAvailable(self):
 		if self.FW["pcb_ver"] not in (5, 6): return False
-		return (self.FW["pcb_ver"] in (4, 5, 6) and self.FW["fw_ver"] < self.DEVICE_MAX_FW)
+		return (self.FW["pcb_ver"] in (4, 5, 6) and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]])
 	
 	def GetFirmwareUpdaterClass(self):
 		if self.FW["pcb_ver"] == 4: # v1.3

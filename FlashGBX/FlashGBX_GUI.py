@@ -659,7 +659,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 								text = "A firmware update for your {:s} device is available. Do you want to update now?".format(dev.GetFullName())
 								msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=text, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 								cb = QtWidgets.QCheckBox("Ignore firmware updates", checked=dontShowAgain)
-								msgbox.setCheckBox(cb)
+								#msgbox.setCheckBox(cb)
 							answer = msgbox.exec()
 							if dev.FW_UPDATE_REQ:
 								if answer == QtWidgets.QMessageBox.Yes:
