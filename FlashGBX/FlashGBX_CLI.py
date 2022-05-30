@@ -795,7 +795,7 @@ class FlashGBX_CLI():
 			if args.agb_romsize == "auto":
 				rom_size = header["rom_size"]
 			else:
-				sizes = [ "auto", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
+				sizes = [ "auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
 				rom_size = Util.AGB_Header_ROM_Sizes_Map[sizes.index(args.agb_romsize) - 1]
 
 			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
