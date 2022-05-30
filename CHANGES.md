@@ -1,4 +1,9 @@
 # Release notes
+### v3.13 (released 2022-05-30)
+- Bundles GBxCart RW v1.4 firmware version R36+L7 (fixes a problem with insideGadgets’ GBxCam application)
+- Added smaller selectable ROM sizes for Game Boy Advance ROM backups
+- Minor bug fixes and improvements
+
 ### v3.12 (released 2022-05-27)
 - Added proper detection of the Sachen 8B-001 mono unlicensed cartridge *(thanks voltagex)*
 - Fixed an issue with dumping large-size GBA Video cartridges in CLI mode

@@ -1162,12 +1162,13 @@ class GbxDevice:
 
 		elif self.MODE == "AGB":
 			data = RomFileAGB(header).GetHeader()
+			# Check where the ROM data repeats (for unlicensed carts)
 			size_check = header[0xA0:0xA0+16]
-			currAddr = 0x400000
+			currAddr = 0x10000
 			while currAddr < 0x2000000:
-				buffer = self.ReadROM(currAddr + 0x0000A0, 64)[:16]
+				buffer = self.ReadROM(currAddr + 0xA0, 64)[:16]
 				if buffer == size_check: break
-				currAddr += 0x400000
+				currAddr *= 2
 			data["rom_size"] = currAddr
 			if (data["3d_memory"] == True):
 				data["rom_size"] = 0x4000000

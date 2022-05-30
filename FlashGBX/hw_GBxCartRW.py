@@ -660,11 +660,11 @@ class GbxDevice:
 			else:
 				# Check where the ROM data repeats (for unlicensed carts)
 				size_check = header[0xA0:0xA0+16]
-				currAddr = 0x400000
+				currAddr = 0x10000
 				while currAddr < 0x2000000:
 					buffer = self.ReadROM(currAddr + 0xA0, 64)[:16]
 					if buffer == size_check: break
-					currAddr += 0x400000
+					currAddr *= 2
 				data["rom_size"] = currAddr
 				
 				if (self.ReadROM(0x1FFE000, 0x0C) == b"AGBFLASHDACS"):
@@ -1887,7 +1887,7 @@ class GbxDevice:
 					self.DEVICE.reset_output_buffer()
 					lives -= 1
 					if lives == 0:
-						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An error occured while reading from the cartridge. Please make sure that the cartridge contacts are clean, re-connect the device and try again from the beginning.", "abortable":False})
+						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An error occured while reading from the cartridge. Please make sure that the cartridge contacts are clean, re-connect the device (avoid USB hubs) and try again from the beginning.", "abortable":False})
 						return False
 					continue
 				elif lives < 20:
@@ -2845,11 +2845,11 @@ class GbxDevice:
 					status = self.WriteROM(address=pos, buffer=data_import[buffer_pos:buffer_pos+buffer_len], flash_buffer_size=flash_buffer_size, skip_init=(skip_init and not self.SKIPPING), rumble_stop=rumble)
 				if status is False:
 					if "iteration" in self.ERROR_ARGS and self.ERROR_ARGS["iteration"] > 0:
-						self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"Unstable connection detected while writing 0x{:X} bytes in iteration {:d} at position 0x{:X} ({:s}).\n\nPlease clean the cartridge contacts very thoroughly, then re-connect the device and try again.".format(buffer_len, self.ERROR_ARGS["iteration"], buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=False))})
+						self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"Unstable connection detected while writing 0x{:X} bytes in iteration {:d} at position 0x{:X} ({:s}).\n\nPlease clean the cartridge contacts very thoroughly, then re-connect the device (avoid USB hubs) and try again.".format(buffer_len, self.ERROR_ARGS["iteration"], buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=False))})
 					elif buffer_pos > 0:
-						self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"An error occured while writing 0x{:X} bytes at position 0x{:X}.\n\nPlease ensure that your cartridge supports ROMs larger than {:s} and that the cartridge contacts are clean, then re-connect the device and try again.".format(buffer_len, buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=False))})
+						self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"An error occured while writing 0x{:X} bytes at position 0x{:X}.\n\nPlease ensure that your cartridge supports ROMs larger than {:s} and that the cartridge contacts are clean, then re-connect the device (avoid USB hubs) and try again.".format(buffer_len, buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=False))})
 					else:
-						self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"An error occured while writing 0x{:X} bytes at position 0x{:X} ({:s}).\n\nPlease make sure that the correct cart type was selected and that the cartridge contacts are clean, then re-connect the device and try again from the beginning.".format(buffer_len, buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=True))})
+						self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"An error occured while writing 0x{:X} bytes at position 0x{:X} ({:s}).\n\nPlease make sure that the correct cart type was selected and that the cartridge contacts are clean, then re-connect the device (avoid USB hubs) and try again from the beginning.".format(buffer_len, buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=True))})
 					self.CANCEL = True
 					self.ERROR = True
 					continue

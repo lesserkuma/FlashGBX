@@ -7,12 +7,12 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.12"
+VERSION_PEP440 = "3.13"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
-AGB_Header_ROM_Sizes = [ "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB", "256 MB" ]
-AGB_Header_ROM_Sizes_Map = [ 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
+AGB_Header_ROM_Sizes = [ "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB", "256 MB" ]
+AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
 AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KB)", "256K SRAM/FRAM (32 KB)", "512K FLASH (64 KB)", "1M FLASH (128 KB)", "8M DACS (1008 KB)", "Unlicensed 512K SRAM (64 KB)", "Unlicensed 1M SRAM (128 KB)" ]
 AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1032192, 65536, 131072 ]
 AGB_Global_CRC32 = 0
@@ -548,7 +548,9 @@ def GetDumpReport(di, device):
 			di["hdr_rom_size"] = "Unknown (0x{:02X})".format(di["hdr_rom_size"])
 		
 		di["hdr_save_type"] = di["header"]["ram_size_raw"]
-		if di["hdr_save_type"] in DMG_Header_RAM_Sizes_Map:
+		if di["hdr_save_type"] == 0x00:
+			di["hdr_save_type"] = "No SRAM (0x{:02X})".format(di["hdr_save_type"])
+		elif di["hdr_save_type"] in DMG_Header_RAM_Sizes_Map:
 			di["hdr_save_type"] = "{:s} (0x{:02X})".format(DMG_Header_RAM_Sizes[DMG_Header_RAM_Sizes_Map.index(di["hdr_save_type"])], di["hdr_save_type"])
 		else:
 			di["hdr_save_type"] = "Unknown (0x{:02X})".format(di["hdr_save_type"])
@@ -569,7 +571,7 @@ def GetDumpReport(di, device):
 			"* Header Checksum: {hdr_header_checksum:s}\n" \
 			"* ROM Checksum:    {hdr_rom_checksum:s}\n" \
 			"* ROM Size:        {hdr_rom_size:s}\n" \
-			"* Save Type:       {hdr_save_type:s}\n" \
+			"* SRAM Size:       {hdr_save_type:s}\n" \
 			"* Mapper Type:     {hdr_mapper_type:s}\n" \
 			"* Target Platform: {hdr_target_platform:s}\n" \
 		.format(hdr_game_title=di["header"]["game_title_raw"], hdr_revision=str(di["header"]["version"]), hdr_sgb=di["hdr_sgb"], hdr_cgb=di["hdr_cgb"], hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], hdr_rom_checksum=di["hdr_rom_checksum"], hdr_rom_size=di["hdr_rom_size"], hdr_save_type=di["hdr_save_type"], hdr_mapper_type=di["hdr_mapper_type"], hdr_target_platform=di["hdr_target_platform"])

@@ -196,7 +196,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("Prefer full &chip erase over sector erase when both available", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Verify data after writing", lambda: self.SETTINGS.setValue("VerifyWrittenData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
-		self.mnuConfig.addAction("&Generate ROM dump reports", lambda: self.SETTINGS.setValue("GenerateDumpReports", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
+		self.mnuConfig.addAction("Always &generate ROM dump reports", lambda: self.SETTINGS.setValue("GenerateDumpReports", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Re-&enable suppressed messages", self.ReEnableMessages)
 		self.mnuConfig.addSeparator()
@@ -768,7 +768,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		speed = None
 		if "time_start" in self.STATUS and self.STATUS["time_start"] > 0:
 			time_elapsed = time.time() - self.STATUS["time_start"]
-			speed = "{:.2f} KB/s".format((self.CONN.INFO["transferred"] / 1024.0) / time_elapsed)
+			if "transferred" in self.CONN.INFO:
+				speed = "{:.2f} KB/s".format((self.CONN.INFO["transferred"] / 1024.0) / time_elapsed)
 			self.STATUS["time_start"] = 0
 
 		if self.CONN.INFO["last_action"] == 1: # Backup ROM
@@ -777,25 +778,30 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			button_dump_report = None
 			dumpinfo_file = ""
 			temp = str(self.SETTINGS.value("GenerateDumpReports", default="disabled")).lower() == "enabled"
-			if temp is True:
+			try:
+				dump_report = self.CONN.GetDumpReport()
+				if dump_report is not False:
+					if time_elapsed is not None and speed is not None:
+						self.lblStatus2aResult.setText(speed)
+						dump_report = dump_report.replace("%TRANSFER_RATE%", speed)
+						dump_report = dump_report.replace("%TIME_ELAPSED%", Util.formatProgressTime(time_elapsed))
+					else:
+						dump_report = dump_report.replace("%TRANSFER_RATE%", "N/A")
+						dump_report = dump_report.replace("%TIME_ELAPSED%", "N/A")
+					dumpinfo_file = os.path.splitext(self.STATUS["last_path"])[0] + ".txt"
+			except Exception as e:
+				print("ERROR: {:s}".format(str(e)))
+			
+			if dump_report is not False and dumpinfo_file != "" and temp is True:
 				try:
-					dump_report = self.CONN.GetDumpReport()
-					if dump_report is not False:
-						if time_elapsed is not None and speed is not None:
-							self.lblStatus2aResult.setText(speed)
-							dump_report = dump_report.replace("%TRANSFER_RATE%", speed)
-							dump_report = dump_report.replace("%TIME_ELAPSED%", Util.formatProgressTime(time_elapsed))
-						else:
-							dump_report = dump_report.replace("%TRANSFER_RATE%", "N/A")
-							dump_report = dump_report.replace("%TIME_ELAPSED%", "N/A")
-						dumpinfo_file = os.path.splitext(self.STATUS["last_path"])[0] + ".txt"
-						with open(dumpinfo_file, "wb") as f:
-							f.write(bytearray([ 0xEF, 0xBB, 0xBF ])) # UTF-8 BOM
-							f.write(dump_report.encode("UTF-8"))
+					with open(dumpinfo_file, "wb") as f:
+						f.write(bytearray([ 0xEF, 0xBB, 0xBF ])) # UTF-8 BOM
+						f.write(dump_report.encode("UTF-8"))
+					button_dump_report = msgbox.addButton("  Open Dump &Report  ", QtWidgets.QMessageBox.ActionRole)
 				except Exception as e:
 					print("ERROR: {:s}".format(str(e)))
-			if dump_report is not False and dumpinfo_file != "":
-				button_dump_report = msgbox.addButton("  &Open Dump Report  ", QtWidgets.QMessageBox.ActionRole)
+			else:
+				button_dump_report = msgbox.addButton("  Generate Dump &Report  ", QtWidgets.QMessageBox.ActionRole)
 			
 			if self.CONN.GetMode() == "DMG":
 				if "operation" in self.STATUS and self.STATUS["operation"] == "GBMEMORY_INITIAL_DUMP": # GB Memory Step 1
@@ -823,7 +829,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.lblHeaderROMChecksumResult.setStyleSheet("QLabel { color: green; }")
 					self.lblStatus4a.setText("Done!")
 					msg = "The ROM backup is complete and the checksum was verified successfully!"
-					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+					#msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
 					if time_elapsed is not None: msg += "\n\nTotal time elapsed: {:s}".format(Util.formatProgressTime(time_elapsed))
 					msgbox.setText(msg)
 					msgbox.setCheckBox(cb)
@@ -834,7 +840,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.lblStatus4a.setText("Done.")
 					if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x105, 0x202, 0x203, 0x205)):
 						msg = "The ROM backup is complete."
-						msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+						#msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
 						msgbox.setText(msg)
 						msgbox.exec()
 					else:
@@ -845,7 +851,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 							msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
 						else:
 							msg += " This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
-						msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+						#msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
 						msgbox.setText(msg)
 						msgbox.setIcon(QtWidgets.QMessageBox.Warning)
 						msgbox.exec()
@@ -855,7 +861,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: green; }")
 					self.lblStatus4a.setText("Done!")
 					msg = "The ROM backup is complete and the checksum was verified successfully!"
-					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
+					#msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["file_sha1"])
 					msgbox.setText(msg)
 					msgbox.setCheckBox(cb)
 					if not dontShowAgain:
@@ -869,7 +875,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					if self.CONN.INFO["loop_detected"] is not False:
 						msg += "\n\nNOTE: A data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
 						msgbox.setIcon(QtWidgets.QMessageBox.Warning)
-					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
+					#msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
 					if time_elapsed is not None: msg += "\n\nTotal time elapsed: {:s}".format(Util.formatProgressTime(time_elapsed))
 					msgbox.setText(msg)
 					msgbox.exec()
@@ -882,13 +888,20 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
 					else:
 						msg += " This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
-					msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
+					#msg += "\n\nCRC32: {:08x}\nSHA-1: {:s}".format(self.CONN.INFO["rom_checksum_calc"], self.CONN.INFO["file_sha1"])
 					if time_elapsed is not None: msg += "\n\nTotal time elapsed: {:s}".format(Util.formatProgressTime(time_elapsed))
 					msgbox.setText(msg)
 					msgbox.setIcon(QtWidgets.QMessageBox.Warning)
 					msgbox.exec()
 			
 			if msgbox.clickedButton() == button_dump_report:
+				if not (dump_report is not False and dumpinfo_file != "" and temp is True):
+					try:
+						with open(dumpinfo_file, "wb") as f:
+							f.write(bytearray([ 0xEF, 0xBB, 0xBF ])) # UTF-8 BOM
+							f.write(dump_report.encode("UTF-8"))
+					except Exception as e:
+						print("ERROR: {:s}".format(str(e)))
 				self.OpenPath(dumpinfo_file)
 		
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
