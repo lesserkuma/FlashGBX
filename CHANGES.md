@@ -1,4 +1,27 @@
 # Release notes
+### v3.13 (released 2022-05-30)
+- Bundles GBxCart RW v1.4 firmware version R36+L7 (fixes a problem with insideGadgets’ GBxCam application)
+- Added smaller selectable ROM sizes for Game Boy Advance ROM backups
+- Minor bug fixes and improvements
+
+### v3.12 (released 2022-05-27)
+- Added proper detection of the Sachen 8B-001 mono unlicensed cartridge *(thanks voltagex)*
+- Fixed an issue with dumping large-size GBA Video cartridges in CLI mode
+- Added the option to generate ROM dump reports in CLI mode
+- Minor bug fixes and improvements
+
+### v3.11 (released 2022-05-25)
+- Added the option to generate ROM dump reports for game preservation purposes *(thanks Hiccup)*
+- Bundles GBxCart RW v1.4 firmware version R35+L7 (improves SRAM access on reproduction cartridges and Game Boy Camera access)
+- Added support for DIY cart with M29F032D @ AUDIO *(thanks Godan)*
+
+### v3.10 (released 2022-05-17)
+- Added support for the Datel Orbit V2 mapper (Action Replay and GameShark) *(thanks Jenetrix)*
+- Fixed verification with AA1030_TSOP88BALL with M36W0R603 *(thanks DevDavisNunez)*
+- Added support for SD007_TSOP_48BALL_V9 with 32M29EWB *(thanks marv17)*
+- Improved support for Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN) *(thanks kyokohunter)*
+- Minor bug fixes and improvements
+
 ### v3.9 (released 2022-04-29)
 - Added support for Ferrante Crafts cart 64 KB *(thanks FerrantePescara)*
 - Added support for Ferrante Crafts cart 512 KB *(thanks FerrantePescara)*

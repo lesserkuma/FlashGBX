@@ -7,6 +7,7 @@
 		[ 0xC1, 0xC1, 0x7D, 0x7D ]
 	],
 	"voltage":3.3,
+	"voltage_variants":true,
 	"flash_size":0x2000000,
 	"start_addr":0,
 	"first_bank":1,

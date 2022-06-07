@@ -18,9 +18,9 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 ### Confirmed working reader/writer hardware and firmware versions
 
-- [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/)
-  - insideGadgets’ firmware version R30 (other hardware revisions and firmware versions may also work, but are untested)
-  - Lesserkuma’s firmware versions L1 to L6
+- [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/) (other hardware revisions may also work, but are untested)
+  - insideGadgets’ firmware version R30
+  - Lesserkuma’s firmware versions L1 to L7
 
 ## Installing and running
 
@@ -95,6 +95,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with AM29F040
   - DIY cart with AM29F080
   - DIY cart with AT49F040
+  - DIY cart with M29F032D
   - DIY cart with MX29LV640
   - DIY cart with SST39SF040
   - DMG-MBC5-32M-FLASH Development Cartridge, E201264
@@ -173,6 +174,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_TSOP_48BALL with M29W160ET
   - SD007_TSOP_48BALL with L160DB12VI
   - SD007_TSOP_48BALL_V9 with 29LV160CBTC-70G
+  - SD007_TSOP_48BALL_V9 with 32M29EWB
   - SD007_TSOP_48BALL_V10 with 29DL164BE-70P
   - SD007_TSOP_48BALL_V10 with 29DL32TF-70
   - SD007_TSOP_48BALL_V10 with 29LV320CTXEI
@@ -291,18 +293,22 @@ The author would like to thank the following very kind people for their help and
 - FerrantePescara (flash chip info)
 - frarees (bug reports)
 - Frost Clock (flash chip info)
+- Godan (flash chip info)
 - Grender (testing)
 - HDR (testing)
 - Herax (flash chip info)
+- Hiccup (help with dump reports)
 - hiks (flash chip info)
 - howie0210 (flash chip info, bug reports)
 - iamevn (flash chip info)
 - Icesythe7 (feature suggestions, testing, bug reports)
 - Jayro (flash chip info)
+- Jenetrix (sample cartridge contribution)
 - JFox (help with properly packaging the app for pip, Linux help, bug reports)
 - joyrider3774 (flash chip info)
 - JS7457 (flash chip info)
 - julgr (macOS help, testing)
+- kyokohunter (bug reports)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)
 - Luca DS (flash chip info)
@@ -327,9 +333,10 @@ The author would like to thank the following very kind people for their help and
 - Super Maker (flash chip info, testing)
 - Tauwasser (research)
 - t5b6_de (flash chip info)
-- Timville (flash chip info)
+- Timville (sample cartridge contribution, flash chip info)
 - twitnic (flash chip info)
 - Veund (flash chip info)
+- voltagex (bug reports)
 - Voultar (bug reports, feature suggestions)
 - Wkr (flash chip info)
 - x7l7j8cc (flash chip info)

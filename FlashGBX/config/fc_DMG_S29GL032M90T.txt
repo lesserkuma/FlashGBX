@@ -1,12 +1,15 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_TSOP_29LV017D with S29GL032M90T"
+		"SD007_TSOP_29LV017D with S29GL032M90T",
+		"SD007_TSOP_48BALL_V9 with 32M29EWB"
 	],
 	"flash_ids":[
-		[ 0x02, 0x02, 0x7D, 0x7D ]
+		[ 0x02, 0x02, 0x7D, 0x7D ],
+		[ 0x8A, 0x8A, 0x7D, 0x7D ]
 	],
 	"voltage":3.3,
+	"voltage_variants":true,
 	"flash_size":0x400000,
 	"start_addr":0,
 	"first_bank":1,

@@ -1,0 +1,64 @@
+{
+	"type":"DMG",
+	"names":[
+		"Action Replay (Datel Orbit V2)",
+		"GameShark (Datel Orbit V2)"
+	],
+	"flash_ids":[
+		[ 0xBF, 0xB5, 0xFF, 0xFF ]
+	],
+	"voltage":5,
+	"flash_size":0x20000,
+	"first_bank":1,
+	"start_addr":0x4000,
+	"mbc":0x205,
+	"write_pin":"WR",
+	"chip_erase_timeout":10,
+	"read_identifier_at":0x4000,
+	"_first_bank":2,
+	"_flash_commands_on_bank_1":true,
+	"_power_cycle":true,
+	"_sector_size":0x1000,
+	"command_set":"DATEL_ORBITV2",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"unlock_read":[
+			[ 0x0101, 1, 1 ],
+			[ 0x0108, 1, 1 ],
+			[ 0x0101, 1, 1 ]
+		],
+		"unlock":[
+			[ 0x7FE1, 0x02, 1 ]
+		],
+		"bank_switch":[
+			[ 0x7FE1, "ID" ]
+		],
+		"read_identifier":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x90 ]
+		],
+		"chip_erase":[
+			[ 0x7FE1, 0x02 ],
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x80 ],
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"single_write":[],
+		"single_write_wait_for":[]
+	}
+}

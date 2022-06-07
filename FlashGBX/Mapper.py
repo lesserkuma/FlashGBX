@@ -71,6 +71,8 @@ class DMG_MBC:
 			return DMG_Unlicensed_XploderGB(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x204:									# 0x204:'Sachen',
 			return DMG_Unlicensed_Sachen(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+		elif mbc_id == 0x205:									# 0x205:'Datel Orbit V2',
+			return DMG_Unlicensed_DatelOrbitV2(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		else:
 			self.__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 			return self
@@ -190,10 +192,16 @@ class DMG_MBC1(DMG_MBC):
 
 	def EnableRAM(self, enable=True):
 		dprint(self.GetName(), "|", enable)
-		commands = [
-			[ 0x6000, 0x01 if enable else 0x00 ],
-			[ 0x0000, 0x0A if enable else 0x00 ],
-		]
+		if enable:
+			commands = [
+				[ 0x6000, 0x01 ],
+				[ 0x0000, 0x0A ],
+			]
+		else:
+			commands = [
+				[ 0x0000, 0x00 ],
+				[ 0x6000, 0x00 ],
+			]
 		self.CartWrite(commands)
 	
 	def SelectBankROM(self, index):
@@ -378,10 +386,16 @@ class DMG_MBC5(DMG_MBC):
 	
 	def EnableRAM(self, enable=True):
 		dprint(self.GetName(), "|", enable)
-		commands = [
-			[ 0x6000, 0x01 if enable else 0x00 ],
-			[ 0x0000, 0x0A if enable else 0x00 ],
-		]
+		if enable:
+			commands = [
+				[ 0x6000, 0x01 ],
+				[ 0x0000, 0x0A ],
+			]
+		else:
+			commands = [
+				[ 0x0000, 0x00 ],
+				[ 0x6000, 0x00 ],
+			]
 		self.CartWrite(commands)
 	
 	def SelectBankROM(self, index):
@@ -524,18 +538,10 @@ class DMG_MBC7(DMG_MBC):
 		]
 		self.CartWrite(commands)
 
-class DMG_MBC1M(DMG_MBC):
+class DMG_MBC1M(DMG_MBC1):
 	def GetName(self):
 		return "MBC1M"
 
-	def EnableRAM(self, enable=True):
-		dprint(self.GetName(), "|", enable)
-		commands = [
-			[ 0x6000, 0x01 if enable else 0x00 ],
-			[ 0x0000, 0x0A if enable else 0x00 ],
-		]
-		self.CartWrite(commands)
-	
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
 		if index < 10:
@@ -557,7 +563,7 @@ class DMG_MBC1M(DMG_MBC):
 class DMG_MMM01(DMG_MBC):
 	def GetName(self):
 		return "MMM01"
-
+	
 	def CalcChecksum(self, buffer):
 		chk = 0
 		temp_data = buffer[0:-0x8000]
@@ -1174,6 +1180,25 @@ class DMG_Unlicensed_Sachen(DMG_MBC):
 			[ 0x2000, index + self.START_BANK ]
 		]
 		self.CartWrite(commands)
+		start_address = 0x4000
+		return (start_address, self.ROM_BANK_SIZE)
+
+class DMG_Unlicensed_DatelOrbitV2(DMG_MBC):
+	def GetName(self):
+		return "Datel Orbit V2"
+
+	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
+		if args is None: args = {}
+		self.ROM_BANK_SIZE = 0x2000
+		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
+	
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|", index)
+		if index == 0:
+			self.CartRead(0x0101, 1)
+			self.CartRead(0x0108, 1)
+			self.CartRead(0x0101, 1)
+		self.CartWrite([[ 0x7FE1, index & 0xFF ]])
 		start_address = 0x4000
 		return (start_address, self.ROM_BANK_SIZE)
 

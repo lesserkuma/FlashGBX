@@ -272,9 +272,11 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		if self.optDevicePCBVer14.isChecked():
 			device_name = "v1.4"
 			file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip"
+			led = "Done"
 		elif self.optDevicePCBVer14a.isChecked():
 			device_name = "v1.4a"
 			file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4a.zip"
+			led = "Status"
 		else:
 			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="Please select the PCB version of your GBxCart RW device.", standardButtons=QtWidgets.QMessageBox.Ok)
 			answer = msgbox.exec()
@@ -282,7 +284,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 
 		self.APP.DisconnectDevice()
 
-		text = "Please follow these steps to proceed with the firmware update:<ol><li>Disconnect the USB cable of your GBxCart RW {:s} device.</li><li>On the circuit board of your GBxCart RW {:s}, press and hold down the small button while connecting the USB cable again.</li><li>Keep the small button held for at least 2 seconds, then let go of it. If done right, the green LED labeled “Done” should remain lit.</li><li>Click OK to continue.</li></ol>".format(device_name, device_name)
+		text = "Please follow these steps to proceed with the firmware update:<ol><li>Disconnect the USB cable of your GBxCart RW {dev_name:s} device.</li><li>On the circuit board of your GBxCart RW {dev_name:s}, press and hold down the small button while connecting the USB cable again.</li><li>Keep the small button held for at least 2 seconds, then let go of it. If done right, the green LED labeled “{led:s}” should remain lit.</li><li>Click OK to continue.</li></ol>".format(dev_name=device_name, led=led)
 		msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 		msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
 		msgbox.setTextFormat(QtCore.Qt.TextFormat.RichText)
@@ -290,6 +292,8 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		if answer == QtWidgets.QMessageBox.Cancel: return
 		self.btnUpdate.setEnabled(False)
 		self.btnClose.setEnabled(False)
+		self.optDevicePCBVer14.setEnabled(False)
+		self.optDevicePCBVer14a.setEnabled(False)
 		
 		while True:
 			ret = self.FWUPD.WriteFirmware(file_name, self.SetStatus)
@@ -297,6 +301,8 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				text = "The firmware update is complete!"
 				self.btnUpdate.setEnabled(True)
 				self.btnClose.setEnabled(True)
+				self.optDevicePCBVer14.setEnabled(True)
+				self.optDevicePCBVer14a.setEnabled(True)
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 				answer = msgbox.exec()
 				self.DEVICE = None
@@ -306,6 +312,8 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				text = "The firmware update is has failed. Please try again."
 				self.btnUpdate.setEnabled(True)
 				self.btnClose.setEnabled(True)
+				self.optDevicePCBVer14.setEnabled(True)
+				self.optDevicePCBVer14a.setEnabled(True)
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 				answer = msgbox.exec()
 				return False
@@ -313,6 +321,8 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				text = "The firmware update file is corrupted. Please re-install the application."
 				self.btnUpdate.setEnabled(True)
 				self.btnClose.setEnabled(True)
+				self.optDevicePCBVer14.setEnabled(True)
+				self.optDevicePCBVer14a.setEnabled(True)
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 				answer = msgbox.exec()
 				return False
@@ -324,4 +334,6 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		if enableUI:
 			self.btnUpdate.setEnabled(True)
 			self.btnClose.setEnabled(True)
+			self.optDevicePCBVer14.setEnabled(True)
+			self.optDevicePCBVer14a.setEnabled(True)
 		self.APP.QT_APP.processEvents()

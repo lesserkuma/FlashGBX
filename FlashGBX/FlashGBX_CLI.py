@@ -264,6 +264,13 @@ class FlashGBX_CLI():
 					pass
 	
 	def FinishOperation(self):
+		time_elapsed = None
+		speed = None
+		if "time_start" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["time_start"] > 0:
+			time_elapsed = time.time() - self.PROGRESS.PROGRESS["time_start"]
+			speed = "{:.2f} KB/s".format((self.CONN.INFO["transferred"] / 1024.0) / time_elapsed)
+			self.PROGRESS.PROGRESS["time_start"] = 0
+
 		if self.CONN.INFO["last_action"] == 4: # Flash ROM
 			self.CONN.INFO["last_action"] = 0
 			if "verified" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["verified"] == True:
@@ -273,6 +280,25 @@ class FlashGBX_CLI():
 		
 		elif self.CONN.INFO["last_action"] == 1: # Backup ROM
 			self.CONN.INFO["last_action"] = 0
+			dump_report = False
+			dumpinfo_file = ""
+			if self.ARGS["argparsed"].generate_dump_report is True:
+				try:
+					dump_report = self.CONN.GetDumpReport()
+					if dump_report is not False:
+						if time_elapsed is not None and speed is not None:
+							dump_report = dump_report.replace("%TRANSFER_RATE%", speed)
+							dump_report = dump_report.replace("%TIME_ELAPSED%", Util.formatProgressTime(time_elapsed))
+						else:
+							dump_report = dump_report.replace("%TRANSFER_RATE%", "N/A")
+							dump_report = dump_report.replace("%TIME_ELAPSED%", "N/A")
+						dumpinfo_file = os.path.splitext(self.CONN.INFO["last_path"])[0] + ".txt"
+						with open(dumpinfo_file, "wb") as f:
+							f.write(bytearray([ 0xEF, 0xBB, 0xBF ])) # UTF-8 BOM
+							f.write(dump_report.encode("UTF-8"))
+				except Exception as e:
+					print("ERROR: {:s}".format(str(e)))
+			
 			if self.CONN.GetMode() == "DMG":
 				print("CRC32: {:08x}".format(self.CONN.INFO["file_crc32"]))
 				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
@@ -304,7 +330,7 @@ class FlashGBX_CLI():
 					else:
 						msg += "\nThis may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
 					print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
-		
+
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.CONN.INFO["last_action"] = 0
 			if not "debug" in self.ARGS and self.CONN.INFO["transferred"] == 131072: # 128 KB
@@ -598,7 +624,7 @@ class FlashGBX_CLI():
 					stok = True
 					s += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[6])
 					data["save_type"] = 6
-			
+
 			if stok is False:
 				s += "Save Type:            Not detected\n"
 			
@@ -732,12 +758,18 @@ class FlashGBX_CLI():
 					print("{:s}Couldn’t determine MBC type, will try to use MBC5. It can also be manually set with the “--dmg-mbc” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 					mbc = 0x19
 			else:
-				mbc = int(args.dmg_mbc)
-				if mbc == 2: mbc = 0x06
-				elif mbc == 3: mbc = 0x13
-				elif mbc == 5: mbc = 0x19
-				elif mbc == 6: mbc = 0x20
-				elif mbc == 7: mbc = 0x22
+				if args.dmg_mbc.startswith("0x"):
+					mbc = int(args.dmg_mbc[2:], 16)
+				elif args.dmg_mbc.isnumeric():
+					mbc = int(args.dmg_mbc)
+					if mbc == 2: mbc = 0x06
+					elif mbc == 3: mbc = 0x13
+					elif mbc == 5: mbc = 0x19
+					elif mbc == 6: mbc = 0x20
+					elif mbc == 7: mbc = 0x22
+					else: mbc = 0x19
+				else:
+					mbc = 0x19
 			
 			if args.dmg_romsize == "auto":
 				try:
@@ -754,7 +786,7 @@ class FlashGBX_CLI():
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 			if self.CONN.INFO["cgb"] == 0xC0 or self.CONN.INFO["cgb"] == 0x80:
 				path = path + ".gbc"
-			elif self.CONN.INFO["sgb"] == 0x03:
+			elif self.CONN.INFO["old_lic"] == 0x33 and self.CONN.INFO["sgb"] == 0x03:
 				path = path + ".sgb"
 			else:
 				path = path + ".gb"
@@ -763,7 +795,7 @@ class FlashGBX_CLI():
 			if args.agb_romsize == "auto":
 				rom_size = header["rom_size"]
 			else:
-				sizes = [ "auto", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
+				sizes = [ "auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
 				rom_size = Util.AGB_Header_ROM_Sizes_Map[sizes.index(args.agb_romsize) - 1]
 
 			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
@@ -785,7 +817,6 @@ class FlashGBX_CLI():
 			if answer != "y":
 				print("Canceled.")
 				return
-		
 		
 		try:
 			f = open(path, "ab+")
@@ -817,12 +848,26 @@ class FlashGBX_CLI():
 			for i in range(0, len(carts)):
 				if not "names" in carts[i]: continue
 				if carts[i]["type"] != self.CONN.GetMode(): continue
-				if args.flashcart_type in carts[i]["names"]:
-					print("Selected flash cartridge type: {:s}".format(args.flashcart_type))
+				if args.flashcart_type in carts[i]["names"] and "flash_size" in carts[i]:
+					print("Selected cartridge type: {:s}\n".format(args.flashcart_type))
 					rom_size = carts[i]["flash_size"]
 					cart_type = i
 					break
-
+			if cart_type == 0:
+				print("ERROR: Couldn’t select the selected cartridge type.\n")
+		else:
+			if self.CONN.GetMode() == "AGB":
+				cart_types = self.CONN.GetSupportedCartridgesAGB()
+				if "flash_type" in header:
+					print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
+					cart_type = header["flash_type"]
+				elif header['logo_correct'] and header['3d_memory'] is True:
+					for i in range(0, len(cart_types[0])):
+						if "3d_memory" in cart_types[1][i]:
+							print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
+							cart_type = i
+							break
+		
 		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_size':rom_size, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 	
 	def FlashROM(self, args, header):
@@ -960,12 +1005,18 @@ class FlashGBX_CLI():
 					print("{:s}Couldn’t determine MBC type, will try to use MBC5. It can also be manually set with the “--dmg-mbc” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 					mbc = 0x19
 			else:
-				mbc = int(args.dmg_mbc)
-				if mbc == 2: mbc = 0x06
-				elif mbc == 3: mbc = 0x13
-				elif mbc == 5: mbc = 0x19
-				elif mbc == 6: mbc = 0x20
-				elif mbc == 7: mbc = 0x22
+				if args.dmg_mbc.startswith("0x"):
+					mbc = int(args.dmg_mbc[2:], 16)
+				elif args.dmg_mbc.isnumeric():
+					mbc = int(args.dmg_mbc)
+					if mbc == 2: mbc = 0x06
+					elif mbc == 3: mbc = 0x13
+					elif mbc == 5: mbc = 0x19
+					elif mbc == 6: mbc = 0x20
+					elif mbc == 7: mbc = 0x22
+					else: mbc = 0x19
+				else:
+					mbc = 0x19
 
 			if args.dmg_savesize == "auto":
 				try:
@@ -1100,9 +1151,9 @@ class FlashGBX_CLI():
 			with open(self.CONFIG_PATH + "/test3.bin", "rb") as f: test3 = bytearray(f.read())
 			if self.CONN.CanPowerCycleCart():
 				print("\nPower cycling.")
-				self.CONN.CartPowerOff()
-				time.sleep(1)
-				self.CONN.CartPowerOn()
+				for _ in range(0, 5):
+					self.CONN.CartPowerCycle(delay=0.1)
+					time.sleep(0.1)
 				self.CONN.ReadInfo(checkRtc=False)
 			time.sleep(0.2)
 			print("\nReading back and comparing data again.")
@@ -1128,6 +1179,7 @@ class FlashGBX_CLI():
 				for i in range(0, len(test3)):
 					if test3[i] != test4[i]: diffcount += 1
 				print("\n{:s}Differences found between two consecutive readbacks: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
+				input("")
 			
 			found_offset = test2.find(test3[0:512])
 			if found_offset < 0:

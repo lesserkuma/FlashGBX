@@ -5,7 +5,7 @@
 # This code is used for official firmware of GBxCart v1.3 only and this code is pure chaos, sorry
 # Refer to hw_GBxCartRW.py for the much cleaner rewrite (used for GBxCart RW v1.4 and firmware L1 on v1.3)
 
-import time, math, struct, traceback, zlib, copy, hashlib, os
+import time, math, struct, traceback, zlib, copy, hashlib, os, platform, datetime
 import serial, serial.tools.list_ports
 from serial import SerialException
 from .RomFileDMG import RomFileDMG
@@ -128,7 +128,7 @@ class GbxDevice:
 	PORT = ''
 	DEVICE = None
 	WORKER = None
-	INFO = { "last_action":None }
+	INFO = { "last_action":None, "dump_info":{} }
 	CANCEL = False
 	ERROR = False
 	CANCEL_ARGS = {}
@@ -380,14 +380,18 @@ class GbxDevice:
 		return (list(self.SUPPORTED_CARTS['AGB'].keys()), list(self.SUPPORTED_CARTS['AGB'].values()))
 	
 	def SetProgress(self, args):
-		if self.CANCEL and args["action"] != "ABORT": return
-		if args["action"] == "UPDATE_POS": self.POS = args["pos"]
+		if self.CANCEL and args["action"] not in ("ABORT", "FINISHED"): return
+		if args["action"] == "UPDATE_POS":
+			self.POS = args["pos"]
+			self.INFO["transferred"] = args["pos"]
 		try:
 			self.SIGNAL.emit(args)
 		except AttributeError:
 			if self.SIGNAL is not None:
 				self.SIGNAL(args)
-		if args["action"] == "FINISHED": self.SIGNAL = None
+		
+		if args["action"] == "FINISHED":
+			self.SIGNAL = None
 	
 	def wait_for_ack(self):
 		buffer = self.read(1)
@@ -1094,7 +1098,7 @@ class GbxDevice:
 
 		if cart_type is not None: # reset cartridge if method is known
 			flashcart_meta = copy.deepcopy(cart_type)
-			if "reset_every" in flashcart_meta:
+			if "reset_every" in flashcart_meta and "flash_size" in flashcart_meta:
 				for j in range(0, flashcart_meta["flash_size"], flashcart_meta["reset_every"]):
 					if j >= 0x2000000: break
 					dprint("reset_every @ 0x{:X}".format(j))
@@ -1158,12 +1162,13 @@ class GbxDevice:
 
 		elif self.MODE == "AGB":
 			data = RomFileAGB(header).GetHeader()
+			# Check where the ROM data repeats (for unlicensed carts)
 			size_check = header[0xA0:0xA0+16]
-			currAddr = 0x400000
+			currAddr = 0x10000
 			while currAddr < 0x2000000:
-				buffer = self.ReadROM(currAddr + 0x0000A0, 64)[:16]
+				buffer = self.ReadROM(currAddr + 0xA0, 64)[:16]
 				if buffer == size_check: break
-				currAddr += 0x400000
+				currAddr *= 2
 			data["rom_size"] = currAddr
 			if (data["3d_memory"] == True):
 				data["rom_size"] = 0x4000000
@@ -1176,10 +1181,14 @@ class GbxDevice:
 		self.INFO["last_action"] = 0
 		self.INFO["has_rtc"] = False
 		self.INFO["no_rtc_reason"] = -1
+		self.INFO["dump_info"] = {}
 		
 		if self.MODE == "DMG" and setPinsAsInputs: self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
 		return data
 	
+	def GetDumpReport(self):
+		return Util.GetDumpReport(self.INFO["dump_info"], self)
+		
 	#################################################################
 
 	def BackupROM(self, fncSetProgress=None, args=None):
@@ -1249,7 +1258,7 @@ class GbxDevice:
 		# Firmware check R26+
 		# Firmware check CFW
 		if ("agb_rom_size" in args and args["agb_rom_size"] > 32 * 1024 * 1024) or (self.MODE == "DMG" and "mbc" in args and not self.IsSupportedMbc(args["mbc"])) or (self.MODE == "AGB" and "dacs_8m" in self.INFO and self.INFO["dacs_8m"] is True): # 3D Memory
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please update to the high compatibility firmware and try again.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please try a newer firmware version.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check CFW
 		
@@ -1273,9 +1282,17 @@ class GbxDevice:
 		self.INFO["last_action"] = mode
 		self.FAST_READ = False
 		if mode == 1: # Backup ROM
+			self.INFO["dump_info"]["timestamp"] = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
+			self.INFO["dump_info"]["file_name"] = args["path"]
+			self.INFO["dump_info"]["file_size"] = args["rom_size"]
+			self.INFO["dump_info"]["cart_type"] = args["cart_type"]
+			self.INFO["dump_info"]["system"] = self.MODE
+			self.INFO["dump_info"]["transfer_size"] = 64
 			fast_read_mode = False #args["fast_read_mode"]
 			buffer_len = 0x1000
 			if self.MODE == "DMG":
+				self.INFO["dump_info"]["rom_size"] = args["rom_size"]
+				self.INFO["dump_info"]["mapper_type"] = args["mbc"]
 				supported_carts = list(self.SUPPORTED_CARTS['DMG'].values())
 				mbc = args["mbc"]
 				bank_count = int(args["rom_size"] / 0x4000)
@@ -1290,8 +1307,10 @@ class GbxDevice:
 				rom_size = bank_count * bank_size
 			
 			elif self.MODE == "AGB":
+				self.INFO["dump_info"]["mapper_type"] = None
 				supported_carts = list(self.SUPPORTED_CARTS['AGB'].values())
 				rom_size = args["agb_rom_size"]
+				self.INFO["dump_info"]["rom_size"] = rom_size
 				bank_count = 1
 				endAddr = rom_size
 				if rom_size == 64 * 1024 * 1024: # 3D Memory
@@ -1426,8 +1445,18 @@ class GbxDevice:
 				file.close()
 			
 			# Calculate Global Checksum
+			buffer = data_dump
+			self.INFO["file_crc32"] = zlib.crc32(buffer) & 0xFFFFFFFF
+			self.INFO["file_sha1"] = hashlib.sha1(buffer).hexdigest()
+			self.INFO["file_sha256"] = hashlib.sha256(buffer).hexdigest()
+			self.INFO["file_md5"] = hashlib.md5(buffer).hexdigest()
+			self.INFO["dump_info"]["hash_crc32"] = self.INFO["file_crc32"]
+			self.INFO["dump_info"]["hash_sha1"] = self.INFO["file_sha1"]
+			self.INFO["dump_info"]["hash_sha256"] = self.INFO["file_sha256"]
+			self.INFO["dump_info"]["hash_md5"] = self.INFO["file_md5"]
 			chk = 0
 			if self.MODE == "DMG":
+				self.INFO["dump_info"]["header"] = RomFileDMG(buffer[:0x180]).GetHeader(unchanged=True)
 				if mbc in (0x0B, 0x0D): # MMM01
 					self.set_mode(self.DEVICE_CMD['RESET_MBC'])
 					self.wait_for_ack()
@@ -1448,15 +1477,26 @@ class GbxDevice:
 					chk = chk & 0xFFFF
 			
 			elif self.MODE == "AGB":
-				chk = zlib.crc32(data_dump) & 0xffffffff
-			
+				self.INFO["dump_info"]["header"] = RomFileAGB(buffer[:0x180]).GetHeader(unchanged=True)
+				chk = self.INFO["file_crc32"]
+
+				temp_ver = "N/A"
+				ids = [ b"SRAM_", b"EEPROM_V", b"FLASH_V", b"FLASH512_V", b"FLASH1M_V", b"AGB_8MDACS_DL_V" ]
+				for id in ids:
+					temp_pos = buffer.find(id)
+					if temp_pos > 0:
+						temp_ver = buffer[temp_pos:temp_pos+0x20]
+						temp_ver = temp_ver[:temp_ver.index(0x00)].decode("ascii", "replace")
+						break
+				self.INFO["dump_info"]["agb_savelib"] = temp_ver
+				self.INFO["dump_info"]["agb_save_flash_id"] = None
+				if "FLASH" in temp_ver:
+					agb_save_flash_id = self.ReadFlashSaveID()
+					if agb_save_flash_id is not False and len(agb_save_flash_id) == 3:
+						self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
+
 			self.INFO["rom_checksum_calc"] = chk
 			
-			self.INFO["file_crc32"] = zlib.crc32(data_dump) & 0xFFFFFFFF
-			self.INFO["file_sha1"] = hashlib.sha1(data_dump).hexdigest()
-			#self.INFO["file_sha256"] = hashlib.sha256(buffer).hexdigest()
-			#self.INFO["file_md5"] = hashlib.md5(buffer).hexdigest()
-
 			# Check for ROM loops
 			self.INFO["loop_detected"] = False
 			temp = min(0x2000000, len(data_dump))
@@ -1959,12 +1999,6 @@ class GbxDevice:
 			print("NOTE: Update your GBxCart RW firmware to version L1 or higher for a better transfer rate with this cartridge.")
 			del flashcart_meta["commands"]["buffer_write"]
 
-		#if "dmg-mmsa-jpn" in flashcart_meta:
-		#	self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Flashing GB Memory cartridges is currently only supported via the high compatibility firmware which you can install from the “Tools” menu.", "abortable":False})
-		#	return False
-		# Firmware check
-		#dprint(flashcart_meta)
-
 		if "flash_commands_on_bank_1" in cart_type:
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported by FlashGBX. Please try the official GBxCart RW firmware and interface software instead.", "abortable":False})
 			return False
@@ -2043,7 +2077,7 @@ class GbxDevice:
 		
 		# Check if write command exists and quit if not
 		if "single_write" not in flashcart_meta["commands"] and "buffer_write" not in flashcart_meta["commands"]:
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM writing using the current firmware version. However, it may be supported via the high compatibility firmware which is available in GUI mode from the “Tools” menu.", "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM writing using the current firmware version. However, a new firmware version might work which may be available in GUI mode from the “Tools” menu.", "abortable":False})
 			return False
 		
 		# Chip Erase
@@ -2090,7 +2124,7 @@ class GbxDevice:
 			
 			dprint("Chip erase took {:d} seconds".format(math.ceil(time.time() - time_start)))
 		
-		elif "sector_erase" in flashcart_meta["commands"] and prefer_chip_erase is True:
+		elif "sector_erase" in flashcart_meta["commands"] and "flash_size" in flashcart_meta and prefer_chip_erase is True:
 			flash_size = flashcart_meta["flash_size"]
 			if flash_size is not False and len(data_import) < flash_size:
 				# Pad with FF till the end
@@ -2271,7 +2305,7 @@ class GbxDevice:
 							pos += 32
 						
 						else:
-							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
+							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can a newer firmware version which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							return False
 					
 					elif self.MODE == "AGB":
@@ -2378,7 +2412,7 @@ class GbxDevice:
 								pos += 256
 						
 						else:
-							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try the high compatibility firmware which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
+							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try a newer firmware version which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							return False
 				
 				elif "single_write" in flashcart_meta["commands"]:

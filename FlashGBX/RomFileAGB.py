@@ -40,7 +40,7 @@ class RomFileAGB:
 		self.CalcChecksumHeader(True)
 		return self.ROMFILE[0:0x200]
 	
-	def GetHeader(self):
+	def GetHeader(self, unchanged=False):
 		buffer = bytearray(self.ROMFILE)
 		data = {}
 		hash = hashlib.sha1(buffer[0:0x180]).digest()
@@ -53,12 +53,14 @@ class RomFileAGB:
 		dprint("Hash: 0x{:s} -- Is Empty?".format((' '.join(format(x, '02X') for x in hash).replace(" ", ", 0x"))), data["empty_nocart"])
 		if data["empty_nocart"]: buffer = bytearray([0x00] * len(buffer))
 		data["logo_correct"] = hashlib.sha1(buffer[0x04:0xA0]).digest() == bytearray([ 0x17, 0xDA, 0xA0, 0xFE, 0xC0, 0x2F, 0xC3, 0x3C, 0x0F, 0x6A, 0xBB, 0x54, 0x9A, 0x8B, 0x80, 0xB6, 0x61, 0x3B, 0x48, 0xEE ])
-		game_title = bytearray(buffer[0xA0:0xAC]).decode("ascii", "replace")
+		data["game_title_raw"] = bytearray(buffer[0xA0:0xAC]).decode("ascii", "replace")
+		game_title = data["game_title_raw"]
 		game_title = re.sub(r"(\x00+)$", "", game_title)
 		game_title = re.sub(r"((_)_+|(\x00)\x00+|(\s)\s+)", "\\2\\3\\4", game_title).replace("\x00", "_")
 		game_title = ''.join(filter(lambda x: x in set(string.printable), game_title))
 		data["game_title"] = game_title
-		game_code = bytearray(buffer[0xAC:0xB0]).decode("ascii", "replace")
+		data["game_code_raw"] = bytearray(buffer[0xAC:0xB0]).decode("ascii", "replace")
+		game_code = data["game_code_raw"]
 		game_code = re.sub(r"(\x00+)$", "", game_code)
 		game_title = re.sub(r"((_)_+|(\x00)\x00+|(\s)\s+)", "\\2\\3\\4", game_title).replace("\x00", "_")
 		game_code = ''.join(filter(lambda x: x in set(string.printable), game_code))
