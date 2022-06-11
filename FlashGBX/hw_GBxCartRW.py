@@ -764,7 +764,7 @@ class GbxDevice:
 				# Check for FLASH
 				ret = self.ReadFlashSaveID()
 				if ret is not False:
-					(_, flash_save_id, _) = ret
+					(flash_save_id, _) = ret
 					try:
 						if flash_save_id != 0 and flash_save_id in Util.AGB_Flash_Save_Chips:
 							save_size = Util.AGB_Flash_Save_Chips_Sizes[list(Util.AGB_Flash_Save_Chips).index(flash_save_id)]
@@ -849,11 +849,6 @@ class GbxDevice:
 		time.sleep(0.01)
 		self._cart_write_flash([ [ 0, 0xF0 ] ])
 		time.sleep(0.01)
-		if agb_flash_chip == 0x1F3D:
-			buffer_len = 128
-		else:
-			buffer_len = 0x1000
-		buffer_len = 0x1000
 		
 		if agb_flash_chip not in Util.AGB_Flash_Save_Chips:
 			# Restore SRAM values
@@ -868,7 +863,7 @@ class GbxDevice:
 			agb_flash_chip_name = Util.AGB_Flash_Save_Chips[agb_flash_chip]
 		
 		dprint(agb_flash_chip_name)
-		return (buffer_len, agb_flash_chip, agb_flash_chip_name)
+		return (agb_flash_chip, agb_flash_chip_name)
 	
 	def ReadROM(self, address, length, skip_init=False, max_length=64):
 		num = math.ceil(length / max_length)
@@ -1961,7 +1956,7 @@ class GbxDevice:
 			self.INFO["dump_info"]["agb_save_flash_id"] = None
 			if "FLASH" in temp_ver:
 				agb_save_flash_id = self.ReadFlashSaveID()
-				if agb_save_flash_id is not False and len(agb_save_flash_id) == 3:
+				if agb_save_flash_id is not False and len(agb_save_flash_id) == 2:
 					self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
 		
 		self.INFO["rom_checksum_calc"] = chk
@@ -2097,7 +2092,8 @@ class GbxDevice:
 				if ret is False:
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t detect the save data flash chip.", "abortable":False})
 					return False
-				(buffer_len, agb_flash_chip, _) = ret
+				buffer_len = 0x1000
+				(agb_flash_chip, _) = ret
 			elif args["save_type"] == 6: # DACS
 				empty_data_byte = 0xFF
 				# Read Chip ID

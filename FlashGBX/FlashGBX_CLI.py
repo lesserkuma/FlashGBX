@@ -749,6 +749,7 @@ class FlashGBX_CLI():
 		mbc = 1
 		rom_size = 0
 
+		path = Util.GenerateFileName(mode=self.CONN.GetMode(), header=self.CONN.INFO, settings=None)
 		if self.CONN.GetMode() == "DMG":
 			if args.dmg_mbc == "auto":
 				try:
@@ -780,16 +781,6 @@ class FlashGBX_CLI():
 			else:
 				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb" ]
 				rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[sizes.index(args.dmg_romsize) - 1]
-			
-			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "": path = "ROM"
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
-			if self.CONN.INFO["cgb"] == 0xC0 or self.CONN.INFO["cgb"] == 0x80:
-				path = path + ".gbc"
-			elif self.CONN.INFO["old_lic"] == 0x33 and self.CONN.INFO["sgb"] == 0x03:
-				path = path + ".sgb"
-			else:
-				path = path + ".gb"
 		
 		elif self.CONN.GetMode() == "AGB":
 			if args.agb_romsize == "auto":
@@ -797,12 +788,6 @@ class FlashGBX_CLI():
 			else:
 				sizes = [ "auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
 				rom_size = Util.AGB_Header_ROM_Sizes_Map[sizes.index(args.agb_romsize) - 1]
-
-			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "": path = header["game_code"].strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "": path = "ROM"
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
-			path = path + ".gba"
 		
 		if args.path != "auto":
 			if os.path.isdir(args.path):
@@ -867,7 +852,6 @@ class FlashGBX_CLI():
 							print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
 							cart_type = i
 							break
-		
 		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_size':rom_size, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 	
 	def FlashROM(self, args, header):
@@ -996,6 +980,14 @@ class FlashGBX_CLI():
 		add_date_time = args.save_filename_add_datetime is True
 		rtc = args.store_rtc is True
 		
+		path_datetime = ""
+		if add_date_time:
+			path_datetime = "_{:s}".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+		
+		path = Util.GenerateFileName(mode=self.CONN.GetMode(), header=self.CONN.INFO, settings=None)
+		path = os.path.splitext(path)[0]
+		path += "{:s}.sav".format(path_datetime)
+		
 		if self.CONN.GetMode() == "DMG":
 			if args.dmg_mbc == "auto":
 				try:
@@ -1038,9 +1030,6 @@ class FlashGBX_CLI():
 				sizes = [ "auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m" ]
 				save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[sizes.index(args.dmg_savesize)]
 
-			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "": path = "ROM"
-			
 			if save_type == 0:
 				print("{:s}Unable to auto-detect the save size. Please use the “--dmg-savesize” command line switch to manually select it.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
@@ -1052,10 +1041,6 @@ class FlashGBX_CLI():
 				sizes = [ "auto", "eeprom4k", "eeprom64k", "sram256k", "flash512k", "flash1m", "dacs8m", "sram512k", "sram1m" ]
 				save_type = sizes.index(args.agb_savetype)
 			
-			path = header["game_title"].strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "": path = header["game_code"].strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "": path = "ROM"
-			
 			mbc = 0
 			if save_type == 0 or save_type == None:
 				print("{:s}Unable to auto-detect the save type. Please use the “--agb-savetype” command line switch to manually select it.{:s}".format(ANSI.RED, ANSI.RESET))
@@ -1063,11 +1048,6 @@ class FlashGBX_CLI():
 		
 		else:
 			return
-		
-		if add_date_time:
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path) + "_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sav"
-		else:
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path) + ".sav"
 		
 		if args.path != "auto":
 			if os.path.isdir(args.path):

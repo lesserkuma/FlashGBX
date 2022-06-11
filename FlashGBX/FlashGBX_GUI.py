@@ -3,7 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import sys, os, time, datetime, re, json, platform, subprocess, requests, webbrowser, pkg_resources, struct, math
-from PySide2 import QtCore, QtWidgets, QtGui
+from .pyside import QtCore, QtWidgets, QtGui, QApplication
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
 from .PocketCameraWindow import PocketCameraWindow
@@ -991,8 +991,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 	def DMGMapperTypeChanged(self, index):
 		if index in (-1, 0): return
-		#if ((list(Util.DMG_Header_Mapper.items())[index])[0]) == 0x203: # Xploder GB
-		#	self.cmbHeaderROMSizeResult.setCurrentIndex(Util.DMG_Header_ROM_Sizes_Flasher_Map.index(0x40000))
 	
 	def CartridgeTypeChanged(self, index):
 		if index in (-1, 0): return
@@ -1028,19 +1026,12 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		rom_size = 0
 		cart_type = 0
+		path = Util.GenerateFileName(mode=self.CONN.GetMode(), header=self.CONN.INFO, settings=self.SETTINGS)
 		if self.CONN.GetMode() == "DMG":
 			setting_name = "LastDirRomDMG"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-			path = self.lblHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or self.lblHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
-			if self.CONN.INFO["cgb"] == 0xC0 or self.CONN.INFO["cgb"] == 0x80:
-				path = path + ".gbc"
-			elif self.CONN.INFO["old_lic"] == 0x33 and self.CONN.INFO["sgb"] == 0x03:
-				path = path + ".sgb"
-			else:
-				path = path + ".gb"
+
 			path = QtWidgets.QFileDialog.getSaveFileName(self, "Backup ROM", last_dir + "/" + path, "Game Boy ROM File (*.gb *.sgb *.gbc);;All Files (*.*)")[0]
 			cart_type = self.cmbDMGCartridgeTypeResult.currentIndex()
 			rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[self.cmbHeaderROMSizeResult.currentIndex()]
@@ -1049,12 +1040,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			setting_name = "LastDirRomAGB"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-			path = self.lblAGBHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii') + "_" + self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "_": path = self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or self.lblAGBHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
+
 			rom_size = Util.AGB_Header_ROM_Sizes_Map[self.cmbAGBHeaderROMSizeResult.currentIndex()]
-			path = path + ".gba"
 			path = QtWidgets.QFileDialog.getSaveFileName(self, "Backup ROM", last_dir + "/" + path, "Game Boy Advance ROM File (*.gba *.srl);;All Files (*.*)")[0]
 			cart_type = self.cmbAGBCartridgeTypeResult.currentIndex()
 		
@@ -1246,13 +1233,19 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if not self.CheckDeviceAlive(): return
 		rtc = False
 		features = []
+		add_date_time = self.SETTINGS.value("SaveFileNameAddDateTime", default="disabled")
+		path_datetime = ""
+		if add_date_time and add_date_time.lower() == "enabled":
+			path_datetime = "_{:s}".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 		
+		path = Util.GenerateFileName(mode=self.CONN.GetMode(), header=self.CONN.INFO, settings=self.SETTINGS)
+		path = os.path.splitext(path)[0]
+		path += "{:s}.sav".format(path_datetime)
 		if self.CONN.GetMode() == "DMG":
 			setting_name = "LastDirSaveDataDMG"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-			path = self.lblHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or self.lblHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
+
 			mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
 			try:
 				features = list(Util.DMG_Header_Mapper.keys())[self.cmbHeaderFeaturesResult.currentIndex()]
@@ -1266,9 +1259,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			setting_name = "LastDirSaveDataAGB"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-			path = self.lblAGBHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii') + "_" + self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "_": path = self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
-			if path == "" or self.lblAGBHeaderTitleResult.styleSheet() == "QLabel { color: red; }": path = "ROM"
+
 			mbc = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
@@ -1276,12 +1267,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				return
 		else:
 			return
-		
-		add_date_time = self.SETTINGS.value("SaveFileNameAddDateTime", default="disabled")
-		if add_date_time and add_date_time.lower() == "enabled":
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path) + "_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".sav"
-		else:
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path) + ".sav"
 		
 		path = QtWidgets.QFileDialog.getSaveFileName(self, "Backup Save Data", last_dir + "/" + path, "Save Data File (*.sav);;All Files (*.*)")[0]
 		if (path == ""): return
@@ -1318,11 +1303,16 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	def WriteRAM(self, dpath="", erase=False):
 		if not self.CheckDeviceAlive(): return
 		features = 0
+		
+		if dpath == "":
+			path = Util.GenerateFileName(mode=self.CONN.GetMode(), header=self.CONN.INFO, settings=self.SETTINGS)
+			path = os.path.splitext(path)[0]
+			path += ".sav"
+		
 		if self.CONN.GetMode() == "DMG":
 			setting_name = "LastDirSaveDataDMG"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-			if dpath == "": path = self.lblHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii')
 			mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
 			try:
 				features = list(Util.DMG_Header_Mapper.keys())[self.cmbHeaderFeaturesResult.currentIndex()]
@@ -1337,8 +1327,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			setting_name = "LastDirSaveDataAGB"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-			if dpath == "":
-				path = self.lblAGBHeaderTitleResult.text().strip().encode('ascii', 'ignore').decode('ascii') + "_" + self.lblAGBHeaderCodeResult.text().strip().encode('ascii', 'ignore').decode('ascii')
 			mbc = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
@@ -1358,7 +1346,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The save data on your cartridge will now be erased.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		else:
-			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path) + ".sav"
 			path = QtWidgets.QFileDialog.getOpenFileName(self, "Restore Save Data", last_dir + "/" + path, "Save Data File (*.sav);;All Files (*.*)")[0]
 			if not path == "": self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 			if (path == ""): return
@@ -1532,17 +1519,18 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.cmbHeaderFeaturesResult.clear()
 			self.cmbHeaderFeaturesResult.addItems(list(Util.DMG_Header_Mapper.values()))
 			self.cmbHeaderFeaturesResult.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-			self.cmbDMGCartridgeTypeResult.clear()
-			self.cmbDMGCartridgeTypeResult.addItems(self.CONN.GetSupportedCartridgesDMG()[0])
-			self.cmbDMGCartridgeTypeResult.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+			if resetStatus:
+				self.cmbDMGCartridgeTypeResult.clear()
+				self.cmbDMGCartridgeTypeResult.addItems(self.CONN.GetSupportedCartridgesDMG()[0])
+				self.cmbDMGCartridgeTypeResult.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+				if "flash_type" in data:
+					self.cmbDMGCartridgeTypeResult.setCurrentIndex(data["flash_type"])
 			self.cmbHeaderROMSizeResult.clear()
 			self.cmbHeaderROMSizeResult.addItems(Util.DMG_Header_ROM_Sizes)
 			self.cmbHeaderROMSizeResult.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
 			self.cmbHeaderRAMSizeResult.clear()
 			self.cmbHeaderRAMSizeResult.addItems(Util.DMG_Header_RAM_Sizes)
 			self.cmbHeaderRAMSizeResult.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-			if "flash_type" in data:
-				self.cmbDMGCartridgeTypeResult.setCurrentIndex(data["flash_type"])
 			
 			self.lblHeaderTitleResult.setText(data['game_title'])
 			self.lblHeaderRevisionResult.setText(str(data['version']))
@@ -1667,11 +1655,12 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.grpDMGCartridgeInfo.setVisible(True)
 		
 		elif self.CONN.GetMode() == "AGB":
-			self.cmbAGBCartridgeTypeResult.clear()
-			self.cmbAGBCartridgeTypeResult.addItems(self.CONN.GetSupportedCartridgesAGB()[0])
-			self.cmbAGBCartridgeTypeResult.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-			if "flash_type" in data:
-				self.cmbAGBCartridgeTypeResult.setCurrentIndex(data["flash_type"])
+			if resetStatus:
+				self.cmbAGBCartridgeTypeResult.clear()
+				self.cmbAGBCartridgeTypeResult.addItems(self.CONN.GetSupportedCartridgesAGB()[0])
+				self.cmbAGBCartridgeTypeResult.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+				if "flash_type" in data:
+					self.cmbAGBCartridgeTypeResult.setCurrentIndex(data["flash_type"])
 
 			self.lblAGBHeaderTitleResult.setText(data['game_title'])
 			self.lblAGBHeaderCodeResult.setText(data['game_code'])
@@ -2297,7 +2286,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		# Taskbar Progress on Windows only
 		try:
-			from PySide2.QtWinExtras import QWinTaskbarButton, QtWin
+			from  PySide2.QtWinExtras import QWinTaskbarButton, QtWin
 			myappid = 'lesserkuma.flashgbx'
 			QtWin.setCurrentProcessExplicitAppUserModelID(myappid)
 			taskbar_button = QWinTaskbarButton()
@@ -2308,7 +2297,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		except ImportError:
 			pass
 		
-		qt_app.exec_()
+		try:
+			qt_app.exec() # PySide6
+		except AttributeError:
+			qt_app.exec_() # PySide2
 
-qt_app = QtWidgets.QApplication(sys.argv)
+qt_app = QApplication(sys.argv)
 qt_app.setApplicationName(APPNAME)

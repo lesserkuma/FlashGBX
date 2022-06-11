@@ -2,12 +2,12 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback, io, struct
+import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback, io, struct, re
 from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.13"
+VERSION_PEP440 = "3.14"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
@@ -520,7 +520,13 @@ def GetDumpReport(di, device):
 	di["hdr_logo"] = "OK" if di["header"]["logo_correct"] else "Invalid"
 	di["header"]["game_title_raw"] = di["header"]["game_title_raw"].replace("\0", "␀")
 	if mode == "DMG":
+		game_title = di["header"]["game_title_raw"]
+		game_code = ""
 		if di["header"]["cgb"] == 0xC0 or di["header"]["cgb"] == 0x80:
+			if len(di["header"]["game_title_raw"].rstrip("\x00")) == 15:
+				if game_title[-4:][0] in ("A", "B", "H", "K", "V") and game_title[-4:][3] in ("A", "B", "D", "E", "F", "I", "J", "K", "P", "S", "U", "X", "Y"):
+					game_code = "* Game Code:       {:s}\n".format(game_title[-4:])
+					game_title = game_title[:-4].rstrip("_")
 			di["hdr_target_platform"] = "Game Boy Color"
 		elif di["header"]["old_lic"] == 0x33 and di["header"]["sgb"] == 0x03:
 			di["hdr_target_platform"] = "Super Game Boy"
@@ -563,7 +569,8 @@ def GetDumpReport(di, device):
 		
 		s += "" \
 			"\n== Parsed Data ==\n" \
-			"* Game Title/Code: {hdr_game_title:s}\n" \
+			"* Game Title:      {hdr_game_title:s}\n" \
+			"{hdr_game_code:s}" \
 			"* Revision:        {hdr_revision:s}\n" \
 			"* Super Game Boy:  {hdr_sgb:s}\n" \
 			"* Game Boy Color:  {hdr_cgb:s}\n" \
@@ -574,7 +581,7 @@ def GetDumpReport(di, device):
 			"* SRAM Size:       {hdr_save_type:s}\n" \
 			"* Mapper Type:     {hdr_mapper_type:s}\n" \
 			"* Target Platform: {hdr_target_platform:s}\n" \
-		.format(hdr_game_title=di["header"]["game_title_raw"], hdr_revision=str(di["header"]["version"]), hdr_sgb=di["hdr_sgb"], hdr_cgb=di["hdr_cgb"], hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], hdr_rom_checksum=di["hdr_rom_checksum"], hdr_rom_size=di["hdr_rom_size"], hdr_save_type=di["hdr_save_type"], hdr_mapper_type=di["hdr_mapper_type"], hdr_target_platform=di["hdr_target_platform"])
+		.format(hdr_game_title=game_title, hdr_game_code=game_code, hdr_revision=str(di["header"]["version"]), hdr_sgb=di["hdr_sgb"], hdr_cgb=di["hdr_cgb"], hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], hdr_rom_checksum=di["hdr_rom_checksum"], hdr_rom_size=di["hdr_rom_size"], hdr_save_type=di["hdr_save_type"], hdr_mapper_type=di["hdr_mapper_type"], hdr_target_platform=di["hdr_target_platform"])
 		if "gbmem" in di and di["gbmem"] is not None:
 			s += "" \
 				"* Map Parameters:  {gbmem:s}\n" \
@@ -613,9 +620,57 @@ def GetDumpReport(di, device):
 		if "agb_save_flash_id" in di and di["agb_save_flash_id"] is not None:
 			s += "" \
 				"* Save Flash Chip: {agb_save_flash_chip_name:s} (0x{agb_save_flash_chip_id:04X})\n" \
-			.format(agb_save_flash_chip_name=di["agb_save_flash_id"][2], agb_save_flash_chip_id=di["agb_save_flash_id"][1])
+			.format(agb_save_flash_chip_name=di["agb_save_flash_id"][1], agb_save_flash_chip_id=di["agb_save_flash_id"][0])
 	
 	return s
+
+def GenerateFileName(mode, header, settings):
+	path = "ROM"
+	if mode == "DMG":
+		path_title = header["game_title"]
+		path_code = ""
+		path_revision = str(header["version"])
+		path_extension = "bin"
+		path = "%TITLE%"
+		if settings is not None:
+			path = settings.value(key="FileNameFormatDMG", default=path)
+		if header["cgb"] == 0xC0 or header["cgb"] == 0x80:
+			if len(header["game_title_raw"].rstrip("\x00")) == 15:
+				if path_title[-4:][0] in ("A", "B", "H", "K", "V") and path_title[-4:][3] in ("A", "B", "D", "E", "F", "I", "J", "K", "P", "S", "U", "X", "Y"):
+					path_code = path_title[-4:]
+					path_title = path_title[:-4].rstrip("_")
+					path = "%TITLE%_%CODE%-%REVISION%"
+					if settings is not None:
+						path = settings.value(key="FileNameFormatCGB", default=path)
+			path_extension = "gbc"
+		elif header["old_lic"] == 0x33 and header["sgb"] == 0x03:
+			path_extension = "sgb"
+		else:
+			path_extension = "gb"
+		if path_title == "":
+			path = "ROM.{:s}".format(path_extension)
+		else:
+			path = path.replace("%TITLE%", path_title.strip())
+			path = path.replace("%CODE%", path_code.strip())
+			path = path.replace("%REVISION%", path_revision)
+			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
+			path += ".{:s}".format(path_extension)
+	elif mode == "AGB":
+		path = "%TITLE%_%CODE%-%REVISION%"
+		if settings is not None:
+			path = settings.value(key="FileNameFormatAGB", default=path)
+		path_title = header["game_title"]
+		path_code = header["game_code"]
+		path_revision = str(header["version"])
+		if (path_title == "" and path_code == ""):
+			path = "ROM.gba"
+		else:
+			path = path.replace("%TITLE%", path_title.strip())
+			path = path.replace("%CODE%", path_code.strip())
+			path = path.replace("%REVISION%", path_revision)
+			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
+			path += ".gba"
+	return path
 
 def validate_datetime_format(string, format):
 	try:

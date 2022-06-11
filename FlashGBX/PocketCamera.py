@@ -103,9 +103,11 @@ class PocketCamera:
 		return self.ConvertPicture(imgbuffer, lastseen=True)
 	
 	def ExtractPicture(self, index):
-		if index <= 30:
+		if index < 30:
 			index = self.ORDER[index]
 			offset = 0x2000 + (index * 0x1000)
+		elif index == 30:
+			offset = 0x11FC
 		elif index == 31:
 			offset = 0
 		imgbuffer = self.DATA[offset:offset+0x1000]
@@ -117,7 +119,7 @@ class PocketCamera:
 		pnginfo.add_text("Creation Time", email.utils.formatdate())
 		
 		if index == 30:
-			pic = self.GetPicture(0)
+			pic = self.GetPicture(30)
 			pnginfo.add_text("Title", "Game Face")
 		elif index == 31:
 			pic = self.GetPicture(31)

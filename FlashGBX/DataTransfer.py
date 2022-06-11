@@ -3,7 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import traceback
-import PySide2
+from . import pyside as PySide2
 
 class DataTransfer(PySide2.QtCore.QThread):
 	CONFIG = None

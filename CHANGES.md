@@ -1,4 +1,11 @@
 # Release notes
+### v3.14 (released 2022-06-11)
+- Fixed a bug with extracting the Game Boy Camera’s Game Face image *(thanks 2358)*
+- Improved the default file names, now includes the ROM revision information as well
+- The default file name format can now be configured within the `settings.ini` file
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums (fixes some games such as Yoshi’s Universal Gravitation) *(thanks 2358)*
+- FlashGBX now experimentally supports both PySide2 and PySide6 GUI frameworks which should make it easier to use on Apple M1 macOS systems *(thanks JFox)*
+
 ### v3.13 (released 2022-05-30)
 - Bundles GBxCart RW v1.4 firmware version R36+L7 (fixes a problem with insideGadgets’ GBxCam application)
 - Added smaller selectable ROM sizes for Game Boy Advance ROM backups

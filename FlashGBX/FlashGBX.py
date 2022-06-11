@@ -89,7 +89,7 @@ def main(portableMode=False):
 		app_path = os.path.dirname(os.path.abspath(__file__))
 	
 	try:
-		from PySide2 import QtCore
+		from .pyside import QtCore
 		cp = { "subdir":app_path + "/config", "appdata":QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppConfigLocation) + '/FlashGBX' }
 	except:
 		cp = { "subdir":app_path + "/config", "appdata":os.path.expanduser('~') + '/FlashGBX' }

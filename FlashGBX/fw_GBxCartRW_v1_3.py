@@ -3,7 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import zipfile, os, serial, struct, time, re, math, platform
-from PySide2 import QtCore, QtWidgets, QtGui
+from .pyside import QtCore, QtWidgets, QtGui, QDesktopWidget
 from . import Util
 
 class FirmwareUpdaterWindow(QtWidgets.QDialog):
@@ -141,7 +141,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 	def run(self):
 		self.layout.update()
 		self.layout.activate()
-		screenGeometry = QtWidgets.QDesktopWidget().screenGeometry()
+		screenGeometry = QDesktopWidget().screenGeometry(self)
 		x = (screenGeometry.width() - self.width()) / 2
 		y = (screenGeometry.height() - self.height()) / 2
 		self.move(x, y)

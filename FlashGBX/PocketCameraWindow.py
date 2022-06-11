@@ -2,10 +2,10 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import functools, os, json, platform, shutil, hashlib
+import functools, os, json, platform, shutil
 from PIL.ImageQt import ImageQt
 from PIL import Image, ImageDraw
-from PySide2 import QtCore, QtWidgets, QtGui
+from .pyside import QtCore, QtWidgets, QtGui, QDesktopWidget
 from .PocketCamera import PocketCamera
 
 class PocketCameraWindow(QtWidgets.QDialog):
@@ -204,7 +204,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	def run(self):
 		self.layout.update()
 		self.layout.activate()
-		screenGeometry = QtWidgets.QDesktopWidget().screenGeometry()
+		screenGeometry = QDesktopWidget().screenGeometry(self)
 		x = (screenGeometry.width() - self.width()) / 2
 		y = (screenGeometry.height() - self.height()) / 2
 		self.move(x, y)

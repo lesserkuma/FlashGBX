@@ -3,7 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import zipfile, serial, struct, time, random, hashlib, datetime
-from PySide2 import QtCore, QtWidgets, QtGui
+from .pyside import QtCore, QtWidgets, QtGui, QDesktopWidget
 try:
 	from . import Util
 except ImportError:
@@ -242,7 +242,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		try:
 			self.layout.update()
 			self.layout.activate()
-			screenGeometry = QtWidgets.QDesktopWidget().screenGeometry()
+			screenGeometry = QDesktopWidget().screenGeometry(self)
 			x = (screenGeometry.width() - self.width()) / 2
 			y = (screenGeometry.height() - self.height()) / 2
 			self.move(x, y)

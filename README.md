@@ -14,7 +14,8 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 - Many reproduction cartridges and flash cartridges can be auto-detected
 - A flash chip query (including Common Flash Interface information) can be performed for flash cartridges
 - Decode and extract Game Boy Camera photos from save data
-- Update firmware of insideGadgets GBxCart RW v1.3 and v1.4 devices
+- Generate ROM dump reports for game preservation purposes
+- Update firmware of most insideGadgets GBxCart RW devices
 
 ### Confirmed working reader/writer hardware and firmware versions
 
@@ -33,24 +34,27 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 
 ### Run using Python (Linux, macOS, Windows)
 
-#### Installing or upgrading from an older version
+#### Installing
 
-1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or higher)
+1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or newer)
 2. Open a Terminal or Command Prompt window
-3. If your Python version is 3.10 or newer, first run this command:<br>`pip3 install --ignore-requires-python -U PySide2`
-4. Install or upgrade FlashGBX with this command:<br>`pip3 install -U FlashGBX`
-* If installation fails and you see an error about a conflict involving PySide2, try these commands instead:<br>`pip3 install pyserial Pillow setuptools requests python-dateutil`<br>`pip3 install --no-deps -U FlashGBX`
+3. Install FlashGBX with this command:<br>`pip3 install FlashGBX[qt5]`
+* If installation fails, use this command instead:<br>`pip3 install FlashGBX[qt6]`
+* If installation still fails, you can install the minimal version (command line interface) with this command:<br>`pip3 install FlashGBX`
 
 * Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
-
-*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages.*
 
 #### Running
 Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
 
 `python3 -m FlashGBX`
 
-*To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
+*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) or [PySide6](https://pypi.org/project/PySide6/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages. To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
+
+#### Upgrading from an older version
+
+1. Open a Terminal or Command Prompt window
+2. Enter this command:<br>`pip3 install -U FlashGBX`
 
 ## Cartridge Compatibility
 ### Supported cartridge memory mappers
@@ -231,8 +235,9 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - BX2006_0106_NEW with S29GL128N10TFI01
   - BX2006_TSOP_64BALL with GL128S
   - BX2006_TSOP_64BALL with GL256S
-  - BX2006_TSOPBGA_0106 with M29W640GB6AZA6
+  - BX2006_TSOPBGA_0106 with M29W640
   - BX2006_TSOPBGA_0106 with K8D6316UTM-PI07
+  - BX2006_TSOPBGA_6108 with M29W640
   - DV15 with MSP55LV100G
   - GA-07 with unlabeled flash chip
   - GE28F128W30 with 128W30B0
@@ -247,6 +252,10 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device. An unstable cartridge connection is the most common reason for read or write errors.
 
+* If your Game Boy Camera cartridge is not reading, make sure it’s connected the correct way around; screws go up.
+
+* For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
+
 * Depending on your system configuration, you may have to use `pip` and `python` commands instead of `pip3` and `python3`.
 
 * On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
@@ -257,12 +266,6 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
-* If you use Python 3.10+ and see the error `Type Error: 'PySide2.QtCore.Qt.WindowType' object cannot be interpreted as an integer` or can only use CLI mode, try to install or update the PySide2 package by running `pip3 install -U PySide2 --ignore-requires-python` or try the older [Python version 3.9.9](https://www.python.org/downloads/release/python-399/).
-
-* If your Game Boy Camera cartridge is not reading, make sure it’s connected the correct way around; screws go up.
-
-* For save data backup/restore on Game Boy Advance reproduction cartridges, depending on how it was built, you may have to manually select the save type for it to work properly. However, the save data backup/restore feature may not work on certain reproduction cartridges with batteryless-patched ROMs. As those cartridges use the same flash chip for both ROM and save data storage, a full ROM backup will usually include the save data. Also, when flashing a new unpatched ROM to a cartridge like this, the game may not be able to save progress without soldering in a battery. See the [Flash Cart DB website](https://flashcartdb.com/index.php/Clone_and_Repo_Cart_Problems) for more information.
-
 ## Miscellaneous
 
 * To use your own frame around extracted Game Boy Camera pictures, place a file called `pc_frame.png` (must be at least 160×144 pixels) into the configuration directory. (GUI mode only)
@@ -271,6 +274,7 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 The author would like to thank the following very kind people for their help and contributions (in alphabetical order):
 
+- 2358 (bug reports)
 - 90sFlav (flash chip info)
 - AcoVanConis (bug reports, flash chip info)
 - AdmirtheSableye (bug reports)
