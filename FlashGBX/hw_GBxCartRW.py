@@ -1394,7 +1394,7 @@ class GbxDevice:
 				self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
 			time.sleep(0.1)
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
-		elif self.MODE == "DMG":
+		elif self.MODE == "AGB":
 			self._write(self.DEVICE_CMD["SET_MODE_AGB"])
 		
 		for f in range(1, len(supported_carts)):
@@ -1446,13 +1446,14 @@ class GbxDevice:
 				size = supp_flash_types[1][flash_types[0]]["flash_size"]
 				size_undetected = False
 				for i in range(0, len(flash_types)):
-					if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
-						size_undetected = True
+					if "flash_size" in supp_flash_types[1][flash_types[i]]:
+						if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
+							size_undetected = True
 				
 				if size_undetected:
 					if isinstance(cfi, dict) and "device_size" in cfi:
 						for i in range(0, len(flash_types)):
-							if cfi['device_size'] == supp_flash_types[1][flash_types[i]]["flash_size"]:
+							if "flash_size" in supp_flash_types[1][flash_types[i]] and cfi['device_size'] == supp_flash_types[1][flash_types[i]]["flash_size"]:
 								flash_type_id = flash_types[i]
 								size_undetected = False
 								break

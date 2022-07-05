@@ -5,7 +5,7 @@
 # This code is used for official firmware of GBxCart v1.3 only and this code is pure chaos, sorry
 # Refer to hw_GBxCartRW.py for the much cleaner rewrite (used for GBxCart RW v1.4 and firmware L1 on v1.3)
 
-import time, math, struct, traceback, zlib, copy, hashlib, os, platform, datetime
+import time, math, struct, traceback, zlib, copy, hashlib, os, datetime
 import serial, serial.tools.list_ports
 from serial import SerialException
 from .RomFileDMG import RomFileDMG
@@ -1146,7 +1146,7 @@ class GbxDevice:
 		if header is False or len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
 		if Util.DEBUG:
 			with open("debug_header.bin", "wb") as f: f.write(header)
-
+		
 		# Check for DACS
 		dacs_8m = False
 		if header[0x04:0x04+0x9C] == bytearray([0x00] * 0x9C):
@@ -1490,10 +1490,10 @@ class GbxDevice:
 						break
 				self.INFO["dump_info"]["agb_savelib"] = temp_ver
 				self.INFO["dump_info"]["agb_save_flash_id"] = None
-				if "FLASH" in temp_ver:
-					agb_save_flash_id = self.ReadFlashSaveID()
-					if agb_save_flash_id is not False and len(agb_save_flash_id) == 3:
-						self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
+				#if "FLASH" in temp_ver:
+				#	agb_save_flash_id = self.ReadFlashSaveID()
+				#	if agb_save_flash_id is not False and len(agb_save_flash_id) == 3:
+				#		self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
 
 			self.INFO["rom_checksum_calc"] = chk
 			

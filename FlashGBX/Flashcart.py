@@ -179,8 +179,8 @@ class Flashcart:
 			time.sleep(0.001)
 	
 	def VerifyFlashID(self):
-		if "read_identifier" not in self.CONFIG["commands"]: return False
-		if len(self.CONFIG["flash_ids"]) == 0: return False
+		if "read_identifier" not in self.CONFIG["commands"]: return (False, [])
+		if len(self.CONFIG["flash_ids"]) == 0: return (False, [])
 		if "power_cycle" in self.CONFIG and self.CONFIG["power_cycle"] is True:
 			self.CART_POWERCYCLE_FNCPTR()
 		self.Reset()

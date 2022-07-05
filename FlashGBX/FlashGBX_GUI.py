@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import sys, os, time, datetime, re, json, platform, subprocess, requests, webbrowser, pkg_resources, struct, math
+import sys, os, time, datetime, json, platform, subprocess, requests, webbrowser, pkg_resources, struct, math
 from .pyside import QtCore, QtWidgets, QtGui, QApplication
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
@@ -2297,9 +2297,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		except ImportError:
 			pass
 		
-		try:
+		if callable(getattr(qt_app, "exec", None)):
 			qt_app.exec() # PySide6
-		except AttributeError:
+		else:
 			qt_app.exec_() # PySide2
 
 qt_app = QApplication(sys.argv)

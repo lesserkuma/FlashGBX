@@ -32,6 +32,8 @@ Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releas
 * Windows Setup: An installer that will add the application to the start menu and optionally create a desktop icon
 * Windows Portable: Have everything in one place including the config files
 
+These work for installing fresh and upgrading from an older version.
+
 ### Run using Python (Linux, macOS, Windows)
 
 #### Installing
@@ -93,6 +95,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 29LV Series Flash BOY with 29LV160DB
   - BLAZE Xploder GB
   - BUNG Doctor GB Card 64M
+  - Catskull 32k Gameboy Flash Cart
   - DIY cart with AM29F010
   - DIY cart with AM29F016
   - DIY cart with AM29F032

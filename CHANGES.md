@@ -1,4 +1,9 @@
 # Release notes
+### v3.15 (released 2022-07-05)
+- Improved support for several flash cartridge types
+- Confirmed support for the Catskull 32k Gameboy Flash Cart *(thanks CodyWick13)*
+- Minor bug fixes and improvements
+
 ### v3.14 (released 2022-06-11)
 - Fixed a bug with extracting the Game Boy Camera’s Game Face image *(thanks 2358)*
 - Improved the default file names, now includes the ROM revision information as well
