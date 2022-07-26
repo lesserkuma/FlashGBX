@@ -333,7 +333,7 @@ class FlashGBX_CLI():
 
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.CONN.INFO["last_action"] = 0
-			if not "debug" in self.ARGS and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB: # 128 KB
+			if not "debug" in self.ARGS and self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB: # 128 KB
 				answer = input("Would you like to extract Game Boy Camera pictures to “{:s}” now? [Y/n]: ".format(Util.formatPathOS(os.path.abspath(os.path.splitext(self.CONN.INFO["last_path"])[0]), end_sep=True) + "IMG_PC**.{:s}".format(self.ARGS["argparsed"].gbcamera_outfile_format))).strip().lower()
 				if answer != "n":
 					pc = PocketCamera()
@@ -842,7 +842,7 @@ class FlashGBX_CLI():
 			if self.CONN.GetMode() == "AGB":
 				cart_types = self.CONN.GetSupportedCartridgesAGB()
 				if "flash_type" in header:
-					print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
+					print("Selected cartridge type: {:s}\n".format(cart_types[0][header["flash_type"]]))
 					cart_type = header["flash_type"]
 				elif header['logo_correct'] and header['3d_memory'] is True:
 					for i in range(0, len(cart_types[0])):

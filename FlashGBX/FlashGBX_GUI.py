@@ -911,22 +911,22 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 			dontShowAgainCameraSavePopup = str(self.SETTINGS.value("SkipCameraSavePopup", default="disabled")).lower() == "enabled"
 			if not dontShowAgainCameraSavePopup:
-				if self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB
-						cbCameraSavePopup = QtWidgets.QCheckBox("Don’t show this message again", checked=dontShowAgain)
-						msgboxCameraPopup = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Would you like to load your save data with the GB Camera Viewer now?")
-						msgboxCameraPopup.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-						msgboxCameraPopup.setDefaultButton(QtWidgets.QMessageBox.Yes)
-						msgboxCameraPopup.setCheckBox(cbCameraSavePopup)
-						answer = msgboxCameraPopup.exec()
-						dontShowAgainCameraSavePopup = cbCameraSavePopup.isChecked()
-						if dontShowAgainCameraSavePopup: self.SETTINGS.setValue("SkipCameraSavePopup", "enabled")
-						if answer == QtWidgets.QMessageBox.Yes:
-							self.CAMWIN = None
-							self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"], config_path=self.CONFIG_PATH)
-							self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-							self.CAMWIN.setModal(True)
-							self.CAMWIN.run()
-							return
+				if self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB
+					cbCameraSavePopup = QtWidgets.QCheckBox("Don’t show this message again", checked=dontShowAgain)
+					msgboxCameraPopup = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Would you like to load your save data with the GB Camera Viewer now?")
+					msgboxCameraPopup.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+					msgboxCameraPopup.setDefaultButton(QtWidgets.QMessageBox.Yes)
+					msgboxCameraPopup.setCheckBox(cbCameraSavePopup)
+					answer = msgboxCameraPopup.exec()
+					dontShowAgainCameraSavePopup = cbCameraSavePopup.isChecked()
+					if dontShowAgainCameraSavePopup: self.SETTINGS.setValue("SkipCameraSavePopup", "enabled")
+					if answer == QtWidgets.QMessageBox.Yes:
+						self.CAMWIN = None
+						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"], config_path=self.CONFIG_PATH)
+						self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+						self.CAMWIN.setModal(True)
+						self.CAMWIN.run()
+						return
 			
 			msgbox.setText("The save data backup is complete!")
 			msgbox.setCheckBox(cb)
@@ -2137,7 +2137,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					elif args["info_type"] == "label":
 						self.lblStatus4a.setText(args["info_msg"])
 				
-				self.ReadCartridge(resetStatus=False)
+				QtCore.QTimer.singleShot(1, lambda: [ self.ReadCartridge(resetStatus=False) ])
 				return
 
 			elif args["action"] == "PROGRESS":
