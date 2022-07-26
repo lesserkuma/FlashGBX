@@ -32,18 +32,20 @@ class PocketCamera:
 			if os.path.getsize(savefile) != 128*1024: return False
 			with open(savefile, "rb") as file: self.DATA = file.read()
 		
-		if self.DATA[0x1FFB1:0x1FFB6] != b'Magic':
-			self.DATA = None
-			return False
+		# if self.DATA[0x1FFB1:0x1FFB6] != b'Magic':
+		# 	self.DATA = None
+		# 	return False
 		
 		order_raw = self.DATA[0x11D7:0x11F5]
 		order = [None] * 30
 		deleted = []
+		seen_indicies = []
 		for i in range(0, 30):
-			if order_raw[i] == 0xFF:
+			if order_raw[i] == 0xFF or order_raw[i] in seen_indicies:
 				deleted.append(i)
 			else:
 				order[order_raw[i]] = i
+			seen_indicies.append(order_raw[i])
 		
 		while None in order: order.remove(None)
 		order.extend(deleted)

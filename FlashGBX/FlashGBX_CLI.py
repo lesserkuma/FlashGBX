@@ -77,7 +77,7 @@ class FlashGBX_CLI():
 			self.ARGS["called_with_args"] = True
 		
 		if args.action is None or args.action not in ("gbcamera-extract", "fwupdate-gbxcartrw"):
-			if not self.FindDevices():
+			if not self.FindDevices(port=args.device_port):
 				print("No devices found.")
 				return
 			else:
@@ -118,7 +118,7 @@ class FlashGBX_CLI():
 			return
 		
 		if args.action == "fwupdate-gbxcartrw":
-			self.UpdateFirmwareGBxCartRW(pcb=5, port=args.fwupdate_port)
+			self.UpdateFirmwareGBxCartRW(pcb=5, port=args.device_port)
 			return 0
 		
 		elif args.mode is None:
@@ -333,26 +333,24 @@ class FlashGBX_CLI():
 
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.CONN.INFO["last_action"] = 0
-			if not "debug" in self.ARGS and self.CONN.INFO["transferred"] == 131072: # 128 KB
-				with open(self.CONN.INFO["last_path"], "rb") as file: temp = file.read()
-				if temp[0x1FFB1:0x1FFB6] == b'Magic' and not self.ARGS["called_with_args"]:
-					answer = input("Game Boy Camera save data was detected.\nWould you like to extract all pictures to “{:s}” now? [Y/n]: ".format(Util.formatPathOS(os.path.abspath(os.path.splitext(self.CONN.INFO["last_path"])[0]), end_sep=True) + "IMG_PC**.{:s}".format(self.ARGS["argparsed"].gbcamera_outfile_format))).strip().lower()
-					if answer != "n":
-						pc = PocketCamera()
-						if pc.LoadFile(self.CONN.INFO["last_path"]) != False:
-							palettes = [ "grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3" ]
-							pc.SetPalette(palettes.index(self.ARGS["argparsed"].gbcamera_palette))
-							file = os.path.splitext(self.CONN.INFO["last_path"])[0] + "/IMG_PC00.png"
-							if os.path.isfile(os.path.dirname(file)):
-								print("Can’t save pictures at location “{:s}”.".format(os.path.abspath(os.path.dirname(file))))
-								return
-							if not os.path.isdir(os.path.dirname(file)):
-								os.makedirs(os.path.dirname(file))
-							for i in range(0, 32):
-								file = os.path.splitext(self.CONN.INFO["last_path"])[0] + "/IMG_PC{:02d}".format(i) + "." + self.ARGS["argparsed"].gbcamera_outfile_format
-								pc.ExportPicture(i, file, scale=1)
-							print("The pictures were extracted.")
-					print("")
+			if not "debug" in self.ARGS and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB: # 128 KB
+				answer = input("Would you like to extract Game Boy Camera pictures to “{:s}” now? [Y/n]: ".format(Util.formatPathOS(os.path.abspath(os.path.splitext(self.CONN.INFO["last_path"])[0]), end_sep=True) + "IMG_PC**.{:s}".format(self.ARGS["argparsed"].gbcamera_outfile_format))).strip().lower()
+				if answer != "n":
+					pc = PocketCamera()
+					if pc.LoadFile(self.CONN.INFO["last_path"]) != False:
+						palettes = [ "grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3" ]
+						pc.SetPalette(palettes.index(self.ARGS["argparsed"].gbcamera_palette))
+						file = os.path.splitext(self.CONN.INFO["last_path"])[0] + "/IMG_PC00.png"
+						if os.path.isfile(os.path.dirname(file)):
+							print("Can’t save pictures at location “{:s}”.".format(os.path.abspath(os.path.dirname(file))))
+							return
+						if not os.path.isdir(os.path.dirname(file)):
+							os.makedirs(os.path.dirname(file))
+						for i in range(0, 32):
+							file = os.path.splitext(self.CONN.INFO["last_path"])[0] + "/IMG_PC{:02d}".format(i) + "." + self.ARGS["argparsed"].gbcamera_outfile_format
+							pc.ExportPicture(i, file, scale=1)
+						print("The pictures were extracted.")
+				print("")
 			
 			print("The save data backup is complete!")
 		
@@ -367,11 +365,11 @@ class FlashGBX_CLI():
 		else:
 			self.CONN.INFO["last_action"] = 0
 	
-	def FindDevices(self, connectToFirst=False):
+	def FindDevices(self, port=None):
 		global hw_devices
 		for hw_device in hw_devices:
 			dev = hw_device.GbxDevice()
-			ret = dev.Initialize(self.FLASHCARTS, max_baud=1700000)
+			ret = dev.Initialize(self.FLASHCARTS, max_baud=1700000, port=port)
 			if ret is False:
 				self.CONN = None
 			elif isinstance(ret, list):

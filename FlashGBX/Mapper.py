@@ -930,7 +930,7 @@ class DMG_TAMA5(DMG_MBC):
 		dprint("Enabling TAMA5")
 		lives = 20
 		while (tama5_check & 3) != 1:
-			dprint("└Current value is 0x{:X}, now writing 0xA001=0x{:X}".format(tama5_check, Util.TAMA5_REG.ENABLE.value))
+			dprint("- Current value is 0x{:X}, now writing 0xA001=0x{:X}".format(tama5_check, Util.TAMA5_REG.ENABLE.value))
 			self.CART_WRITE_FNCPTR(0xA001, Util.TAMA5_REG.ENABLE.value)
 			tama5_check = self.CartRead(0xA000)
 			time.sleep(0.1)

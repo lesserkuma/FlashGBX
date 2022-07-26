@@ -142,7 +142,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--save-filename-add-datetime", action="store_true", help="adds a timestamp to the file name of save data backups")
 	ap_cli2.add_argument("--gbcamera-palette", choices=["grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3"], type=str.lower, default="grayscale", help="sets the palette of pictures extracted from Game Boy Camera saves")
 	ap_cli2.add_argument("--gbcamera-outfile-format", choices=["png", "bmp", "gif", "jpg"], type=str.lower, default="png", help="sets the file format of saved pictures extracted from Game Boy Camera saves")
-	ap_cli2.add_argument("--fwupdate-port", help="override device port for the firmware updater", default=None)
+	ap_cli2.add_argument("--device-port", help="override device port", default=None)
 	args = parser.parse_args()
 	
 	if "appdata" in cp:

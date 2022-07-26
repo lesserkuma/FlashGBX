@@ -1,4 +1,13 @@
 # Release notes
+### v3.16 (released 2022-07-26)
+- Added support for 256M29EWH (no PCB text) *(thanks Diddy_Kong)*
+- Added support for a new insideGadgets 4 MB flash cartridge *(thanks AlexiG)*
+- Added support for Ferrante Crafts cart 32 KB V2 *(thanks FerrantePescara)*
+- Bundles GBxCart RW v1.4 firmware version R37+L7 (improves support for some Game Boy flash cartridges)
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums
+- Added an option for manually specifying the device port to use via command line argument `--device-port`
+- Support added for Pocket Camera save data files made using 2bit PXLR Studio
+
 ### v3.15 (released 2022-07-05)
 - Improved support for several flash cartridge types
 - Confirmed support for the Catskull 32k Gameboy Flash Cart *(thanks CodyWick13)*

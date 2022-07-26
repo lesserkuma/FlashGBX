@@ -144,6 +144,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 - Game Boy
 
   - 2006_TSOP_64BALL_QFP48 with AL016J55FFAR2
+  - 256M29EWH (no PCB text)
   - 36VF3204 and ALTERA CPLD (no PCB text)
   - DMG-DHCN-20 with MX29LV320ET
   - DMG-GBRW-20 with 29LV320ETMI-70G
@@ -290,7 +291,9 @@ The author would like to thank the following very kind people for their help and
 - crizzlycruz (flash chip info)
 - Davidish (flash chip info)
 - DevDavisNunez (bug reports)
+- Diddy_Kong (sample cartridge contribution)
 - djedditt (testing)
+- Dr-InSide (bug reports)
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
 - EchelonPrime (flash chip info)
@@ -342,11 +345,13 @@ The author would like to thank the following very kind people for their help and
 - t5b6_de (flash chip info)
 - Timville (sample cartridge contribution, flash chip info)
 - twitnic (flash chip info)
+- velipso (bug reports)
 - Veund (flash chip info)
 - voltagex (bug reports)
 - Voultar (bug reports, feature suggestions)
 - Wkr (flash chip info)
 - x7l7j8cc (flash chip info)
+- xactoes (testing)
 - Zeii (flash chip info)
 - Zelante (flash chip info)
 - zvxr (flash chip info)

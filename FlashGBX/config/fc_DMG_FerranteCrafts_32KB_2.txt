@@ -1,0 +1,54 @@
+{
+	"type":"DMG",
+	"names":[
+		"Ferrante Crafts cart 32 KB V2"
+	],
+	"flash_ids":[
+		[ 0xBF, 0xFF, 0x25, 0xFF ]
+	],
+	"voltage":5,
+	"flash_size":0x8000,
+	"start_addr":0,
+	"first_bank":1,
+	"write_pin":"WR",
+	"chip_erase_timeout":20,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x90 ]
+		],
+		"chip_erase":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x80 ],
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

@@ -17,7 +17,7 @@ class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 7
-	DEVICE_LATEST_FW_TS = { 4:1619427330, 5:1653902765, 6:1653902765 }
+	DEVICE_LATEST_FW_TS = { 4:1619427330, 5:1657187182, 6:1657187182 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -142,7 +142,7 @@ class GbxDevice:
 						dev.close()
 						self.DEVICE = None
 						self.BAUDRATE = 1000000
-						return False
+						continue
 				elif max_baud >= 1700000 and self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE < 1700000:
 					# Switch to higher baud rate
 					self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
@@ -163,7 +163,7 @@ class GbxDevice:
 				elif self.FW is None or "cfw_id" not in self.FW or self.FW["cfw_id"] != 'L': # Not a CFW by Lesserkuma
 					dev.close()
 					self.DEVICE = None
-					return False
+					continue
 				elif self.FW["fw_ver"] < self.DEVICE_MIN_FW:
 					dev.close()
 					self.DEVICE = None
@@ -177,7 +177,7 @@ class GbxDevice:
 				if (self.FW["pcb_ver"] not in (4, 5, 6, 101)): # only the v1.3, v1.4, v1.4a, Mini v1.1 PCB revisions are supported
 					dev.close()
 					self.DEVICE = None
-					return False
+					continue
 				
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 

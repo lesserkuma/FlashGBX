@@ -255,7 +255,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			elif config_ret[i][0] == 3:
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), config_ret[i][1], QtWidgets.QMessageBox.Ok)
 
-		QtCore.QTimer.singleShot(1, lambda: [ self.UpdateCheck(), self.FindDevices() ])
+		QtCore.QTimer.singleShot(1, lambda: [ self.UpdateCheck(), self.FindDevices(port=args["argparsed"].device_port) ])
+
 
 	def GuiCreateGroupBoxDMGCartInfo(self):
 		self.grpDMGCartridgeInfo = QtWidgets.QGroupBox("Game Boy Cartridge Information")
@@ -680,7 +681,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				return True
 			return False
 	
-	def FindDevices(self, connectToFirst=False):
+	def FindDevices(self, connectToFirst=False, port=None):
 		if self.CONN is not None:
 			self.DisconnectDevice()
 		self.lblDevice.setText("Searching...")
@@ -693,7 +694,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		global hw_devices
 		for hw_device in hw_devices:
 			dev = hw_device.GbxDevice()
-			ret = dev.Initialize(self.FLASHCARTS, max_baud=1700000)
+			ret = dev.Initialize(self.FLASHCARTS, max_baud=1700000, port=port)
 			if ret is False:
 				self.CONN = None
 			elif isinstance(ret, list):
@@ -910,11 +911,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 			dontShowAgainCameraSavePopup = str(self.SETTINGS.value("SkipCameraSavePopup", default="disabled")).lower() == "enabled"
 			if not dontShowAgainCameraSavePopup:
-				if self.CONN.INFO["transferred"] == 131072: # 128 KB
-					with open(self.CONN.INFO["last_path"], "rb") as file: temp = file.read()
-					if temp[0x1FFB1:0x1FFB6] == b'Magic':
+				if self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB
 						cbCameraSavePopup = QtWidgets.QCheckBox("Don’t show this message again", checked=dontShowAgain)
-						msgboxCameraPopup = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Game Boy Camera save data was detected.\nWould you like to load it with the GB Camera Viewer now?")
+						msgboxCameraPopup = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Would you like to load your save data with the GB Camera Viewer now?")
 						msgboxCameraPopup.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 						msgboxCameraPopup.setDefaultButton(QtWidgets.QMessageBox.Yes)
 						msgboxCameraPopup.setCheckBox(cbCameraSavePopup)
