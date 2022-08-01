@@ -7,7 +7,7 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.16.1"
+VERSION_PEP440 = "3.17"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 
@@ -632,8 +632,10 @@ def GenerateFileName(mode, header, settings):
 		path_revision = str(header["version"])
 		path_extension = "bin"
 		path = "%TITLE%"
+		fe_sgb = "enabled"
 		if settings is not None:
 			path = settings.value(key="FileNameFormatDMG", default=path)
+			fe_sgb = settings.value(key="AutoFileExtensionSGB", default="enabled")
 		if header["cgb"] == 0xC0 or header["cgb"] == 0x80:
 			if len(header["game_title_raw"].rstrip("\x00")) == 15:
 				if path_title[-4:][0] in ("A", "B", "H", "K", "V") and path_title[-4:][3] in ("A", "B", "D", "E", "F", "I", "J", "K", "P", "S", "U", "X", "Y"):
@@ -643,7 +645,7 @@ def GenerateFileName(mode, header, settings):
 					if settings is not None:
 						path = settings.value(key="FileNameFormatCGB", default=path)
 			path_extension = "gbc"
-		elif header["old_lic"] == 0x33 and header["sgb"] == 0x03:
+		elif header["old_lic"] == 0x33 and header["sgb"] == 0x03 and fe_sgb.lower() == "enabled":
 			path_extension = "sgb"
 		else:
 			path_extension = "gb"

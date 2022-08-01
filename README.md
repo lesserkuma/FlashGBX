@@ -303,6 +303,7 @@ The author would like to thank the following very kind people for their help and
 - FerrantePescara (flash chip info)
 - frarees (bug reports)
 - Frost Clock (flash chip info)
+- gekkio (bug reports, technical information)
 - Godan (flash chip info)
 - Grender (testing)
 - HDR (testing)

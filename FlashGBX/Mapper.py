@@ -207,11 +207,12 @@ class DMG_MBC1(DMG_MBC):
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index, hex(index >> 5), hex(index & 0x1F))
 		commands = [
-			[ 0x6000, 0 ],
+			[ 0x6000, 1 ],
+			[ 0x2000, index ],
 			[ 0x4000, index >> 5 ],
-			[ 0x2000, index & 0x1F ],
 		]
-		start_address = 0 if index == 0 else 0x4000
+		start_address = 0x4000 if index & 0x1F else 0
+
 		self.CartWrite(commands)
 		return (start_address, self.ROM_BANK_SIZE)
 
@@ -544,18 +545,12 @@ class DMG_MBC1M(DMG_MBC1):
 
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
-		if index < 10:
-			commands = [
-				[ 0x4000, index >> 4 ],
-				[ 0x2000, index & 0x1F ],
-			]
-		else:
-			commands = [
-				[ 0x4000, index >> 4 ],
-				[ 0x2000, 0x10 | (index & 0x1F) ],
-			]
-		
-		start_address = 0 if index == 0 else 0x4000
+		commands = [
+			[ 0x6000, 1 ],
+			[ 0x2000, index ],
+			[ 0x4000, index >> 4 ],
+		]
+		start_address = 0x4000 if index & 0x0F else 0
 
 		self.CartWrite(commands)
 		return (start_address, self.ROM_BANK_SIZE)

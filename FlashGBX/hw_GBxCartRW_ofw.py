@@ -190,7 +190,7 @@ class GbxDevice:
 					dev.close()
 					self.DEVICE = None
 					return False
-				elif (self.FW[1] == 100 and self.FW[0] < 26):
+				elif (self.FW[1] == 100 and self.FW[0] < 26 and self.FW[0] != 20):
 					self.FW_UPDATE_REQ = True
 				elif (self.FW[1] in (2, 4, 90) and self.FW[0] < self.DEVICE_MAX_FW) or (self.FW[0] < self.DEVICE_MIN_FW):
 					self.FW_UPDATE_REQ = True
@@ -703,9 +703,12 @@ class GbxDevice:
 		
 		if mbc in (0x01, 0x02, 0x03): # MBC1
 			dprint("└[MBC1] 0x6000=0x00, 0x4000=0x{:X}, 0x2000=0x{:X}".format(bank >> 5, bank & 0x1F))
-			self.cart_write(0x6000, 0)
+			#self.cart_write(0x6000, 0)
+			#self.cart_write(0x4000, bank >> 5)
+			#self.cart_write(0x2000, bank & 0x1F)
+			self.cart_write(0x6000, 1)
+			self.cart_write(0x2000, bank)
 			self.cart_write(0x4000, bank >> 5)
-			self.cart_write(0x2000, bank & 0x1F)
 		elif mbc in (0x101, 0x103): # MBC1M
 			self.cart_write(0x4000, bank >> 4)
 			if (bank < 10):
@@ -1386,7 +1389,14 @@ class GbxDevice:
 					elif mbc == 0x104: # M161
 						startAddr = 0
 						endAddr = 0x8000
-
+					elif mbc in (0x01, 0x02, 0x03): # MBC1
+						if bank & 0x1F:
+							startAddr = 0x4000
+							endAddr = 0x8000
+						else:
+							startAddr = 0
+							endAddr = 0x4000
+					
 					self.SetBankROM(bank, mbc)
 				
 				for currAddr in range(startAddr, endAddr, buffer_len):

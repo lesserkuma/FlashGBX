@@ -1,4 +1,7 @@
 # Release notes
+### v3.17 (released 2022-08-01)
+- Improved MBC1 ROM banking based on the [Game Boy: Complete Technical Reference](https://github.com/Gekkio/gb-ctr) by gekkio (fixes games such as Super Chinese Fighter GB)
+
 ### v3.16/v3.16.1 (released 2022-07-26)
 - Added support for 256M29EWH (no PCB text) *(thanks Diddy_Kong)*
 - Added support for a new insideGadgets 4 MB flash cartridge *(thanks AlexiG)*
