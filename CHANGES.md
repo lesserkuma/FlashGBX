@@ -1,4 +1,8 @@
 # Release notes
+### v3.18 (released 2022-08-18)
+- Fixed a problem with writing MBC2 save data on different mapper cartirdges
+- Improved support for the insideGadgets LinkNLoad flash cartridges
+
 ### v3.17 (released 2022-08-01)
 - Improved MBC1 ROM banking based on the [Game Boy: Complete Technical Reference](https://github.com/Gekkio/gb-ctr) by gekkio (fixes games such as Super Chinese Fighter GB)
 

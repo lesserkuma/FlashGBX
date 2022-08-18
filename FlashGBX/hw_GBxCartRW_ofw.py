@@ -1582,6 +1582,7 @@ class GbxDevice:
 				if audio_low:
 					dprint("DMG-MBC5-32M-FLASH Development Cartridge detected")
 					self.set_mode(self.DEVICE_CMD["AUDIO_LOW"])
+				self.cart_write(0x4000, 0x00)
 
 			elif self.MODE == "AGB":
 				bank_size = 0x10000

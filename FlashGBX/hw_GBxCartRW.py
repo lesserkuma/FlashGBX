@@ -33,6 +33,7 @@ class GbxDevice:
 		"OFW_ERROR_LED_ON":0x3F,
 		"OFW_GB_CART_MODE":0x47,
 		"OFW_GB_FLASH_BANK_1_COMMAND_WRITES":0x4E,
+		"OFW_LNL_QUERY":0x25,
 		"QUERY_FW_INFO":0xA1,
 		"SET_MODE_AGB":0xA2,
 		"SET_MODE_DMG":0xA3,
@@ -337,8 +338,15 @@ class GbxDevice:
 		return "https://www.gbxcart.com/"
 	
 	def SupportsFirmwareUpdates(self):
+		self._write(self.DEVICE_CMD["OFW_LNL_QUERY"])
+		old_timeout = self.DEVICE.timeout
+		self.DEVICE.timeout = 0.15
+		is_lnl = self._read(1) == 0x31
+		self.DEVICE.timeout = old_timeout
+		dprint("LinkNLoad detected:", is_lnl)
+		if is_lnl: return False
 		return self.FW["pcb_ver"] in (4, 5, 6)
-
+	
 	def FirmwareUpdateAvailable(self):
 		if self.FW["pcb_ver"] not in (5, 6): return False
 		return (self.FW["pcb_ver"] in (4, 5, 6) and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]])
@@ -2071,7 +2079,7 @@ class GbxDevice:
 			if audio_low:
 				dprint("DMG-MBC5-32M-FLASH Development Cartridge detected")
 				self._set_fw_variable("FLASH_WE_PIN", 0x01)
-			
+			self._cart_write(0x4000, 0x00)
 			_mbc.EnableRAM(enable=True)
 		
 		elif self.MODE == "AGB":

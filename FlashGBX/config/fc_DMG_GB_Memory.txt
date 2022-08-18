@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"NP GB Memory Cartridge (DMG-MMSA-JPN)"
+		"NP GB-Memory Cartridge (DMG-MMSA-JPN)"
 	],
 	"flash_ids":[
 		[ 0xC2, 0x89 ]
