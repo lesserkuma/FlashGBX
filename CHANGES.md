@@ -1,6 +1,6 @@
 # Release notes
 ### v3.18 (released 2022-08-18)
-- Fixed a problem with writing MBC2 save data on different mapper cartirdges
+- Fixed a problem with writing MBC2 save data onto cartridges that use a different mapper
 - Improved support for the insideGadgets LinkNLoad flash cartridges
 
 ### v3.17 (released 2022-08-01)
