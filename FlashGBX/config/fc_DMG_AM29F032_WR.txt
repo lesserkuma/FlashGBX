@@ -1,9 +1,11 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with AM29F032 @ WR"
+		"DIY cart with AM29F032 @ WR",
+		"DIY cart with MBM29F033C @ WR"
 	],
 	"flash_ids":[
+		[ 0x04, 0xD4, 0x00, 0x00 ],
 		[ 0x04, 0xD4, 0x00, 0x00 ]
 	],
 	"voltage":5,
@@ -11,7 +13,7 @@
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":90,
 	"sector_size":0x10000,
 	"command_set":"AMD",
 	"commands":{

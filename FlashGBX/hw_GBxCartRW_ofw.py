@@ -16,7 +16,7 @@ from . import Util
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 26
-	DEVICE_MAX_FW = 30
+	DEVICE_MAX_FW = 31
 
 	DEVICE_CMD = {
 		"CART_MODE":'C',
@@ -116,6 +116,7 @@ class GbxDevice:
 		"CART_PWR_ON":'/',
 		"CART_PWR_OFF":'.',
 		"QUERY_CART_PWR":']',
+		"QUERY_ADDR":'@',
 		"AUDIO_HIGH":'8',
 		"AUDIO_LOW":'9',
 	}
@@ -124,6 +125,7 @@ class GbxDevice:
 	
 	FW = []
 	FW_UPDATE_REQ = False
+	QBL = None
 	MODE = None
 	PORT = ''
 	DEVICE = None
@@ -180,7 +182,7 @@ class GbxDevice:
 					#self.DEVICE = dev
 					pass
 				
-				if self.DEVICE is None or not self.IsConnected() or self.FW == [] or self.FW[0] == b'':
+				if self.DEVICE is None or not self.IsConnected() or self.FW == [] or self.FW[0] == b'' or self.QBL is False:
 					dev.close()
 					self.DEVICE = None
 					conn_msg.append([0, "Couldn’t communicate with the GBxCart RW device on port " + ports[i] + ". Please disconnect and reconnect the device, then try again."])
@@ -191,6 +193,8 @@ class GbxDevice:
 					self.DEVICE = None
 					return False
 				elif (self.FW[1] == 100 and self.FW[0] < 26 and self.FW[0] != 20):
+					self.FW_UPDATE_REQ = True
+				elif (self.FW[1] == 90 and self.FW[0] < 30):
 					self.FW_UPDATE_REQ = True
 				elif (self.FW[1] in (2, 4, 90) and self.FW[0] < self.DEVICE_MAX_FW) or (self.FW[0] < self.DEVICE_MIN_FW):
 					self.FW_UPDATE_REQ = True
@@ -301,6 +305,7 @@ class GbxDevice:
 		#if pcb != 4: return False
 		if pcb not in (2, 4, 90, 100) and fw <= 3: return False
 		if (self.FW[1] == 100 and self.FW[0] >= 26): return False
+		if (self.FW[1] == 90 and self.FW[0] >= 30): return False
 		return fw < self.DEVICE_MAX_FW
 	
 	def GetFirmwareUpdaterClass(self):
@@ -331,6 +336,9 @@ class GbxDevice:
 			self.write(self.DEVICE_CMD["READ_FIRMWARE_VERSION"])
 			fw = self.DEVICE.read(1)
 			self.FW = [fw[0], pcb[0]]
+			if self.FW[1] in (2, 4) and self.FW[0] > 30: # check fw memory
+				self.set_number(0x21FF0, self.DEVICE_CMD["QUERY_ADDR"])
+				self.QBL = self.DEVICE.read(1)[0] == 84
 			return True
 		except:
 			self.FW = False
@@ -485,13 +493,13 @@ class GbxDevice:
 
 		# Read save state
 		for i in range(0, 0x20):
-			self.cart_write(0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value, cs=True) # register select and address (high)
-			self.cart_write(0xA000, i >> 4 | Util.TAMA5_CMD.RAM_READ.value << 1, cs=True) # bit 0 = higher ram address, rest = command
-			self.cart_write(0xA001, Util.TAMA5_REG.ADDR_L.value, cs=True) # address (low)
+			self.cart_write(0xA001, 0x06, cs=True) # register select and address (high)
+			self.cart_write(0xA000, i >> 4 | 0x01 << 1, cs=True) # bit 0 = higher ram address, rest = command
+			self.cart_write(0xA001, 0x07, cs=True) # address (low)
 			self.cart_write(0xA000, i & 0x0F, cs=True) # bits 0-3 = lower ram address
-			self.cart_write(0xA001, Util.TAMA5_REG.MEM_READ_H.value, cs=True) # data out (high)
+			self.cart_write(0xA001, 0x0D, cs=True) # data out (high)
 			data_h = self.ReadROM(0xA000, 64)[0]
-			self.cart_write(0xA001, Util.TAMA5_REG.MEM_READ_L.value, cs=True) # data out (low)
+			self.cart_write(0xA001, 0x0C, cs=True) # data out (low)
 			data_l = self.ReadROM(0xA000, 64)[0]
 			data = ((data_h & 0xF) << 4) | (data_l & 0xF)
 			buffer.append(data)
@@ -500,13 +508,13 @@ class GbxDevice:
 		# Read RTC state
 		if rtc:
 			for r in range(0, 0x10):
-				self.cart_write(0xA001, Util.TAMA5_REG.MEM_WRITE_L.value, cs=True) # set address
+				self.cart_write(0xA001, 0x04, cs=True) # set address
 				self.cart_write(0xA000, r, cs=True) # address
-				self.cart_write(0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value, cs=True) # register select
-				self.cart_write(0xA000, Util.TAMA5_CMD.RTC.value << 1, cs=True) # rtc mode
-				self.cart_write(0xA001, Util.TAMA5_REG.ADDR_L.value, cs=True) # set access mode
+				self.cart_write(0xA001, 0x06, cs=True) # register select
+				self.cart_write(0xA000, 0x04 << 1, cs=True) # rtc mode
+				self.cart_write(0xA001, 0x07, cs=True) # set access mode
 				self.cart_write(0xA000, 1, cs=True) # 1 = read
-				self.cart_write(0xA001, Util.TAMA5_REG.MEM_READ_L.value, cs=True) # data out
+				self.cart_write(0xA001, 0x0C, cs=True) # data out
 				data = self.ReadROM(0xA000, 64)[0]
 				buffer.append(data)
 				self.SetProgress({"action":"UPDATE_POS", "abortable":False, "pos":0x21+r})
@@ -522,25 +530,25 @@ class GbxDevice:
 		self.NO_PROG_UPDATE = True
 
 		for i in range(0, 0x20):
-			self.cart_write(0xA001, Util.TAMA5_REG.MEM_WRITE_H.value, cs=True) # data in (high)
+			self.cart_write(0xA001, 0x05, cs=True) # data in (high)
 			self.cart_write(0xA000, data[i] >> 4, cs=True)
-			self.cart_write(0xA001, Util.TAMA5_REG.MEM_WRITE_L.value, cs=True) # data in (low)
+			self.cart_write(0xA001, 0x04, cs=True) # data in (low)
 			self.cart_write(0xA000, data[i] & 0xF, cs=True)
-			self.cart_write(0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value, cs=True) # register select and address (high)
-			self.cart_write(0xA000, i >> 4 | Util.TAMA5_CMD.RAM_WRITE.value << 1, cs=True) # bit 0 = higher ram address, rest = command
-			self.cart_write(0xA001, Util.TAMA5_REG.ADDR_L.value, cs=True) # address (low)
+			self.cart_write(0xA001, 0x06, cs=True) # register select and address (high)
+			self.cart_write(0xA000, i >> 4 | 0x00 << 1, cs=True) # bit 0 = higher ram address, rest = command
+			self.cart_write(0xA001, 0x07, cs=True) # address (low)
 			self.cart_write(0xA000, i & 0x0F, cs=True) # bits 0-3 = lower ram address
 			self.SetProgress({"action":"UPDATE_POS", "abortable":False, "pos":i+1})
 		
 		if rtc and bytearray(data[0x20:0x30]) != bytearray([0xFF] * 0x10):
 			for r in range(0, 0x10):
-				self.cart_write(0xA001, Util.TAMA5_REG.MEM_WRITE_L.value, cs=True) # set address
+				self.cart_write(0xA001, 0x04, cs=True) # set address
 				self.cart_write(0xA000, r, cs=True) # address
-				self.cart_write(0xA001, Util.TAMA5_REG.MEM_WRITE_H.value, cs=True) # set value to write
+				self.cart_write(0xA001, 0x05, cs=True) # set value to write
 				self.cart_write(0xA000, data[0x20+r], cs=True) # value
-				self.cart_write(0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value, cs=True) # register select
-				self.cart_write(0xA000, Util.TAMA5_CMD.RTC.value << 1, cs=True) # rtc mode
-				self.cart_write(0xA001, Util.TAMA5_REG.ADDR_L.value, cs=True) # set access mode
+				self.cart_write(0xA001, 0x06, cs=True) # register select
+				self.cart_write(0xA000, 0x04 << 1, cs=True) # rtc mode
+				self.cart_write(0xA001, 0x07, cs=True) # set access mode
 				self.cart_write(0xA000, 0, cs=True) # 0 = write
 				self.SetProgress({"action":"UPDATE_POS", "abortable":False, "pos":0x21+r})
 
@@ -737,9 +745,9 @@ class GbxDevice:
 			self.cart_write(0x2100, ((bank % 0x20) & 0xFF))
 		elif mbc == 0xFD: # TAMA5
 			dprint("└[TAMA5] 0xA001=0x00, 0xA000=0x{:X}, 0xA001=0x01, 0xA000=0x{:X}".format(bank & 0x0F, bank >> 4))
-			self.cart_write(0xA001, Util.TAMA5_REG.ROM_BANK_L.value, cs=True) # ROM bank (low)
+			self.cart_write(0xA001, 0x00, cs=True) # ROM bank (low)
 			self.cart_write(0xA000, bank & 0x0F, cs=True)
-			self.cart_write(0xA001, Util.TAMA5_REG.ROM_BANK_H.value, cs=True) # ROM bank (high)
+			self.cart_write(0xA001, 0x01, cs=True) # ROM bank (high)
 			self.cart_write(0xA000, (bank >> 4) & 0x0F, cs=True)
 		elif mbc == 0xFF: # HuC-1
 			dprint("└[HuC-1] 0x2000=0x{:X}".format(bank & 0x3F))
@@ -1272,8 +1280,8 @@ class GbxDevice:
 			dprint("Enabling TAMA5")
 			lives = 20
 			while (tama5_check & 3) != 1:
-				dprint("└Current value is 0x{:X}, now writing 0xA001=0x{:X}".format(tama5_check, Util.TAMA5_REG.ENABLE.value))
-				self.cart_write(0xA001, Util.TAMA5_REG.ENABLE.value, cs=True)
+				dprint("└Current value is 0x{:X}, now writing 0xA001=0x{:X}".format(tama5_check, 0x0A))
+				self.cart_write(0xA001, 0x0A, cs=True)
 				tama5_check = int.from_bytes(self.ReadROM(0xA000, 64)[:1], byteorder="little")
 				time.sleep(0.1)
 				lives -= 1

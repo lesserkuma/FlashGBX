@@ -10,7 +10,7 @@ def ReadConfigFiles(args):
 	settings = Util.IniSettings(path=args["config_path"] + "/settings.ini")
 	config_version = settings.value("ConfigVersion")
 	if not os.path.exists(args["config_path"]): os.makedirs(args["config_path"])
-	fc_files = glob.glob("{0:s}/fc_*.txt".format(args["config_path"]))
+	fc_files = glob.glob("{:s}/fc_*.txt".format(glob.escape(args["config_path"])))
 	if config_version is not None and len(fc_files) == 0:
 		print("No flash cartridge type configuration files found in {:s}. Resetting configuration...".format(args["config_path"]))
 		settings.clear()
@@ -53,7 +53,7 @@ def LoadConfig(args):
 			
 			if rf_list != "":
 				ret.append([1, "The application was recently updated and some flashcart type files have been updated as well. You will find backup copies of them in your configuration directory.\n\nUpdated files:\n" + rf_list[:-1]])
-			fc_files = glob.glob("{0:s}/fc_*.txt".format(config_path))
+			fc_files = glob.glob("{0:s}/fc_*.txt".format(glob.escape(config_path)))
 		else:
 			print("WARNING: {:s} not found. This is required to load new flash cartridge type configurations after updating.".format(app_path + "/res/config.zip"))
 	

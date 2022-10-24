@@ -4,6 +4,8 @@
 
 import sys, os, time, datetime, json, platform, subprocess, requests, webbrowser, pkg_resources, struct, math
 from .pyside import QtCore, QtWidgets, QtGui, QApplication
+from PIL.ImageQt import ImageQt
+from PIL import Image, ImageDraw
 from .RomFileDMG import RomFileDMG
 from .RomFileAGB import RomFileAGB
 from .PocketCameraWindow import PocketCameraWindow
@@ -24,6 +26,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	CAMWIN = None
 	FWUPWIN = None
 	STATUS = {}
+	TEXT_COLOR = (0, 0, 0, 255)
 	
 	def __init__(self, args):
 		QtWidgets.QWidget.__init__(self)
@@ -37,6 +40,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.setWindowIcon(QtGui.QIcon(self.APP_PATH + "/res/icon.ico"))
 		self.setWindowTitle("{:s} {:s}".format(APPNAME, VERSION))
 		self.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+		self.TEXT_COLOR = QtGui.QPalette().color(QtGui.QPalette.Text).toTuple()
 		
 		# Create the QtWidgets.QVBoxLayout that lays out the whole form
 		self.layout = QtWidgets.QGridLayout()
@@ -291,7 +295,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		group_layout.addLayout(rowHeaderRtc)
 
 		rowHeaderLogoValid = QtWidgets.QHBoxLayout()
-		lblHeaderLogoValid = QtWidgets.QLabel("Nintendo Logo:")
+		lblHeaderLogoValid = QtWidgets.QLabel("Boot Logo:")
 		lblHeaderLogoValid.setContentsMargins(0, 1, 0, 1)
 		rowHeaderLogoValid.addWidget(lblHeaderLogoValid)
 		self.lblHeaderLogoValidResult = QtWidgets.QLabel("")
@@ -396,7 +400,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		group_layout.addLayout(rowAGBGpioRtc)
 
 		rowAGBHeaderLogoValid = QtWidgets.QHBoxLayout()
-		lblAGBHeaderLogoValid = QtWidgets.QLabel("Nintendo Logo:")
+		lblAGBHeaderLogoValid = QtWidgets.QLabel("Boot Logo:")
 		lblAGBHeaderLogoValid.setContentsMargins(0, 1, 0, 1)
 		rowAGBHeaderLogoValid.addWidget(lblAGBHeaderLogoValid)
 		self.lblAGBHeaderLogoValidResult = QtWidgets.QLabel("")
@@ -1244,25 +1248,24 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			setting_name = "LastDirSaveDataDMG"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-
 			mbc = (list(Util.DMG_Header_Mapper.items())[self.cmbHeaderFeaturesResult.currentIndex()])[0]
 			try:
 				features = list(Util.DMG_Header_Mapper.keys())[self.cmbHeaderFeaturesResult.currentIndex()]
 			except:
-				pass
+				features = []
 			save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[self.cmbHeaderRAMSizeResult.currentIndex()]
 			if save_type == 0:
 				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Please select the correct save data size.", QtWidgets.QMessageBox.Ok)
 				return
+		
 		elif self.CONN.GetMode() == "AGB":
 			setting_name = "LastDirSaveDataAGB"
 			last_dir = self.SETTINGS.value(setting_name)
 			if last_dir is None: last_dir = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.DocumentsLocation)
-
 			mbc = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
-				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The save type was not selected or auto-detection failed.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "No save type was selected.", QtWidgets.QMessageBox.Ok)
 				return
 		else:
 			return
@@ -1276,8 +1279,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				rtc = False
 			else:
 				msg = "A Real Time Clock cartridge was detected. Do you want the cartridge’s Real Time Clock register values also to be saved?"
-				if self.CONN.GetMode() == "AGB":
-					msg += "\n\nNote that these values may not yet be supported by emulators."
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 				answer = msgbox.exec()
@@ -1329,7 +1330,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			mbc = 0
 			save_type = self.cmbAGBSaveTypeResult.currentIndex()
 			if save_type == 0:
-				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The save type was not selected or auto-detection failed.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "No save type was selected.", QtWidgets.QMessageBox.Ok)
 				return
 		else:
 			return
@@ -1366,7 +1367,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if self.CONN.INFO["has_rtc"]: # features in (0x10, 0xFD, 0xFE): # RTC of MBC3, TAMA5, HuC-3
 			if self.CONN.GetMode() == "DMG" and features == 0x10 and not self.CONN.IsClkConnected():
 				rtc = False
-			elif (self.CONN.GetMode() == "DMG" and ((features == 0xFE and (filesize == save_type + 0xC or erase)) or (self.CONN.IsClkConnected() and features == 0x10 and filesize == save_type + 0x30 or erase))) or \
+			elif (self.CONN.GetMode() == "DMG" and ((features == 0xFD and (filesize == save_type + 0x28 or erase)) or (features == 0xFE and (filesize == save_type + 0xC or erase)) or (self.CONN.IsClkConnected() and features == 0x10 and filesize == save_type + 0x30 or erase))) or \
 			     (self.CONN.GetMode() == "AGB" and (filesize == Util.AGB_Header_Save_Sizes[save_type] + 0x10 or erase)):
 				msg = "A Real Time Clock cartridge was detected. Do you want the Real Time Clock register values to be also written?"
 				cb = QtWidgets.QCheckBox("&Adjust RTC", checked=True)
@@ -1418,7 +1419,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						if mode == "DMG": self.optDMG.setChecked(True)
 						elif mode == "AGB": self.optAGB.setChecked(True)
 						self.SetMode()
-						return True
+						return
 					else:
 						return False
 				else:
@@ -1482,7 +1483,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.grpAGBCartridgeInfo.setEnabled(True)
 	
 	def ReadCartridge(self, resetStatus=True):
-		if not self.CheckDeviceAlive(): return
+		if self.CheckDeviceAlive() is not True: return
 		if resetStatus:
 			self.btnHeaderRefresh.setEnabled(False)
 			self.btnDetectCartridge.setEnabled(False)
@@ -1560,6 +1561,19 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 								self.lblHeaderRtcResult.setText("{:d} day, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m))
 							else:
 								self.lblHeaderRtcResult.setText("{:d} days, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m))
+						elif data['mapper_raw'] == 0xFD: # TAMA5
+							seconds = Util.DecodeBCD(data["rtc_buffer"][0x00])
+							minutes = Util.DecodeBCD(data["rtc_buffer"][0x01])
+							hours = Util.DecodeBCD(data["rtc_buffer"][0x02])
+							#weekday = data["rtc_buffer"][0x03] & 0xF
+							days = Util.DecodeBCD(data["rtc_buffer"][0x03] >> 4 | (data["rtc_buffer"][0x04] & 0xF) << 4)
+							months = Util.DecodeBCD(data["rtc_buffer"][0x04] >> 4 | (data["rtc_buffer"][0x05] & 0xF) << 4)
+							years = Util.DecodeBCD(data["rtc_buffer"][0x05] >> 4 | (data["rtc_buffer"][0x06] & 0xF) << 4)
+							leap_year_state = Util.DecodeBCD(data["rtc_buffer"][0x0D] >> 4)
+							if leap_year_state == 0:
+								self.lblHeaderRtcResult.setText("Year {:d}*, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds))
+							else:
+								self.lblHeaderRtcResult.setText("Year {:d}, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds))
 					except:
 						self.lblHeaderRtcResult.setText("Unknown data")
 				else:
@@ -1649,7 +1663,17 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblHeaderRevisionResult.setText("")
 				self.lblHeaderLogoValidResult.setText("")
 				self.lblHeaderLogoValidResult.setStyleSheet(self.lblHeaderRevisionResult.styleSheet())
-
+				if "logo_sachen" in data:
+					data["logo_sachen"].putpalette([ 255, 255, 255, 128, 128, 128 ])
+					self.lblHeaderLogoValidResult.setPixmap(QtGui.QPixmap.fromImage(ImageQt(data["logo_sachen"].convert("RGBA"))))
+			else:
+				if "logo" in data:
+					if data['logo_correct']:
+						data["logo"].putpalette([ 255, 255, 255, self.TEXT_COLOR[0], self.TEXT_COLOR[1], self.TEXT_COLOR[2] ])
+					else:
+						data["logo"].putpalette([ 255, 255, 255, 251, 0, 24 ])
+					self.lblHeaderLogoValidResult.setPixmap(QtGui.QPixmap.fromImage(ImageQt(data["logo"].convert("RGBA"))))
+			
 			self.grpAGBCartridgeInfo.setVisible(False)
 			self.grpDMGCartridgeInfo.setVisible(True)
 		
@@ -1770,8 +1794,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.grpStatus.setTitle("Transfer Status")
 			self.FinishOperation()
 		
-		if not data['logo_correct'] and data['empty'] == False and resetStatus and not (self.CONN.GetMode() == "DMG" and data["mapper_raw"] in (0x203, 0x204, 0x205)):
-			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The Nintendo Logo check failed which usually means that the cartridge can’t be read correctly. Please make sure you selected the correct mode and that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
+		if not data['logo_correct'] and not data["header_checksum_correct"] and data['empty'] == False and resetStatus and not (self.CONN.GetMode() == "DMG" and data["mapper_raw"] in (0x203, 0x204, 0x205)):
+			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM header checksum and Nintendo Logo checks failed. Please ensure that the cartridge contacts are clean.", QtWidgets.QMessageBox.Ok)
 		
 		if data['game_title'][:11] == "YJencrypted" and resetStatus:
 			QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "This cartridge may be protected against reading or writing a ROM. If you don’t want to risk this cartridge to render itself unusable, please do not try to write a new ROM to it.", QtWidgets.QMessageBox.Ok)

@@ -469,8 +469,21 @@ class FlashGBX_CLI():
 							rtc_m = (rtc_buffer & 0xFFF) % 60
 							rtc_d = (rtc_buffer >> 12) & 0xFFF
 							s += "{:d} days, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
+						elif data['mapper_raw'] == 0xFD: # TAMA5
+							seconds = Util.DecodeBCD(data["rtc_buffer"][0x00])
+							minutes = Util.DecodeBCD(data["rtc_buffer"][0x01])
+							hours = Util.DecodeBCD(data["rtc_buffer"][0x02])
+							#weekday = data["rtc_buffer"][0x03] & 0xF
+							days = Util.DecodeBCD(data["rtc_buffer"][0x03] >> 4 | (data["rtc_buffer"][0x04] & 0xF) << 4)
+							months = Util.DecodeBCD(data["rtc_buffer"][0x04] >> 4 | (data["rtc_buffer"][0x05] & 0xF) << 4)
+							years = Util.DecodeBCD(data["rtc_buffer"][0x05] >> 4 | (data["rtc_buffer"][0x06] & 0xF) << 4)
+							leap_year_state = Util.DecodeBCD(data["rtc_buffer"][0x0D] >> 4)
+							if leap_year_state == 0:
+								s += "Year {:d}*, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
+							else:
+								s += "Year {:d}, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
 					except:
-						s += "Invalid state"
+						s += "Unknown data"
 				else:
 					s += "OK"
 			else:

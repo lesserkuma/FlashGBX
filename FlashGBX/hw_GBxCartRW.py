@@ -475,6 +475,7 @@ class GbxDevice:
 			if flashcart:
 				buffer = bytearray([self.DEVICE_CMD["DMG_FLASH_WRITE_BYTE"]])
 			else:
+				if sram: self._set_fw_variable("DMG_WRITE_CS_PULSE", 1)
 				buffer = bytearray([self.DEVICE_CMD["DMG_CART_WRITE"]])
 			buffer.extend(struct.pack(">I", address))
 			buffer.extend(struct.pack("B", value & 0xFF))
@@ -493,7 +494,10 @@ class GbxDevice:
 			
 			buffer.extend(struct.pack(">I", address >> 1))
 			buffer.extend(struct.pack(">H", value & 0xFFFF))
+		
 		self._write(buffer)
+		
+		if self.MODE == "DMG" and sram: self._set_fw_variable("DMG_WRITE_CS_PULSE", 0)
 	
 	def _cart_write_flash(self, commands, flashcart=False):
 		if self.FW["fw_ver"] < 6 and not (self.MODE == "AGB" and not flashcart):
@@ -643,8 +647,10 @@ class GbxDevice:
 			if checkRtc:
 				data["has_rtc"] = _mbc.HasRTC() is True
 				if data["has_rtc"] is True:
+					if _mbc.GetName() == "TAMA5": _mbc.EnableMapper()
 					_mbc.LatchRTC()
 					data["rtc_buffer"] = _mbc.ReadRTC()
+					if _mbc.GetName() == "TAMA5": self._set_fw_variable("DMG_READ_CS_PULSE", 0)
 			else:
 				data["has_rtc"] = False
 		
@@ -982,16 +988,24 @@ class GbxDevice:
 
 		# Read save state
 		for i in range(0, 0x20):
-			self._cart_write(0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value) # register select and address (high)
-			self._cart_write(0xA000, i >> 4 | Util.TAMA5_CMD.RAM_READ.value << 1) # bit 0 = higher ram address, rest = command
-			self._cart_write(0xA001, Util.TAMA5_REG.ADDR_L.value) # address (low)
+			self._cart_write(0xA001, 0x06) # register select and address (high)
+			self._cart_write(0xA000, i >> 4 | 0x01 << 1) # bit 0 = higher ram address, rest = command
+			self._cart_write(0xA001, 0x07) # address (low)
 			self._cart_write(0xA000, i & 0x0F) # bits 0-3 = lower ram address
-			self._cart_write(0xA001, Util.TAMA5_REG.MEM_READ_H.value) # data out (high)
-			time.sleep(0.03)
-			data_h = self._cart_read(0xA000)
-			self._cart_write(0xA001, Util.TAMA5_REG.MEM_READ_L.value) # data out (low)
-			time.sleep(0.03)
-			data_l = self._cart_read(0xA000)
+			self._cart_write(0xA001, 0x0D) # data out (high)
+			value1, value2 = None, None
+			while value1 is None or value1 != value2:
+				value2 = value1
+				value1 = self._cart_read(0xA000)
+			data_h = value1
+			self._cart_write(0xA001, 0x0C) # data out (low)
+
+			value1, value2 = None, None
+			while value1 is None or value1 != value2:
+				value2 = value1
+				value1 = self._cart_read(0xA000)
+			data_l = value1
+			
 			data = ((data_h & 0xF) << 4) | (data_l & 0xF)
 			buffer.append(data)
 			self.SetProgress({"action":"UPDATE_POS", "abortable":False, "pos":i+1})
@@ -1097,15 +1111,18 @@ class GbxDevice:
 		self.NO_PROG_UPDATE = True
 
 		for i in range(0, 0x20):
-			self._cart_write(0xA001, Util.TAMA5_REG.MEM_WRITE_H.value) # data in (high)
+			self._cart_write(0xA001, 0x05) # data in (high)
 			self._cart_write(0xA000, buffer[i] >> 4)
-			self._cart_write(0xA001, Util.TAMA5_REG.MEM_WRITE_L.value) # data in (low)
+			self._cart_write(0xA001, 0x04) # data in (low)
 			self._cart_write(0xA000, buffer[i] & 0xF)
-			self._cart_write(0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value) # register select and address (high)
-			self._cart_write(0xA000, i >> 4 | Util.TAMA5_CMD.RAM_WRITE.value << 1) # bit 0 = higher ram address, rest = command
-			self._cart_write(0xA001, Util.TAMA5_REG.ADDR_L.value) # address (low)
+			self._cart_write(0xA001, 0x06) # register select and address (high)
+			self._cart_write(0xA000, i >> 4 | 0x00 << 1) # bit 0 = higher ram address, rest = command
+			self._cart_write(0xA001, 0x07) # address (low)
 			self._cart_write(0xA000, i & 0x0F) # bits 0-3 = lower ram address
-			time.sleep(0.03)
+			value1, value2 = None, None
+			while value1 is None or value1 != value2:
+				value2 = value1
+				value1 = self._cart_read(0xA000)
 			self.SetProgress({"action":"UPDATE_POS", "abortable":False, "pos":i+1})
 		
 		self.NO_PROG_UPDATE = False
@@ -2253,6 +2270,10 @@ class GbxDevice:
 						temp = self.ReadRAM(address=int(pos/8), length=buffer_len, command=command, max_length=max_length)
 					elif self.MODE == "AGB" and args["save_type"] == 6: # DACS
 						temp = self.ReadROM(address=0x1F00000+pos, length=buffer_len, skip_init=False, max_length=max_length)
+					elif self.MODE == "DMG" and _mbc.GetName() == "MBC2":
+						temp = self.ReadRAM(address=pos, length=buffer_len, command=command, max_length=max_length)
+						for i in range(0, len(temp)):
+							temp[i] = temp[i] & 0x0F
 					else:
 						temp = self.ReadRAM(address=pos, length=buffer_len, command=command, max_length=max_length)
 
@@ -2351,12 +2372,14 @@ class GbxDevice:
 			rtc_buffer = None
 			# Real Time Clock
 			if args["rtc"] is True:
+				self.NO_PROG_UPDATE = True
 				if self.MODE == "DMG" and args["rtc"] is True:
 					_mbc.LatchRTC()
 					rtc_buffer = _mbc.ReadRTC()
 				elif self.MODE == "AGB":
 					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 					rtc_buffer = _agb_gpio.ReadRTC()
+				self.NO_PROG_UPDATE = False
 				self.SetProgress({"action":"UPDATE_POS", "pos":len(buffer)+len(rtc_buffer)})
 			
 			if args["path"] is not None:
@@ -2377,7 +2400,7 @@ class GbxDevice:
 		elif args["mode"] == 3: # Restore
 			self.INFO["transferred"] = len(buffer)
 			if args["rtc"] is True:
-				advance = args["rtc_advance"]
+				advance = "rtc_advance" in args and args["rtc_advance"]
 				self.SetProgress({"action":"UPDATE_RTC", "method":"write"})
 				if self.MODE == "DMG" and args["rtc"] is True:
 					_mbc.WriteRTC(buffer[-_mbc.GetRTCBufferSize():], advance=advance)

@@ -83,11 +83,11 @@ class DMG_MBC:
 		else:
 			return self.CART_READ_FNCPTR(address, length)
 
-	def CartWrite(self, commands, delay=False):
+	def CartWrite(self, commands, delay=False, sram=False):
 		for command in commands:
 			address = command[0]
 			value = command[1]
-			self.CART_WRITE_FNCPTR(address, value)
+			self.CART_WRITE_FNCPTR(address, value, sram=sram)
 			if delay is not False: time.sleep(delay)
 
 	def GetID(self):
@@ -922,74 +922,81 @@ class DMG_TAMA5(DMG_MBC):
 
 	def EnableMapper(self):
 		tama5_check = self.CartRead(0xA000)
-		dprint("Enabling TAMA5")
-		lives = 20
+		lives = 150
 		while (tama5_check & 3) != 1:
-			dprint("- Current value is 0x{:X}, now writing 0xA001=0x{:X}".format(tama5_check, Util.TAMA5_REG.ENABLE.value))
-			self.CART_WRITE_FNCPTR(0xA001, Util.TAMA5_REG.ENABLE.value)
+			dprint("- Current value is 0x{:X}, now writing 0xA001=0x{:X}".format(tama5_check, 0x0A))
+			self.CartWrite([[0xA001, 0x0A]], sram=True)
 			tama5_check = self.CartRead(0xA000)
-			time.sleep(0.1)
+			time.sleep(0.01)
 			lives -= 1
-			if lives < 0: return False
+			if lives < 0:
+				dprint("Failed!")
+				return False
+		dprint("Enabled TAMA5 successfully")
 		return True
-
+	
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
 		commands = [
-			[ 0xA001, Util.TAMA5_REG.ROM_BANK_L.value ],	# ROM bank (low)
+			[ 0xA001, 0x00 ],	# ROM bank (low)
 			[ 0xA000, index & 0x0F ],
-			[ 0xA001, Util.TAMA5_REG.ROM_BANK_H.value ],	# ROM bank (high)
+			[ 0xA001, 0x01 ],	# ROM bank (high)
 			[ 0xA000, (index >> 4) & 0x0F ],
 		]
 		start_address = 0 if index == 0 else 0x4000
 		
-		self.CartWrite(commands)
+		self.CartWrite(commands, sram=True)
 		return (start_address, self.ROM_BANK_SIZE)
 
 	def HasRTC(self):
-		#return True
-		return False # temporarily disabled
+		return True
 
 	def GetRTCBufferSize(self):
-		return 0x18
-
+		return 0x28
+	
 	def ReadRTC(self):
 		buffer = bytearray()
-		commands = [
-			[ 0xA001, Util.TAMA5_REG.MEM_WRITE_L.value ], # set address
-			[ 0xA000, 0x0D ], # address
-			[ 0xA001, Util.TAMA5_REG.MEM_WRITE_H.value ], # set value to write
-			[ 0xA000, 0 ], # value
-			[ 0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value ], # register select
-			[ 0xA000, Util.TAMA5_CMD.RTC.value << 1 ], # rtc mode
-			[ 0xA001, Util.TAMA5_REG.ADDR_L.value ], # set access mode
-			[ 0xA000, 0 ] # 0 = write
-		]
-		self.CartWrite(commands)
-		time.sleep(0.03)
-
-		for r in range(0, 0x0D):
-			commands = [
-				[ 0xA001, Util.TAMA5_REG.MEM_WRITE_L.value ], # set address
-				[ 0xA000, r ], # address
-				[ 0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value ], # register select
-				[ 0xA000, Util.TAMA5_CMD.RTC.value << 1 ], # rtc mode
-				[ 0xA001, Util.TAMA5_REG.ADDR_L.value ], # set access mode
-				[ 0xA000, 1 ], # 1 = read
-				[ 0xA001, Util.TAMA5_REG.MEM_READ_L.value ] # data out
-			]
-			self.CartWrite(commands)
-			time.sleep(0.03)
-			data = self.CartRead(0xA000)
-			buffer.append(data)
+		for page in range(0, 4):
+			page_buffer = bytearray(8)
+			for reg in range(0, 0x10):
+				commands = [
+					# Select RTC
+					[ 0xA001, 0x06 ],
+					[ 0xA000, 0x08 ],
+					# Select RTC register
+					[ 0xA001, 0x04 ],
+					[ 0xA000, reg ],
+					# Select RTC operation
+					[ 0xA001, 0x07 ],
+					[ 0xA000, (page << 1) + 1 ],
+					# Read data
+					[ 0xA001, 0x0C ]
+				]
+				self.CartWrite(commands, sram=True)
+				value1, value2 = None, None
+				while value1 is None or value1 != value2:
+					value2 = value1
+					value1 = self.CartRead(0xA000)
+				data = self.CartRead(0xA000) & 0x0F
+				if reg % 2 == 0:
+					page_buffer[reg>>1] = data
+				else:
+					page_buffer[reg>>1] |= data << 4
+			buffer += page_buffer
 		
 		# Add timestamp of backup time
 		ts = int(time.time())
-		buffer.extend([0xFF, 0xFF, 0xFF])
 		buffer.extend(struct.pack("<Q", ts))
 
 		#dstr = ' '.join(format(x, '02X') for x in buffer)
-		#dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+		#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+
+		commands = [
+			# Select RTC
+			[ 0xA001, 0x00 ]
+		]
+		self.CartWrite(commands, sram=True)
+		self.SelectBankROM(0)
 
 		return buffer
 
@@ -1001,68 +1008,130 @@ class DMG_TAMA5(DMG_MBC):
 					seconds = 0
 					minutes = 0
 					hours = 0
+					weekday = 0
 					days = 1
 					months = 1
+					years = 0
+					leap_year_state = 0
+					z24h_flag = 1
 				else:
-					seconds = Util.DecodeBCD(buffer[0x00] | buffer[0x01] << 4)
-					minutes = Util.DecodeBCD(buffer[0x02] | buffer[0x03] << 4)
-					hours = Util.DecodeBCD(buffer[0x04] | buffer[0x05] << 4)
-					days = Util.DecodeBCD(buffer[0x07] | buffer[0x08] << 4)
-					months = Util.DecodeBCD(buffer[0x09] | buffer[0x0A] << 4)
-					#dprint(seconds, minutes, hours, days, months)
+					#dstr = ' '.join(format(x, '02X') for x in buffer)
+					#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+
+					seconds = Util.DecodeBCD(buffer[0x00])
+					minutes = Util.DecodeBCD(buffer[0x01])
+					hours = Util.DecodeBCD(buffer[0x02])
+					weekday = buffer[0x03] & 0xF
+					days = Util.DecodeBCD(buffer[0x03] >> 4 | (buffer[0x04] & 0xF) << 4)
+					months = Util.DecodeBCD(buffer[0x04] >> 4 | (buffer[0x05] & 0xF) << 4)
+					years = Util.DecodeBCD(buffer[0x05] >> 4 | (buffer[0x06] & 0xF) << 4)
+					leap_year_state = Util.DecodeBCD(buffer[0x0D] >> 4)
+					z24h_flag = Util.DecodeBCD(buffer[0x0D] & 0xF)
+					#print("Old:", seconds, minutes, hours, day_of_week, days, months, years, leap_year_state, z24h_flag)
 					
 					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
 					timestamp_now = int(time.time())
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
-						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, months % 12, days % 31, hours % 24, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
+						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(2000 + leap_year_state, months, days, hours % 24, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
 						rd = relativedelta(dt_now, dt_then)
 						dt_new = dt_buffer + rd
-						#print(dt_then, dt_now, dt_buffer, dt_new, sep="\n")
+						
+						# Weird cases
+						year_new = (dt_new.year - 2000 - leap_year_state) 
+						years += year_new
+						if years >= 160:
+							years -= 140
+						elif years >= 140:
+							years -= 100
+						elif years >= 120:
+							years -= 60
+						elif years >= 100 and (years - year_new) < 100:
+							years -= 100
+						
 						months = dt_new.month
 						days = dt_new.day
 						hours = dt_new.hour
 						minutes = dt_new.minute
 						seconds = dt_new.second
-						dprint(seconds, minutes, hours, days, months)
+						dt_buffer_notime = dt_buffer.replace(hour=0, minute=0, second=0)
+						dt_new_notime = dt_new.replace(hour=0, minute=0, second=0)
+						days_passed = int((dt_new_notime.timestamp() - dt_buffer_notime.timestamp()) / 60 / 60 / 24)
+						weekday += days_passed % 7
+						#print("leap_year_state#1", leap_year_state)
+						leap_year_state = (leap_year_state + year_new) % 4
+						#print("leap_year_state#2", leap_year_state)
+						#print("New:", seconds, minutes, hours, day_of_week, days, months, years, leap_year_state, z24h_flag)
 
-				#dprint(years, months, days, weekday, hours, minutes, seconds)
-				temp = Util.EncodeBCD(seconds)
-				buffer[0x00] = temp & 0x0F
-				buffer[0x01] = temp >> 4 & 0x0F
-				temp = Util.EncodeBCD(minutes)
-				buffer[0x02] = temp & 0x0F
-				buffer[0x03] = temp >> 4 & 0x0F
-				temp = Util.EncodeBCD(hours)
-				buffer[0x04] = temp & 0x0F
-				buffer[0x05] = temp >> 4 & 0x0F
-				temp = Util.EncodeBCD(days)
-				buffer[0x07] = temp & 0x0F
-				buffer[0x08] = temp >> 4 & 0x0F
-				temp = Util.EncodeBCD(months)
-				buffer[0x09] = temp & 0x0F
-				buffer[0x0A] = temp >> 4 & 0x0F
+				buffer[0x00] = Util.EncodeBCD(seconds)
+				buffer[0x01] = Util.EncodeBCD(minutes)
+				buffer[0x02] = Util.EncodeBCD(hours)
+				buffer[0x03] = (weekday & 0xF) | ((Util.EncodeBCD(days) & 0xF) << 4)
+				buffer[0x04] = (Util.EncodeBCD(days) >> 4) | ((Util.EncodeBCD(months) & 0xF) << 4)
+				buffer[0x05] = (Util.EncodeBCD(months) >> 4) | ((Util.EncodeBCD(years) & 0xF) << 4)
+				buffer[0x06] = (Util.EncodeBCD(years) >> 4)
+				buffer[0x0D] = leap_year_state << 4 | z24h_flag
 				
-				dstr = ' '.join(format(x, '02X') for x in buffer)
-				dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+				#dstr = ' '.join(format(x, '02X') for x in buffer)
+				#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
 			
 			except Exception as e:
 				print("Couldn’t update the RTC register values\n", e)
 
-		for r in range(0, 0x10):
-			commands = [
-				[ 0xA001, Util.TAMA5_REG.MEM_WRITE_L.value ], # set address
-				[ 0xA000, r ], # address
-				[ 0xA001, Util.TAMA5_REG.MEM_WRITE_H.value ], # set value to write
-				[ 0xA000, buffer[r] ], # value
-				[ 0xA001, Util.TAMA5_REG.ADDR_H_SET_MODE.value ], # register select
-				[ 0xA000, Util.TAMA5_CMD.RTC.value << 1 ], # rtc mode
-				[ 0xA001, Util.TAMA5_REG.ADDR_L.value ], # set access mode
-				[ 0xA000, 0 ] # 0 = write
-			]
-			self.CartWrite(commands)
-			time.sleep(0.03)
-	
+		for page in range(0, 4):
+			if page == 0:
+				commands = [
+					# Select TAMA6
+					[ 0xA001, 0x06 ],
+					[ 0xA000, 0x04 ],
+					# Stop timer
+					[ 0xA001, 0x06 ],
+					[ 0xA000, 0x04 ],
+					[ 0xA001, 0x07 ],
+					[ 0xA000, 0x00 ],
+				]
+				commands = [
+					# Select TAMA6
+					[ 0xA001, 0x06 ],
+					[ 0xA000, 0x04 ],
+					# Reset timer
+					[ 0xA001, 0x06 ],
+					[ 0xA000, 0x04 ],
+					[ 0xA001, 0x07 ],
+					[ 0xA000, 0x01 ],
+				]
+				self.CartWrite(commands, sram=True)
+
+			page_buffer = buffer[page*8:page*8+8]
+			for reg in range(0, 0x0D):
+				commands = [
+					# Select RTC
+					[ 0xA001, 0x06 ],
+					[ 0xA000, 0x08 ],
+					# Select RTC register
+					[ 0xA001, 0x04 ],
+					[ 0xA000, reg ],
+					# Set data
+					[ 0xA001, 0x05 ]
+				]
+				self.CartWrite(commands, sram=True)
+				if reg % 2 == 0:
+					self.CartWrite([[ 0xA000, page_buffer[reg>>1] & 0xF ]], sram=True)
+				else:
+					self.CartWrite([[ 0xA000, page_buffer[reg>>1] >> 4 ]], sram=True)
+				commands = [
+					# Select RTC operation
+					[ 0xA001, 0x07 ],
+					[ 0xA000, (page << 1) ],
+					# Read data
+					[ 0xA001, 0x0C ]
+				]
+				self.CartWrite(commands, sram=True)
+				value1, value2 = None, None
+				while value1 is None or value1 != value2:
+					value2 = value1
+					value1 = self.CartRead(0xA000)
+
 	def ReadWithCSPulse(self):
 		return False
 
@@ -1304,18 +1373,34 @@ class AGB_GPIO:
 		])
 		return data
 
+	def RTCWriteStatus(self, value):
+		self.CartWrite([
+			[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
+			[ self.GPIO_REG_DAT, 1 ],
+			[ self.GPIO_REG_DAT, 5 ],
+			[ self.GPIO_REG_CNT, 7 ], # Write Enable
+		])
+		self.RTCCommand(self.RTC_WRITE_STATS)
+		self.RTCWriteData(value)
+
+		self.CartWrite([
+			[ self.GPIO_REG_DAT, 1 ],
+			[ self.GPIO_REG_DAT, 1 ],
+			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
+		])
+
 	def HasRTC(self):
 		if not self.RTC: return False
 
 		status = self.RTCReadStatus()
 		dprint(status)
 		if (status >> 7) == 1:
-			dprint("No RTC because of RTC Status Register Power Flag:", status >> 7 & 1)
+			dprint("No RTC because of set RTC Status Register Power Flag:", status >> 7 & 1)
 			return 1
 		if (status >> 6) != 1:
-			dprint("No RTC because of RTC Status Register 24h Flag:", status >> 6 & 1)
-			return 2
-
+			dprint("Unexpected RTC Status Register 24h Flag:", status >> 6 & 1)
+			#return 2
+		
 		rom1 = self.CartRead(self.GPIO_REG_DAT, 6)
 		self.CartWrite([
 			[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
@@ -1355,7 +1440,7 @@ class AGB_GPIO:
 		
 		# Add timestamp of backup time
 		ts = int(time.time())
-		buffer.extend(b'\x01') # 24h mode (TODO: read from cart?)
+		buffer.append(self.RTCReadStatus()) # 24h mode = 0x40, reset flag = 0x80
 		buffer.extend(struct.pack("<Q", ts))
 
 		dstr = ' '.join(format(x, '02X') for x in buffer)
@@ -1381,6 +1466,7 @@ class AGB_GPIO:
 					hours = 0
 					minutes = 0
 					seconds = 0
+					rtc_status = 0x40 | 0x80
 				else:
 					years = Util.DecodeBCD(buffer[0x00])
 					months = Util.DecodeBCD(buffer[0x01])
@@ -1389,6 +1475,9 @@ class AGB_GPIO:
 					hours = Util.DecodeBCD(buffer[0x04] & 0x7F)
 					minutes = Util.DecodeBCD(buffer[0x05])
 					seconds = Util.DecodeBCD(buffer[0x06])
+					rtc_status = buffer[0x07]
+					if rtc_status == 0x01: rtc_status = 0x40 # old dumps had this value
+
 					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
 					timestamp_now = int(time.time())
 					if timestamp_then < timestamp_now:
@@ -1438,3 +1527,5 @@ class AGB_GPIO:
 			[ self.GPIO_REG_DAT, 1 ],
 			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
 		])
+
+		self.RTCWriteStatus(rtc_status)

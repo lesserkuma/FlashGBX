@@ -1,10 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"Ferrante Crafts cart 32 KB V2"
+		"Ferrante Crafts cart 32 KB V2",
+		"marv17 32 KB Homebrew Flashcard (SST39SF040)"
 	],
 	"flash_ids":[
-		[ 0xBF, 0xFF, 0x25, 0xFF ]
+		[ 0xBF, 0xFF, 0x25, 0xFF ],
+		[ 0xBF, 0xB7, 0xFF, 0xFF ]
 	],
 	"voltage":5,
 	"flash_size":0x8000,

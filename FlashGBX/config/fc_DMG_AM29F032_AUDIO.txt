@@ -3,19 +3,21 @@
 	"names":[
 		"insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC",
 		"DIY cart with AM29F032 @ AUDIO",
-		"DIY cart with M29F032D @ AUDIO"
+		"DIY cart with M29F032D @ AUDIO",
+		"DIY cart with MBM29F033C @ AUDIO"
 	],
 	"flash_ids":[
 		[ 0x04, 0xD4, 0x00, 0x00 ],
 		[ 0x04, 0xD4, 0x00, 0x00 ],
-		[ 0x20, 0xAC, 0x00, 0x00 ]
+		[ 0x20, 0xAC, 0x00, 0x00 ],
+		[ 0x04, 0xD4, 0x00, 0x00 ]
 	],
 	"voltage":5,
 	"flash_size":0x400000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"AUDIO",
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":90,
 	"sector_size":0x10000,
 	"command_set":"AMD",
 	"commands":{

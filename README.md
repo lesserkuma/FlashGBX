@@ -20,7 +20,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 ### Confirmed working reader/writer hardware and firmware versions
 
 - [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/) (other hardware revisions may also work, but are untested)
-  - insideGadgets’ firmware version R30
+  - insideGadgets’ firmware version R31
   - Lesserkuma’s firmware versions L1 to L7
 
 ## Installing and running
@@ -40,8 +40,8 @@ These work for installing fresh and upgrading from an older version.
 
 1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or newer)
 2. Open a Terminal or Command Prompt window
-3. Install FlashGBX with this command:<br>`pip3 install FlashGBX[qt5]`
-* If installation fails, use this command instead:<br>`pip3 install FlashGBX[qt6]`
+3. Install FlashGBX with this command:<br>`pip3 install "FlashGBX[qt5]"`
+* If installation fails, use this command instead:<br>`pip3 install "FlashGBX[qt6]"`
 * If installation still fails, you can install the minimal version (command line interface) with this command:<br>`pip3 install FlashGBX`
 
 * Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
@@ -103,6 +103,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with AM29F080
   - DIY cart with AT49F040
   - DIY cart with M29F032D
+  - DIY cart with MBM29F033C
   - DIY cart with MX29LV640
   - DIY cart with SST39SF040
   - DMG-MBC5-32M-FLASH Development Cartridge, E201264
@@ -247,6 +248,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - GE28F128W30 with 128W30B0
   - M5M29G130AN (no PCB text)
   - M6MGJ927 (no PCB text)
+  - MSP54LV512 (no PCB text)
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
@@ -299,7 +301,9 @@ The author would like to thank the following very kind people for their help and
 - EchelonPrime (flash chip info)
 - EmperorOfTigers (bug reports, flash chip info)
 - endrift (research, mGBA emulator)
+- ethanstrax (flash chip info)
 - eveningmoose (flash chip info)
+- Falknör (bug reports)
 - FerrantePescara (flash chip info)
 - frarees (bug reports)
 - Frost Clock (flash chip info)
@@ -319,6 +323,7 @@ The author would like to thank the following very kind people for their help and
 - joyrider3774 (flash chip info)
 - JS7457 (flash chip info)
 - julgr (macOS help, testing)
+- kscheel (bug reports)
 - kyokohunter (bug reports)
 - litlemoran (flash chip info)
 - LovelyA72 (flash chip info)

@@ -1,4 +1,16 @@
 # Release notes
+### v3.19 (released 2022-10-24)
+- Fixed a bug not allowing FlashGBX to run correctly if there were square brackets in the file path *(thanks kscheel)*
+- Added support for MSP54LV512 (no PCB text) *(thanks ethanstrax)*
+- Added support for DIY cart with MBM29F033C *(thanks Godan)*
+- Added support for marv17 32 KB Homebrew Flashcard (SST39SF040) *(thanks marv17)*
+- Minor adjustments to the format of GBA RTC register data was made as it is now also supported by the mGBA emulator from version 0.10.0 *(thanks endrift)*
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums *(thanks Falknör)*
+- Added support for saving and restoring RTC registers of official TAMA5 cartridges inside save data files
+- Now decodes and displays the embedded Boot Logo of Game Boy games *(thanks Jenetrix)*
+- Bundles GBxCart RW v1.1/v1.2/v1.3 firmware version R31 *(thanks AlexiG)*
+- Minor bug fixes and improvements
+
 ### v3.18 (released 2022-08-18)
 - Fixed a problem with writing MBC2 save data onto cartridges that use a different mapper
 - Improved support for the insideGadgets LinkNLoad flash cartridges
