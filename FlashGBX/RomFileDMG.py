@@ -105,6 +105,12 @@ class RomFileDMG:
 		game_title = re.sub(r"(\x00+)$", "", game_title)
 		game_title = re.sub(r"((_)_+|(\x00)\x00+|(\s)\s+)", "\\2\\3\\4", game_title).replace("\x00", "_")
 		game_title = ''.join(filter(lambda x: x in set(string.printable), game_title))
+		data["game_code"] = ""
+		if data["cgb"] in (0x80, 0xC0):
+			if len(data["game_title_raw"].rstrip("\x00")) == 15:
+				if data["game_title_raw"][-4:][0] in ("A", "B", "H", "K", "V") and data["game_title_raw"][-4:][3] in ("A", "B", "D", "E", "F", "I", "J", "K", "P", "S", "U", "X", "Y"):
+					data["game_code"] = game_title[-4:]
+					game_title = game_title[:-4].rstrip("_")
 		data["game_title"] = game_title
 
 		data["maker_code"] = format(int(buffer[0x14B]), "02X")

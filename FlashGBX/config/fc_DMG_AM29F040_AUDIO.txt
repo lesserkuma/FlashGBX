@@ -1,19 +1,18 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with MBC1 and AM29F080 @ AUDIO"
+		"DIY cart with AM29F040 @ AUDIO"
 	],
 	"flash_ids":[
-		[ 0x20, 0xF1 ],
-		[ 0x01, 0xD5 ]
+		[ 0x01, 0xA4 ]
 	],
 	"voltage":5,
-	"flash_size":0x100000,
+	"flash_size":0x80000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"AUDIO",
-	"chip_erase_timeout":60,
-	"mbc":0x03,
+	"chip_erase_timeout":15,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

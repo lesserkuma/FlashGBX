@@ -18,6 +18,7 @@ class DMG_MBC:
 	RAM_BANK_SIZE = 0x2000
 	ROM_BANK_NUM = 0
 	CURRENT_ROM_BANK = 0
+	CURRENT_FLASH_BANK = 0
 	START_BANK = 0
 
 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
@@ -105,6 +106,9 @@ class DMG_MBC:
 	def GetROMBank(self):
 		return self.CURRENT_ROM_BANK
 
+	def GetFlashBank(self):
+		return self.CURRENT_FLASH_BANK
+
 	def GetROMBanks(self, rom_size):
 		return math.ceil(rom_size / self.ROM_BANK_SIZE)
 	
@@ -158,6 +162,12 @@ class DMG_MBC:
 
 	def SetStartBank(self, index):
 		self.START_BANK = index
+	
+	def SelectBankFlash(self, index):
+		return
+	
+	def HasFlashBanks(self):
+		return False
 	
 	def HasHiddenSector(self):
 		return False
@@ -440,6 +450,9 @@ class DMG_MBC6(DMG_MBC):
 		self.CartWrite(commands)
 		start_address = 0 if index == 0 else 0x4000
 		return (start_address, self.ROM_BANK_SIZE)
+
+	def HasFlashBanks(self):
+		return True
 
 	def SelectBankFlash(self, index):
 		dprint(self.GetName(), "|", index)
@@ -922,7 +935,7 @@ class DMG_TAMA5(DMG_MBC):
 
 	def EnableMapper(self):
 		tama5_check = self.CartRead(0xA000)
-		lives = 150
+		lives = 20
 		while (tama5_check & 3) != 1:
 			dprint("- Current value is 0x{:X}, now writing 0xA001=0x{:X}".format(tama5_check, 0x0A))
 			self.CartWrite([[0xA001, 0x0A]], sram=True)
@@ -930,7 +943,7 @@ class DMG_TAMA5(DMG_MBC):
 			time.sleep(0.01)
 			lives -= 1
 			if lives < 0:
-				dprint("Failed!")
+				print("Error: Couldn’t enable TAMA5 mapper!")
 				return False
 		dprint("Enabled TAMA5 successfully")
 		return True
@@ -1142,21 +1155,32 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 	def GetName(self):
 		return "256M Multi Cart"
 	
-	def SelectBankROM(self, index):
-		dprint(self.GetName(), "|", index)
+	def HasFlashBanks(self):
+		return True
 
+	def SelectBankFlash(self, index):
 		flash_bank = math.floor(index / 512)
+		dprint(self.GetName(), "|SelectBankFlash()|", index, "->", flash_bank)
+
+		self.CART_POWERCYCLE_FNCPTR()
+		
+		commands = [
+			[ 0x7000, 0x00 ],
+			[ 0x7001, 0x00 ],
+			[ 0x7002, 0x90 + flash_bank ]
+		]
+		self.CURRENT_FLASH_BANK = flash_bank
+		self.CartWrite(commands, delay=0.1)
+
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|SelectBankROM()|", index)
+
+		#if index % 512 == 0 or abs(self.CURRENT_ROM_BANK - index) > 1:
+		if (index % 512 == 0) or (self.CURRENT_FLASH_BANK != math.floor(index / 512)):
+			self.SelectBankFlash(index)
+		self.CURRENT_ROM_BANK = index
 		index = index % 512
 
-		if index == 0:
-			self.CART_POWERCYCLE_FNCPTR()
-			commands = [
-				[ 0x7000, 0x00 ],
-				[ 0x7001, 0x00 ],
-				[ 0x7002, 0x90 + flash_bank ]
-			]
-			self.CartWrite(commands, delay=0.1)
-		
 		commands = [
 			[ 0x2100, index & 0xFF ],
 			[ 0x3000, ((index >> 8) & 0xFF) ],
@@ -1529,3 +1553,4 @@ class AGB_GPIO:
 		])
 
 		self.RTCWriteStatus(rtc_status)
+

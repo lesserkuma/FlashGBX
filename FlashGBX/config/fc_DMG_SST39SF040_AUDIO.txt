@@ -1,6 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
+		"DIY cart with SST39SF040 @ AUDIO",
 		"Ferrante Crafts cart 512 KB"
 	],
 	"flash_ids":[
@@ -10,10 +11,10 @@
 	"flash_size":0x80000,
 	"start_addr":0,
 	"first_bank":1,
-	"mbc":0x19,
 	"flash_commands_on_bank_1":true,
 	"write_pin":"AUDIO",
 	"chip_erase_timeout":30,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

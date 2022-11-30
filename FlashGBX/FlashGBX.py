@@ -33,7 +33,7 @@ def LoadConfig(args):
 	(config_version, fc_files) = ReadConfigFiles(args=args)
 	if config_version != Util.VERSION:
 		# Rename old files that have since been replaced/renamed/merged
-		deprecated_files = [ "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt", "fc_AGB_MX29LV640_AUDIO.txt", "fc_AGB_M36L0R7050T.txt", "fc_AGB_M36L0R8060B.txt", "fc_AGB_M36L0R8060T.txt", "fc_AGB_iG_32MB_S29GL512N.txt", "fc_DMG_SST39SF010_AUDIO.txt" ]
+		deprecated_files = [ "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt", "fc_AGB_MX29LV640_AUDIO.txt", "fc_AGB_M36L0R7050T.txt", "fc_AGB_M36L0R8060B.txt", "fc_AGB_M36L0R8060T.txt", "fc_AGB_iG_32MB_S29GL512N.txt", "fc_DMG_SST39SF010_MBC1_AUDIO.txt", "fc_DMG_SST39SF040_MBC5_AUDIO.txt", "fc_DMG_AM29F010_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_WR.txt", "fc_DMG_AM29F080_MBC1_AUDIO.txt", "fc_DMG_AM29F080_MBC1_WR.txt", "fc_DMG_SST39SF040_MBC1_AUDIO.txt", "fc_DMG_SST39SF020_MBC1_AUDIO.txt" ]
 		for file in deprecated_files:
 			if os.path.exists(config_path + "/" + file):
 				os.rename(config_path + "/" + file, config_path + "/" + file + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".bak")
@@ -68,6 +68,7 @@ def LoadConfig(args):
 				except:
 					ret.append([2, "The flashchip type file “{:s}” could not be parsed and needs to be fixed before it can be used.".format(os.path.basename(file))])
 					continue
+				if "names" not in specs: continue
 				for name in specs["names"]:
 					if not specs["type"] in flashcarts: continue # only DMG and AGB are supported right now
 					flashcarts[specs["type"]][name] = specs
@@ -135,7 +136,6 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--ignore-bad-header", action="store_true", help="don’t stop if invalid data found in cartridge header data")
 	ap_cli2.add_argument("--flashcart-type", type=str, default="autodetect", help="name of flash cart; see txt files in config directory")
 	ap_cli2.add_argument("--prefer-chip-erase", action="store_true", help="prefer full chip erase over sector erase when both available")
-	ap_cli2.add_argument("--reversed-sectors", action="store_true", help="use reversed flash sectors if possible")
 	ap_cli2.add_argument("--force-5v", action="store_true", help="force 5V when writing Game Boy flash cartridges")
 	ap_cli2.add_argument("--no-verify-write", action="store_true", help="do not verify written data")
 	ap_cli2.add_argument("--generate-dump-report", action="store_true", help="generate dump reports when making a ROM backup")
@@ -143,6 +143,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--gbcamera-palette", choices=["grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3"], type=str.lower, default="grayscale", help="sets the palette of pictures extracted from Game Boy Camera saves")
 	ap_cli2.add_argument("--gbcamera-outfile-format", choices=["png", "bmp", "gif", "jpg"], type=str.lower, default="png", help="sets the file format of saved pictures extracted from Game Boy Camera saves")
 	ap_cli2.add_argument("--device-port", help="override device port", default=None)
+	ap_cli2.add_argument("--device-limit-baudrate", action="store_true", help="limit connection to a slower baud rate")
 	args = parser.parse_args()
 	
 	if "appdata" in cp:

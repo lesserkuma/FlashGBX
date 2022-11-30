@@ -21,7 +21,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 - [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/) (other hardware revisions may also work, but are untested)
   - insideGadgets’ firmware version R31
-  - Lesserkuma’s firmware versions L1 to L7
+  - Lesserkuma’s firmware versions L1 to L8
 
 ## Installing and running
 
@@ -78,7 +78,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - HuC-3
   - TAMA5
   - Unlicensed 256M Mapper
-  - Unlicesned Wisdom Tree Mapper
+  - Unlicensed Wisdom Tree Mapper
   - Unlicensed Xploder GB Mapper
   - Unlicensed Sachen Mapper
 
@@ -86,7 +86,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - All cartridges without memory mapping
   - 8M FLASH DACS
   - 3D Memory (GBA Video)
-  - Unlicensed 2048M Mapper
+  - Unlicensed 2G Mapper
 
 ### Currently supported flash cartridges
 
@@ -208,14 +208,15 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
   - 4000L0ZBQ0 DRV with 3000L0YBQ0
-  - 4350Q2 with 4050V0YBQ1
-  - 4350Q2 with 4350LLYBQ2
   - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0
   - 4050_4400_4000_4350_36L0R_V5 with 4050L0YTQ2
   - 4050_4400_4000_4350_36L0R_V5 with M36L0R7050T
   - 4050_4400_4000_4350_36L0R_V5 with M36L0T8060T
   - 4050_4400_4000_4350_36L0R_V5 with M36L0R8060T
+  - 4350Q2 with 4050V0YBQ1
+  - 4350Q2 with 4350LLYBQ2
   - 4400 with 4400L0ZDQ0
+  - 4444-39VF512 with 4444LLZBBO
   - 4455_4400_4000_4350_36L0R_V3 with M36L0R7050T
   - AA1030_TSOP88BALL with M36W0R603
   - AGB-E05-01 with GL128S
@@ -249,6 +250,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - M5M29G130AN (no PCB text)
   - M6MGJ927 (no PCB text)
   - MSP54LV512 (no PCB text)
+  - SUN100S_MSP54XXX with MSP54LV100
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
@@ -291,6 +293,7 @@ The author would like to thank the following very kind people for their help and
 - BennVenn (unlicensed mapper reverse engineering)
 - ClassicOldSong (bug reports)
 - crizzlycruz (flash chip info)
+- Därk (flash chip info)
 - Davidish (flash chip info)
 - DevDavisNunez (bug reports)
 - Diddy_Kong (sample cartridge contribution)

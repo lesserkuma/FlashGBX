@@ -12,7 +12,9 @@
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"AUDIO",
+	"sector_size":0x10000,
 	"chip_erase_timeout":60,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -41,6 +43,22 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ 0, 0xFF, 0xFF ]
+		],
+		"sector_erase":[
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xAA ],
+			[ 0x2AA, 0x55 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFF, 0xFF ]
 		],
 		"single_write":[
 			[ 0x555, 0xAA ],

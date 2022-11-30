@@ -15,6 +15,7 @@
 	"write_pin":"WR",
 	"sector_size":0x10000,
 	"chip_erase_timeout":60,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

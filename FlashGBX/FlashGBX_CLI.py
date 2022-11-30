@@ -159,40 +159,44 @@ class FlashGBX_CLI():
 		print("\nCartridge Information:")
 		print(s_header)
 
-		if args.action == "backup-rom":
-			self.BackupROM(args, header)
-		
-		elif args.action == "backup-save":
-			self.BackupRestoreRAM(args, header)
-		
-		elif args.action == "restore-save":
-			if args.path == "auto":
-				args.path = input("Enter file path of save data file: ").strip().replace("\"", "")
+		try:
+			if args.action == "backup-rom":
+				self.BackupROM(args, header)
+			
+			elif args.action == "backup-save":
+				self.BackupRestoreRAM(args, header)
+			
+			elif args.action == "restore-save":
+				if args.path == "auto":
+					args.path = input("Enter file path of save data file: ").strip().replace("\"", "")
+					print("")
+					if args.path == "":
+						print("Canceled.")
+						self.DisconnectDevice()
+						return
+				self.BackupRestoreRAM(args, header)
+			
+			elif args.action == "erase-save":
+				self.BackupRestoreRAM(args, header)
+			
+			elif args.action == "debug-test-save":
+				self.BackupRestoreRAM(args, header)
+			
+			elif args.action == "flash-rom":
+				if args.path == "auto":
+					args.path = input("Enter file path of ROM file: ").strip().replace("\"", "")
+					print("")
+					if args.path == "":
+						print("Canceled.")
+						self.DisconnectDevice()
+						return
+				self.FlashROM(args, header)
+			
+			if args.action != "info":
 				print("")
-				if args.path == "":
-					print("Canceled.")
-					self.DisconnectDevice()
-					return
-			self.BackupRestoreRAM(args, header)
 		
-		elif args.action == "erase-save":
-			self.BackupRestoreRAM(args, header)
-		
-		elif args.action == "debug-test-save":
-			self.BackupRestoreRAM(args, header)
-		
-		elif args.action == "flash-rom":
-			if args.path == "auto":
-				args.path = input("Enter file path of ROM file: ").strip().replace("\"", "")
-				print("")
-				if args.path == "":
-					print("Canceled.")
-					self.DisconnectDevice()
-					return
-			self.FlashROM(args, header)
-		
-		if args.action != "info":
-			print("")
+		except KeyboardInterrupt:
+			print("\n\nOperation stopped.")
 		
 		self.DisconnectDevice()
 		return 0
@@ -229,6 +233,8 @@ class FlashGBX_CLI():
 				print("\033[KErasing flash sector at address 0x{:X}...".format(args["sector_pos"]), end="\r")
 			elif args["action"] == "UPDATE_RTC":
 				print("\nUpdating Real Time Clock...")
+			elif args["action"] == "ERROR":
+				print("{:s}{:s}{:s}{:s}".format(ANSI.CLEAR_LINE, ANSI.RED, args["text"], ANSI.RESET))
 			elif args["action"] == "ABORTING":
 				print("\nStopping...")
 			elif args["action"] == "FINISHED":
@@ -369,7 +375,7 @@ class FlashGBX_CLI():
 		global hw_devices
 		for hw_device in hw_devices:
 			dev = hw_device.GbxDevice()
-			ret = dev.Initialize(self.FLASHCARTS, max_baud=1700000, port=port)
+			ret = dev.Initialize(self.FLASHCARTS, port=port, max_baud=1000000 if self.ARGS["argparsed"].device_limit_baudrate else 1700000)
 			if ret is False:
 				self.CONN = None
 			elif isinstance(ret, list):
@@ -392,7 +398,7 @@ class FlashGBX_CLI():
 	def ConnectDevice(self):
 		dev = self.DEVICE[1]
 		port = dev.GetPort()
-		ret = dev.Initialize(self.FLASHCARTS, port=port, max_baud=1700000)
+		ret = dev.Initialize(self.FLASHCARTS, port=port, max_baud=1000000 if self.ARGS["argparsed"].device_limit_baudrate else 1700000)
 
 		if ret is False:
 			print("\n{:s}An error occured while trying to connect to the device.{:s}".format(ANSI.RED, ANSI.RESET))
@@ -435,7 +441,9 @@ class FlashGBX_CLI():
 		bad_read = False
 		s = ""
 		if self.CONN.GetMode() == "DMG":
-			s += "Game Title/Code: {:s}\n".format(data["game_title"])
+			s += "Game Title:      {:s}\n".format(data["game_title"])
+			if len(data['game_code']) > 0:
+				s += "Game Code:       {:s}\n".format(data['game_code'])
 			s += "Revision:        {:s}\n".format(str(data["version"]))
 			s += "Super Game Boy:  "
 			if data['sgb'] in Util.DMG_Header_SGB:
@@ -517,9 +525,9 @@ class FlashGBX_CLI():
 			try:
 				if data['mapper_raw'] == 0x06: # MBC2
 					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[1])
-				elif data['mapper_raw'] == 0x22 and data["game_title"] in ("KORO2 KIRBYKKKJ", "KIRBY TNT__KTNE"): # MBC7 Kirby
+				elif data['mapper_raw'] == 0x22 and data["game_title"] in ("KORO2 KIRBY", "KIRBY TNT"): # MBC7 Kirby
 					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x101)])
-				elif data['mapper_raw'] == 0x22 and data["game_title"] in ("CMASTER____KCEJ"): # MBC7 Command Master
+				elif data['mapper_raw'] == 0x22 and data["game_title"] in ("CMASTER"): # MBC7 Command Master
 					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x102)])
 				elif data['mapper_raw'] == 0xFD: # TAMA5
 					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x103)])
@@ -707,6 +715,7 @@ class FlashGBX_CLI():
 		# Cart Type
 		msg_cart_type_s = ""
 		msg_flash_size_s = ""
+		msg_flash_mapper_s = ""
 		if cart_type is not None:
 			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=supp_cart_types[1][cart_type])
 			msg_cart_type_s = "Cartridge Type: Supported flash cartridge – compatible with:\n{:s}\n".format(msg_cart_type)
@@ -714,6 +723,15 @@ class FlashGBX_CLI():
 			if "flash_size" in supp_cart_types[1][cart_type_id]:
 				size = supp_cart_types[1][cart_type_id]["flash_size"]
 				msg_flash_size_s = "ROM Size: {:s}\n".format(Util.formatFileSize(size, asInt=True))
+
+			if self.CONN.GetMode() == "DMG":
+				if "mbc" in supp_cart_types[1][cart_type_id]:
+					if supp_cart_types[1][cart_type_id]["mbc"] == "manual":
+						msg_flash_mapper_s = "Mapper Type: Manual selection\n"
+					elif supp_cart_types[1][cart_type_id]["mbc"] in Util.DMG_Header_Mapper.keys():
+						msg_flash_mapper_s = "Mapper Type: {:s}\n".format(Util.DMG_Header_Mapper[supp_cart_types[1][cart_type_id]["mbc"]])
+				else:
+					msg_flash_mapper_s = "Mapper Type: Default (MBC5)\n"
 
 		else:
 			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage)
@@ -751,7 +769,7 @@ class FlashGBX_CLI():
 			msg_cfi_s = "Common Flash Interface Data: No data provided\n"
 		
 		msg = "\n\nThe following cartridge configuration was detected:\n\n"
-		temp = msg + "{:s}{:s}{:s}\n{:s}\n{:s}\n{:s}".format(msg_header_s, msg_flash_size_s, msg_save_type_s, msg_flash_id_s, msg_cfi_s, msg_cart_type_s)
+		temp = msg + "{:s}{:s}{:s}{:s}\n{:s}\n{:s}\n{:s}".format(msg_header_s, msg_flash_size_s, msg_flash_mapper_s, msg_save_type_s, msg_flash_id_s, msg_cfi_s, msg_cart_type_s)
 		print(temp[:-1])
 		
 		return cart_type
@@ -765,7 +783,7 @@ class FlashGBX_CLI():
 			if args.dmg_mbc == "auto":
 				try:
 					mbc = header["mapper_raw"]
-					if mbc == 0: mbc = 0x19
+					if mbc == 0: mbc = 0x19 # MBC5 default
 				except:
 					print("{:s}Couldn’t determine MBC type, will try to use MBC5. It can also be manually set with the “--dmg-mbc” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 					mbc = 0x19
@@ -774,7 +792,8 @@ class FlashGBX_CLI():
 					mbc = int(args.dmg_mbc[2:], 16)
 				elif args.dmg_mbc.isnumeric():
 					mbc = int(args.dmg_mbc)
-					if mbc == 2: mbc = 0x06
+					if mbc == 1: mbc = 0x01
+					elif mbc == 2: mbc = 0x06
 					elif mbc == 3: mbc = 0x13
 					elif mbc == 5: mbc = 0x19
 					elif mbc == 6: mbc = 0x20
@@ -867,6 +886,9 @@ class FlashGBX_CLI():
 	
 	def FlashROM(self, args, header):
 		path = ""
+		s_mbc = ""
+		mbc = 0
+
 		mode = self.CONN.GetMode()
 		if mode == "DMG":
 			carts = self.CONN.GetSupportedCartridgesDMG()[1]
@@ -876,7 +898,7 @@ class FlashGBX_CLI():
 			return
 		
 		cart_type = 0
-		mbc = 0
+		
 		for i in range(0, len(carts)):
 			if not "names" in carts[i]: continue
 			if carts[i]["type"] != mode: continue
@@ -942,30 +964,57 @@ class FlashGBX_CLI():
 		elif 'voltage_variants' in carts[cart_type] and carts[cart_type]['voltage'] == 3.3:
 			print("The selected flash cartridge type usually flashes fine with 3.3V, however sometimes it may require 5V. You can use the “--force-5v” command line switch if necessary. Please note that 5V can be unsafe for some flash chips.")
 		
-		reverse_sectors = False
-		if args.reversed_sectors is True:
-			reverse_sectors = True
-			print("Will be writing to the cartridge with reversed flash sectors.")
-		elif 'sector_reversal' in carts[cart_type]:
-			print("The selected flash cartridge type is reported to sometimes have reversed sectors. You can use the “--reversed-sectors” command line switch if the cartridge is not working after writing the ROM.")
-		
 		prefer_chip_erase = args.prefer_chip_erase is True
 		if not prefer_chip_erase and 'chip_erase' in carts[cart_type]['commands'] and 'sector_erase' in carts[cart_type]['commands']:
 			print("This flash cartridge supports both Sector Erase and Full Chip Erase methods. You can use the “--prefer-chip-erase” command line switch if necessary.")
 		
-		if "mbc" in carts[cart_type]:
-			mbc = carts[cart_type]["mbc"]
-
 		verify_write = args.no_verify_write is False
 		
 		fix_header = False
 		if self.CONN.GetMode() == "DMG":
 			hdr = RomFileDMG(buffer).GetHeader()
+
+			mbc = 0x19 # MBC5 default
+			if "mbc" in carts[cart_type]:
+				if carts[cart_type]["mbc"] == "manual":
+					if args.dmg_mbc != "auto":
+						if args.dmg_mbc.startswith("0x"):
+							mbc = int(args.dmg_mbc[2:], 16)
+						elif args.dmg_mbc.isnumeric():
+							mbc = int(args.dmg_mbc)
+							if mbc == 1: mbc = 0x01
+							elif mbc == 2: mbc = 0x06
+							elif mbc == 3: mbc = 0x13
+							elif mbc == 5: mbc = 0x19
+							elif mbc == 6: mbc = 0x20
+							elif mbc == 7: mbc = 0x22
+							else: mbc = 0x19
+				elif isinstance(carts[cart_type]["mbc"], int):
+					mbc = carts[cart_type]["mbc"]
+				else:
+					if args.dmg_mbc.startswith("0x"):
+						mbc = int(args.dmg_mbc[2:], 16)
+					elif args.dmg_mbc.isnumeric():
+						mbc = int(args.dmg_mbc)
+						if mbc == 1: mbc = 0x01
+						elif mbc == 2: mbc = 0x06
+						elif mbc == 3: mbc = 0x13
+						elif mbc == 5: mbc = 0x19
+						elif mbc == 6: mbc = 0x20
+						elif mbc == 7: mbc = 0x22
+						else: mbc = 0x19
+					else:
+						mbc = 0x19
+			
+			if mbc in Util.DMG_Header_Mapper:
+				s_mbc = " using Mapper Type “{:s}”".format(Util.DMG_Header_Mapper[mbc])
+			else:
+				s_mbc = " using Mapper Type 0x{:X}".format(mbc)
 		elif self.CONN.GetMode() == "AGB":
 			hdr = RomFileAGB(buffer).GetHeader()
-		if not hdr["logo_correct"] and mbc != 0x203:
+		if not hdr["logo_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
 			print("{:s}WARNING: The ROM file you selected will not boot on actual hardware due to invalid logo data.{:s}".format(ANSI.YELLOW, ANSI.RESET))
-		if not hdr["header_checksum_correct"] and mbc != 0x203:
+		if not hdr["header_checksum_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
 			print("{:s}WARNING: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).{:s}".format(ANSI.YELLOW, hdr["header_checksum_calc"], hdr["header_checksum"], ANSI.RESET))
 			answer = input("Fix the header checksum before continuing? [Y/n]: ").strip().lower()
 			print("")
@@ -975,15 +1024,14 @@ class FlashGBX_CLI():
 		print("")
 		v = carts[cart_type]["voltage"]
 		if override_voltage: v = override_voltage
-		print("The following ROM file will now be written to the flash cartridge at {:s}V:\n{:s}".format(str(v), os.path.abspath(path)))
+		print("The following ROM file will now be written to the flash cartridge{:s} at {:s}V:\n{:s}".format(s_mbc, str(v), os.path.abspath(path)))
 		
 		print("")
 		if len(buffer) > 0x1000:
-			args = { "mode":4, "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
+			args = { "mode":4, "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc }
 		else:
-			args = { "mode":4, "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "reverse_sectors":reverse_sectors, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header }
+			args = { "mode":4, "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc }
 		self.CONN.TransferData(signal=self.PROGRESS.SetProgress, args=args)
-		#self.CONN.TransferData(args={ 'mode':4, 'path':path, 'cart_type':cart_type, 'override_voltage':override_voltage, 'start_addr':0, 'buffer':buffer, 'prefer_chip_erase':prefer_chip_erase, 'reverse_sectors':reverse_sectors, 'fast_read_mode':True, 'verify_write':verify_write, 'fix_header':fix_header }, signal=self.PROGRESS.SetProgress)
 
 		buffer = None
 	
@@ -1003,7 +1051,7 @@ class FlashGBX_CLI():
 			if args.dmg_mbc == "auto":
 				try:
 					mbc = header["mapper_raw"]
-					if mbc == 0: mbc = 0x19
+					if mbc == 0: mbc = 0x19 # MBC5 default
 				except:
 					print("{:s}Couldn’t determine MBC type, will try to use MBC5. It can also be manually set with the “--dmg-mbc” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 					mbc = 0x19
@@ -1012,7 +1060,8 @@ class FlashGBX_CLI():
 					mbc = int(args.dmg_mbc[2:], 16)
 				elif args.dmg_mbc.isnumeric():
 					mbc = int(args.dmg_mbc)
-					if mbc == 2: mbc = 0x06
+					if mbc == 1: mbc = 0x01
+					elif mbc == 2: mbc = 0x06
 					elif mbc == 3: mbc = 0x13
 					elif mbc == 5: mbc = 0x19
 					elif mbc == 6: mbc = 0x20

@@ -7,9 +7,10 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.19"
+VERSION_PEP440 = "3.20"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
+DEBUG_LOG = []
 
 AGB_Header_ROM_Sizes = [ "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB", "256 MB" ]
 AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
@@ -20,6 +21,7 @@ AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000 ]
 
 DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
+DMG_Mapper_Types = { "None":[ 0x00 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x06 ], "MBC3":[ 0x10, 0x13 ], "MBC5":[ 0x19, 0x1B, 0x1C, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "256M Multi Cart":[ 0x201 ], "Wisdom Tree":[ 0x202 ], "Xploder GB":[ 0x203 ], "Sachen":[ 0x204 ], "Datel Orbit V2":[ 0x205 ] }
 DMG_Header_ROM_Sizes = [ "32 KB", "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000 ]
@@ -147,7 +149,7 @@ class Progress():
 				self.UPDATER(args)
 				self.PROGRESS = {}
 			
-			elif args["action"] in ("ERASE", "SECTOR_ERASE", "UNLOCK", "UPDATE_RTC"):
+			elif args["action"] in ("ERASE", "SECTOR_ERASE", "UNLOCK", "UPDATE_RTC", "ERROR"):
 				if "time_start" in self.PROGRESS:
 					args["time_elapsed"] = now - self.PROGRESS["time_start"]
 				elif "time_start" in args:
@@ -309,11 +311,14 @@ def formatProgressTimeShort(sec):
 	sec %= 60
 	return "{:02d}:{:02d}:{:02d}".format(int(hr), int(min), int(sec))
 
-def formatProgressTime(sec):
+def formatProgressTime(sec, asFloat=False):
 	if int(sec) == 1:
 		return "{:d} second".format(int(sec))
 	elif sec < 60:
-		return "{:d} seconds".format(int(sec))
+		if sec < 1 and asFloat:
+			return "{:.2f} seconds".format(sec)
+		else:
+			return "{:d} seconds".format(int(sec))
 	elif int(sec) == 60:
 		return "1 minute"
 	else:
@@ -496,10 +501,11 @@ def GetDumpReport(di, device):
 		"* Hardware:        {hardware:s} – Firmware {firmware:s}\n" \
 		"* Software:        {software:s}\n" \
 		"* OS Platform:     {platform:s}\n" \
+		"* Baud Rate:       {baud_rate:d}\n" \
 		"* Dump Time:       {timestamp:s}\n" \
 		"* Time Elapsed:    %TIME_ELAPSED% (%TRANSFER_RATE%)\n" \
 		"* Transfer Buffer: {buffer_size:d} bytes\n" \
-	.format(hardware=device.GetFullName(), firmware=device.GetFirmwareVersion(), software="{:s} {:s}".format(APPNAME, VERSION), platform=platform.platform(), buffer_size=di["transfer_size"], timestamp=di["timestamp"])
+	.format(hardware=device.GetFullName(), firmware=device.GetFirmwareVersion(), software="{:s} {:s}".format(APPNAME, VERSION), platform=platform.platform(), buffer_size=di["transfer_size"], timestamp=di["timestamp"], baud_rate=device.GetBaudRate())
 	
 	if mode == "DMG":
 		s += "" \
@@ -520,13 +526,11 @@ def GetDumpReport(di, device):
 	di["hdr_logo"] = "OK" if di["header"]["logo_correct"] else "Invalid"
 	di["header"]["game_title_raw"] = di["header"]["game_title_raw"].replace("\0", "␀")
 	if mode == "DMG":
-		game_title = di["header"]["game_title_raw"]
+		game_title = di["header"]["game_title"]
 		game_code = ""
-		if di["header"]["cgb"] == 0xC0 or di["header"]["cgb"] == 0x80:
-			if len(di["header"]["game_title_raw"].rstrip("\x00")) == 15:
-				if game_title[-4:][0] in ("A", "B", "H", "K", "V") and game_title[-4:][3] in ("A", "B", "D", "E", "F", "I", "J", "K", "P", "S", "U", "X", "Y"):
-					game_code = "* Game Code:       {:s}\n".format(game_title[-4:])
-					game_title = game_title[:-4].rstrip("_")
+		if di["header"]["cgb"] in (0xC0, 0x80):
+			if "game_code" in di["header"] and len(di["header"]["game_code"]) > 0:
+				game_code = "* Game Code:       {:s}\n".format(di["header"]["game_code"])
 			di["hdr_target_platform"] = "Game Boy Color"
 		elif di["header"]["old_lic"] == 0x33 and di["header"]["sgb"] == 0x03:
 			di["hdr_target_platform"] = "Super Game Boy"
@@ -631,19 +635,20 @@ def GenerateFileName(mode, header, settings):
 		path_code = ""
 		path_revision = str(header["version"])
 		path_extension = "bin"
-		path = "%TITLE%"
+		path = "%TITLE%-%REVISION%"
 		fe_sgb = "enabled"
 		if settings is not None:
 			path = settings.value(key="FileNameFormatDMG", default=path)
 			fe_sgb = settings.value(key="AutoFileExtensionSGB", default="enabled")
-		if header["cgb"] == 0xC0 or header["cgb"] == 0x80:
-			if len(header["game_title_raw"].rstrip("\x00")) == 15:
-				if path_title[-4:][0] in ("A", "B", "H", "K", "V") and path_title[-4:][3] in ("A", "B", "D", "E", "F", "I", "J", "K", "P", "S", "U", "X", "Y"):
-					path_code = path_title[-4:]
-					path_title = path_title[:-4].rstrip("_")
-					path = "%TITLE%_%CODE%-%REVISION%"
-					if settings is not None:
-						path = settings.value(key="FileNameFormatCGB", default=path)
+		if header["mapper_raw"] > 0xFF:
+			path = "%TITLE%"
+		if header["cgb"] in (0xC0, 0x80):
+			if len(header["game_code"]) > 0:
+				path_title = header["game_title"]
+				path_code = header["game_code"]
+				path = "%TITLE%_%CODE%-%REVISION%"
+				if settings is not None:
+					path = settings.value(key="FileNameFormatCGB", default=path)
 			path_extension = "gbc"
 		elif header["old_lic"] == 0x33 and header["sgb"] == 0x03 and fe_sgb.lower() == "enabled":
 			path_extension = "sgb"
@@ -672,7 +677,18 @@ def GenerateFileName(mode, header, settings):
 			path = path.replace("%REVISION%", path_revision)
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 			path += ".gba"
+	#path = path.replace(" ", "_")
 	return path
+
+def compare_mbc(a, b):
+	for v in DMG_Mapper_Types.values():
+		if a in v and b in v: return True
+	return False
+
+def get_mbc_name(id):
+	for (k, v) in DMG_Mapper_Types.items():
+		if id in v: return k
+	return "Unknown mapper type 0x{:02X}".format(id)
 
 def validate_datetime_format(string, format):
 	try:
@@ -692,7 +708,13 @@ def find_size(data, max_size, min_size=0x20):
 	return offset
 
 def dprint(*args, **kwargs):
+	stack = traceback.extract_stack()
+	stack = stack[len(stack)-2]
+	msg = "[{:s}] [{:s}:{:d}] {:s}(): {:s}".format(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), stack.filename[stack.filename.replace("\\", "/").rindex("/")+1:], stack.lineno, stack.name, " ".join(map(str, args)), **kwargs)
 	if DEBUG:
-		stack = traceback.extract_stack()
-		stack = stack[len(stack)-2]
-		print("{:s}[{:s}] [{:s}:{:d}] {:s}(): {:s}".format(ANSI.CLEAR_LINE, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), stack.filename[stack.filename.replace("\\", "/").rindex("/")+1:], stack.lineno, stack.name, " ".join(map(str, args)), **kwargs))
+		msg = "{:s}{:s}".format(ANSI.CLEAR_LINE, msg)
+		print(msg)
+	else:
+		global DEBUG_LOG
+		DEBUG_LOG.append(msg)
+		DEBUG_LOG = DEBUG_LOG[-10000:]

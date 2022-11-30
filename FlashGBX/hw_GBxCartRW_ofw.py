@@ -173,7 +173,7 @@ class GbxDevice:
 						self.DEVICE = None
 						self.BAUDRATE = 1000000
 						return False
-				elif self.FW[1] == 5 and self.BAUDRATE < 1700000 and max_baud >= 1700000:
+				elif len(self.FW) > 0 and self.FW[1] == 5 and self.BAUDRATE < 1700000 and max_baud >= 1700000:
 					# Switch to higher baud rate
 					#self.set_mode(self.DEVICE_CMD["USART_1_7M_SPEED"])
 					#self.BAUDRATE = 1700000
@@ -206,14 +206,14 @@ class GbxDevice:
 					pass
 				
 				if self.FW[1] not in self.PCB_VERSIONS.keys():
-					if Util.DEBUG is True and self.FW[1] == 5:
-						self.PCB_VERSIONS[5] = "v1.4"
-					elif Util.DEBUG is True and self.FW[1] == 6:
-						self.PCB_VERSIONS[5] = "v1.4a"
-					else:
-						dev.close()
-						self.DEVICE = None
-						continue
+					# if Util.DEBUG is True and self.FW[1] == 5:
+					# 	self.PCB_VERSIONS[5] = "v1.4"
+					# elif Util.DEBUG is True and self.FW[1] == 6:
+					# 	self.PCB_VERSIONS[5] = "v1.4a"
+					# else:
+					dev.close()
+					self.DEVICE = None
+					continue
 				
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 				if (self.FW[1] not in (4, 5)):
@@ -278,6 +278,9 @@ class GbxDevice:
 		fw, _ = self.FW
 		return "R{:s}".format(str(fw))
 	
+	def GetBaudRate(self):
+		return self.BAUDRATE
+	
 	def GetPCBVersion(self):
 		_, pcb = self.FW
 		if pcb in self.PCB_VERSIONS:
@@ -290,7 +293,10 @@ class GbxDevice:
 		return self.DEVICE_NAME
 	
 	def GetFullNameExtended(self, more=False):
-		return "{:s} – Firmware {:s} ({:s})".format(self.GetFullName(), self.GetFirmwareVersion(), str(self.PORT))
+		if more:
+			return "{:s} – Firmware {:s} on {:s}".format(self.GetFullName(), self.GetFirmwareVersion(), str(self.PORT))
+		else:
+			return "{:s} – Firmware {:s}".format(self.GetFullName(), self.GetFirmwareVersion())
 	
 	def GetOfficialWebsite(self):
 		return "https://www.gbxcart.com/"
@@ -725,7 +731,7 @@ class GbxDevice:
 			else:
 				dprint("└[MBC1M] 0x4000=0x{:X}, 0x2000=0x{:X}".format(bank >> 4, 0x10 | (bank & 0x1F)))
 				self.cart_write(0x2000, 0x10 | (bank & 0x1F))
-		elif (mbc == 0 and bank_count > 256) or mbc == 0x19: # MBC5
+		elif (mbc == 0 and bank_count > 256) or mbc in (0x19, 0x1A, 0x1B, 0x1C, 0x1E): # MBC5
 			dprint("└[MBC5] 0x2100=0x{:X}".format(bank & 0xFF))
 			self.cart_write(0x2100, (bank & 0xFF))
 			if bank == 0 or bank >= 256:
@@ -922,8 +928,9 @@ class GbxDevice:
 				size = supp_flash_types[1][flash_types[0]]["flash_size"]
 				size_undetected = False
 				for i in range(0, len(flash_types)):
-					if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
-						size_undetected = True
+					if "flash_size" in supp_flash_types[1][flash_types[i]]:
+						if size != supp_flash_types[1][flash_types[i]]["flash_size"]:
+							size_undetected = True
 				
 				if size_undetected:
 					if isinstance(cfi, dict) and "device_size" in cfi:
@@ -1940,8 +1947,7 @@ class GbxDevice:
 			i = i - len(data_import)
 			if i > 0: data_import += bytearray([0xFF] * i)
 			
-			#self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=args["fast_read_mode"], verify_write=args["verify_write"], fix_header=args["fix_header"])
-			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], reverse_sectors=args["reverse_sectors"], fast_read_mode=False, verify_write=args["verify_write"], fix_header=args["fix_header"])
+			self._FlashROM(buffer=data_import, cart_type=cart_type, voltage=args["override_voltage"], start_addr=0, signal=signal, prefer_chip_erase=args["prefer_chip_erase"], fast_read_mode=False, verify_write=args["verify_write"], fix_header=args["fix_header"], manual_mbc=args["mbc"])
 		
 		# Reset pins to avoid save data loss
 		self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
@@ -1949,12 +1955,11 @@ class GbxDevice:
 	
 	#######################################################################################################################################
 	
-	def _FlashROM(self, buffer=bytearray(), start_addr=0, cart_type=None, voltage=3.3, signal=None, prefer_chip_erase=False, reverse_sectors=False, fast_read_mode=False, verify_write=False, fix_header=False):
+	def _FlashROM(self, buffer=bytearray(), start_addr=0, cart_type=None, voltage=3.3, signal=None, prefer_chip_erase=False, fast_read_mode=False, verify_write=False, fix_header=False, manual_mbc=0):
 		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
 		if self.INFO == None: self.ReadInfo()
 		self.INFO["last_action"] = 4
 		bank_size = 0x4000
-		mbc = 0
 		time_start = time.time()
 		
 		data_import = copy.copy(buffer)
@@ -2032,17 +2037,21 @@ class GbxDevice:
 		elif flashcart_meta["voltage"] == 5:
 			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
 		
-		# MBC
-		if "mbc" in flashcart_meta:
-			mbc = flashcart_meta['mbc']
-			if mbc == 2: mbc = 0x06
-			elif mbc == 3: mbc = 0x13
-			elif mbc == 5: mbc = 0x19
-			elif mbc == 6: mbc = 0x20
-			elif mbc == 7: mbc = 0x22
-			dprint("Using MBC{:d} (ID 0x{:02X}) for flashing".format(flashcart_meta['mbc'], mbc))
-		
 		if self.MODE == "DMG":
+			# MBC
+			if "mbc" in flashcart_meta:
+				mbc = flashcart_meta["mbc"]
+				if mbc is not False and isinstance(mbc, int):
+					dprint("Using forced mapper type 0x{:02X} for flashing".format(mbc))
+				elif mbc == "manual":
+					mbc = manual_mbc
+					dprint("Using manually selected mapper type 0x{:02X} for flashing".format(mbc))
+				if mbc == 0:
+					mbc = 0x19 # MBC5 default
+					dprint("Using default mapper type 0x{:02X} for flashing".format(mbc))
+			else:
+				mbc = 0x19 # MBC5 default
+
 			self.set_mode(self.DEVICE_CMD["GB_CART_MODE"])
 			if "flash_commands_on_bank_1" in flashcart_meta and flashcart_meta["flash_commands_on_bank_1"]:
 				dprint("Setting GB_FLASH_BANK_1_COMMAND_WRITES")
@@ -2489,6 +2498,10 @@ class GbxDevice:
 							pos += 64
 
 						else: # super slow -- for testing purposes only!
+							#self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try a newer firmware version which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
+							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please try a differnt firmware version or newer hardware revision.".format(APPNAME, self.GetFullName()), "abortable":False})
+							return False
+							'''
 							for i in range(0, len(flashcart_meta["commands"]["single_write"])):
 								addr = flashcart_meta["commands"]["single_write"][i][0]
 								data = flashcart_meta["commands"]["single_write"][i][1]
@@ -2517,6 +2530,7 @@ class GbxDevice:
 							currAddr += 2
 							pos += 2
 							data = data_import[pos:pos+2]
+							'''
 				
 				if ack == False:
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t write {:d} bytes to flash at position 0x{:X}. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(len(data), pos-len(data)), "abortable":False})

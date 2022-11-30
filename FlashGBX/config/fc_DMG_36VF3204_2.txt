@@ -12,6 +12,7 @@
 	"first_bank":0,
 	"write_pin":"WR",
 	"chip_erase_timeout":5,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

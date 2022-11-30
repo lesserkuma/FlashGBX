@@ -1,4 +1,14 @@
 # Release notes
+### v3.20 (released 2022-11-30)
+- Bundles GBxCart RW v1.4/v1.4a firmware version R38+L8
+- Will now retry failed flash sector writes a few times before stopping the process (requires firmware version L1+)
+- Added delta ROM writing (only write the difference between two ROMs); requires both the original <name>.<ext> ROM file and the changed <name>.delta.<ext> ROM file in the same directory (requires firmware version L1+) *(thanks djeddit for the suggestion)*
+- Fixed support for Flash2Advance Ultra 64M with 2× 28F320C3B
+- Fixed support for BX2006_TSOPBGA_0106/BX2006_TSOPBGA_6108 with M29W640 (requires firmware version L8+)
+- Confirmed support for 4444-39VF512 with 4444LLZBBO *(thanks marv17)*
+- Added support for SUN100S_MSP54XXX with MSP54LV100 *(thanks Därk)*
+- Minor bug fixes and improvements
+
 ### v3.19 (released 2022-10-24)
 - Fixed a bug not allowing FlashGBX to run correctly if there were square brackets in the file path *(thanks kscheel)*
 - Added support for MSP54LV512 (no PCB text) *(thanks ethanstrax)*

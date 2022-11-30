@@ -1,18 +1,19 @@
 {
 	"type":"DMG",
 	"names":[
-		"DIY cart with MBC1 and AM29F040 @ WR"
+		"DIY cart with AM29F080 @ WR"
 	],
 	"flash_ids":[
-		[ 0x01, 0xA4 ]
+		[ 0x20, 0xF1 ],
+		[ 0x01, 0xD5 ]
 	],
 	"voltage":5,
-	"flash_size":0x80000,
+	"flash_size":0x100000,
 	"start_addr":0,
 	"first_bank":1,
-	"mbc":0x03,
 	"write_pin":"WR",
-	"chip_erase_timeout":15,
+	"chip_erase_timeout":60,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

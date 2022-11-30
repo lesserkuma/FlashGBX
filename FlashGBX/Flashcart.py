@@ -64,7 +64,7 @@ class Flashcart:
 
 	def GetVoltage(self):
 		return self.CONFIG["voltage"]
-
+	
 	def GetMBC(self):
 		if (self.CONFIG["type"].upper() == "AGB") or ("mbc" not in self.CONFIG): return False
 		mbc = self.CONFIG["mbc"]
@@ -233,6 +233,27 @@ class Flashcart:
 			smallest_sector_size = min(smallest_sector_size, sector[0])
 		return smallest_sector_size
 	
+	def GetSectorOffsets(self, rom_size=0, rom_bank_size=0x4000):
+		regions = self.GetSectorMap()
+		pos = 0
+		offsets = []
+		if isinstance(regions, list):
+			for region in regions:
+				size = region[0]
+				count = region[1]
+				for _ in range(0, count):
+					# offsets.append([ pos, math.floor(pos / rom_bank_size) ])
+					offsets.append([ pos, size ])
+					pos += size
+			# for i in range(0, len(offsets)):
+			# 	#print(hex(offsets[i][0]), hex(offsets[i][1]))
+			# 	print(hex(offsets[i]))
+		else:
+			while pos < rom_size:
+				offsets.append([ pos, regions ])
+				pos += regions
+		return offsets
+	
 	def GetSectorMap(self):
 		if self.SECTOR_MAP is not None:
 			return self.SECTOR_MAP
@@ -323,6 +344,11 @@ class Flashcart:
 							sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
 							self.CartWrite([[sr_addr, sr_data]])
 					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
+					temp = self.CartRead(addr, 2)
+					if len(temp) != 2:
+						dprint("Communication error in SectorErase():", temp)
+						#self.PROGRESS_FNCPTR({"info_type":"msgbox_critical", "info_msg":"A critical communication error occured during sector erase. Please avoid passive USB hubs, try different USB ports/cables and re-connect the device."})
+						return False
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
 					self.LAST_SR = wait_for
 					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["sector_erase_wait_for"][i][2], data, str(wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2] == data)))
@@ -330,8 +356,8 @@ class Flashcart:
 					time.sleep(0.1)
 					timeout -= 1
 					if timeout < 1:
-						dprint("Timeout error!")
-						self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The sector erase attempt timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
+						dprint("Timeout error in SectorErase():", self.LAST_SR)
+						#self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The sector erase attempt timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
 						return False
 					if wait_for == data: break
 					self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":buffer_pos, "time_start":time.time(), "abortable":True})
