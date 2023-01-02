@@ -3,6 +3,10 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import datetime, shutil, platform, os, json, math, traceback, re, time, serial, zipfile, struct
+
+#NJ experimental imports
+import subprocess
+
 try:
 	# pylint: disable=import-error
 	import readline
@@ -35,13 +39,13 @@ class FlashGBX_CLI():
 		self.CONFIG_PATH = args['config_path']
 		self.FLASHCARTS = args["flashcarts"]
 		self.PROGRESS = Util.Progress(self.UpdateProgress)
-		
+
 		global prog_bar_part_char
 		if platform.system() == "Windows":
 			prog_bar_part_char = [" ", " ", " ", " ", "▌", "▌", "▌", "▌"]
 		else:
 			prog_bar_part_char = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉"]
-	
+
 	def run(self):
 		config_ret = self.ARGS["config_ret"]
 		for i in range(0, len(config_ret)):
@@ -51,17 +55,17 @@ class FlashGBX_CLI():
 				print("{:s}{:s}{:s}".format(ANSI.YELLOW, config_ret[i][1], ANSI.RESET))
 			elif config_ret[i][0] == 2:
 				print("{:s}{:s}{:s}".format(ANSI.RED, config_ret[i][1], ANSI.RESET))
-		
+
 		args = self.ARGS["argparsed"]
 		config_path = Util.formatPathOS(self.CONFIG_PATH)
 		print("Configuration directory: {:s}\n".format(config_path))
-		
+
 		# Ask interactively if no args set
 		if args.action is None:
 			self.ARGS["called_with_args"] = False
-			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"]
-			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures From Existing Save Data Backup\n 8) Firmware Update (for GBxCart RW v1.4/v1.4a only)\n")
-			args.action = input("Enter number 1-8 [1]: ").lower().strip()
+			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "play-game", "debug-test-save"]
+			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures From Existing Save Data Backup\n 8) Firmware Update (for GBxCart RW v1.4/v1.4a only)\n 9) Play game (Experimental)\n")
+			args.action = input("Enter number 1-9 [1]: ").lower().strip()
 			try:
 				if int(args.action) == 0:
 					print("Canceled.")
@@ -75,7 +79,7 @@ class FlashGBX_CLI():
 					return
 		else:
 			self.ARGS["called_with_args"] = True
-		
+
 		if args.action is None or args.action not in ("gbcamera-extract", "fwupdate-gbxcartrw"):
 			if not self.FindDevices(port=args.device_port):
 				print("No devices found.")
@@ -90,7 +94,7 @@ class FlashGBX_CLI():
 					print("\nConnected to {:s}".format(dev.GetFullNameExtended(more=True)))
 				else:
 					print("\nConnected to {:s}".format(dev.GetFullNameExtended()))
-		
+
 		if args.action == "gbcamera-extract":
 			if args.path == "auto":
 				args.path = input("Enter file path of Game Boy Camera save data file: ").strip().replace("\"", "")
@@ -98,7 +102,7 @@ class FlashGBX_CLI():
 				if args.path == "":
 					print("Canceled.")
 					return
-			
+
 			pc = PocketCamera()
 			if pc.LoadFile(args.path) != False:
 				palettes = [ "grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3" ]
@@ -116,11 +120,11 @@ class FlashGBX_CLI():
 			else:
 				print("\n{:s}Couldn’t parse the save data file.{:s}\n".format(ANSI.RED, ANSI.RESET))
 			return
-		
+
 		if args.action == "fwupdate-gbxcartrw":
 			self.UpdateFirmwareGBxCartRW(pcb=5, port=args.device_port)
 			return 0
-		
+
 		elif args.mode is None:
 			print("Select Cartridge Mode:\n 1) Game Boy or Game Boy Color\n 2) Game Boy Advance\n")
 			answer = input("Enter number 1-2 [2]: ").lower().strip()
@@ -134,7 +138,7 @@ class FlashGBX_CLI():
 				self.DisconnectDevice()
 				return
 			print("")
-		
+
 		if args.mode == "dmg":
 			print("Cartridge Mode: Game Boy or Game Boy Color")
 			self.CONN.SetMode("DMG")
@@ -155,17 +159,17 @@ class FlashGBX_CLI():
 			print(s_header)
 			self.DisconnectDevice()
 			return
-		
+
 		print("\nCartridge Information:")
 		print(s_header)
 
 		try:
 			if args.action == "backup-rom":
 				self.BackupROM(args, header)
-			
+
 			elif args.action == "backup-save":
 				self.BackupRestoreRAM(args, header)
-			
+
 			elif args.action == "restore-save":
 				if args.path == "auto":
 					args.path = input("Enter file path of save data file: ").strip().replace("\"", "")
@@ -175,13 +179,16 @@ class FlashGBX_CLI():
 						self.DisconnectDevice()
 						return
 				self.BackupRestoreRAM(args, header)
-			
+
 			elif args.action == "erase-save":
 				self.BackupRestoreRAM(args, header)
-			
+
 			elif args.action == "debug-test-save":
 				self.BackupRestoreRAM(args, header)
-			
+
+			elif args.action == "play-game":
+				self.PlayGame(args, header)
+
 			elif args.action == "flash-rom":
 				if args.path == "auto":
 					args.path = input("Enter file path of ROM file: ").strip().replace("\"", "")
@@ -191,23 +198,133 @@ class FlashGBX_CLI():
 						self.DisconnectDevice()
 						return
 				self.FlashROM(args, header)
-			
+
 			if args.action != "info":
 				print("")
-		
+
 		except KeyboardInterrupt:
 			print("\n\nOperation stopped.")
-		
+
 		self.DisconnectDevice()
 		return 0
+
+	def PlayGame(self, args, header):
+		#For this to work smoothly we need to force overwrite
+		args.overwrite = True
+
+		#Emulator settings path
+		emu_ini = self.CONFIG_PATH + "/emu.ini"
+		
+		#Check ini exists and create it if not
+		if not os.path.exists(emu_ini):
+			print("{} does not exist, creating it\n".format(emu_ini))
+			f = open(emu_ini, "x")
+			f.close()
+
+		#Load ini and get emulator_path
+		settings = Util.IniSettings(emu_ini)
+		emulator_path = settings.value("emulator_path")
+		
+		#Ensure we have a valid path
+		valid_path = False
+		while not valid_path:
+			if emulator_path is not None:
+				if os.path.exists(emulator_path):
+					valid_path = True
+					settings.setValue("emulator_path", emulator_path)
+				else:
+					print("Cannot find: {}\n".format(emulator_path))
+			else:
+				print("Emulator path not set\n")
+			
+			if valid_path is False:
+				emulator_path = input("Enter path for emulator: ")
+				
+		print("Using emulator: {}\n".format(emulator_path))
+
+		#Prep our gamedata area
+		gamedata_dir = settings.value("gamedata_dir")
+		if gamedata_dir is None: gamedata_dir = self.APP_PATH + "/gamedata"
+		if not os.path.exists(gamedata_dir): os.makedirs(gamedata_dir)
+		print("Game data directory: {}\n".format(gamedata_dir))
 	
+		#Prep our file paths
+		game_filetype = "rom"
+		save_filetype = "sav"
+		file_name = header['game_title'] + "_" + header['game_code'] + "-" + str(header["version"])
+		game_file_path = gamedata_dir + "/" + file_name + "." + game_filetype
+		save_file_path = gamedata_dir + "/" + file_name + "." + save_filetype
+		
+		if os.path.exists(game_file_path):
+			#Well that is convenient
+			#TODO: Validate checksum
+			print("ROM already loaded into working folder\n")
+		else:
+			#Pull ROM from the cart
+			args.path = game_file_path
+			args.action = "backup-rom"
+			self.BackupROM(args, header)
+			print("")
+		
+		#Check if there is an existing save file in the gamedata folder
+		if os.path.exists(save_file_path):
+			print("Save data already exists, renaming to avoid overwriting\n")
+			shutil.move(save_file_path, gamedata_dir + "/" + file_name + "-" + str(int(time.time())) + "-localconflict." + save_filetype)
+
+		#Pull save data from the cart
+		args.path = save_file_path
+		args.action = "backup-save"
+		self.BackupRestoreRAM(args, header)
+		print("")
+		
+		#Backup our starting save data
+		shutil.copyfile(save_file_path, gamedata_dir + "/" + file_name + "-" + str(int(time.time())) + "." + save_filetype)
+		
+		#Prep our args for pushing save data back to the cart
+		args.action = "restore-save"
+		
+		#What are we playing?
+		print("Playing {} ({} rev {})\n".format(header['game_title'], header['game_code'], str(header['version'])))
+		
+		loop = 1
+		#before = os.path.getmtime(save_file_path)
+		emulator = subprocess.Popen([emulator_path, game_file_path])
+
+		while loop:
+			time.sleep (1)
+			#after = os.path.getmtime(save_file_path)
+			
+			push_save_data = False
+
+			#if after > before:
+			#	print("Save data modified")
+			#	push_save_data = True
+			#	before = after
+
+			poll = emulator.poll()
+			if poll is not None:
+				print("Emulator has been closed\n")
+				push_save_data = True
+				loop = 0
+
+			if push_save_data:
+				self.BackupRestoreRAM(args, header)
+				print("")
+
+		#Backup our ending save data
+		shutil.move(save_file_path, gamedata_dir + "/" + file_name + "-" + str(int(time.time())) + "." + save_filetype)
+		
+		print("Finished playing game")
+
+		return 0
+
 	def UpdateProgress(self, args):
 		if args is None: return
-		
+
 		if "error" in args:
 			print("{:s}{:s}{:s}".format(ANSI.RED, args["error"], ANSI.RESET))
 			return
-		
+
 		pos = 0
 		size = 0
 		speed = 0
@@ -218,7 +335,7 @@ class FlashGBX_CLI():
 		if "speed" in args: speed = args["speed"]
 		if "time_elapsed" in args: elapsed = args["time_elapsed"]
 		if "time_left" in args: left = args["time_left"]
-		
+
 		if "action" in args:
 			if args["action"] == "INITIALIZE":
 				if args["method"] == "ROM_WRITE_VERIFY":
@@ -268,7 +385,7 @@ class FlashGBX_CLI():
 					print(prog_str.replace("%PROG_BAR%", prog_bar), end="\r", flush=True)
 				except:
 					pass
-	
+
 	def FinishOperation(self):
 		time_elapsed = None
 		speed = None
@@ -283,7 +400,7 @@ class FlashGBX_CLI():
 				print("{:s}The ROM was written and verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
 			else:
 				print("ROM writing complete!")
-		
+
 		elif self.CONN.INFO["last_action"] == 1: # Backup ROM
 			self.CONN.INFO["last_action"] = 0
 			dump_report = False
@@ -304,7 +421,7 @@ class FlashGBX_CLI():
 							f.write(dump_report.encode("UTF-8"))
 				except Exception as e:
 					print("ERROR: {:s}".format(str(e)))
-			
+
 			if self.CONN.GetMode() == "DMG":
 				print("CRC32: {:08x}".format(self.CONN.INFO["file_crc32"]))
 				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
@@ -357,9 +474,9 @@ class FlashGBX_CLI():
 							pc.ExportPicture(i, file, scale=1)
 						print("The pictures were extracted.")
 				print("")
-			
+
 			print("The save data backup is complete!")
-		
+
 		elif self.CONN.INFO["last_action"] == 3: # Restore RAM
 			self.CONN.INFO["last_action"] = 0
 			if "save_erase" in self.CONN.INFO and self.CONN.INFO["save_erase"]:
@@ -367,10 +484,10 @@ class FlashGBX_CLI():
 				del(self.CONN.INFO["save_erase"])
 			else:
 				print("The save data was restored!")
-		
+
 		else:
 			self.CONN.INFO["last_action"] = 0
-	
+
 	def FindDevices(self, port=None):
 		global hw_devices
 		for hw_device in hw_devices:
@@ -386,15 +503,15 @@ class FlashGBX_CLI():
 					if status == 3:
 						print("{:s}{:s}{:s}".format(ANSI.RED, msg.replace("\n\n", "\n"), ANSI.RESET))
 						self.CONN = None
-			
+
 			if dev.IsConnected():
 				self.DEVICE = (dev.GetFullNameExtended(), dev)
 				dev.Close()
 				break
-		
+
 		if self.DEVICE is None: return False
 		return True
-		
+
 	def ConnectDevice(self):
 		dev = self.DEVICE[1]
 		port = dev.GetPort()
@@ -405,7 +522,7 @@ class FlashGBX_CLI():
 			traceback.print_stack()
 			self.CONN = None
 			return False
-		
+
 		elif isinstance(ret, list):
 			for i in range(0, len(ret)):
 				status = ret[i][0]
@@ -420,11 +537,11 @@ class FlashGBX_CLI():
 					print("{:s}{:s}{:s}".format(ANSI.RED, msg, ANSI.RESET))
 					self.CONN = None
 					return False
-		
+
 		if dev.FW_UPDATE_REQ:
 			print("{:s}A firmware update for your {:s} device is required to fully use this software.\nPlease visit the official website at {:s} for updates.\n{:s}Current firmware version: {:s}{:s}".format(ANSI.RED, dev.GetFullName(), dev.GetOfficialWebsite(), ANSI.YELLOW, dev.GetFirmwareVersion(), ANSI.RESET))
 			time.sleep(5)
-	
+
 		self.CONN = dev
 		return True
 
@@ -436,15 +553,15 @@ class FlashGBX_CLI():
 		except:
 			pass
 		self.CONN = None
-	
+
 	def ReadCartridge(self, data):
 		bad_read = False
 		s = ""
 		if self.CONN.GetMode() == "DMG":
-			s += "Game Title:      {:s}\n".format(data["game_title"])
+			s += "Game Title:	  {:s}\n".format(data["game_title"])
 			if len(data['game_code']) > 0:
-				s += "Game Code:       {:s}\n".format(data['game_code'])
-			s += "Revision:        {:s}\n".format(str(data["version"]))
+				s += "Game Code:	   {:s}\n".format(data['game_code'])
+			s += "Revision:		{:s}\n".format(str(data["version"]))
 			s += "Super Game Boy:  "
 			if data['sgb'] in Util.DMG_Header_SGB:
 				s += "{:s}\n".format(Util.DMG_Header_SGB[data['sgb']])
@@ -515,33 +632,33 @@ class FlashGBX_CLI():
 			else:
 				s += "Header Checksum: {:s}Invalid (0x{:02X}){:s}\n".format(ANSI.RED, data['header_checksum'], ANSI.RESET)
 				bad_read = True
-			s += "ROM Checksum:    0x{:04X}\n".format(data['rom_checksum'])
+			s += "ROM Checksum:	0x{:04X}\n".format(data['rom_checksum'])
 			try:
-				s += "ROM Size:        {:s}\n".format(Util.DMG_Header_ROM_Sizes[data['rom_size_raw']])
+				s += "ROM Size:		{:s}\n".format(Util.DMG_Header_ROM_Sizes[data['rom_size_raw']])
 			except:
-				s += "ROM Size:        {:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "ROM Size:		{:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
-			
+
 			try:
 				if data['mapper_raw'] == 0x06: # MBC2
-					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[1])
+					s += "Save Type:	   {:s}\n".format(Util.DMG_Header_RAM_Sizes[1])
 				elif data['mapper_raw'] == 0x22 and data["game_title"] in ("KORO2 KIRBY", "KIRBY TNT"): # MBC7 Kirby
-					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x101)])
+					s += "Save Type:	   {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x101)])
 				elif data['mapper_raw'] == 0x22 and data["game_title"] in ("CMASTER"): # MBC7 Command Master
-					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x102)])
+					s += "Save Type:	   {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x102)])
 				elif data['mapper_raw'] == 0xFD: # TAMA5
-					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x103)])
+					s += "Save Type:	   {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x103)])
 				elif data['mapper_raw'] == 0x20: # MBC6
-					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x104)])
+					s += "Save Type:	   {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(0x104)])
 				else:
-					s += "Save Type:       {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(data['ram_size_raw'])])
+					s += "Save Type:	   {:s}\n".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(data['ram_size_raw'])])
 			except:
-				s += "Save Type:       Not detected\n"
-			
+				s += "Save Type:	   Not detected\n"
+
 			try:
-				s += "Mapper Type:     {:s}\n".format(Util.DMG_Header_Mapper[data['mapper_raw']])
+				s += "Mapper Type:	 {:s}\n".format(Util.DMG_Header_Mapper[data['mapper_raw']])
 			except:
-				s += "Mapper Type:     {:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "Mapper Type:	 {:s}Not detected{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
 
 			if data['logo_correct'] and not self.CONN.IsSupportedMbc(data["mapper_raw"]):
@@ -553,11 +670,11 @@ class FlashGBX_CLI():
 						self.ARGS["argparsed"].flashcart_type = cart_types[0][i]
 
 		elif self.CONN.GetMode() == "AGB":
-			s += "Game Title:           {:s}\n".format(data["game_title"])
-			s += "Game Code:            {:s}\n".format(data["game_code"])
-			s += "Revision:             {:d}\n".format(data["version"])
+			s += "Game Title:		   {:s}\n".format(data["game_title"])
+			s += "Game Code:			{:s}\n".format(data["game_code"])
+			s += "Revision:			 {:d}\n".format(data["version"])
 
-			s += "Real Time Clock:      "
+			s += "Real Time Clock:	  "
 			if data['has_rtc']:
 				if 'rtc_buffer' in data:
 					try:
@@ -587,9 +704,9 @@ class FlashGBX_CLI():
 			s += "\n"
 
 			if data["logo_correct"]:
-				s += "Nintendo Logo:        OK\n"
+				s += "Nintendo Logo:		OK\n"
 			else:
-				s += "Nintendo Logo:        {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
+				s += "Nintendo Logo:		{:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
 			if data["96h_correct"]:
 				s += "Cartridge Identifier: OK\n"
@@ -598,12 +715,12 @@ class FlashGBX_CLI():
 				bad_read = True
 
 			if data['header_checksum_correct']:
-				s += "Header Checksum:      Valid (0x{:02X})\n".format(data['header_checksum'])
+				s += "Header Checksum:	  Valid (0x{:02X})\n".format(data['header_checksum'])
 			else:
-				s += "Header Checksum:      {:s}Invalid (0x{:02X}){:s}\n".format(ANSI.RED, data['header_checksum'], ANSI.RESET)
+				s += "Header Checksum:	  {:s}Invalid (0x{:02X}){:s}\n".format(ANSI.RED, data['header_checksum'], ANSI.RESET)
 				bad_read = True
-			
-			s += "ROM Checksum:         "
+
+			s += "ROM Checksum:		 "
 			Util.AGB_Global_CRC32 = 0
 			db_agb_entry = None
 			if os.path.exists("{0:s}/db_AGB.json".format(self.CONFIG_PATH)):
@@ -616,46 +733,46 @@ class FlashGBX_CLI():
 						s += "Not in database\n"
 			else:
 				s += "FAIL: Database for Game Boy Advance titles not found in {:s}/db_AGB.json\n".format(self.CONFIG_PATH)
-			
+
 			if db_agb_entry != None:
 				if data["rom_size_calc"] < 0x400000:
 					s += "In database (0x{:06X})\n".format(db_agb_entry['rc'])
 					Util.AGB_Global_CRC32 = db_agb_entry['rc']
-				s += "ROM Size:             {:d} MB\n".format(int(db_agb_entry['rs']/1024/1024))
+				s += "ROM Size:			 {:d} MB\n".format(int(db_agb_entry['rs']/1024/1024))
 				data['rom_size'] = db_agb_entry['rs']
-			
+
 			elif data["rom_size"] != 0:
 				if not data["rom_size"] in Util.AGB_Header_ROM_Sizes_Map:
 					data["rom_size"] = 0x2000000
-				s += "ROM Size:             {:d} MB\n".format(int(data["rom_size"]/1024/1024))
+				s += "ROM Size:			 {:d} MB\n".format(int(data["rom_size"]/1024/1024))
 			else:
-				s += "ROM Size:             Not detected\n"
+				s += "ROM Size:			 Not detected\n"
 				bad_read = True
-			
+
 			stok = False
 			if data["save_type"] == None:
 				if db_agb_entry != None:
 					if db_agb_entry['st'] < len(Util.AGB_Header_Save_Types):
 						stok = True
-						s += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[db_agb_entry['st']])
+						s += "Save Type:			{:s}\n".format(Util.AGB_Header_Save_Types[db_agb_entry['st']])
 						data["save_type"] = db_agb_entry['st']
 				if data["dacs_8m"] is True:
 					stok = True
-					s += "Save Type:            {:s}\n".format(Util.AGB_Header_Save_Types[6])
+					s += "Save Type:			{:s}\n".format(Util.AGB_Header_Save_Types[6])
 					data["save_type"] = 6
 
 			if stok is False:
-				s += "Save Type:            Not detected\n"
-			
+				s += "Save Type:			Not detected\n"
+
 			if data['logo_correct'] and isinstance(db_agb_entry, dict) and "rs" in db_agb_entry and db_agb_entry['rs'] == 0x4000000 and not self.CONN.IsSupported3dMemory():
 				print("{:s}\nWARNING: This cartridge uses a Memory Bank Controller that may not be completely supported yet. A future version of the {:s} device firmware may add support for it.{:s}".format(ANSI.YELLOW, self.CONN.GetFullName(), ANSI.RESET))
-		
+
 			if "has_rtc" in data and data["has_rtc"] is not True and "no_rtc_reason" in data:
 				if data["no_rtc_reason"] == 1:
 					print("{:s}NOTE: It seems that this cartridge’s Real Time Clock battery may no longer be functional and needs to be replaced.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 
 		return (bad_read, s, data)
-	
+
 	def DetectCartridge(self, limitVoltage=False):
 		print("Now attempting to auto-detect the flash cartridge type...")
 		if self.CONN.CheckROMStable() is False:
@@ -664,7 +781,7 @@ class FlashGBX_CLI():
 		if self.CONN.GetMode() in self.FLASHCARTS and len(self.FLASHCARTS[self.CONN.GetMode()]) == 0:
 			print("{:s}No flash cartridge type configuration files found. Try to restart the application with the “--reset” command line switch to reset the configuration.{:s}".format(ANSI.RED, ANSI.RESET))
 			return -2
-		
+
 		header = self.CONN.ReadInfo()
 		self.ReadCartridge(header)
 		ret = self.CONN.DetectCartridge(limitVoltage=limitVoltage, checkSaveType=True)
@@ -673,7 +790,7 @@ class FlashGBX_CLI():
 		# Save Type
 		if save_type is None:
 			save_type = 0
-		
+
 		# Cart Type
 		cart_type = None
 		msg_cart_type = ""
@@ -681,7 +798,7 @@ class FlashGBX_CLI():
 			supp_cart_types = self.CONN.GetSupportedCartridgesDMG()
 		elif self.CONN.GetMode() == "AGB":
 			supp_cart_types = self.CONN.GetSupportedCartridgesAGB()
-		
+
 		if len(cart_types) > 0:
 			cart_type = cart_type_id
 			for i in range(0, len(cart_types)):
@@ -690,7 +807,7 @@ class FlashGBX_CLI():
 				else:
 					msg_cart_type += "- {:s}\n".format(supp_cart_types[0][cart_types[i]])
 			msg_cart_type = msg_cart_type[:-1]
-		
+
 		# Messages
 		# Header
 		msg_header_s = "Game Title: {:s}\n".format(header["game_title"])
@@ -711,7 +828,7 @@ class FlashGBX_CLI():
 				msg_save_type_s = "Save Type: {:s} {:s}(not battery-backed){:s}\n".format(temp, ANSI.RED, ANSI.RESET)
 			else:
 				msg_save_type_s = "Save Type: {:s}\n".format(temp)
-		
+
 		# Cart Type
 		msg_cart_type_s = ""
 		msg_flash_size_s = ""
@@ -737,7 +854,7 @@ class FlashGBX_CLI():
 			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage)
 			if (len(flash_id.split("\n")) > 2) and ((self.CONN.GetMode() == "DMG") or ("dacs_8m" in header and header["dacs_8m"] is not True)):
 				msg_cart_type_s = "<b>Cartridge Type:</b> Unknown flash cartridge – Please submit the displayed information along with a picture of the cartridge’s circuit board."
-				if ("[     0/90]" in flash_id):
+				if ("[	 0/90]" in flash_id):
 					try_this = "Generic Flash Cartridge (0/90)"
 				elif ("[   AAA/AA]" in flash_id):
 					try_this = "Generic Flash Cartridge (AAA/AA)"
@@ -760,20 +877,20 @@ class FlashGBX_CLI():
 				msg_cart_type_s += "\n"
 			else:
 				msg_cart_type_s = "Cartridge Type: Generic ROM Cartridge (not rewritable or not auto-detectable)\n"
-		
+
 		msg_flash_id_s = "Flash ID Check:\n{:s}\n".format(flash_id[:-1])
 
 		if cfi_s != "":
 			msg_cfi_s = "Common Flash Interface Data:\n{:s}\n".format(cfi_s)
 		else:
 			msg_cfi_s = "Common Flash Interface Data: No data provided\n"
-		
+
 		msg = "\n\nThe following cartridge configuration was detected:\n\n"
 		temp = msg + "{:s}{:s}{:s}{:s}\n{:s}\n{:s}\n{:s}".format(msg_header_s, msg_flash_size_s, msg_flash_mapper_s, msg_save_type_s, msg_flash_id_s, msg_cfi_s, msg_cart_type_s)
 		print(temp[:-1])
-		
+
 		return cart_type
-	
+
 	def BackupROM(self, args, header):
 		mbc = 1
 		rom_size = 0
@@ -801,7 +918,7 @@ class FlashGBX_CLI():
 					else: mbc = 0x19
 				else:
 					mbc = 0x19
-			
+
 			if args.dmg_romsize == "auto":
 				try:
 					rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[header["rom_size_raw"]]
@@ -811,20 +928,20 @@ class FlashGBX_CLI():
 			else:
 				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb" ]
 				rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[sizes.index(args.dmg_romsize) - 1]
-		
+
 		elif self.CONN.GetMode() == "AGB":
 			if args.agb_romsize == "auto":
 				rom_size = header["rom_size"]
 			else:
 				sizes = [ "auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
 				rom_size = Util.AGB_Header_ROM_Sizes_Map[sizes.index(args.agb_romsize) - 1]
-		
+
 		if args.path != "auto":
 			if os.path.isdir(args.path):
 				path = args.path + "/" + path
 			else:
 				path = args.path
-		
+
 		if (path == ""): return
 		if not args.overwrite and os.path.exists(os.path.abspath(path)):
 			answer = input("The target file “{:s}” already exists.\nDo you want to overwrite it? [y/N]: ".format(os.path.abspath(path))).strip().lower()
@@ -832,14 +949,14 @@ class FlashGBX_CLI():
 			if answer != "y":
 				print("Canceled.")
 				return
-		
+
 		try:
 			f = open(path, "ab+")
 			f.close()
 		except (PermissionError, FileNotFoundError):
 			print("{:s}Couldn’t access “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
 			return
-		
+
 		s_mbc = ""
 		if self.CONN.GetMode() == "DMG":
 			if mbc in Util.DMG_Header_Mapper:
@@ -850,11 +967,11 @@ class FlashGBX_CLI():
 			print("The ROM will now be read{:s} and saved to “{:s}”.".format(s_mbc, os.path.abspath(path)))
 		else:
 			print("The ROM will now be read and saved to “{:s}”.".format(os.path.abspath(path)))
-		
+
 		print("")
-		
+
 		cart_type = 0
-		if args.flashcart_type != "autodetect": 
+		if args.flashcart_type != "autodetect":
 			if self.CONN.GetMode() == "DMG":
 				carts = self.CONN.GetSupportedCartridgesDMG()[1]
 			elif self.CONN.GetMode() == "AGB":
@@ -883,7 +1000,7 @@ class FlashGBX_CLI():
 							cart_type = i
 							break
 		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_size':rom_size, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
-	
+
 	def FlashROM(self, args, header):
 		path = ""
 		s_mbc = ""
@@ -896,9 +1013,9 @@ class FlashGBX_CLI():
 			carts = self.CONN.GetSupportedCartridgesAGB()[1]
 		else:
 			return
-		
+
 		cart_type = 0
-		
+
 		for i in range(0, len(carts)):
 			if not "names" in carts[i]: continue
 			if carts[i]["type"] != mode: continue
@@ -906,7 +1023,7 @@ class FlashGBX_CLI():
 				print("Selected flash cartridge type: {:s}".format(args.flashcart_type))
 				cart_type = i
 				break
-		
+
 		if cart_type <= 0 and args.flashcart_type == "autodetect":
 			cart_type = self.DetectCartridge()
 			if cart_type is None: cart_type = 0
@@ -919,13 +1036,13 @@ class FlashGBX_CLI():
 		elif cart_type == 0 and args.flashcart_type != "autodetect":
 			print("{:s}Couldn’t find the selected flash cartridge type “{:s}”. Please make sure the correct cartridge mode is selected and copy the exact name from the configuration files located in {:s}.{:s}".format(ANSI.RED, args.flashcart_type, self.CONFIG_PATH, ANSI.RESET))
 			return
-		
+
 		if args.path == "auto":
 			print("{:s}No ROM file for writing was selected.{:s}".format(ANSI.RED, ANSI.RESET))
 			return
 		else:
 			path = args.path
-		
+
 		try:
 			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
 				print("{:s}ROM files bigger than 256 MB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
@@ -957,19 +1074,19 @@ class FlashGBX_CLI():
 		except (PermissionError, FileNotFoundError):
 			print("{:s}Couldn’t access file path “{:s}”.{:s}".format(ANSI.RED, args.path, ANSI.RESET))
 			return
-		
+
 		override_voltage = False
 		if args.force_5v is True:
 			override_voltage = 5
 		elif 'voltage_variants' in carts[cart_type] and carts[cart_type]['voltage'] == 3.3:
 			print("The selected flash cartridge type usually flashes fine with 3.3V, however sometimes it may require 5V. You can use the “--force-5v” command line switch if necessary. Please note that 5V can be unsafe for some flash chips.")
-		
+
 		prefer_chip_erase = args.prefer_chip_erase is True
 		if not prefer_chip_erase and 'chip_erase' in carts[cart_type]['commands'] and 'sector_erase' in carts[cart_type]['commands']:
 			print("This flash cartridge supports both Sector Erase and Full Chip Erase methods. You can use the “--prefer-chip-erase” command line switch if necessary.")
-		
+
 		verify_write = args.no_verify_write is False
-		
+
 		fix_header = False
 		if self.CONN.GetMode() == "DMG":
 			hdr = RomFileDMG(buffer).GetHeader()
@@ -1005,7 +1122,7 @@ class FlashGBX_CLI():
 						else: mbc = 0x19
 					else:
 						mbc = 0x19
-			
+
 			if mbc in Util.DMG_Header_Mapper:
 				s_mbc = " using Mapper Type “{:s}”".format(Util.DMG_Header_Mapper[mbc])
 			else:
@@ -1020,12 +1137,12 @@ class FlashGBX_CLI():
 			print("")
 			if answer != "n":
 				fix_header = True
-		
+
 		print("")
 		v = carts[cart_type]["voltage"]
 		if override_voltage: v = override_voltage
 		print("The following ROM file will now be written to the flash cartridge{:s} at {:s}V:\n{:s}".format(s_mbc, str(v), os.path.abspath(path)))
-		
+
 		print("")
 		if len(buffer) > 0x1000:
 			args = { "mode":4, "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc }
@@ -1034,19 +1151,19 @@ class FlashGBX_CLI():
 		self.CONN.TransferData(signal=self.PROGRESS.SetProgress, args=args)
 
 		buffer = None
-	
+
 	def BackupRestoreRAM(self, args, header):
 		add_date_time = args.save_filename_add_datetime is True
 		rtc = args.store_rtc is True
-		
+
 		path_datetime = ""
 		if add_date_time:
 			path_datetime = "_{:s}".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-		
+
 		path = Util.GenerateFileName(mode=self.CONN.GetMode(), header=self.CONN.INFO, settings=None)
 		path = os.path.splitext(path)[0]
 		path += "{:s}.sav".format(path_datetime)
-		
+
 		if self.CONN.GetMode() == "DMG":
 			if args.dmg_mbc == "auto":
 				try:
@@ -1093,30 +1210,30 @@ class FlashGBX_CLI():
 			if save_type == 0:
 				print("{:s}Unable to auto-detect the save size. Please use the “--dmg-savesize” command line switch to manually select it.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
-		
+
 		elif self.CONN.GetMode() == "AGB":
 			if args.agb_savetype == "auto":
 				save_type = header["save_type"]
 			else:
 				sizes = [ "auto", "eeprom4k", "eeprom64k", "sram256k", "flash512k", "flash1m", "dacs8m", "sram512k", "sram1m" ]
 				save_type = sizes.index(args.agb_savetype)
-			
+
 			mbc = 0
 			if save_type == 0 or save_type == None:
 				print("{:s}Unable to auto-detect the save type. Please use the “--agb-savetype” command line switch to manually select it.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
-		
+
 		else:
 			return
-		
+
 		if args.path != "auto":
 			if os.path.isdir(args.path):
 				path = args.path + "/" + path
 			else:
 				path = args.path
-		
+
 		if (path == ""): return
-		
+
 		s_mbc = ""
 		if self.CONN.GetMode() == "DMG":
 			if mbc in Util.DMG_Header_Mapper:
@@ -1147,7 +1264,7 @@ class FlashGBX_CLI():
 			print("The cartridge save data will now be erased from the cartridge{:s}.".format(s_mbc))
 		elif args.action == "debug-test-save":
 			print("The cartridge save data size will now be examined{:s}.\nNote: This is for debug use only.\n".format(s_mbc))
-		
+
 		if self.CONN.GetMode() == "AGB":
 			print("Using Save Type “{:s}”.".format(Util.AGB_Header_Save_Types[save_type]))
 		elif self.CONN.GetMode() == "DMG":
@@ -1164,7 +1281,7 @@ class FlashGBX_CLI():
 		except (PermissionError, FileNotFoundError):
 			print("{:s}Couldn’t access “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
 			return
-		
+
 		print("")
 		if args.action == "backup-save":
 			self.CONN.TransferData(args={ 'mode':2, 'path':path, 'mbc':mbc, 'save_type':save_type, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
@@ -1203,12 +1320,12 @@ class FlashGBX_CLI():
 			print("Restoring original save data.")
 			self.CONN.TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
-			
+
 			if mbc == 6:
 				for i in range(0, len(test2)):
 					test2[i] &= 0x0F
 					test3[i] &= 0x0F
-			
+
 			if test2 != test4:
 				diffcount = 0
 				for i in range(0, len(test2)):
@@ -1220,7 +1337,7 @@ class FlashGBX_CLI():
 					if test3[i] != test4[i]: diffcount += 1
 				print("\n{:s}Differences found between two consecutive readbacks: {:d}{:s}".format(ANSI.RED, diffcount, ANSI.RESET))
 				input("")
-			
+
 			found_offset = test2.find(test3[0:512])
 			if found_offset < 0:
 				if self.CONN.GetMode() == "AGB":
@@ -1235,12 +1352,12 @@ class FlashGBX_CLI():
 						found_length += 1
 				else:
 					found_length = len(test2) - found_offset
-				
+
 				if self.CONN.GetMode() == "DMG":
 					print("\n{:s}Done! The writable save data size is {:s} out of {:s} checked.{:s}".format(ANSI.GREEN, Util.formatFileSize(found_length), Util.formatFileSize(save_type), ANSI.RESET))
 				elif self.CONN.GetMode() == "AGB":
 					print("\n{:s}Done! The writable save data size using save type “{:s}” is {:s}.{:s}".format(ANSI.GREEN, Util.AGB_Header_Save_Types[save_type], Util.formatFileSize(found_length), ANSI.RESET))
-			
+
 			try:
 				(_, _, cfi) = self.CONN.CheckFlashChip(limitVoltage=False)
 				if len(cfi["raw"]) > 0:
@@ -1262,7 +1379,7 @@ class FlashGBX_CLI():
 			if self.FWUPD_R is True:
 				print("")
 			print(text, flush=True)
-	
+
 	def UpdateFirmwareGBxCartRW(self, pcb=5, port=False):
 		if pcb != 5: return False
 		print("\nFirmware Updater for GBxCart RW v1.4")
@@ -1286,13 +1403,13 @@ class FlashGBX_CLI():
 			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
 			fw_ver = self.INI.GetValue("fw_ver")
 			fw_buildts = self.INI.GetValue("fw_buildts")
-		
+
 		print("Available firmware version:\n{:s}\n".format("{:s} ({:s})".format(fw_ver, datetime.datetime.fromtimestamp(int(fw_buildts)).astimezone().replace(microsecond=0).isoformat())))
 		print("Please follow these steps to proceed with the firmware update:\n1. Disconnect the USB cable of your GBxCart RW {:s} device.\n2. On the circuit board of your GBxCart RW {:s}, press and hold down\n   the small button while connecting the USB cable again.\n3. Keep the small button held for at least 2 seconds, then let go of it.\n   If done right, the green LED labeled “Done” should remain lit.\n4. Press ENTER or RETURN to continue.".format(device_name, device_name))
 		if len(input("").strip()) != 0:
 			print("Canceled.")
 			return False
-		
+
 		try:
 			ports = []
 			if port is None or port is False:
@@ -1323,7 +1440,7 @@ class FlashGBX_CLI():
 					traceback.print_exception(type(err), err, err.__traceback__)
 					print(err)
 					return False
-			
+
 			if ret == 1:
 				print("The firmware update is complete!")
 				return True
@@ -1332,7 +1449,7 @@ class FlashGBX_CLI():
 				return False
 			else:
 				return False
-		
+
 		except Exception as err:
 			traceback.print_exception(type(err), err, err.__traceback__)
 			print(err)

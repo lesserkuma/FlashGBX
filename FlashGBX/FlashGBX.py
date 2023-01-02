@@ -122,7 +122,7 @@ def main(portableMode=False):
 	
 	ap_cli1 = parser.add_argument_group('main command line interface arguments')
 	ap_cli1.add_argument("--mode", choices=["dmg", "agb"], type=str.lower, default=None, help="set cartridge mode to \"dmg\" (Game Boy) or \"agb\" (Game Boy Advance)")
-	ap_cli1.add_argument("--action", choices=["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"], type=str.lower, default=None, help="select program action")
+	ap_cli1.add_argument("--action", choices=["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "play-game", "debug-test-save"], type=str.lower, default=None, help="select program action")
 	ap_cli1.add_argument("--overwrite", action="store_true", help="overwrite without asking if target file already exists")
 	ap_cli1.add_argument("path", nargs="?", default="auto", help="target or source file path (optional when reading, required when writing)")
 	
