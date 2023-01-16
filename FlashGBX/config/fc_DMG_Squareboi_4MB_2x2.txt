@@ -1,0 +1,74 @@
+{
+	"type":"DMG",
+	"names":[
+		"Squareboi 4 MB (2× 2 MB)"
+	],
+	"voltage":5,
+	"flash_size":0x400000,
+	"start_addr":0x4000,
+	"first_bank":0,
+	"write_pin":"AUDIO",
+	"chip_erase_timeout":120,
+	"mbc":0x1B,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0x4000, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0x4AAA, 0xAA ],
+			[ 0x4555, 0x55 ],
+			[ 0x4AAA, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0x4AAA, 0x98 ]
+		],
+		"chip_erase":[
+			[ 0x2100, 0x00, "WR" ],
+			[ 0x4AAA, 0xAA ],
+			[ 0x4555, 0x55 ],
+			[ 0x4AAA, 0x80 ],
+			[ 0x4AAA, 0xAA ],
+			[ 0x4555, 0x55 ],
+			[ 0x4AAA, 0x10 ],
+			[ 0x2100, 0x80, "WR" ],
+			[ 0x4AAA, 0xAA ],
+			[ 0x4555, 0x55 ],
+			[ 0x4AAA, 0x80 ],
+			[ 0x4AAA, 0xAA ],
+			[ 0x4555, 0x55 ],
+			[ 0x4AAA, 0x10 ],
+			[ 0x2100, 0x00, "WR" ]
+
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0x4000, 0xFF, 0xFF ],
+			[ 0x4000, 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0x4AAA, 0xAA ],
+			[ 0x4555, 0x55 ],
+			[ 0x4AAA, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

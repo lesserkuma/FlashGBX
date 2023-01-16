@@ -2,7 +2,7 @@
 
 for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://github.com/lesserkuma/FlashGBX#run-using-python-linux-macos-windows), [macOS](https://github.com/lesserkuma/FlashGBX#run-using-python-linux-macos-windows)
 
-<img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/01.png" alt="FlashGBX on Windows" width="400"><br><img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/02.png" alt="GB Camera Album Viewer"  width="400">
+<img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/01.png" alt="FlashGBX on Windows 11" width="500"><br><img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/02.png" alt="GB Camera Album Viewer" width="500">
 
 ## Introduction
 
@@ -53,6 +53,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 *FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) or [PySide6](https://pypi.org/project/PySide6/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages. To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
 
+*Note: On Linux systems, the `brltty` module may render GBxCart RW devices non-accessible. See the troubleshooting section for details.*
+
 #### Upgrading from an older version
 
 1. Open a Terminal or Command Prompt window
@@ -93,6 +95,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 - Game Boy
 
   - 29LV Series Flash BOY with 29LV160DB
+  - BennVenn MBC3000 RTC cart
   - BLAZE Xploder GB
   - BUNG Doctor GB Card 64M
   - Catskull 32k Gameboy Flash Cart
@@ -124,15 +127,18 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC
   - insideGadgets 4 MB (2× 2 MB), 32 KB FRAM, MBC5
   - Mr Flash 64M
+  - Squareboi 4 MB (2× 2 MB)
 
 - Game Boy Advance
 
+  - Action Replay Ultimate Codes (with SST39VF800A)
   - Development AGB Cartridge 64M Flash S, E201843
   - Development AGB Cartridge 128M Flash S, E201850
   - Development AGB Cartridge 256M Flash S, E201868
   - Flash2Advance 128M (with 2× 28F640J3A120)
   - Flash2Advance 256M (with 2× 28F128J3A150)
   - Flash2Advance Ultra 64M (with 2× 28F320C3B)
+  - Flash2Advance Ultra 256M (with 8× 3204C3B100)
   - Flash Advance Card 64M (with 28F640J3A120)
   - insideGadgets 16 MB, 64K EEPROM with Solar Sensor and RTC options
   - insideGadgets 32 MB, 1M FLASH with RTC option
@@ -164,6 +170,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_48BALL_64M_V6 with 36VF3204
   - SD007_48BALL_64M_V6 with 29DL163BD-90
   - SD007_48BALL_64M_V8 with M29W160ET
+  - SD007_48BALL_SOP28 with M29W320ET
   - SD007_BV5 with 29LV160TE-70PFTN
   - SD007_BV5_DRV with M29W320DT
   - SD007_BV5_DRV with S29GL032M90TFIR4
@@ -173,6 +180,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_BV5_V3 with HY29LV160BT-70
   - SD007_BV5_V3 with AM29LV160MB
   - SD007_K8D3216_32M with MX29LV160CT
+  - SD007_T40_64BALL_S71_TV_TS28 with TC58FVB016FT-85
+  - SD007_T40_64BALL_SOJ28 with 29LV016T
   - SD007_T40_64BALL_TSOP28 with 29LV016T
   - SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85¹
   - SD007_TSOP_29LV017D with L017D70VC
@@ -245,6 +254,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - BX2006_TSOPBGA_0106 with K8D6316UTM-PI07
   - BX2006_TSOPBGA_6108 with M29W640
   - DV15 with MSP55LV100G
+  - F864-3 with M36L0R7050B
   - GA-07 with unlabeled flash chip
   - GE28F128W30 with 128W30B0
   - M5M29G130AN (no PCB text)
@@ -272,6 +282,8 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * On some Linux systems like Fedora, you may need to install the `python3-pillow-qt` package manually in order for the GUI mode to work.
 
+* On some Linux systems you may see the message “No devices found.” even though you’re using a USB cable capable of data transfers. This may be caused by a module called `brltty` (a driver for refreshable braille displays) that is erroneously interfering and taking over control of any connected USB device that uses the CH340/341 chipset. The solution would be to uninstall or blacklist the `brltty` driver and then reboot the system.
+
 * If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
 ## Miscellaneous
@@ -285,6 +297,7 @@ The author would like to thank the following very kind people for their help and
 - 2358 (bug reports)
 - 90sFlav (flash chip info)
 - AcoVanConis (bug reports, flash chip info)
+- ALXCO-Hardware (feature suggestions)
 - AdmirtheSableye (bug reports)
 - AlexiG (GBxCart RW hardware, bug reports, flash chip info)
 - AndehX (app icon, flash chip info)
@@ -297,11 +310,12 @@ The author would like to thank the following very kind people for their help and
 - Davidish (flash chip info)
 - DevDavisNunez (bug reports)
 - Diddy_Kong (sample cartridge contribution)
-- djedditt (testing)
+- djedditt (testing, sample cartridge contribution)
 - Dr-InSide (bug reports)
 - dyf2007 (flash chip info)
 - easthighNerd (feature suggestions)
 - EchelonPrime (flash chip info)
+- edo999 (flash chip info)
 - EmperorOfTigers (bug reports, flash chip info)
 - endrift (research, mGBA emulator)
 - ethanstrax (flash chip info)
@@ -310,6 +324,7 @@ The author would like to thank the following very kind people for their help and
 - FerrantePescara (flash chip info)
 - frarees (bug reports)
 - Frost Clock (flash chip info)
+- gboh (bug reports)
 - gekkio (bug reports, technical information)
 - Godan (flash chip info)
 - Grender (testing)
@@ -335,7 +350,7 @@ The author would like to thank the following very kind people for their help and
 - manuelcm1 (flash chip info)
 - marv17 (flash chip info, testing, bug reports, feature suggestions)
 - Mr_V (flash chip info, testing)
-- orangeglo (GB Memory Cartridge samples)
+- orangeglo (GB Memory Cartridge samples, bug reports)
 - paarongiroux (bug reports)
 - Paradoxical (flash chip info)
 - Rairch (bug reports)
@@ -343,12 +358,14 @@ The author would like to thank the following very kind people for their help and
 - redalchemy (bug reports, flash chip info)
 - RetroGorek (flash chip info)
 - RevZ (Linux help, testing, bug reports, flash chip info)
+- s1cp (flash chip info)
 - Satumox (bug reports)
 - Sgt.DoudouMiel (flash chip info)
 - Shinichi999 (bug reports)
 - Sithdown (flash chip info)
 - skite2001 (flash chip info)
 - Smelly-Ghost (testing)
+- Stitch (flash chip info)
 - Super Maker (flash chip info, testing)
 - Tauwasser (research)
 - t5b6_de (flash chip info)

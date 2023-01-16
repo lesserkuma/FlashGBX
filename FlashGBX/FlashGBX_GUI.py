@@ -200,7 +200,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("Prefer full &chip erase over sector erase when both available", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Verify data after writing", lambda: self.SETTINGS.setValue("VerifyWrittenData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
-		self.mnuConfig.addAction("Always &generate ROM dump reports", lambda: self.SETTINGS.setValue("GenerateDumpReports", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
+		self.mnuConfig.addAction("Limit &baud rate to 1Mbps for GBxCart RW v1.4 devices", lambda: [ self.SETTINGS.setValue("LimitBaudRate", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")), self.SetLimitBaudRate() ])
+		self.mnuConfig.addAction("Always &generate ROM dump reports", lambda: self.SETTINGS.setValue("GenerateDumpReports", str(self.mnuConfig.actions()[6].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Re-&enable suppressed messages", self.ReEnableMessages)
 		self.mnuConfig.addSeparator()
@@ -211,12 +212,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.actions()[3].setCheckable(True)
 		self.mnuConfig.actions()[4].setCheckable(True)
 		self.mnuConfig.actions()[5].setCheckable(True)
+		self.mnuConfig.actions()[6].setCheckable(True)
 		self.mnuConfig.actions()[0].setChecked(self.SETTINGS.value("UpdateCheck") == "enabled")
 		self.mnuConfig.actions()[1].setChecked(self.SETTINGS.value("SaveFileNameAddDateTime", default="disabled") == "enabled")
 		self.mnuConfig.actions()[2].setChecked(self.SETTINGS.value("PreferChipErase", default="disabled") == "enabled")
 		self.mnuConfig.actions()[3].setChecked(self.SETTINGS.value("VerifyWrittenData", default="enabled") == "enabled")
 		self.mnuConfig.actions()[4].setChecked(self.SETTINGS.value("AutoDetectLimitVoltage", default="disabled") == "enabled")
-		self.mnuConfig.actions()[5].setChecked(self.SETTINGS.value("GenerateDumpReports", default="disabled") == "enabled")
+		self.mnuConfig.actions()[5].setChecked(self.SETTINGS.value("LimitBaudRate", default="disabled") == "enabled")
+		self.mnuConfig.actions()[6].setChecked(self.SETTINGS.value("GenerateDumpReports", default="disabled") == "enabled")
 		
 		self.btnConfig.setMenu(self.mnuConfig)
 		
@@ -264,7 +267,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 	def GuiCreateGroupBoxDMGCartInfo(self):
 		self.grpDMGCartridgeInfo = QtWidgets.QGroupBox("Game Boy Cartridge Information")
-		self.grpDMGCartridgeInfo.setMinimumWidth(352)
+		self.grpDMGCartridgeInfo.setMinimumWidth(364)
 		group_layout = QtWidgets.QVBoxLayout()
 		group_layout.setContentsMargins(-1, 5, -1, -1)
 
@@ -361,7 +364,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	
 	def GuiCreateGroupBoxAGBCartInfo(self):
 		self.grpAGBCartridgeInfo = QtWidgets.QGroupBox("Game Boy Advance Cartridge Information")
-		self.grpAGBCartridgeInfo.setMinimumWidth(352)
+		self.grpAGBCartridgeInfo.setMinimumWidth(364)
 		group_layout = QtWidgets.QVBoxLayout()
 		group_layout.setContentsMargins(-1, 5, -1, -1)
 
@@ -458,6 +461,17 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 		self.grpAGBCartridgeInfo.setLayout(group_layout)
 		return self.grpAGBCartridgeInfo
+	
+	def SetLimitBaudRate(self):
+		if not self.CheckDeviceAlive(): return
+		mode = self.CONN.GetMode()
+		limit_baudrate = self.SETTINGS.value("LimitBaudRate")
+		if limit_baudrate == "enabled":
+			self.CONN.ChangeBaudRate(baudrate=1000000)
+		else:
+			self.CONN.ChangeBaudRate(baudrate=1700000)
+		self.DisconnectDevice()
+		self.FindDevices(connectToFirst=True, mode=mode)
 	
 	def UpdateCheck(self):
 		update_check = self.SETTINGS.value("UpdateCheck")
@@ -614,7 +628,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.CONN = None
 				if self.cmbDevice.count() == 0: self.lblDevice.setText("No connection.")
 				return False
-			
 			elif isinstance(ret, list):
 				for i in range(0, len(ret)):
 					status = ret[i][0]
@@ -637,6 +650,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						return False
 			
 			if dev.IsConnected():
+				dev.SetWriteDelay(enable=str(self.SETTINGS.value("WriteDelay", default="disabled")).lower() == "enabled")
 				qt_app.processEvents()
 				self.CONN = dev
 				self.optDMG.setAutoExclusive(False)
@@ -722,6 +736,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		messages = []
 		last_msg = ""
+
+		# pylint: disable=global-variable-not-assigned
 		global hw_devices
 		for hw_device in hw_devices:
 			dev = hw_device.GbxDevice()
@@ -1178,6 +1194,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		if not just_erase:
 			self.SETTINGS.setValue(setting_name, os.path.dirname(path))
+			if os.path.getsize(path) == 0:
+				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The selected ROM file is empty.", QtWidgets.QMessageBox.Ok)
+				return
 			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MB are not supported.", QtWidgets.QMessageBox.Ok)
 				return
@@ -1234,7 +1253,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					mbc2 = Util.get_mbc_name(hdr["mapper_raw"])
 					compatible_mbc = [ "None", "MBC2", "MBC3", "MBC5", "MBC7", "GBD", "G-MMC1", "HuC-1", "HuC-3" ]
 					if mbc2 == "None":
-						mbc = 0x19 # MBC5
+						pass
 					elif mbc2 != "None" and not (mbc1 in compatible_mbc and mbc2 in compatible_mbc):
 						if "mbc" in carts[cart_type] and carts[cart_type]["mbc"] == "manual":
 							msg_text = "The ROM file you selected uses a different mapper type than your current selection. What mapper should be used when writing the ROM?\n\nSelected mapper type: {:s}\nROM mapper type: {:s}".format(mbc1, mbc2)
@@ -1251,6 +1270,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 							elif msgbox.clickedButton() == button_2:
 								mbc = hdr["mapper_raw"]
 						else:
+							if mbc1 == "None": mbc1 = "None/Unknown"
 							msg_text = "Warning: The ROM file you selected uses a different mapper type than your cartridge type. The ROM file may be incompatible with your cartridge.\n\nCartridge mapper type: {:s}\nROM mapper type: {:s}".format(mbc1, mbc2)
 							answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg_text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 							if answer == QtWidgets.QMessageBox.Cancel: return
@@ -1416,7 +1436,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		if not erase:
 			filesize = os.path.getsize(path)
-			if filesize > 0x200000: # reject too large files to avoid exploding RAM
+			if filesize == 0 or filesize > 0x200000: # reject too large files to avoid exploding RAM
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The size of this file is not supported.", QtWidgets.QMessageBox.Ok)
 				return
 		
@@ -1795,7 +1815,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			
 			db_agb_entry = None
 			if os.path.exists("{0:s}/db_AGB.json".format(self.CONFIG_PATH)):
-				with open("{0:s}/db_AGB.json".format(self.CONFIG_PATH)) as f:
+				with open("{0:s}/db_AGB.json".format(self.CONFIG_PATH), encoding="UTF-8") as f:
 					db_agb = f.read()
 					db_agb = json.loads(db_agb)
 					if data["header_sha1"] in db_agb.keys():
@@ -2413,5 +2433,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		else:
 			qt_app.exec_() # PySide2
 
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 qt_app = QApplication(sys.argv)
 qt_app.setApplicationName(APPNAME)

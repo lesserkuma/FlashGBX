@@ -1,6 +1,19 @@
 # Release notes
+### v3.21 (released 2023-01-16)
+- Bundles GBxCart RW v1.4/v1.4a firmware version R39+L8 (adds support for insideGadgets WonderSwan and Game Gear flash carts)
+- Added support for SD007_48BALL_SOP28 with M29W320ET *(thanks DevDavisNunez)*
+- Added support for the BennVenn MBC3000 RTC cart *(thanks LucentW)*
+- Added support for Flash2Advance Ultra 256M with 8× 3204C3B100 *(thanks djeddit)*
+- Added support for SD007_T40_64BALL_SOJ28 with 29LV016T *(thanks Stitch)*
+- Confirmed support for SD007_T40_64BALL_S71_TV_TS28 with TC58FVB016FT-85 *(thanks edo999)*
+- Added support for F864-3 with M36L0R7050B *(thanks s1cp)*
+- Allowed for switching between different Write Enable pins during chip erase and sector erase command sequences via a third parameter (“WR” or “AUDIO”) *(thanks ALXCO-Hardware for the suggestion)*
+- Added support for the Squareboi 4 MB (2× 2 MB) cart *(thanks ALXCO-Hardware)*
+- Added an option to limit the baud rate for GBxCart RW v1.4/v1.4a
+- Minor bug fixes and improvements *(thanks gboh, Grender and orangeglo)*
+
 ### v3.20 (released 2022-11-30)
-- Bundles GBxCart RW v1.4/v1.4a firmware version R38+L8
+- Bundles GBxCart RW v1.4/v1.4a firmware version R38+L8 (minor improvements)
 - Will now retry failed flash sector writes a few times before stopping the process (requires firmware version L1+)
 - Added delta ROM writing (only write the difference between two ROMs); requires both the original &lt;name&gt;.&lt;ext&gt; ROM file and the changed &lt;name&gt;.delta.&lt;ext&gt; ROM file in the same directory (requires firmware version L1+) *(thanks djeddit for the suggestion)*
 - Fixed support for Flash2Advance Ultra 64M with 2× 28F320C3B
@@ -234,7 +247,7 @@
 - Added support for SD007_TSOP_48BALL_V10 with M29W320DT *(thanks Jayro)*
 - Fixed a problem of reading from a certain type of cartridge that uses the GL256S flash chip *(thanks marv17)*
 - Added support for B11 with 26L6420MC-90 *(thanks dyf2007)*
-- Added support for DIY carts with MBC3 and MX29LV640 *(thanks eveningmoose)*
+- Added support for DIY carts with MX29LV640 *(thanks eveningmoose)*
 
 ### v2.1 (released 2021-05-05)
 - Fixed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17 and 90sFlav)*

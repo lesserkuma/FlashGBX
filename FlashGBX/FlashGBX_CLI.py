@@ -372,6 +372,7 @@ class FlashGBX_CLI():
 			self.CONN.INFO["last_action"] = 0
 	
 	def FindDevices(self, port=None):
+		# pylint: disable=global-variable-not-assigned
 		global hw_devices
 		for hw_device in hw_devices:
 			dev = hw_device.GbxDevice()
@@ -607,7 +608,7 @@ class FlashGBX_CLI():
 			Util.AGB_Global_CRC32 = 0
 			db_agb_entry = None
 			if os.path.exists("{0:s}/db_AGB.json".format(self.CONFIG_PATH)):
-				with open("{0:s}/db_AGB.json".format(self.CONFIG_PATH)) as f:
+				with open("{0:s}/db_AGB.json".format(self.CONFIG_PATH), encoding="UTF-8") as f:
 					db_agb = f.read()
 					db_agb = json.loads(db_agb)
 					if data["header_sha1"] in db_agb.keys():

@@ -17,7 +17,7 @@ class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 8
-	DEVICE_LATEST_FW_TS = { 4:1619427330, 5:1669112674, 6:1669112674 }
+	DEVICE_LATEST_FW_TS = { 4:1619427330, 5:1673788742, 6:1673788742 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -113,7 +113,9 @@ class GbxDevice:
 	FAST_READ = False
 	SKIPPING = False
 	BAUDRATE = 1000000
-	MAX_BUFFER_LEN = 512
+	MAX_BUFFER_LEN = 0x2000
+	DEVICE_TIMEOUT = 1
+	WRITE_DELAY = False
 	
 	def __init__(self):
 		pass
@@ -140,18 +142,21 @@ class GbxDevice:
 				if not self.LoadFirmwareVersion() and max_baud >= 1700000:
 					dev.close()
 					self.BAUDRATE = 1700000
+					self.MAX_BUFFER_LEN = 0x2000
 					dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
 					self.DEVICE = dev
 					if not self.LoadFirmwareVersion():
 						dev.close()
 						self.DEVICE = None
 						self.BAUDRATE = 1000000
+						self.MAX_BUFFER_LEN = 0x100
 						continue
 				elif max_baud >= 1700000 and self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE < 1700000:
 					# Switch to higher baud rate
-					self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
-					self.BAUDRATE = 1700000
-					dev.close()
+					#self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
+					#self.BAUDRATE = 1700000
+					#dev.close()
+					self.ChangeBaudRate(baudrate=1700000)
 					dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
 					self.DEVICE = dev
 				
@@ -186,7 +191,7 @@ class GbxDevice:
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 
 				self.PORT = ports[i]
-				self.DEVICE.timeout = 1
+				self.DEVICE.timeout = self.DEVICE_TIMEOUT
 				
 				# Load Flash Cartridge Handlers
 				self.UpdateFlashCarts(flashcarts)
@@ -241,6 +246,19 @@ class GbxDevice:
 	
 	def GetBaudRate(self):
 		return self.BAUDRATE
+	
+	def ChangeBaudRate(self, baudrate):
+		if not self.IsConnected(): return
+		if baudrate == 1700000:
+			self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
+			self.Close()
+			self.BAUDRATE = baudrate
+			self.MAX_BUFFER_LEN = 0x2000
+		elif baudrate == 1000000:
+			self._write(self.DEVICE_CMD["OFW_USART_1_0M_SPEED"])
+			self.Close()
+			self.BAUDRATE = baudrate
+			self.MAX_BUFFER_LEN = 0x100
 	
 	def CanSetVoltageManually(self):
 		return False
@@ -381,6 +399,10 @@ class GbxDevice:
 	def GetFWBuildDate(self):
 		return self.FW["fw_dt"]
 	
+	def SetWriteDelay(self, enable=True):
+		dprint("Setting Write Delay to", enable)
+		self.WRITE_DELAY = enable
+	
 	def wait_for_ack(self, values=None):
 		if values is None: values = [0x01, 0x03]
 		buffer = self._read(1)
@@ -396,10 +418,10 @@ class GbxDevice:
 				self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"A timeout error has occured at {:s}() in line {:d}. Please make sure that the cartridge contacts are clean, re-connect the device and try again from the beginning.".format(stack.name, stack.lineno)})
 			else:
 				dprint("Communication error ({:s}(), line {:d})".format(stack.name, stack.lineno))
-				#print(self.CANCEL_ARGS)
 				self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"A communication error has occured at {:s}() in line {:d}. Please make sure that the cartridge contacts are clean, re-connect the device and try again from the beginning.".format(stack.name, stack.lineno)})
 			self.ERROR = True
 			self.CANCEL = True
+			self.SetWriteDelay(enable=True)
 			return False
 		
 		return buffer
@@ -417,7 +439,7 @@ class GbxDevice:
 		# On MacOS it’s possible not all bytes are transmitted successfully,
 		# even though we’re using flush() which is the tcdrain function.
 		# Still looking for a better solution than delaying here.
-		if platform.system() == "Darwin":
+		if platform.system() == "Darwin" or self.WRITE_DELAY is True:
 			time.sleep(0.00125)
 		
 		if wait: return self.wait_for_ack()
@@ -541,6 +563,7 @@ class GbxDevice:
 			self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"A critical communication error occured during a write. Please avoid passive USB hubs, try different USB ports/cables and re-connect the device."})
 			self.CANCEL = True
 			self.ERROR = True
+			return False
 
 	def _clk_toggle(self, num):
 		if self.FW["pcb_ver"] not in (5, 6, 101): return False
@@ -548,6 +571,13 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["CLK_HIGH"])
 			self._write(self.DEVICE_CMD["CLK_LOW"])
 		return True
+	
+	def _set_we_pin_wr(self):
+		if self.MODE == "DMG":
+			self._set_fw_variable("FLASH_WE_PIN", 0x01) # FLASH_WE_PIN_WR
+	def _set_we_pin_audio(self):
+		if self.MODE == "DMG":
+			self._set_fw_variable("FLASH_WE_PIN", 0x02) # FLASH_WE_PIN_AUDIO
 	
 	def CartPowerCycle(self, delay=0.1):
 		if self.CanPowerCycleCart():
@@ -1457,7 +1487,7 @@ class GbxDevice:
 				elif we == "WR+RESET":
 					self._set_fw_variable("FLASH_WE_PIN", 0x03) # FLASH_WE_PIN_WR_RESET
 			
-			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle)
+			flashcart = Flashcart(config=flashcart_meta, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, set_we_pin_wr=self._set_we_pin_wr, set_we_pin_audio=self._set_we_pin_audio)
 			flashcart.Reset(full_reset=False)
 			if flashcart.Unlock() is False: return False
 			if "flash_ids" in flashcart_meta and len(flashcart_meta["flash_ids"]) > 0:
@@ -1501,7 +1531,24 @@ class GbxDevice:
 								flash_type_id = flash_types[i]
 								size_undetected = False
 								break
-		
+					else:
+						if self.MODE == "AGB":
+							# Check where the ROM data repeats (for unlicensed carts)
+							header = self.ReadROM(0, 0x180)
+							size_check = header[0xA0:0xA0+16]
+							currAddr = 0x10000
+							while currAddr < 0x2000000:
+								buffer = self.ReadROM(currAddr + 0xA0, 64)[:16]
+								if buffer == size_check: break
+								currAddr *= 2
+							rom_size = currAddr
+
+							for i in range(0, len(flash_types)):
+								if "flash_size" in supp_flash_types[1][flash_types[i]] and rom_size == supp_flash_types[1][flash_types[i]]["flash_size"]:
+									flash_type_id = flash_types[i]
+									size_undetected = False
+									break
+
 		else:
 			(flash_id, cfi_s, cfi) = self.CheckFlashChip(limitVoltage=limitVoltage)
 		
@@ -1667,7 +1714,7 @@ class GbxDevice:
 							self._cart_write(method['reset'][i][0], method['reset'][i][1], flashcart=True)
 
 				if cart_type is not None: # reset cartridge if method is known
-					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
+					flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None, set_we_pin_wr=self._set_we_pin_wr, set_we_pin_audio=self._set_we_pin_audio)
 					flashcart.Reset(full_reset=False)
 		
 		if "method" in cfi:
@@ -1737,7 +1784,7 @@ class GbxDevice:
 			time.sleep(0.2)
 
 		if cart_type is not None: # reset cartridge if method is known
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=None, set_we_pin_wr=self._set_we_pin_wr, set_we_pin_audio=self._set_we_pin_audio)
 			flashcart.Reset(full_reset=True)
 
 		flash_id = ""
@@ -1792,7 +1839,7 @@ class GbxDevice:
 			file = open(args["path"], "wb")
 		
 		self.FAST_READ = True
-
+		
 		flashcart = False
 		supported_carts = list(self.SUPPORTED_CARTS[self.MODE].values())
 		cart_type = copy.deepcopy(supported_carts[args["cart_type"]])
@@ -1802,7 +1849,7 @@ class GbxDevice:
 				if i == args["cart_type"]:
 					try:
 						cart_type["_index"] = cart_type["names"].index(list(self.SUPPORTED_CARTS[self.MODE].keys())[i])
-						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
+						flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress, set_we_pin_wr=self._set_we_pin_wr, set_we_pin_audio=self._set_we_pin_audio)
 					except:
 						pass
 
@@ -1890,11 +1937,12 @@ class GbxDevice:
 		
 		buffer = bytearray(size)
 		max_length = self.MAX_BUFFER_LEN
+		dprint("Max buffer size: 0x{:X}".format(max_length))
 		if self.FAST_READ is True:
 			if (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY"):
-				max_length = 0x1000
+				max_length = min(max_length, 0x1000)
 			else:
-				max_length = 0x2000
+				max_length = min(max_length, 0x2000)
 		self.INFO["dump_info"]["transfer_size"] = max_length
 		pos_total = 0
 		start_address = 0
@@ -1968,21 +2016,31 @@ class GbxDevice:
 					skip_init = True
 				
 				if len(temp) != buffer_len:
+					if "verify_write" in args:
+						self.SetProgress({"action":"UPDATE_POS", "pos":args["verify_from"]+pos_total})
+					else:
+						self.SetProgress({"action":"UPDATE_POS", "pos":pos_total})
+					
 					if (max_length >> 1) < 64:
 						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}!".format(len(temp), buffer_len, pos_total))
 						max_length = 64
+					elif lives > 18:
+						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}!".format(len(temp), buffer_len, pos_total))
 					else:
-						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}! Decreasing maximum transfer buffer length to 0x{:X}.".format(len(temp), buffer_len, pos_total, max_length >> 1))
+						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}! Decreasing maximum transfer buffer size to 0x{:X}.".format(len(temp), buffer_len, pos_total, max_length >> 1))
 						max_length >>= 1
 						self.MAX_BUFFER_LEN = max_length
+					
 					self.INFO["dump_info"]["transfer_size"] = max_length
 					skip_init = False
 					self.DEVICE.reset_input_buffer()
 					self.DEVICE.reset_output_buffer()
 					lives -= 1
 					if lives == 0:
-						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An error occured while reading from the cartridge. When connecting the device, avoid passive USB hubs and try different USB ports/cables.", "abortable":False})
-						return False
+						self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"An error occured while reading from the cartridge. When connecting the device, avoid passive USB hubs and try different USB ports/cables."})
+						self.CANCEL = True
+						self.ERROR = True
+						if "verify_write" in args: return False
 					continue
 				elif lives < 20:
 					lives = 20
@@ -1992,8 +2050,12 @@ class GbxDevice:
 				pos_total += len(temp)
 				
 				if "verify_write" in args:
-					if pos_total >= len(args["verify_write"]): break
+					#if pos_total >= len(args["verify_write"]): break
 					check = args["verify_write"][pos_total-len(temp):pos_total]
+					if Util.DEBUG:
+						dprint("Writing 0x{:X} bytes to debug_verify.bin".format(len(temp)))
+						with open("debug_verify.bin", "ab") as f: f.write(temp)
+					
 					if temp[:len(check)] != check:
 						for i in range(0, pos_total):
 							if (i < len(args["verify_write"]) - 1) and (i < pos_total - 1) and args["verify_write"][i] != buffer[i]:
@@ -2001,11 +2063,9 @@ class GbxDevice:
 									dprint("Skipping RTC area at 0x{:X}".format(i))
 								else:
 									dprint("Mismatch during verification at 0x{:X}".format(i))
-									if Util.DEBUG:
-										with open("debug_verify.bin", "wb") as f: f.write(temp)
 									return i
 					else:
-						dprint("Verification successful between 0x{:X} and 0x{:X}".format(pos_total-len(temp), pos_total-1))
+						dprint("Verification successful between 0x{:X} and 0x{:X}".format(pos_total-len(temp), pos_total))
 					self.SetProgress({"action":"UPDATE_POS", "pos":args["verify_from"]+pos_total})
 				else:
 					self.SetProgress({"action":"UPDATE_POS", "pos":pos_total})
@@ -2644,7 +2704,7 @@ class GbxDevice:
 			data_map_import = bytearray(data_map_import)
 			dprint("Hidden sector data loaded")
 		else:
-			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress)
+			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress, set_we_pin_wr=self._set_we_pin_wr, set_we_pin_audio=self._set_we_pin_audio)
 		
 		rumble = "rumble" in flashcart.CONFIG and flashcart.CONFIG["rumble"] is True
 		
@@ -2882,7 +2942,7 @@ class GbxDevice:
 			sector_offsets = flashcart.GetSectorOffsets(rom_size=len(data_import), rom_bank_size=rom_bank_size)
 			if len(sector_offsets) > 0:
 				flash_capacity = sector_offsets[-1][0] + sector_offsets[-1][1]
-				if flash_capacity < len(data_import):
+				if flash_capacity < len(data_import) and not (flashcart.SupportsChipErase() and args["prefer_chip_erase"]):
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"There are not enough flash sectors available to write this ROM. The maximum capacity is {:s}.".format(Util.formatFileSize(flash_capacity, asInt=False)), "abortable":False})
 					return False
 
@@ -3131,10 +3191,12 @@ class GbxDevice:
 								time.sleep(delay)
 								self.CartPowerOn()
 								if self.MODE == "DMG" and _mbc.HasFlashBanks(): _mbc.SelectBankFlash(bank)
-							else:
-								time.sleep(delay)
+							time.sleep(delay)
+							self.DEVICE.reset_input_buffer()
+							self.DEVICE.reset_output_buffer()
 							self._cart_write(pos, 0xF0)
 							self._cart_write(pos, 0xFF)
+							flashcart.Unlock()
 							continue
 						
 						self.CANCEL = True
@@ -3178,6 +3240,8 @@ class GbxDevice:
 		verified = False
 		if "verify_write" in args and args["verify_write"] is True:
 			self.SetProgress({"action":"INITIALIZE", "method":"ROM_WRITE_VERIFY", "size":len(data_import)})
+			if Util.DEBUG:
+				with open("debug_verify.bin", "wb") as f: pass
 			for sector in write_sectors:
 				verified = True
 				if sector[0] >= len(data_import): break
@@ -3192,8 +3256,8 @@ class GbxDevice:
 				end_address = buffer_pos
 
 				verified_size = self._BackupROM(verify_args)
-				if verified_size is not None: dprint("args[\"verify_len\"]=0x{:X}, verified_size=0x{:X}".format(verify_args["verify_len"], verified_size))
-				if self.CANCEL:
+				if isinstance(verified_size, int): dprint("args[\"verify_len\"]=0x{:X}, verified_size=0x{:X}".format(verify_args["verify_len"], verified_size))
+				if self.CANCEL or self.ERROR:
 					cancel_args = {"action":"ABORT", "abortable":False}
 					cancel_args.update(self.CANCEL_ARGS)
 					self.CANCEL_ARGS = {}

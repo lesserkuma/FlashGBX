@@ -1,17 +1,24 @@
 {
 	"type":"AGB",
 	"names":[
-		"Flash2Advance Ultra 64M with 2× 28F320C3B"
+		"Flash2Advance Ultra 256M with 8× 3204C3B100"
 	],
 	"flash_ids":[
 		[ 0x89, 0x00, 0x89, 0x00, 0xC5, 0x88, 0xC5, 0x88 ]
 	],
 	"voltage":3.3,
-	"flash_size":0x800000,
+	"flash_size":0x2000000,
 	"sector_size":[
+		[0x04000, 8],
+		[0x20000, 63],
+		[0x04000, 8],
+		[0x20000, 63],
+		[0x04000, 8],
+		[0x20000, 63],
 		[0x04000, 8],
 		[0x20000, 63]
 	],
+	"reset_every":0x800000,
 	"command_set":"INTEL",
 	"commands":{
 		"unlock":[

@@ -5,7 +5,7 @@
 # This code is used for official firmware of GBxCart v1.3 only and this code is pure chaos, sorry
 # Refer to hw_GBxCartRW.py for the much cleaner rewrite (used for GBxCart RW v1.4 and firmware L1 on v1.3)
 
-import time, math, struct, traceback, zlib, copy, hashlib, os, datetime
+import time, math, struct, traceback, zlib, copy, hashlib, os, datetime, platform
 import serial, serial.tools.list_ports
 from serial import SerialException
 from .RomFileDMG import RomFileDMG
@@ -139,6 +139,7 @@ class GbxDevice:
 	NO_PROG_UPDATE = False
 	FAST_READ = False
 	BAUDRATE = 1000000
+	WRITE_DELAY = False
 	
 	def __init__(self):
 		pass
@@ -281,6 +282,9 @@ class GbxDevice:
 	def GetBaudRate(self):
 		return self.BAUDRATE
 	
+	def ChangeBaudRate(self, _):
+		return
+
 	def GetPCBVersion(self):
 		_, pcb = self.FW
 		if pcb in self.PCB_VERSIONS:
@@ -407,6 +411,9 @@ class GbxDevice:
 		if args["action"] == "FINISHED":
 			self.SIGNAL = None
 	
+	def SetWriteDelay(self, enable=True):
+		self.WRITE_DELAY = enable
+	
 	def wait_for_ack(self):
 		buffer = self.read(1)
 		if buffer == False:
@@ -473,8 +480,9 @@ class GbxDevice:
 			data = bytearray(data, 'ascii')
 		self.DEVICE.write(data)
 		self.DEVICE.flush()
-		if wait_for_ack:
-			return self.wait_for_ack()
+		if platform.system() == "Darwin" or self.WRITE_DELAY is True:
+			time.sleep(0.00125)
+		if wait_for_ack: return self.wait_for_ack()
 	
 	def DetectCartridge(self, mbc=None, limitVoltage=False, checkSaveType=False):
 		self.SIGNAL = None
@@ -2498,7 +2506,6 @@ class GbxDevice:
 							pos += 64
 
 						else: # super slow -- for testing purposes only!
-							#self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Buffer writing for this flash chip is not supported with your device’s firmware version. You can try a newer firmware version which is available through the firmware updater in the “Tools” menu.\n\n{:s}".format(str(flashcart_meta["commands"]["buffer_write"])), "abortable":False})
 							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please try a differnt firmware version or newer hardware revision.".format(APPNAME, self.GetFullName()), "abortable":False})
 							return False
 							'''
