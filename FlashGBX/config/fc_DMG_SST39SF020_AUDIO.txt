@@ -5,7 +5,7 @@
 		"GB-CART32K-A with SST39SF020A"
 	],
 	"flash_ids":[
-		[ 0xBF, 0xB6, 0x01, 0xFF ]
+		[ 0xBF, 0xB6 ]
 	],
 	"voltage":5,
 	"flash_size":0x10000,

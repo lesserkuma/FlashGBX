@@ -3178,13 +3178,13 @@ class GbxDevice:
 							buffer_pos = rev_buffer_pos
 							bank = start_bank
 							sector_pos -= 1
-							err_text = "Write failed! Retrying from 0x{:X}...".format(rev_buffer_pos)
+							err_text = "Write error! Retrying from 0x{:X}...".format(rev_buffer_pos)
 							if not Util.DEBUG: print(err_text)
 							dprint(err_text, "Bank {:d} | HP: {:d}/100".format(bank, retry_hp))
 							pos = end_address
 							status = False
 
-							self.SetProgress({"action":"ERROR", "abortable":True, "pos":buffer_pos, "text":"Write failed! Retrying from 0x{:X}...".format(rev_buffer_pos)})
+							self.SetProgress({"action":"ERROR", "abortable":True, "pos":buffer_pos, "text":"Write error! Retrying from 0x{:X}...".format(rev_buffer_pos)})
 							delay = 0.5 + (100-retry_hp)/50
 							if self.CanPowerCycleCart():
 								self.CartPowerOff(0)
