@@ -13,19 +13,24 @@ class Flashcart:
 	CART_READ_FNCPTR = None
 	CART_POWERCYCLE_FNCPTR = None
 	PROGRESS_FNCPTR = None
+	SET_WE_PIN_WR = None
+	SET_WE_PIN_AUDIO = None
+	DEFAULT_WE = None
 	SECTOR_COUNT = 0
 	SECTOR_POS = 0
 	SECTOR_MAP = None
 	CFI = None
 	LAST_SR = 0x00
 
-	def __init__(self, config=None, cart_write_fncptr=None, cart_write_fast_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, progress_fncptr=None):
+	def __init__(self, config=None, cart_write_fncptr=None, cart_write_fast_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, progress_fncptr=None, set_we_pin_wr=None, set_we_pin_audio=None):
 		if config is None: config = {}
 		self.CART_WRITE_FNCPTR = cart_write_fncptr
 		self.CART_WRITE_FAST_FNCPTR = cart_write_fast_fncptr
 		self.CART_READ_FNCPTR = cart_read_fncptr
 		self.CART_POWERCYCLE_FNCPTR = cart_powercycle_fncptr
 		self.PROGRESS_FNCPTR = progress_fncptr
+		self.SET_WE_PIN_WR = set_we_pin_wr
+		self.SET_WE_PIN_AUDIO = set_we_pin_audio
 		self.CONFIG = config
 		if "command_set" in config:
 			self.CONFIG["_command_set"] = config["command_set"]
@@ -33,6 +38,8 @@ class Flashcart:
 			self.CONFIG["_command_set"] = "INTEL"
 		else:
 			self.CONFIG["_command_set"] = ""
+		if "write_pin" in config:
+			self.DEFAULT_WE = config["write_pin"]
 	
 	def CartRead(self, address, length=0):
 		if length == 0:
@@ -42,16 +49,16 @@ class Flashcart:
 				length = 1
 		return self.CART_READ_FNCPTR(address, length)
 	
-	def CartWrite(self, commands, flashcart=True, sram=False):
-		if "command_set" in self.CONFIG and self.CONFIG["command_set"] in ("GBMEMORY", "DMG-MBC5-32M-FLASH"): flashcart = False
-		dprint(commands, flashcart, sram)
-		if flashcart and not sram:
+	def CartWrite(self, commands, fast_write=True, sram=False):
+		if "command_set" in self.CONFIG and self.CONFIG["command_set"] in ("GBMEMORY", "DMG-MBC5-32M-FLASH"): fast_write = False
+		dprint(commands, fast_write, sram)
+		if fast_write and not sram:
 			self.CART_WRITE_FAST_FNCPTR(commands, flashcart=True)
 		else:
 			for command in commands:
 				address = command[0]
 				value = command[1]
-				self.CART_WRITE_FNCPTR(address, value, flashcart=flashcart, sram=sram)
+				self.CART_WRITE_FNCPTR(address, value, flashcart=fast_write, sram=sram)
 	
 	def GetCommandSetType(self):
 		return self.CONFIG["_command_set"].upper()
@@ -158,7 +165,7 @@ class Flashcart:
 					dprint("Reading 0x{:X} bytes from cartridge at 0x{:X} = {:s}".format(command[1], command[0], str(temp)))
 			time.sleep(0.001)
 		if "unlock" in self.CONFIG["commands"]:
-			self.CartWrite(self.CONFIG["commands"]["unlock"])
+			self.CartWrite(self.CONFIG["commands"]["unlock"], fast_write=False)
 			time.sleep(0.001)
 
 	def Reset(self, full_reset=False, max_address=0x2000000):
@@ -172,7 +179,7 @@ class Flashcart:
 				if j >= max_address: break
 				dprint("reset_every @ 0x{:X}".format(j))
 				for command in self.CONFIG["commands"]["reset"]:
-					self.CartWrite([[j, command[1]]])
+					self.CartWrite([[j + command[0], command[1]]])
 					time.sleep(0.01)
 		elif "reset" in self.CONFIG["commands"]:
 			self.CartWrite(self.CONFIG["commands"]["reset"])
@@ -285,8 +292,23 @@ class Flashcart:
 		for i in range(0, len(self.CONFIG["commands"]["chip_erase"])):
 			addr = self.CONFIG["commands"]["chip_erase"][i][0]
 			data = self.CONFIG["commands"]["chip_erase"][i][1]
+			if len(self.CONFIG["commands"]["chip_erase"][i]) > 2:
+				we = self.CONFIG["commands"]["chip_erase"][i][2]
+			else:
+				we = None
+			
 			if not addr == None:
+				if we == "WR":
+					self.SET_WE_PIN_WR()
+				elif we == "AUDIO":
+					self.SET_WE_PIN_AUDIO()
 				self.CartWrite([[addr, data]])
+				if we is not None:
+					if self.DEFAULT_WE == "WR":
+						self.SET_WE_PIN_WR()
+					elif self.DEFAULT_WE == "AUDIO":
+						self.SET_WE_PIN_AUDIO()
+			
 			time.sleep(0.1)
 			if self.CONFIG["commands"]["chip_erase_wait_for"][i][0] != None:
 				addr = self.CONFIG["commands"]["chip_erase_wait_for"][i][0]
@@ -298,7 +320,18 @@ class Flashcart:
 						for j in range(0, len(self.CONFIG["commands"]["read_status_register"])):
 							#sr_addr = self.CONFIG["commands"]["read_status_register"][j][0]
 							sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
+							
+							if we == "WR":
+								self.SET_WE_PIN_WR()
+							elif we == "AUDIO":
+								self.SET_WE_PIN_AUDIO()
 							self.CartWrite([[addr, sr_data]])
+							if we is not None:
+								if self.DEFAULT_WE == "WR":
+									self.SET_WE_PIN_WR()
+								elif self.DEFAULT_WE == "AUDIO":
+									self.SET_WE_PIN_AUDIO()
+
 					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
 					self.LAST_SR = wait_for
@@ -320,13 +353,28 @@ class Flashcart:
 		for i in range(0, len(self.CONFIG["commands"]["sector_erase"])):
 			addr = self.CONFIG["commands"]["sector_erase"][i][0]
 			data = self.CONFIG["commands"]["sector_erase"][i][1]
+			if len(self.CONFIG["commands"]["sector_erase"][i]) > 2:
+				we = self.CONFIG["commands"]["sector_erase"][i][2]
+			else:
+				we = None
+			
 			if addr == "SA": addr = pos
 			if addr == "SA+1": addr = pos + 1
 			if addr == "SA+2": addr = pos + 2
 			if addr == "SA+0x4000": addr = pos + 0x4000
 			if addr == "SA+0x7000": addr = pos + 0x7000
 			if not addr == None:
+				if we == "WR":
+					self.SET_WE_PIN_WR()
+				elif we == "AUDIO":
+					self.SET_WE_PIN_AUDIO()
 				self.CartWrite([[addr, data]])
+				if we is not None:
+					if self.DEFAULT_WE == "WR":
+						self.SET_WE_PIN_WR()
+					elif self.DEFAULT_WE == "AUDIO":
+						self.SET_WE_PIN_AUDIO()
+			
 			if self.CONFIG["commands"]["sector_erase_wait_for"][i][0] != None:
 				addr = self.CONFIG["commands"]["sector_erase_wait_for"][i][0]
 				data = self.CONFIG["commands"]["sector_erase_wait_for"][i][1]
@@ -342,7 +390,18 @@ class Flashcart:
 						for j in range(0, len(self.CONFIG["commands"]["read_status_register"])):
 							sr_addr = self.CONFIG["commands"]["read_status_register"][j][0]
 							sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
+
+							if we == "WR":
+								self.SET_WE_PIN_WR()
+							elif we == "AUDIO":
+								self.SET_WE_PIN_AUDIO()
 							self.CartWrite([[sr_addr, sr_data]])
+							if we is not None:
+								if self.DEFAULT_WE == "WR":
+									self.SET_WE_PIN_WR()
+								elif self.DEFAULT_WE == "AUDIO":
+									self.SET_WE_PIN_AUDIO()
+							
 					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					temp = self.CartRead(addr, 2)
 					if len(temp) != 2:

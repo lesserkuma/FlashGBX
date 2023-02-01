@@ -3,6 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import traceback
+from serial import SerialException
 from . import pyside as PySide2
 
 class DataTransfer(PySide2.QtCore.QThread):
@@ -25,6 +26,8 @@ class DataTransfer(PySide2.QtCore.QThread):
 		return not self.FINISHED
 	
 	def run(self):
+		tb = ""
+		error = None
 		try:
 			if self.CONFIG == None:
 				pass
@@ -34,7 +37,19 @@ class DataTransfer(PySide2.QtCore.QThread):
 				self.CONFIG['port'].TransferData(self.CONFIG, self.updateProgress)
 				self.FINISHED = True
 		
+		except SerialException as e:
+			if "GetOverlappedResult failed" in e.args[0]:
+				self.updateProgress.emit({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The USB connection was lost during a transfer. Try different USB cables, reconnect the device, restart the software and try again.", "abortable":False})
+				self.FINISHED = True
+				return
+			tb = traceback.format_exc()
+			error = e
+		
 		except Exception as e:
-			traceback.print_exc()
-			self.updateProgress.emit({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An unresolvable error has occured. See console output for more information. Reconnect the device, restart the software and try again.\n\n{:s}: {:s}".format(type(e).__name__, str(e)), "abortable":False})
+			tb = traceback.format_exc()
+			error = e
+		
+		if error is not None:
+			print(tb)
+			self.updateProgress.emit({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An unresolvable error has occured. See console output for more information. Reconnect the device, restart the software and try again.\n\n{:s}: {:s}".format(type(error).__name__, str(error)), "abortable":False})
 			self.FINISHED = True

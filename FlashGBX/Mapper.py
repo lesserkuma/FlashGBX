@@ -517,7 +517,7 @@ class DMG_MBC6(DMG_MBC):
 			sr = self.CartRead(0x4000)
 			dprint("Status Register Check: 0x{:X} == 0x80? {:s}".format(sr, str(sr == 0x80)))
 			if sr == 0x80: break
-			time.sleep(0.0001)
+			time.sleep(0.01)
 
 	def GetFlashID(self):
 		self.EnableFlash(enable=True)

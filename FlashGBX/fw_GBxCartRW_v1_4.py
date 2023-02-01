@@ -309,7 +309,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				self.reject()
 				return True
 			elif ret == 2:
-				text = "The firmware update is has failed. Please try again."
+				text = "The firmware update has failed. Please try again."
 				self.btnUpdate.setEnabled(True)
 				self.btnClose.setEnabled(True)
 				self.optDevicePCBVer14.setEnabled(True)

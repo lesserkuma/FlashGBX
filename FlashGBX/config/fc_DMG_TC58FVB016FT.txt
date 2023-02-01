@@ -1,10 +1,14 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85"
+		"SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85",
+		"SD007_T40_64BALL_S71_TV_TS28 with TC58FVB016FT-85",
+		"SD007_T40_64BALL_SOJ28 with 29LV016T"
 	],
 	"flash_ids":[
-		[ 0x98, 0x45, 0x00, 0x2A ]
+		[ 0x98, 0x45, 0x00, 0x2A ],
+		[ 0x98, 0x45, 0x00, 0x2A ],
+		[ 0x04, 0xC7, 0x00, 0x00 ]
 	],
 	"voltage":5,
 	"flash_size":0x200000,

@@ -5,7 +5,7 @@
 		"Catskull 32k Gameboy Flash Cart"
 	],
 	"flash_ids":[
-		[ 0xBF, 0xB5, 0x01, 0xFF ]
+		[ 0xBF, 0xB5 ]
 	],
 	"voltage":5,
 	"flash_size":0x8000,
