@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import zipfile, os, serial, struct, time, re, math, platform
+import zipfile, os, serial, struct, time, re, math
 from .pyside import QtCore, QtWidgets, QtGui, QDesktopWidget
 from . import Util
 
@@ -20,6 +20,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		self.APP_PATH = app_path
 		self.DEVICE = device
 		self.PCB_VER = device.GetPCBVersion()
+		self.FW_VER = device.GetFirmwareVersion()
 		self.PORT = device.GetPort()
 
 		self.setWindowTitle("FlashGBX – Firmware Updater for GBxCart RW")
@@ -178,10 +179,10 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			return False
 		dev.write(b'0')
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		dev.write(struct.pack(">BIBB", 0x2A, 0x37653565, 0x31, 0))
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		self.APP.QT_APP.processEvents()
 		time.sleep(0.3 + delay)
 		dev.reset_input_buffer()
@@ -298,7 +299,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		if self.ResetAVR(delay) is False:
 			fncSetStatus(text="Status: Bootloader error.", enableUI=True)
 			self.prgStatus.setValue(0)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ For safety reasons and to avoid potential fire hazards, do not use unauthorized clone hardware that have no electrical fuses, such as the “FLASH&nbsp;BOY” series.".replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX – Firmware Updater for GBxCart RW {:s}".format(self.PCB_VER), text="Failed updating your GBxCart RW {:s} ({:s})!\n\nThe firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ For safety reasons and to avoid potential fire hazards, do not use this software with unauthorized clone hardware that has no electrical fuses, such as the “FLASH&nbsp;BOY” series.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
 			answer = msgbox.exec()
 			return 2
 		
@@ -312,12 +313,12 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			dev.reset_output_buffer()
 			dev.write(b"@@@")
 			dev.flush()
-			if platform.system() == "Darwin": time.sleep(0.00125)
+			time.sleep(0.00125)
 			buffer = dev.read(0x11)
 			if (len(buffer) < 0x11) or (buffer[0:3] != b'TSB'):
 				dev.write(b"?")
 				dev.flush()
-				if platform.system() == "Darwin": time.sleep(0.00125)
+				time.sleep(0.00125)
 				dev.close()
 				self.APP.QT_APP.processEvents()
 				time.sleep(1)
@@ -326,13 +327,13 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				fncSetStatus("Status: Waiting for bootloader... (+{:d}ms)".format(math.ceil(delay * 1000)))
 				if self.ResetAVR(delay) is False:
 					fncSetStatus(text="Status: Bootloader error.", enableUI=True)
-					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX – Firmware Updater for GBxCart RW {:s}".format(self.PCB_VER), text="Failed updating your GBxCart RW {:s} ({:s})!\n\nThe firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ For safety reasons and to avoid potential fire hazards, do not use this software with unauthorized clone hardware that has no electrical fuses, such as the “FLASH&nbsp;BOY” series.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
 					answer = msgbox.exec()
 					return 2
 				lives -= 1
 				if lives < 0:
 					fncSetStatus(text="Status: Bootloader timeout.", enableUI=True)
-					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Ok)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX – Firmware Updater for GBxCart RW {:s}".format(self.PCB_VER), text="Failed updating your GBxCart RW {:s} ({:s})!\n\nThe firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the insideGadgets standalone firmware updater instead.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
 					answer = msgbox.exec()
 					return 2
 				continue
@@ -382,7 +383,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		dev.write(b"!")
 		dev.write(user_data)
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		dev.read(0x41)
 
 		# Write firmware
@@ -394,21 +395,21 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		lives = 10
 		dev.write(b"F")
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		ret = dev.read(1)
 		while ret != b"?":
 			dev.write(b"F")
 			dev.flush()
-			if platform.system() == "Darwin": time.sleep(0.00125)
+			time.sleep(0.00125)
 			ret = dev.read(1)
 			lives -= 1
 			if lives == 0:
 				dev.write(b"?")
 				dev.flush()
-				if platform.system() == "Darwin": time.sleep(0.00125)
+				time.sleep(0.00125)
 				dev.close()
 				fncSetStatus(text="Status: Protocol Error. Please try again.", enableUI=True)
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Protocol Error). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Protocol Error). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the insideGadgets standalone firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 				answer = msgbox.exec()
 				if answer == QtWidgets.QMessageBox.Yes:
 					time.sleep(1)
@@ -424,10 +425,10 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			if (ret != b"?"):
 				dev.write(b"?")
 				dev.flush()
-				if platform.system() == "Darwin": time.sleep(0.00125)
+				time.sleep(0.00125)
 				dev.close()
 				fncSetStatus(text="Status: Write Error ({:s}). Please try again.".format(str(ret)), enableUI=True)
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Write Error, {:s}). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, you will have to use the official firmware updater to recover the firmware.".format(str(ret)), standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Write Error, {:s}). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the insideGadgets standalone firmware updater instead.".format(str(ret)), standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 				answer = msgbox.exec()
 				if answer == QtWidgets.QMessageBox.Yes:
 					time.sleep(1)
@@ -435,7 +436,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				return 2
 		dev.write(b"?")
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		dev.read(1)
 		
 		# verify flash
@@ -443,12 +444,12 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		buffer2 = bytearray()
 		dev.write(b"f")
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		for i in range(0, 0x1DC0, 0x40):
 			self.APP.QT_APP.processEvents()
 			dev.write(b"!")
 			dev.flush()
-			if platform.system() == "Darwin": time.sleep(0.00125)
+			time.sleep(0.00125)
 			while dev.in_waiting == 0: time.sleep(0.01)
 			ret = bytearray(dev.read(0x40))
 			buffer2 += ret
@@ -465,9 +466,9 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 			fncSetStatus(text="Status: Verification Error.", enableUI=True)
 			dev.write(b"?")
 			dev.flush()
-			if platform.system() == "Darwin": time.sleep(0.00125)
+			time.sleep(0.00125)
 			dev.close()
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Verification Error). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the official firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text="The firmware update was not successful (Verification Error). Do you want to try again?\n\nIf it doesn’t work even after multiple retries, please use the insideGadgets standalone firmware updater instead.", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, defaultButton=QtWidgets.QMessageBox.Yes)
 			answer = msgbox.exec()
 			if answer == QtWidgets.QMessageBox.Yes:
 				time.sleep(1)
@@ -479,25 +480,25 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		user_data[2] = 42
 		dev.write(b"C")
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		ret = dev.read(1)
 		while ret != b"?":
 			dev.write(b"C")
 			dev.flush()
-			if platform.system() == "Darwin": time.sleep(0.00125)
+			time.sleep(0.00125)
 			ret = dev.read(1)
 			lives -= 1
 			if lives == 0:
 				dev.write(b"?")
 				dev.flush()
-				if platform.system() == "Darwin": time.sleep(0.00125)
+				time.sleep(0.00125)
 				dev.close()
 				fncSetStatus(text="Status: User data update error. Please try again.", enableUI=True)
 				return 2
 		dev.write(b"!")
 		dev.write(user_data)
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		dev.read(0x41)
 		
 		# Restart
@@ -506,7 +507,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		fncSetStatus("Status: Restarting the device...")
 		dev.write(b"?")
 		dev.flush()
-		if platform.system() == "Darwin": time.sleep(0.00125)
+		time.sleep(0.00125)
 		dev.close()
 		self.APP.QT_APP.processEvents()
 		time.sleep(0.8)

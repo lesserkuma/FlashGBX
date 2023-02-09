@@ -1,34 +1,31 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD007_T40_64BALL_TSOP28 with 29LV016T"
-	],
-	"flash_ids":[
-		[ 0x04, 0xC7, 0x00, 0x00 ]
+		"DIY cart with HY29F800 @ WR"
 	],
 	"voltage":5,
-	"flash_size":0x200000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"chip_erase_timeout":60,
+	"chip_erase_timeout":120,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
 		],
 		"read_identifier":[
-			[ 0xAAA, 0xA9 ],
-			[ 0x555, 0x56 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x90 ]
 		],
 		"chip_erase":[
-			[ 0x555, 0xA9 ],
-			[ 0x2AA, 0x56 ],
-			[ 0x555, 0x80 ],
-			[ 0x555, 0xA9 ],
-			[ 0x2AA, 0x56 ],
-			[ 0x555, 0x10 ]
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
 		],
 		"chip_erase_wait_for":[
 			[ null, null, null ],
@@ -39,9 +36,9 @@
 			[ 0, 0xFF, 0xFF ]
 		],
 		"single_write":[
-			[ 0x555, 0xA9 ],
-			[ 0x2AA, 0x56 ],
-			[ 0x555, 0xA0 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0xA0 ],
 			[ "PA", "PD" ]
 		],
 		"single_write_wait_for":[

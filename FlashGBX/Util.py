@@ -7,14 +7,14 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.21"
+VERSION_PEP440 = "3.22"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 DEBUG_LOG = []
 
-AGB_Header_ROM_Sizes = [ "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB", "256 MB" ]
+AGB_Header_ROM_Sizes = [ "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB", "256 MiB" ]
 AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
-AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KB)", "256K SRAM/FRAM (32 KB)", "512K FLASH (64 KB)", "1M FLASH (128 KB)", "8M DACS (1008 KB)", "Unlicensed 512K SRAM (64 KB)", "Unlicensed 1M SRAM (128 KB)" ]
+AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1008 KiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)" ]
 AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1032192, 65536, 131072 ]
 AGB_Global_CRC32 = 0
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
@@ -22,10 +22,10 @@ AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20
 
 DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
 DMG_Mapper_Types = { "None":[ 0x00 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x06 ], "MBC3":[ 0x10, 0x13 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "256M Multi Cart":[ 0x201 ], "Wisdom Tree":[ 0x202 ], "Xploder GB":[ 0x203 ], "Sachen":[ 0x204 ], "Datel Orbit V2":[ 0x205 ] }
-DMG_Header_ROM_Sizes = [ "32 KB", "64 KB", "128 KB", "256 KB", "512 KB", "1 MB", "2 MB", "4 MB", "8 MB", "16 MB", "32 MB" ]
+DMG_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000 ]
-DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KB)", "64K SRAM (8 KB)", "256K SRAM (32 KB)", "512K SRAM (64 KB)", "1M SRAM (128 KB)", "MBC6 SRAM+FLASH (1.03 MB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KB)", "Unlicensed 1M EEPROM (128 KB)" ]
+DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KiB)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)" ]
 DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203 ]
 DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000 ] # RAM size in bytes
 DMG_Header_SGB = { 0x00:'No support', 0x03:'Supported' }
@@ -50,9 +50,9 @@ class IniSettings():
 				if not os.path.isdir(os.path.dirname(path)):
 					os.makedirs(os.path.dirname(path))
 				if os.path.exists(path):
-					with open(path, "a+") as f: f.close()
+					with open(path, "a+", encoding="UTF-8") as f: f.close()
 				else:
-					with open(path, "w+") as f: f.close()
+					with open(path, "w+", encoding="UTF-8") as f: f.close()
 			except:
 				print("Error accessing the configuration directory or settings file.")
 				return
@@ -77,7 +77,7 @@ class IniSettings():
 	def Reload(self):
 		if self.SETTINGS is None: return
 		if self.FILENAME is not False:
-			with open(self.FILENAME, "r", encoding="utf-8") as f:
+			with open(self.FILENAME, "r", encoding="UTF-8") as f:
 				self.SETTINGS.read_file(f)
 		if len(self.SETTINGS.sections()) == 0:
 			self.SETTINGS.add_section(self.MAIN_SECTION)
@@ -98,7 +98,7 @@ class IniSettings():
 		self.SETTINGS[self.MAIN_SECTION][key] = value
 		dprint("Updating settings:", key, "=", value)
 		if self.FILENAME is not False:
-			with open(self.FILENAME, "w", encoding="utf-8") as f:
+			with open(self.FILENAME, "w", encoding="UTF-8") as f:
 				self.SETTINGS.write(f)
 	
 	def clear(self): self.Clear()
@@ -106,7 +106,7 @@ class IniSettings():
 		if self.SETTINGS is None: return None
 		self.SETTINGS.clear()
 		if self.FILENAME is not False:
-			with open(self.FILENAME, "w", encoding="utf-8") as f:
+			with open(self.FILENAME, "w", encoding="UTF-8") as f:
 				self.SETTINGS.write(f)
 
 class Progress():
@@ -292,16 +292,16 @@ def formatFileSize(size, asInt=False, roundUp=False):
 		val = size/1024
 		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} KB".format(int(val))
+			return "{:d} KiB".format(int(val))
 		else:
-			return "{:.1f} KB".format(val)
+			return "{:.1f} KiB".format(val)
 	else:
 		val = size/1024/1024
 		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} MB".format(int(val))
+			return "{:d} MiB".format(int(val))
 		else:
-			return "{:.2f} MB".format(val)
+			return "{:.2f} MiB".format(val)
 
 def formatProgressTimeShort(sec):
 	sec = sec % (24 * 3600)
@@ -505,7 +505,8 @@ def GetDumpReport(di, device):
 		"* Dump Time:       {timestamp:s}\n" \
 		"* Time Elapsed:    %TIME_ELAPSED% (%TRANSFER_RATE%)\n" \
 		"* Transfer Buffer: {buffer_size:d} bytes\n" \
-	.format(hardware=device.GetFullName(), firmware=device.GetFirmwareVersion(), software="{:s} {:s}".format(APPNAME, VERSION), platform=platform.platform(), buffer_size=di["transfer_size"], timestamp=di["timestamp"], baud_rate=device.GetBaudRate())
+		"* Retries:         {retries:d}\n" \
+	.format(hardware=device.GetFullName(), firmware=device.GetFirmwareVersion(), software="{:s} {:s}".format(APPNAME, VERSION), platform=platform.platform(), buffer_size=di["transfer_size"], timestamp=di["timestamp"], baud_rate=device.GetBaudRate(), retries=device.GetReadErrors())
 	
 	if mode == "DMG":
 		s += "" \
@@ -587,9 +588,34 @@ def GetDumpReport(di, device):
 			"* Target Platform: {hdr_target_platform:s}\n" \
 		.format(hdr_game_title=game_title, hdr_game_code=game_code, hdr_revision=str(di["header"]["version"]), hdr_sgb=di["hdr_sgb"], hdr_cgb=di["hdr_cgb"], hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], hdr_rom_checksum=di["hdr_rom_checksum"], hdr_rom_size=di["hdr_rom_size"], hdr_save_type=di["hdr_save_type"], hdr_mapper_type=di["hdr_mapper_type"], hdr_target_platform=di["hdr_target_platform"])
 		if "gbmem" in di and di["gbmem"] is not None:
-			s += "" \
-				"* Map Parameters:  {gbmem:s}\n" \
-			.format(gbmem=''.join(format(x, '02X') for x in di["gbmem"][:0x18]))
+			raw_data = ""
+			for i in range(0, 4):
+				raw_data += ''.join(format(x, '02X') for x in di["gbmem"][i*0x20:i*0x20+0x20]) + "\n                   "
+			raw_data = raw_data[:-20]
+			
+			if "gbmem_parsed" in di and len(di["gbmem_parsed"]) > 0:
+				s += "" \
+					"\n== GB-Memory Data ==\n" \
+					"* Game Code:       {game_code:s}\n" \
+					"* Game Title:      {title:s}\n" \
+					"* Write Timestamp: {timestamp:s}\n" \
+					"* Write Kiosk ID:  {kiosk_id:s}\n" \
+					"* Write Counter:   {write_count:d}\n" \
+					"* Cartridge Value: {cart_id:s}\n" \
+					"* Raw Map Data:    {raw_data:s}\n" \
+				.format(
+					game_code=di["gbmem_parsed"]["game_code"],
+					title=di["gbmem_parsed"]["title"],
+					timestamp=di["gbmem_parsed"]["timestamp"],
+					kiosk_id=di["gbmem_parsed"]["kiosk_id"],
+					cart_id=di["gbmem_parsed"]["cart_id"],
+					write_count=di["gbmem_parsed"]["write_count"],
+					raw_data=raw_data
+				)
+			else:
+				s += "" \
+					"* GB-Memory Data:  {:s}\n" \
+				.format(raw_data)
 	
 	if mode == "AGB":
 		di["header"]["game_code_raw"] = di["header"]["game_code_raw"].replace("\0", "␀")
@@ -717,4 +743,4 @@ def dprint(*args, **kwargs):
 	else:
 		global DEBUG_LOG
 		DEBUG_LOG.append(msg)
-		DEBUG_LOG = DEBUG_LOG[-10000:]
+		DEBUG_LOG = DEBUG_LOG[-16384:]

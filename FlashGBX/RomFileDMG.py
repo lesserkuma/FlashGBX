@@ -150,9 +150,11 @@ class RomFileDMG:
 
 			# GB Memory
 			if data["mapper_raw"] == 0x19 and data["game_title"] == "NP M-MENU MENU" and data["header_checksum"] == 0xD3:
+				data["rom_size_raw"] = 0x05
 				data["ram_size_raw"] = 0x04
 				data["mapper_raw"] = 0x105
 			elif data["mapper_raw"] == 0x01 and data["game_title"] == "DMG MULTI MENU " and data["header_checksum"] == 0x36:
+				data["rom_size_raw"] = 0x05
 				data["ram_size_raw"] = 0x04
 				data["mapper_raw"] = 0x105
 			

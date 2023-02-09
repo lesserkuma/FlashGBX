@@ -19,6 +19,7 @@
 	"write_pin":"AUDIO",
 	"chip_erase_timeout":90,
 	"sector_size":0x10000,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

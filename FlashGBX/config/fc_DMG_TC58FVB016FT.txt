@@ -3,11 +3,13 @@
 	"names":[
 		"SD007_T40_64BALL_TSOP28 with TC58FVB016FT-85",
 		"SD007_T40_64BALL_S71_TV_TS28 with TC58FVB016FT-85",
-		"SD007_T40_64BALL_SOJ28 with 29LV016T"
+		"SD007_T40_64BALL_SOJ28 with 29LV016T",
+		"SD007_T40_64BALL_TSOP28 with 29LV016T"
 	],
 	"flash_ids":[
 		[ 0x98, 0x45, 0x00, 0x2A ],
 		[ 0x98, 0x45, 0x00, 0x2A ],
+		[ 0x04, 0xC7, 0x00, 0x00 ],
 		[ 0x04, 0xC7, 0x00, 0x00 ]
 	],
 	"voltage":5,
@@ -20,6 +22,11 @@
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x90 ]
 		],
 		"chip_erase":[
 			[ 0x555, 0xA9 ],

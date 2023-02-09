@@ -33,7 +33,7 @@ def LoadConfig(args):
 	(config_version, fc_files) = ReadConfigFiles(args=args)
 	if config_version != Util.VERSION:
 		# Rename old files that have since been replaced/renamed/merged
-		deprecated_files = [ "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt", "fc_AGB_MX29LV640_AUDIO.txt", "fc_AGB_M36L0R7050T.txt", "fc_AGB_M36L0R8060B.txt", "fc_AGB_M36L0R8060T.txt", "fc_AGB_iG_32MB_S29GL512N.txt", "fc_DMG_SST39SF010_MBC1_AUDIO.txt", "fc_DMG_SST39SF040_MBC5_AUDIO.txt", "fc_DMG_AM29F010_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_WR.txt", "fc_DMG_AM29F080_MBC1_AUDIO.txt", "fc_DMG_AM29F080_MBC1_WR.txt", "fc_DMG_SST39SF040_MBC1_AUDIO.txt", "fc_DMG_SST39SF020_MBC1_AUDIO.txt" ]
+		deprecated_files = [ "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt", "fc_AGB_MX29LV640_AUDIO.txt", "fc_AGB_M36L0R7050T.txt", "fc_AGB_M36L0R8060B.txt", "fc_AGB_M36L0R8060T.txt", "fc_AGB_iG_32MB_S29GL512N.txt", "fc_DMG_SST39SF010_MBC1_AUDIO.txt", "fc_DMG_SST39SF040_MBC5_AUDIO.txt", "fc_DMG_AM29F010_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_WR.txt", "fc_DMG_AM29F080_MBC1_AUDIO.txt", "fc_DMG_AM29F080_MBC1_WR.txt", "fc_DMG_SST39SF040_MBC1_AUDIO.txt", "fc_DMG_SST39SF020_MBC1_AUDIO.txt", "fc_DMG_29LV016T.txt" ]
 		for file in deprecated_files:
 			if os.path.exists(config_path + "/" + file):
 				os.rename(config_path + "/" + file, config_path + "/" + file + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".bak")
@@ -175,9 +175,9 @@ def main(portableMode=False):
 		if app is None:
 			from . import FlashGBX_CLI
 			if args["argparsed"].action is None:
-				if exc is not None: print("{:s}{:s}{:s}".format(Util.ANSI.YELLOW, exc, Util.ANSI.RESET))
 				parser.print_help()
 				print("\n\n{:s}NOTE: GUI mode couldn’t be launched, but the application can be run in CLI mode.\n      Optional command line switches are explained above.{:s}\n".format(Util.ANSI.RED, Util.ANSI.RESET))
+				if exc is not None: print("{:s}{:s}{:s}".format(Util.ANSI.YELLOW, exc, Util.ANSI.RESET))
 			
 			print("Now running in CLI mode.\n")
 			app = FlashGBX_CLI.FlashGBX_CLI(args)

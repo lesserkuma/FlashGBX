@@ -105,6 +105,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with AM29F040
   - DIY cart with AM29F080
   - DIY cart with AT49F040
+  - DIY cart with HY29F800
   - DIY cart with M29F032D
   - DIY cart with MBM29F033C
   - DIY cart with MX29LV640
@@ -155,6 +156,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 36VF3204 and ALTERA CPLD (no PCB text)
   - DMG-DHCN-20 with MX29LV320ET
   - DMG-GBRW-20 with 29LV320ETMI-70G
+  - DRV with AM29LV160DB and ALTERA CPLD
   - ES29LV160_DRV with 29DL32TF-70
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
@@ -304,6 +306,7 @@ The author would like to thank the following very kind people for their help and
 - antPL (flash chip info)
 - bbsan (flash chip info)
 - BennVenn (unlicensed mapper reverse engineering)
+- ccs21 (flash chip info)
 - ClassicOldSong (bug reports)
 - crizzlycruz (flash chip info)
 - Därk (flash chip info)
@@ -341,6 +344,7 @@ The author would like to thank the following very kind people for their help and
 - joyrider3774 (flash chip info)
 - JS7457 (flash chip info)
 - julgr (macOS help, testing)
+- Kaede (flash chip info)
 - kscheel (bug reports)
 - kyokohunter (bug reports)
 - litlemoran (flash chip info)

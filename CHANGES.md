@@ -1,4 +1,11 @@
 # Release notes
+### v3.22 (released 2023-02-09)
+- Added support for DRV with AM29LV160DB and ALTERA CPLD *(thanks ccs21)*
+- Added support for DIY cart with HY29F800 *(thanks Kaede)*
+- Added more information to the dump report with Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN)
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums
+- Minor bug fixes and improvements
+
 ### v3.21 (released 2023-01-16)
 - Bundles GBxCart RW v1.4/v1.4a firmware version R39+L8 (adds support for insideGadgets WonderSwan and Game Gear flash carts)
 - Added support for SD007_48BALL_SOP28 with M29W320ET *(thanks DevDavisNunez)*
@@ -10,7 +17,7 @@
 - Allowed for switching between different Write Enable pins during chip erase and sector erase command sequences via a third parameter (“WR” or “AUDIO”) *(thanks ALXCO-Hardware for the suggestion)*
 - Added support for the Squareboi 4 MB (2× 2 MB) cart *(thanks ALXCO-Hardware)*
 - Added an option to limit the baud rate for GBxCart RW v1.4/v1.4a
-- Minor bug fixes and improvements *(thanks gboh, Grender and orangeglo)*
+- Minor bug fixes and improvements *(thanks gboh, Grender, orangeglo and marv17)*
 
 ### v3.20 (released 2022-11-30)
 - Bundles GBxCart RW v1.4/v1.4a firmware version R38+L8 (minor improvements)
@@ -83,7 +90,7 @@
 - Added support for the Datel Orbit V2 mapper (Action Replay and GameShark) *(thanks Jenetrix)*
 - Fixed verification with AA1030_TSOP88BALL with M36W0R603 *(thanks DevDavisNunez)*
 - Added support for SD007_TSOP_48BALL_V9 with 32M29EWB *(thanks marv17)*
-- Improved support for Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN) *(thanks kyokohunter)*
+- Improved support for Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN) *(thanks kyokohunter)*
 - Minor bug fixes and improvements
 
 ### v3.9 (released 2022-04-29)
@@ -107,7 +114,7 @@
 
 ### v3.7 (released 2022-03-31)
 - Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums (improves support for Classic NES Series, NES Classics and Famicom Mini cartridges)
-- When writing new ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN), hidden sector data will now be auto-generated if it’s not provided by the user in form of a .map file
+- When writing new ROMs to Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN), hidden sector data will now be auto-generated if it’s not provided by the user in form of a .map file
 - Erasing save data of Game Boy Advance cartridges with the 512K FLASH and 1M FLASH save types is now faster
 - Windows Setup Package: Updated the CH340/CH341 driver to the latest version (01/18/2022, 3.7.2022.01)
 - Fixed a bug introduced in v3.4 that broke writing ROMs to SD008-6810-V5 with MX29CL256FH cartridges
@@ -129,7 +136,7 @@
 - Added support for Flash Advance Card 64M with 28F640J3A120 *(thanks manuelcm1)*
 - Fixed a bug with writing ROMs to insideGadgets rumble cartridges on the GBxCart RW v1.3 hardware running the L1 firmware *(thanks DevDavisNunez)*
 - In GUI mode, flashable cartridges can now completely be wiped of their ROM data by not selecting any file when using the Write ROM feature *(thanks daidianren for the suggestion)*
-- Fixed a bug introduced in v3.4 with making a ROM backup of Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN)
+- Fixed a bug introduced in v3.4 with making a ROM backup of Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN)
 - Bundles GBxCart RW v1.4 firmware version R34+L5 (enables support for some more flash cartridges)
 - Added support for DIY cartridges with the AT49F040 flash chip for up to 512 KB of ROM data (requires at least GBxCart RW revision v1.4 and firmware version R34+L5) *(thanks Timville)*
 - Added support for the insideGadgets 512 KB flash cartridge (requires at least GBxCart RW revision v1.4 and firmware version R34+L5) *(thanks Timville and marv17)*
@@ -227,7 +234,7 @@
 
 ### v2.3 (released 2021-06-08)
 - Added support for AGB-E05-06L with 29LV128DBT2C-90Q *(thanks marv17)*
-- Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN) will now be unlocked properly even if they’re stuck in erase mode *(thanks Grender for testing)*
+- Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN) will now be unlocked properly even if they’re stuck in erase mode *(thanks Grender for testing)*
 - Confirmed support for SD007_TSOP_48BALL_V10 with GL032M10BFIR3 *(thanks Mr_V)*
 - Added support for 2006_TSOP_64BALL_6106 with W29GL128SH9B *(thanks marv17)*
 - Fixed support for insideGadgets 1 MB, 128 KB SRAM *(thanks AlexiG)*
@@ -265,7 +272,7 @@
 - Created a custom high compatibility firmware for GBxCart v1.3 and v1.4 devices, completely written from scratch
   - Version L1 for GBxCart RW v1.3
     - Works with all officially released Game Boy and Game Boy Advance cartridges including those with rare mappers, except cartridges that use memory cards and other external peripherals
-    - Supported mappers: MBC1, MBC2, MBC3, MBC30, MBC5, MBC6, MBC7, MBC1M, MMM01, GBD (Game Boy Camera), G-MMC1 (GB Memory), M161, HuC-1, HuC-3, TAMA5, DACS, 3D Memory (GBA Video)
+    - Supported mappers: MBC1, MBC2, MBC3, MBC30, MBC5, MBC6, MBC7, MBC1M, MMM01, GBD (Game Boy Camera), G-MMC1 (GB-Memory), M161, HuC-1, HuC-3, TAMA5, DACS, 3D Memory (GBA Video)
     - Enables support for a few more reproduction and flash cartridges including:
       - 4050M0Y0Q0-39VF512 with 4050M0Y0Q0
       - Development AGB Cartridge 128M Flash S, E201850
@@ -279,7 +286,7 @@
     - Same as above but already integrated into the official firmware of GBxCart RW v1.4
 - Added support for official cartridges with the MBC6 memory bank controller including its flash memory; tested with “Net de Get: Minigame @ 100” (CGB-BMVJ-JPN) *(thanks to endrift’s research at [gbdev](https://gbdev.gg8.se/forums/viewtopic.php?id=544))* (requires GBxCart RW firmware version L1+)
 - Previously preliminarily added mapper support including for MBC7 and GBA Video cartridges is now working (requires GBxCart RW firmware version L1+)
-- Added support for writing compilation ROMs to Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN); requires a .map file in the same directory as the ROM file; all this can be generated using orangeglo’s [GBNP ROM builder website](https://orangeglo.github.io/gbnp/index.html)
+- Added support for writing compilation ROMs to Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN); requires a .map file in the same directory as the ROM file; all this can be generated using orangeglo’s [GBNP ROM builder website](https://orangeglo.github.io/gbnp/index.html)
 - Confirmed support for GB-M968 with 29LV160DB *(thanks bbsan)*
 - Added support for ROM backup as well as save data backup and restore for 8M FLASH DACS cartridges; tested with “Hikaru no Go 3 – Joy Carry Cartridge” (AGB-GHTJ-JPN)
 - Confirmed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17)*
@@ -293,7 +300,7 @@
 - Fixed minor bugs
 
 ### v1.4.1 (released 2021-03-15)
-- Added ROM and map backup support for official Nintendo Power GB Memory Cartridges (DMG-MMSA-JPN); save data handling and ROM writing is not supported yet
+- Added ROM and map backup support for official Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN); save data handling and ROM writing is not supported yet
 - Added preliminary support for 4050M0Y0Q0-39VF512 with 4050M0Y0Q0 (requires a future firmware update of GBxCart RW)
 - Added preliminary support for official cartridges with the MBC7 memory bank controller; tested with “Korokoro Kirby” (CGB-KKKJ-JPN) (requires a future firmware update of GBxCart RW)
 - Added support for official cartridges with the M161 memory bank controller; tested with “Mani 4 in 1: Tetris + Alleyway + Yakuman + Tennis” (DMG-601CHN) (requires GBxCart RW firmware R26 or newer)

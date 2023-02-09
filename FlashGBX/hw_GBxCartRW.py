@@ -114,9 +114,10 @@ class GbxDevice:
 	SKIPPING = False
 	BAUDRATE = 1000000
 	MAX_BUFFER_LEN = 0x2000
-	DEVICE_TIMEOUT = 1
+	DEVICE_TIMEOUT = 0.5
 	WRITE_DELAY = False
-	
+	READ_ERRORS = 0
+
 	def __init__(self):
 		pass
 	
@@ -181,7 +182,7 @@ class GbxDevice:
 				#elif self.FW["fw_ver"] < self.DEVICE_MAX_FW:
 				#	conn_msg.append([1, "The GBxCart RW device on port " + ports[i] + " is running an older firmware version. Please consider updating to version L" + str(self.DEVICE_MAX_FW) + " to make use of the latest features.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
 				elif self.FW["fw_ver"] > self.DEVICE_MAX_FW:
-					conn_msg.append([0, "NOTE: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with, so errors may occur."])
+					conn_msg.append([0, "Note: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with, so errors may occur."])
 				
 				if (self.FW["pcb_ver"] not in (4, 5, 6, 101)): # only the v1.3, v1.4, v1.4a, Mini v1.1 PCB revisions are supported
 					dev.close()
@@ -206,7 +207,7 @@ class GbxDevice:
 					conn_msg.append([3, "A critical error occured while trying to access the GBxCart RW device on port " + ports[i] + ".\n\n" + str(e)])
 				continue
 		
-		#conn_msg.append([0, "NOTE: This is a third party tool for GBxCart RW by insideGadgets. Visit https://www.gbxcart.com/ for more information."])
+		#conn_msg.append([0, "Note: This is a third party tool for GBxCart RW by insideGadgets. Visit https://www.gbxcart.com/ for more information."])
 		return conn_msg
 	
 	def LoadFirmwareVersion(self):
@@ -403,6 +404,10 @@ class GbxDevice:
 		dprint("Setting Write Delay to", enable)
 		self.WRITE_DELAY = enable
 	
+	def SetTimeout(self, seconds=0.5):
+		self.DEVICE_TIMEOUT = seconds
+		self.DEVICE.timeout = self.DEVICE_TIMEOUT
+	
 	def wait_for_ack(self, values=None):
 		if values is None: values = [0x01, 0x03]
 		buffer = self._read(1)
@@ -449,6 +454,7 @@ class GbxDevice:
 		buffer = self.DEVICE.read(count)
 		if len(buffer) != count:
 			dprint("Warning: Received {:d} byte(s) instead of the expected {:d} byte(s)".format(len(buffer), count))
+			self.READ_ERRORS += 1
 			while self.DEVICE.in_waiting > 0:
 				self.DEVICE.reset_input_buffer()
 				time.sleep(0.5)
@@ -664,7 +670,7 @@ class GbxDevice:
 		elif self.MODE == "AGB":
 			if self.FW["pcb_ver"] in (5, 6, 101) and self.FW["fw_ver"] > 1:
 				self._write(self.DEVICE_CMD["AGB_BOOTUP_SEQUENCE"], wait=True)
-
+		
 		header = self.ReadROM(0, 0x180)
 		if Util.DEBUG:
 			with open("debug_header.bin", "wb") as f: f.write(header)
@@ -1800,6 +1806,9 @@ class GbxDevice:
 	
 	def GetDumpReport(self):
 		return Util.GetDumpReport(self.INFO["dump_info"], self)
+
+	def GetReadErrors(self):
+		return self.READ_ERRORS
 	
 	#################################################################
 	
@@ -2016,20 +2025,25 @@ class GbxDevice:
 					skip_init = True
 				
 				if len(temp) != buffer_len:
+					pos_temp = pos_total
 					if "verify_write" in args:
+						pos_temp += args["verify_base_pos"]
 						self.SetProgress({"action":"UPDATE_POS", "pos":args["verify_from"]+pos_total})
 					else:
 						self.SetProgress({"action":"UPDATE_POS", "pos":pos_total})
 					
+					err_text = "Note: Incomplete transfer detected. Resuming from 0x{:X}...".format(pos_temp)
 					if (max_length >> 1) < 64:
-						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}!".format(len(temp), buffer_len, pos_total))
+						dprint("Failed to receive 0x{:X} bytes from the device at position 0x{:X}.".format(buffer_len, pos_temp))
 						max_length = 64
 					elif lives > 18:
-						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}!".format(len(temp), buffer_len, pos_total))
+						dprint("Failed to receive 0x{:X} bytes from the device at position 0x{:X}.".format(buffer_len, pos_temp))
 					else:
-						dprint("Received 0x{:X} bytes instead of 0x{:X} bytes from the device at position 0x{:X}! Decreasing maximum transfer buffer size to 0x{:X}.".format(len(temp), buffer_len, pos_total, max_length >> 1))
+						dprint("Failed to receive 0x{:X} bytes from the device at position 0x{:X}. Decreasing maximum transfer buffer size to 0x{:X}.".format(buffer_len, pos_temp, max_length >> 1))
 						max_length >>= 1
 						self.MAX_BUFFER_LEN = max_length
+						err_text += "\nBuffer size adjusted to {:d} bytes...".format(max_length)
+					if ".dev" in Util.VERSION_PEP440 and not Util.DEBUG: print(err_text)
 					
 					self.INFO["dump_info"]["transfer_size"] = max_length
 					skip_init = False
@@ -2079,15 +2093,19 @@ class GbxDevice:
 		if "verify_write" in args:
 			return min(pos_total, len(args["verify_write"]))
 		
-		# Hidden sector (GB Memory)
-		if self.MODE == "DMG":
-			if len(args["path"]) > 0 and _mbc.HasHiddenSector():
-				file = open(os.path.splitext(args["path"])[0] + ".map", "wb")
-				temp = _mbc.ReadHiddenSector()
-				self.INFO["hidden_sector"] = temp
-				self.INFO["dump_info"]["gbmem"] = temp
-				file.write(temp)
-				file.close()
+		# Hidden sector (GB-Memory)
+		if self.MODE == "DMG" and len(args["path"]) > 0 and _mbc.HasHiddenSector():
+			file = open(os.path.splitext(args["path"])[0] + ".map", "wb")
+			temp = _mbc.ReadHiddenSector()
+			self.INFO["hidden_sector"] = temp
+			self.INFO["dump_info"]["gbmem"] = temp
+			self.INFO["dump_info"]["gbmem_parsed"] = (GBMemoryMap()).ParseMapData(buffer_map=temp, buffer_rom=buffer)
+			file.write(temp)
+			file.close()
+		else:
+			if "hidden_sector" in self.INFO: del(self.INFO["hidden_sector"])
+			if "gbmem" in self.INFO["dump_info"]: del(self.INFO["dump_info"]["gbmem"])
+			if "gbmem_parsed" in self.INFO["dump_info"]: del(self.INFO["dump_info"]["gbmem_parsed"])
 		
 		# Calculate Global Checksum
 		self.INFO["file_crc32"] = zlib.crc32(buffer) & 0xFFFFFFFF
@@ -2119,9 +2137,14 @@ class GbxDevice:
 			self.INFO["dump_info"]["agb_savelib"] = temp_ver
 			self.INFO["dump_info"]["agb_save_flash_id"] = None
 			if "FLASH" in temp_ver:
-				agb_save_flash_id = self.ReadFlashSaveID()
-				if agb_save_flash_id is not False and len(agb_save_flash_id) == 2:
-					self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
+				try:
+					agb_save_flash_id = self.ReadFlashSaveID()
+					if agb_save_flash_id is not False and len(agb_save_flash_id) == 2:
+						self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
+				except:
+					print("Error querying the flash save chip.")
+					self.DEVICE.reset_input_buffer()
+					self.DEVICE.reset_output_buffer()
 		
 		self.INFO["rom_checksum_calc"] = chk
 		
@@ -2267,7 +2290,7 @@ class GbxDevice:
 				self._cart_write(0, 0x50)
 				self._cart_write(0, 0xFF)
 				if flash_id != bytearray([ 0xB0, 0x00, 0x9F, 0x00 ]):
-					print("WARNING: Unknown DACS flash chip ID ({:s})".format(' '.join(format(x, '02X') for x in flash_id)))
+					print("Warning: Unknown DACS flash chip ID ({:s})".format(' '.join(format(x, '02X') for x in flash_id)))
 				buffer_len = 0x2000
 
 				# ↓↓↓ Load commands into firmware
@@ -2653,7 +2676,7 @@ class GbxDevice:
 		# Firmware check L2
 		if (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] < 3) and ("command_set" in cart_type and cart_type["command_set"] == "SHARP") and ("buffer_write" in cart_type["commands"]):
 			if self.FW["pcb_ver"] in (5, 6):
-				print("NOTE: Update your GBxCart RW firmware to version L3 or higher for a better transfer rate with this cartridge.")
+				print("Note: Update your GBxCart RW firmware to version L3 or higher for a better transfer rate with this cartridge.")
 			del(cart_type["commands"]["buffer_write"])
 		# Firmware check L2
 		# Firmware check L5
@@ -2662,7 +2685,7 @@ class GbxDevice:
 			return False
 		if (self.FW["pcb_ver"] not in (5, 6, 101) or self.FW["fw_ver"] < 5) and ("double_die" in cart_type and cart_type["double_die"] is True):
 			if self.FW["pcb_ver"] in (5, 6):
-				print("NOTE: Update your GBxCart RW firmware to version L5 or higher for a better transfer rate with this cartridge.")
+				print("Note: Update your GBxCart RW firmware to version L5 or higher for a better transfer rate with this cartridge.")
 			del(cart_type["commands"]["buffer_write"])
 		# Firmware check L5
 		# Firmware check L8
@@ -2681,28 +2704,6 @@ class GbxDevice:
 		
 		if cart_type["command_set"] == "GBMEMORY":
 			flashcart = Flashcart_DMG_MMSA(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, progress_fncptr=self.SetProgress)
-			if "buffer_map" not in args:
-				if os.path.exists(os.path.splitext(args["path"])[0] + ".map"):
-					with open(os.path.splitext(args["path"])[0] + ".map", "rb") as file: args["buffer_map"] = file.read()
-				else:
-					temp = data_import
-					if len(temp) == 0: temp = bytearray([0xFF] * 0x180)
-					try:
-						gbmem = GBMemoryMap(rom=temp)
-						args["buffer_map"] = gbmem.GetMapData()
-					except:
-						print("{:s}An error occured while trying to generate the hidden sector data for the NP GB Memory cartridge.{:s}".format(ANSI.RED, ANSI.RESET))
-					
-					if args["buffer_map"] is False:
-						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The NP GB Memory Cartridge requires extra hidden sector data. As it couldn’t be auto-generated, please provide your own at the following path: {:s}".format(os.path.splitext(args["path"])[0] + ".map"), "abortable":False})
-						return False
-					else:
-						dprint("Generated hidden sector data:", args["buffer_map"])
-						if Util.DEBUG:
-							with open("debug_mmsa_map.bin", "wb") as f: f.write(args["buffer_map"])
-			data_map_import = copy.copy(args["buffer_map"])
-			data_map_import = bytearray(data_map_import)
-			dprint("Hidden sector data loaded")
 		else:
 			flashcart = Flashcart(config=cart_type, cart_write_fncptr=self._cart_write, cart_write_fast_fncptr=self._cart_write_flash, cart_read_fncptr=self.ReadROM, cart_powercycle_fncptr=self.CartPowerCycle, progress_fncptr=self.SetProgress, set_we_pin_wr=self._set_we_pin_wr, set_we_pin_audio=self._set_we_pin_audio)
 		
@@ -2789,6 +2790,33 @@ class GbxDevice:
 				dprint("Pullups disabled")
 		# ↑↑↑ Flashcart configuration
 
+		# ↓↓↓ DMG-MMSA-JPN hidden sector
+		if self.MODE == "DMG" and _mbc.GetName() == "G-MMC1":
+			if "buffer_map" not in args:
+				if os.path.exists(os.path.splitext(args["path"])[0] + ".map"):
+					with open(os.path.splitext(args["path"])[0] + ".map", "rb") as file: args["buffer_map"] = file.read()
+				else:
+					temp = data_import
+					if len(temp) == 0: temp = bytearray([0xFF] * 0x180)
+					try:
+						gbmem = GBMemoryMap(rom=temp, oldmap=_mbc.ReadHiddenSector())
+						args["buffer_map"] = gbmem.GetMapData()
+					except Exception as e:
+						print("{:s}An error occured while trying to generate the hidden sector data for the NP GB-Memory cartridge.{:s}\n{:s}".format(ANSI.RED, ANSI.RESET, str(e)))
+						args["buffer_map"] = False
+					
+					if args["buffer_map"] is False:
+						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The NP GB-Memory Cartridge requires extra hidden sector data. As it couldn’t be auto-generated, please provide your own at the following path: {:s}".format(os.path.splitext(args["path"])[0] + ".map"), "abortable":False})
+						return False
+					else:
+						dprint("Generated hidden sector data:", args["buffer_map"])
+						if Util.DEBUG:
+							with open("debug_mmsa_map.bin", "wb") as f: f.write(args["buffer_map"])
+			data_map_import = copy.copy(args["buffer_map"])
+			data_map_import = bytearray(data_map_import)
+			dprint("Hidden sector data loaded")
+		# ↑↑↑ DMG-MMSA-JPN hidden sector
+
 		# ↓↓↓ Load commands into firmware
 		flash_cmds = []
 		command_set_type = flashcart.GetCommandSetType()
@@ -2810,7 +2838,7 @@ class GbxDevice:
 			dprint("Using Sharp/Intel command set")
 		elif command_set_type in ("GBMEMORY", "DMG-MBC5-32M-FLASH"):
 			temp = 0x00
-			dprint("Using GB Memory command set")
+			dprint("Using GB-Memory command set")
 		elif command_set_type in ("BLAZE_XPLODER", "DATEL_ORBITV2"):
 			temp = 0x00
 		else:
@@ -2824,7 +2852,7 @@ class GbxDevice:
 
 		if command_set_type == "GBMEMORY" and self.FW["pcb_ver"] not in (5, 6, 101):
 			self._set_fw_variable("FLASH_WE_PIN", 0x01)
-			dprint("Using GB Memory mode on GBxCart RW v1.3")
+			dprint("Using GB-Memory mode on GBxCart RW v1.3")
 		elif command_set_type == "DMG-MBC5-32M-FLASH":
 			self._set_fw_variable("FLASH_WE_PIN", 0x02)
 		else:
@@ -2843,7 +2871,7 @@ class GbxDevice:
 				dprint("Using Flash2Advance mode with a buffer of {:d} bytes".format(flash_buffer_size))
 			elif command_set_type == "GBMEMORY" and self.FW["pcb_ver"] in (5, 6, 101):
 				self._write(0x03) # FLASH_METHOD_DMG_MMSA
-				dprint("Using GB Memory mode on GBxCart RW v1.4")
+				dprint("Using GB-Memory mode on GBxCart RW v1.4")
 			elif flashcart.SupportsBufferWrite() and flash_buffer_size > 0:
 				self._write(0x02) # FLASH_METHOD_BUFFERED
 				flash_cmds = flashcart.GetCommands("buffer_write")
@@ -2926,7 +2954,7 @@ class GbxDevice:
 		if "flash_ids" in cart_type:
 			(verified, flash_id) = flashcart.VerifyFlashID()
 			if not verified:
-				print("NOTE: This cartridge’s Flash ID ({:s}) doesn’t match the cartridge type selection.".format(' '.join(format(x, '02X') for x in flash_id)))
+				print("Note: This cartridge’s Flash ID ({:s}) doesn’t match the cartridge type selection.".format(' '.join(format(x, '02X') for x in flash_id)))
 		# ↑↑↑ Read Flash ID
 		
 		# ↓↓↓ Read Sector Map
@@ -3247,6 +3275,7 @@ class GbxDevice:
 				if sector[0] >= len(data_import): break
 				verify_args = copy.copy(args)
 				verify_args.update({"verify_write":data_import[sector[0]:sector[0]+sector[1]], "rom_size":len(data_import), "verify_from":sector[0], "path":"", "rtc_area":flashcart.HasRTC(), "verify_mbc":_mbc})
+				verify_args["verify_base_pos"] = sector[0]
 				verify_args["verify_len"] = len(verify_args["verify_write"])
 				verify_args["rom_size"] = len(verify_args["verify_write"])
 				self.SetProgress({"action":"UPDATE_POS", "pos":sector[0]})
@@ -3298,6 +3327,7 @@ class GbxDevice:
 		self.ERROR = False
 		self.CANCEL = False
 		self.CANCEL_ARGS = {}
+		self.READ_ERRORS = 0
 		if self.IsConnected():
 			if self.FW["pcb_ver"] in (5, 6, 101):
 				self._write(self.DEVICE_CMD["OFW_CART_MODE"])

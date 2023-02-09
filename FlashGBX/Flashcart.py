@@ -42,10 +42,13 @@ class Flashcart:
 			self.DEFAULT_WE = config["write_pin"]
 	
 	def CartRead(self, address, length=0):
-		if length == 0:
-			if self.CONFIG["type"].upper() == "AGB":
+		if self.CONFIG["type"].upper() == "AGB":
+			if length % 2 == 1:
+				length += 1
+			if length == 0:
 				length = 2
-			else:
+		else:
+			if length == 0:
 				length = 1
 		return self.CART_READ_FNCPTR(address, length)
 	

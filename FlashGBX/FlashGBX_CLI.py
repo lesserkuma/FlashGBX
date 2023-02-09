@@ -252,7 +252,7 @@ class FlashGBX_CLI():
 				return
 			elif args["action"] == "PROGRESS":
 				# pv style progress status
-				prog_str = "{:s}/{:s} {:s} [{:s}KB/s] [{:s}] {:s}% ETA {:s} ".format(Util.formatFileSize(size=pos).replace(" ", "").replace("Bytes", "B").replace("Byte", "B").rjust(8), Util.formatFileSize(size=size).replace(" ", "").replace("Bytes", "B"), Util.formatProgressTimeShort(elapsed), "{:.2f}".format(speed).rjust(6), "%PROG_BAR%", "{:d}".format(int(pos/size*100)).rjust(3), Util.formatProgressTimeShort(left))
+				prog_str = "{:s}/{:s} {:s} [{:s}KiB/s] [{:s}] {:s}% ETA {:s} ".format(Util.formatFileSize(size=pos).replace(" ", "").replace("Bytes", "B").replace("Byte", "B").rjust(8), Util.formatFileSize(size=size).replace(" ", "").replace("Bytes", "B"), Util.formatProgressTimeShort(elapsed), "{:.2f}".format(speed).rjust(6), "%PROG_BAR%", "{:d}".format(int(pos/size*100)).rjust(3), Util.formatProgressTimeShort(left))
 				prog_width = shutil.get_terminal_size((80, 20))[0] - (len(prog_str) - 10)
 				progress = min(1, max(0, pos/size))
 				whole_width = math.floor(progress * prog_width)
@@ -274,7 +274,7 @@ class FlashGBX_CLI():
 		speed = None
 		if "time_start" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["time_start"] > 0:
 			time_elapsed = time.time() - self.PROGRESS.PROGRESS["time_start"]
-			speed = "{:.2f} KB/s".format((self.CONN.INFO["transferred"] / 1024.0) / time_elapsed)
+			speed = "{:.2f} KiB/s".format((self.CONN.INFO["transferred"] / 1024.0) / time_elapsed)
 			self.PROGRESS.PROGRESS["time_start"] = 0
 
 		if self.CONN.INFO["last_action"] == 4: # Flash ROM

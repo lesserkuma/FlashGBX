@@ -140,6 +140,7 @@ class GbxDevice:
 	FAST_READ = False
 	BAUDRATE = 1000000
 	WRITE_DELAY = False
+	READ_ERRORS = 0
 	
 	def __init__(self):
 		pass
@@ -223,7 +224,7 @@ class GbxDevice:
 					conn_msg.append([0, "{:s}Now running in Legacy Mode. You can install the optimized firmware version L1 in GUI mode from the “Tools” menu.{:s}".format(ANSI.YELLOW, ANSI.RESET)])
 
 				self.PORT = ports[i]
-				self.DEVICE.timeout = 1
+				self.DEVICE.timeout = 0.5
 				
 				# Load Flash Cartridge Handlers
 				self.UpdateFlashCarts(flashcarts)
@@ -414,6 +415,9 @@ class GbxDevice:
 	def SetWriteDelay(self, enable=True):
 		self.WRITE_DELAY = enable
 	
+	def SetTimeout(self, seconds=0.5):
+		self.DEVICE.timeout = seconds
+
 	def wait_for_ack(self):
 		buffer = self.read(1)
 		if buffer == False:
@@ -452,6 +456,7 @@ class GbxDevice:
 			if self.DEVICE.in_waiting > 1000: dprint("Recv buffer used: {:d} bytes".format(self.DEVICE.in_waiting))
 			buffer = self.DEVICE.read(readlen)
 			if len(buffer) != readlen:
+				self.READ_ERRORS += 1
 				dprint("Received {:d} byte(s) instead of the expected {:d} bytes during iteration {:d}.".format(len(buffer), readlen, i))
 				self.write('0') # end
 				time.sleep(0.5)
@@ -1214,7 +1219,10 @@ class GbxDevice:
 	
 	def GetDumpReport(self):
 		return Util.GetDumpReport(self.INFO["dump_info"], self)
-		
+
+	def GetReadErrors(self):
+		return self.READ_ERRORS
+	
 	#################################################################
 
 	def BackupROM(self, fncSetProgress=None, args=None):
@@ -1284,7 +1292,7 @@ class GbxDevice:
 		# Firmware check R26+
 		# Firmware check CFW
 		if ("agb_rom_size" in args and args["agb_rom_size"] > 32 * 1024 * 1024) or (self.MODE == "DMG" and "mbc" in args and not self.IsSupportedMbc(args["mbc"])) or (self.MODE == "AGB" and "dacs_8m" in self.INFO and self.INFO["dacs_8m"] is True): # 3D Memory
-			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please try a newer firmware version.".format(APPNAME, self.GetFullName()), "abortable":False})
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please try the dedicated insideGadgets software programs, try updating the firmware or upgrade to a new hardware revision.".format(APPNAME, self.GetFullName()), "abortable":False})
 			return False
 		# Firmware check CFW
 		
