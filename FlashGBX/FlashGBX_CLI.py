@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import datetime, shutil, platform, os, json, math, traceback, re, time, serial, zipfile, struct
+import datetime, shutil, platform, os, json, math, traceback, re, time, serial, zipfile
 try:
 	# pylint: disable=import-error
 	import readline
@@ -31,8 +31,8 @@ class FlashGBX_CLI():
 
 	def __init__(self, args):
 		self.ARGS = args
-		self.APP_PATH = args['app_path']
-		self.CONFIG_PATH = args['config_path']
+		Util.APP_PATH = args['app_path']
+		Util.CONFIG_PATH = args['config_path']
 		self.FLASHCARTS = args["flashcarts"]
 		self.PROGRESS = Util.Progress(self.UpdateProgress)
 		
@@ -53,7 +53,7 @@ class FlashGBX_CLI():
 				print("{:s}{:s}{:s}".format(ANSI.RED, config_ret[i][1], ANSI.RESET))
 		
 		args = self.ARGS["argparsed"]
-		config_path = Util.formatPathOS(self.CONFIG_PATH)
+		config_path = Util.formatPathOS(Util.CONFIG_PATH)
 		print("Configuration directory: {:s}\n".format(config_path))
 		
 		# Ask interactively if no args set
@@ -457,53 +457,7 @@ class FlashGBX_CLI():
 			else:
 				s += "Unknown (0x{:02X})\n".format(data['cgb'])
 
-			s += "Real Time Clock: "
-			if data['has_rtc']:
-				if 'rtc_buffer' in data:
-					try:
-						if data['mapper_raw'] == 0x10: # MBC3
-							rtc_s = data["rtc_buffer"][0x00]
-							rtc_m = data["rtc_buffer"][0x04]
-							rtc_h = data["rtc_buffer"][0x08]
-							rtc_d = (data["rtc_buffer"][0x0C] | data["rtc_buffer"][0x10] << 8) & 0x1FF
-							rtc_carry = ((data["rtc_buffer"][0x10] & 0x80) != 0)
-							if rtc_carry: rtc_d += 512
-							if rtc_h > 24 or rtc_m > 60 or rtc_s > 60:
-								s += "Invalid state"
-							else:
-								s += "{:d} days, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s)
-						elif data['mapper_raw'] == 0xFE: # HuC-3
-							rtc_buffer = struct.unpack("<I", data["rtc_buffer"][0:4])[0]
-							rtc_h = math.floor((rtc_buffer & 0xFFF) / 60)
-							rtc_m = (rtc_buffer & 0xFFF) % 60
-							rtc_d = (rtc_buffer >> 12) & 0xFFF
-							s += "{:d} days, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
-						elif data['mapper_raw'] == 0xFD: # TAMA5
-							seconds = Util.DecodeBCD(data["rtc_buffer"][0x00])
-							minutes = Util.DecodeBCD(data["rtc_buffer"][0x01])
-							hours = Util.DecodeBCD(data["rtc_buffer"][0x02])
-							#weekday = data["rtc_buffer"][0x03] & 0xF
-							days = Util.DecodeBCD(data["rtc_buffer"][0x03] >> 4 | (data["rtc_buffer"][0x04] & 0xF) << 4)
-							months = Util.DecodeBCD(data["rtc_buffer"][0x04] >> 4 | (data["rtc_buffer"][0x05] & 0xF) << 4)
-							years = Util.DecodeBCD(data["rtc_buffer"][0x05] >> 4 | (data["rtc_buffer"][0x06] & 0xF) << 4)
-							leap_year_state = Util.DecodeBCD(data["rtc_buffer"][0x0D] >> 4)
-							if leap_year_state == 0:
-								s += "Year {:d}*, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
-							else:
-								s += "Year {:d}, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
-					except:
-						s += "Unknown data"
-				else:
-					s += "OK"
-			else:
-				temp = "Not available"
-				if 'no_rtc_reason' in data:
-					if data["no_rtc_reason"] == -1:
-						temp = "Unknown"
-				if data['mapper_raw'] == 0xFD: # TAMA5
-					temp = "OK"
-				s += temp
-			s += "\n"
+			s += "Real Time Clock: " + data["rtc_string"] + "\n"
 
 			if data["logo_correct"]:
 				s += "Nintendo Logo:   OK\n"
@@ -558,34 +512,7 @@ class FlashGBX_CLI():
 			s += "Game Code:            {:s}\n".format(data["game_code"])
 			s += "Revision:             {:d}\n".format(data["version"])
 
-			s += "Real Time Clock:      "
-			if data['has_rtc']:
-				if 'rtc_buffer' in data:
-					try:
-						#weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-						rtc_y = (data["rtc_buffer"][0] & 0x0F) + ((data["rtc_buffer"][0] >> 4) * 10)
-						rtc_m = (data["rtc_buffer"][1] & 0x0F) + ((data["rtc_buffer"][1] >> 4) * 10)
-						rtc_d = (data["rtc_buffer"][2] & 0x0F) + ((data["rtc_buffer"][2] >> 4) * 10)
-						#rtc_w = (data["rtc_buffer"][3] & 0x0F) + ((data["rtc_buffer"][3] >> 4) * 10)
-						rtc_h = ((data["rtc_buffer"][4] & 0x0F) + (((data["rtc_buffer"][4] >> 4) & 0x7) * 10))
-						rtc_i = (data["rtc_buffer"][5] & 0x0F) + ((data["rtc_buffer"][5] >> 4) * 10)
-						rtc_s = (data["rtc_buffer"][6] & 0x0F) + ((data["rtc_buffer"][6] >> 4) * 10)
-						s += "20{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(rtc_y, rtc_m, rtc_d, rtc_h, rtc_i, rtc_s)
-					except:
-						s += "Unknown data"
-				else:
-					s += "Detected"
-			else:
-				if 'no_rtc_reason' in data:
-					if data['no_rtc_reason'] == 1:
-						s += "Not available / Battery dry"
-					elif data['no_rtc_reason'] == -1:
-						s += "Unknown"
-					else:
-						s += "Not available"
-				else:
-					s += "Not available"
-			s += "\n"
+			s += "Real Time Clock:      " + data["rtc_string"] + "\n"
 
 			if data["logo_correct"]:
 				s += "Nintendo Logo:        OK\n"
@@ -606,30 +533,20 @@ class FlashGBX_CLI():
 			
 			s += "ROM Checksum:         "
 			Util.AGB_Global_CRC32 = 0
-			db_agb_entry = None
-			if os.path.exists("{0:s}/db_AGB.json".format(self.CONFIG_PATH)):
-				with open("{0:s}/db_AGB.json".format(self.CONFIG_PATH), encoding="UTF-8") as f:
-					db_agb = f.read()
-					db_agb = json.loads(db_agb)
-					if data["header_sha1"] in db_agb.keys():
-						db_agb_entry = db_agb[data["header_sha1"]]
-					else:
-						s += "Not in database\n"
-			else:
-				s += "FAIL: Database for Game Boy Advance titles not found in {:s}/db_AGB.json\n".format(self.CONFIG_PATH)
-			
+			db_agb_entry = data["db"]
 			if db_agb_entry != None:
 				if data["rom_size_calc"] < 0x400000:
 					s += "In database (0x{:06X})\n".format(db_agb_entry['rc'])
 					Util.AGB_Global_CRC32 = db_agb_entry['rc']
 				s += "ROM Size:             {:d} MB\n".format(int(db_agb_entry['rs']/1024/1024))
 				data['rom_size'] = db_agb_entry['rs']
-			
 			elif data["rom_size"] != 0:
+				s += "Not in database\n"
 				if not data["rom_size"] in Util.AGB_Header_ROM_Sizes_Map:
 					data["rom_size"] = 0x2000000
 				s += "ROM Size:             {:d} MB\n".format(int(data["rom_size"]/1024/1024))
 			else:
+				s += "Not in database\n"
 				s += "ROM Size:             Not detected\n"
 				bad_read = True
 			
@@ -837,8 +754,11 @@ class FlashGBX_CLI():
 		try:
 			f = open(path, "ab+")
 			f.close()
-		except (PermissionError, FileNotFoundError):
-			print("{:s}Couldn’t access “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
+		except PermissionError:
+			print("{:s}Couldn’t access file “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
+			return
+		except FileNotFoundError:
+			print("{:s}Couldn’t find file “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
 			return
 		
 		s_mbc = ""
@@ -918,7 +838,7 @@ class FlashGBX_CLI():
 				return
 			elif cart_type < 0: return
 		elif cart_type == 0 and args.flashcart_type != "autodetect":
-			print("{:s}Couldn’t find the selected flash cartridge type “{:s}”. Please make sure the correct cartridge mode is selected and copy the exact name from the configuration files located in {:s}.{:s}".format(ANSI.RED, args.flashcart_type, self.CONFIG_PATH, ANSI.RESET))
+			print("{:s}Couldn’t find the selected flash cartridge type “{:s}”. Please make sure the correct cartridge mode is selected and copy the exact name from the configuration files located in {:s}.{:s}".format(ANSI.RED, args.flashcart_type, Util.CONFIG_PATH, ANSI.RESET))
 			return
 		
 		if args.path == "auto":
@@ -955,8 +875,11 @@ class FlashGBX_CLI():
 						print("Canceled.")
 						return
 
-		except (PermissionError, FileNotFoundError):
-			print("{:s}Couldn’t access file path “{:s}”.{:s}".format(ANSI.RED, args.path, ANSI.RESET))
+		except PermissionError:
+			print("{:s}Couldn’t access file “{:s}”.{:s}".format(ANSI.RED, args.path, ANSI.RESET))
+			return
+		except FileNotFoundError:
+			print("{:s}Couldn’t find file “{:s}”.{:s}".format(ANSI.RED, args.path, ANSI.RESET))
 			return
 		
 		override_voltage = False
@@ -1074,22 +997,22 @@ class FlashGBX_CLI():
 			if args.dmg_savesize == "auto":
 				try:
 					if header['mapper_raw'] == 0x06: # MBC2
-						save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[1]
+						save_type = 1
 					elif header['mapper_raw'] == 0x22 and header["game_title"] in ("KORO2 KIRBYKKKJ", "KIRBY TNT_KTNE"): # MBC7 Kirby
-						save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(0x101)]
+						save_type = 0x101
 					elif header['mapper_raw'] == 0x22 and header["game_title"] in ("CMASTER_KCEJ"): # MBC7 Command Master
-						save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(0x102)]
+						save_type = 0x102
 					elif header['mapper_raw'] == 0xFD: # TAMA5
-						save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(0x103)]
+						save_type = 0x103
 					elif header['mapper_raw'] == 0x20: # TAMA5
-						save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(0x104)]
+						save_type = 0x104
 					else:
-						save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(header['ram_size_raw'])]
+						save_type = header['ram_size_raw']
 				except:
 					save_type = 0x20000
 			else:
 				sizes = [ "auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m" ]
-				save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map[sizes.index(args.dmg_savesize)]
+				save_type = args.dmg_savesize
 
 			if save_type == 0:
 				print("{:s}Unable to auto-detect the save size. Please use the “--dmg-savesize” command line switch to manually select it.{:s}".format(ANSI.RED, ANSI.RESET))
@@ -1162,8 +1085,11 @@ class FlashGBX_CLI():
 			elif args.action == "restore-save":
 				f = open(path, "rb+")
 				f.close()
-		except (PermissionError, FileNotFoundError):
-			print("{:s}Couldn’t access “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
+		except PermissionError:
+			print("{:s}Couldn’t access file “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
+			return
+		except FileNotFoundError:
+			print("{:s}Couldn’t find file “{:s}”.{:s}".format(ANSI.RED, path, ANSI.RESET))
 			return
 		
 		print("")
@@ -1178,18 +1104,18 @@ class FlashGBX_CLI():
 			self.ARGS["debug"] = True
 
 			print("Making a backup of the original save data.")
-			ret = self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
+			ret = self.CONN.TransferData(args={ 'mode':2, 'path':Util.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			if ret is False: return False
 			time.sleep(0.1)
 			print("Writing random data.")
-			test2 = bytearray(os.urandom(os.path.getsize(self.CONFIG_PATH + "/test1.bin")))
-			with open(self.CONFIG_PATH + "/test2.bin", "wb") as f: f.write(test2)
-			self.CONN.TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test2.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
+			test2 = bytearray(os.urandom(os.path.getsize(Util.CONFIG_PATH + "/test1.bin")))
+			with open(Util.CONFIG_PATH + "/test2.bin", "wb") as f: f.write(test2)
+			self.CONN.TransferData(args={ 'mode':3, 'path':Util.CONFIG_PATH + "/test2.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			print("Reading back and comparing data.")
-			self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test3.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':2, 'path':Util.CONFIG_PATH + "/test3.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
-			with open(self.CONFIG_PATH + "/test3.bin", "rb") as f: test3 = bytearray(f.read())
+			with open(Util.CONFIG_PATH + "/test3.bin", "rb") as f: test3 = bytearray(f.read())
 			if self.CONN.CanPowerCycleCart():
 				print("\nPower cycling.")
 				for _ in range(0, 5):
@@ -1198,17 +1124,18 @@ class FlashGBX_CLI():
 				self.CONN.ReadInfo(checkRtc=False)
 			time.sleep(0.2)
 			print("\nReading back and comparing data again.")
-			self.CONN.TransferData(args={ 'mode':2, 'path':self.CONFIG_PATH + "/test4.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':2, 'path':Util.CONFIG_PATH + "/test4.bin", 'mbc':mbc, 'save_type':save_type }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
-			with open(self.CONFIG_PATH + "/test4.bin", "rb") as f: test4 = bytearray(f.read())
+			with open(Util.CONFIG_PATH + "/test4.bin", "rb") as f: test4 = bytearray(f.read())
 			print("Restoring original save data.")
-			self.CONN.TransferData(args={ 'mode':3, 'path':self.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':3, 'path':Util.CONFIG_PATH + "/test1.bin", 'mbc':mbc, 'save_type':save_type, 'erase':False }, signal=self.PROGRESS.SetProgress)
 			time.sleep(0.1)
 			
 			if mbc == 6:
 				for i in range(0, len(test2)):
 					test2[i] &= 0x0F
 					test3[i] &= 0x0F
+					test4[i] &= 0x0F
 			
 			if test2 != test4:
 				diffcount = 0
@@ -1238,22 +1165,22 @@ class FlashGBX_CLI():
 					found_length = len(test2) - found_offset
 				
 				if self.CONN.GetMode() == "DMG":
-					print("\n{:s}Done! The writable save data size is {:s} out of {:s} checked.{:s}".format(ANSI.GREEN, Util.formatFileSize(found_length), Util.formatFileSize(save_type), ANSI.RESET))
+					print("\n{:s}Done! The writable save data size is {:s} out of {:s} checked.{:s}".format(ANSI.GREEN, Util.formatFileSize(found_length), Util.formatFileSize(Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(save_type)]), ANSI.RESET))
 				elif self.CONN.GetMode() == "AGB":
 					print("\n{:s}Done! The writable save data size using save type “{:s}” is {:s}.{:s}".format(ANSI.GREEN, Util.AGB_Header_Save_Types[save_type], Util.formatFileSize(found_length), ANSI.RESET))
 			
 			try:
 				(_, _, cfi) = self.CONN.CheckFlashChip(limitVoltage=False)
 				if len(cfi["raw"]) > 0:
-					with open(self.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi["raw"])
+					with open(Util.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi["raw"])
 					print("CFI data was extracted to “cfi.bin”.")
 			except:
 				pass
 
-			os.unlink(self.CONFIG_PATH + "/test1.bin")
-			os.unlink(self.CONFIG_PATH + "/test2.bin")
-			os.unlink(self.CONFIG_PATH + "/test3.bin")
-			os.unlink(self.CONFIG_PATH + "/test4.bin")
+			os.unlink(Util.CONFIG_PATH + "/test1.bin")
+			os.unlink(Util.CONFIG_PATH + "/test2.bin")
+			os.unlink(Util.CONFIG_PATH + "/test3.bin")
+			os.unlink(Util.CONFIG_PATH + "/test4.bin")
 
 	def UpdateFirmwareGBxCartRW_PrintText(self, text, enableUI=False, setProgress=None):
 		if setProgress is not None:
@@ -1273,10 +1200,10 @@ class FlashGBX_CLI():
 		print("")
 		if answer == "1":
 			device_name = "v1.4"
-			file_name = self.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip"
+			file_name = Util.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip"
 		elif answer == "2":
 			device_name = "v1.4a"
-			file_name = self.APP_PATH + "/res/fw_GBxCart_RW_v1_4a.zip"
+			file_name = Util.APP_PATH + "/res/fw_GBxCart_RW_v1_4a.zip"
 		else:
 			print("Canceled.")
 			return

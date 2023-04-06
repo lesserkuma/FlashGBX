@@ -16,12 +16,11 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 - Decode and extract Game Boy Camera photos from save data
 - Generate ROM dump reports for game preservation purposes
 - Update firmware of most insideGadgets GBxCart RW devices
+- Delta flashing support, useful for development by writing only differences between two ROMs (if named `rom.gba` and `rom.delta.gba`)
 
-### Confirmed working reader/writer hardware and firmware versions
+### Compatible cartridge reader/writer hardware
 
-- [insideGadgets GBxCart RW v1.3 and v1.4](https://www.gbxcart.com/) (other hardware revisions may also work, but are untested)
-  - insideGadgets’ firmware version R31
-  - Lesserkuma’s firmware versions L1 to L8
+- [insideGadgets GBxCart RW](https://www.gbxcart.com/) (tested with v1.3 and v1.4)
 
 ## Installing and running
 
@@ -100,7 +99,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - BUNG Doctor GB Card 64M
   - Catskull 32k Gameboy Flash Cart
   - DIY cart with AM29F010
-  - DIY cart with AM29F016
+  - DIY cart with AM29F016/29F016
   - DIY cart with AM29F032
   - DIY cart with AM29F040
   - DIY cart with AM29F080
@@ -136,8 +135,10 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Development AGB Cartridge 64M Flash S, E201843
   - Development AGB Cartridge 128M Flash S, E201850
   - Development AGB Cartridge 256M Flash S, E201868
+  - Flash Advance Pro 256M
   - Flash2Advance 128M (with 2× 28F640J3A120)
   - Flash2Advance 256M (with 2× 28F128J3A150)
+  - Flash2Advance Ultra 2G (with 4× 4400L0Y0Q0)
   - Flash2Advance Ultra 64M (with 2× 28F320C3B)
   - Flash2Advance Ultra 256M (with 8× 3204C3B100)
   - Flash Advance Card 64M (with 28F640J3A120)
@@ -288,104 +289,18 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
+* Note that FlashGBX is not designed to be used with feature-stripped clone hardware such as the license-violating “FLASH&nbsp;BOY” series devices. These will not work as intended and have a considerable risk of causing damage as seen [here](https://flashboycyclone.online/).
+
 ## Miscellaneous
 
 * To use your own frame around extracted Game Boy Camera pictures, place a file called `pc_frame.png` (must be at least 160×144 pixels) into the configuration directory. (GUI mode only)
 
 ## Thanks
 
-The author would like to thank the following very kind people for their help and contributions (in alphabetical order):
+The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-- 2358 (bug reports)
-- 90sFlav (flash chip info)
-- AcoVanConis (bug reports, flash chip info)
-- ALXCO-Hardware (feature suggestions)
-- AdmirtheSableye (bug reports)
-- AlexiG (GBxCart RW hardware, bug reports, flash chip info)
-- AndehX (app icon, flash chip info)
-- antPL (flash chip info)
-- bbsan (flash chip info)
-- BennVenn (unlicensed mapper reverse engineering)
-- ccs21 (flash chip info)
-- ClassicOldSong (bug reports)
-- crizzlycruz (flash chip info)
-- Därk (flash chip info)
-- Davidish (flash chip info)
-- DevDavisNunez (bug reports)
-- Diddy_Kong (sample cartridge contribution)
-- djedditt (testing, sample cartridge contribution)
-- Dr-InSide (bug reports)
-- dyf2007 (flash chip info)
-- easthighNerd (feature suggestions)
-- EchelonPrime (flash chip info)
-- edo999 (flash chip info)
-- EmperorOfTigers (bug reports, flash chip info)
-- endrift (research, mGBA emulator)
-- ethanstrax (flash chip info)
-- eveningmoose (flash chip info)
-- Falknör (bug reports)
-- FerrantePescara (flash chip info)
-- frarees (bug reports)
-- Frost Clock (flash chip info)
-- gboh (bug reports)
-- gekkio (bug reports, technical information)
-- Godan (flash chip info)
-- Grender (testing)
-- HDR (testing)
-- Herax (flash chip info)
-- Hiccup (help with dump reports)
-- hiks (flash chip info)
-- howie0210 (flash chip info, bug reports)
-- iamevn (flash chip info)
-- Icesythe7 (feature suggestions, testing, bug reports)
-- Jayro (flash chip info)
-- Jenetrix (sample cartridge contribution)
-- JFox (help with properly packaging the app for pip, Linux help, bug reports)
-- joyrider3774 (flash chip info)
-- JS7457 (flash chip info)
-- julgr (macOS help, testing)
-- Kaede (flash chip info)
-- kscheel (bug reports)
-- kyokohunter (bug reports)
-- litlemoran (flash chip info)
-- LovelyA72 (flash chip info)
-- Luca DS (flash chip info)
-- LucentW (flash chip info, testing, bug reports)
-- manuelcm1 (flash chip info)
-- marv17 (flash chip info, testing, bug reports, feature suggestions)
-- Mr_V (flash chip info, testing)
-- orangeglo (GB Memory Cartridge samples, bug reports)
-- paarongiroux (bug reports)
-- Paradoxical (flash chip info)
-- Rairch (bug reports)
-- Raphaël BOICHOT (feature suggestions)
-- redalchemy (bug reports, flash chip info)
-- RetroGorek (flash chip info)
-- RevZ (Linux help, testing, bug reports, flash chip info)
-- s1cp (flash chip info)
-- Satumox (bug reports)
-- Sgt.DoudouMiel (flash chip info)
-- Shinichi999 (bug reports)
-- Sithdown (flash chip info)
-- skite2001 (flash chip info)
-- Smelly-Ghost (testing)
-- Stitch (flash chip info)
-- Super Maker (flash chip info, testing)
-- Tauwasser (research)
-- t5b6_de (flash chip info)
-- Timville (sample cartridge contribution, flash chip info)
-- twitnic (flash chip info)
-- velipso (bug reports)
-- Veund (flash chip info)
-- voltagex (bug reports)
-- Voultar (bug reports, feature suggestions)
-- Wkr (flash chip info)
-- x7l7j8cc (flash chip info)
-- xactoes (testing)
-- Zeii (flash chip info)
-- Zelante (flash chip info)
-- zvxr (flash chip info)
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, crizzlycruz, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kscheel, kyokohunter, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, metroid-maniac, Mr_V, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, Shinichi999, sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, Timville, twitnic, velipso, Veund, voltagex, Voultar, Wkr, x7l7j8cc, xactoes, Zeii, Zelante, zvxr
 
 ## DISCLAIMER
 
-This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!
+This software is being developed by Lesserkuma as a hobby project. There is no direct afflilation with insideGadgets or Nintendo. This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!

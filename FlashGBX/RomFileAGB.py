@@ -2,13 +2,14 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import hashlib, re, zlib, string
-from .Util import dprint
+import hashlib, re, zlib, string, os, json
+from . import Util
 
 class RomFileAGB:
 	ROMFILE_PATH = None
 	ROMFILE = bytearray()
-	
+	DATA = None
+
 	def __init__(self, file=None):
 		if isinstance(file, str):
 			self.ROMFILE_PATH = file
@@ -50,7 +51,6 @@ class RomFileAGB:
 		nocart_hashes.append(bytearray([ 0x46, 0x86, 0xE3, 0x81, 0xB2, 0x4A, 0x2D, 0xB0, 0x7D, 0xE8, 0x3D, 0x45, 0x2F, 0xA3, 0x1E, 0x8A, 0x04, 0x4B, 0x3A, 0x50 ])) # Method 2
 		data["empty_nocart"] = hash in nocart_hashes
 		data["empty"] = (buffer[0x04:0xA0] == bytearray([buffer[0x04]] * 0x9C)) or data["empty_nocart"]
-		# dprint("Hash: 0x{:s} -- Is Empty?".format((' '.join(format(x, '02X') for x in hash).replace(" ", ", 0x"))), data["empty_nocart"])
 		if data["empty_nocart"]: buffer = bytearray([0x00] * len(buffer))
 		data["logo_correct"] = hashlib.sha1(buffer[0x04:0xA0]).digest() == bytearray([ 0x17, 0xDA, 0xA0, 0xFE, 0xC0, 0x2F, 0xC3, 0x3C, 0x0F, 0x6A, 0xBB, 0x54, 0x9A, 0x8B, 0x80, 0xB6, 0x61, 0x3B, 0x48, 0xEE ])
 		data["game_title_raw"] = bytearray(buffer[0xA0:0xAC]).decode("ascii", "replace")
@@ -74,7 +74,10 @@ class RomFileAGB:
 		data["header_checksum"] = int(buffer[0xBD])
 		data["header_checksum_calc"] = self.CalcChecksumHeader()
 		data["header_checksum_correct"] = data["header_checksum"] == data["header_checksum_calc"]
-		data["header_sha1"] = hashlib.sha1(buffer[0x00:0xC0]).hexdigest()
+		if len(game_code) == 4 and game_code[0] == "M":
+			data["header_sha1"] = hashlib.sha1(buffer[0x0:0x100]).hexdigest()
+		else:
+			data["header_sha1"] = hashlib.sha1(buffer[0x0:0x180]).hexdigest()
 		data["version"] = int(buffer[0xBC])
 		data["96h_correct"] = (buffer[0xB2] == 0x96)
 		data["rom_checksum_calc"] = self.CalcChecksumGlobal()
@@ -99,4 +102,19 @@ class RomFileAGB:
 		if (data["game_title"] == "NGC-HIKARU3" and data["game_code"] == "GHTJ" and data["header_checksum"] == 0xB3):
 			data["dacs_8m"] = True
 		
+		self.DATA = data
+		data["db"] = self.GetDatabaseEntry()
 		return data
+
+	def GetDatabaseEntry(self):
+		data = self.DATA
+		db_entry = None
+		if os.path.exists("{0:s}/db_AGB.json".format(Util.CONFIG_PATH)):
+			with open("{0:s}/db_AGB.json".format(Util.CONFIG_PATH), encoding="UTF-8") as f:
+				db = f.read()
+				db = json.loads(db)
+				if data["header_sha1"] in db.keys():
+					db_entry = db[data["header_sha1"]]
+		else:
+			print("FAIL: Database for Game Boy Advance titles not found at {0:s}/db_AGB.json".format(Util.CONFIG_PATH))
+		return db_entry

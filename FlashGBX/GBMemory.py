@@ -140,7 +140,6 @@ class GBMemoryMap:
 
 			self.MAP_DATA[0x00:0x7E] = bytearray([0xFF] * 0x7E)
 			self.MAP_DATA[0x6E:0x70] = bytearray([0x00] * 2)
-			#self.MAP_DATA[0x70:0x78] = struct.pack("=8s", "{:s}".format(Util.VERSION_PEP440).encode("ascii").ljust(8, b'\xFF'))
 			self.MAP_DATA[0x7E:0x80] = bytearray([0x00] * 2)
 			self.MAP_DATA[0:3] = struct.pack(">I", data["map"]["raw"])[:3]
 			self.MAP_DATA[0x18:0x18+len(data["menu"]["raw"])] = data["menu"]["raw"]
@@ -216,7 +215,6 @@ class GBMemoryMap:
 			
 			self.MAP_DATA[0x00:0x7E] = bytearray([0xFF] * 0x7E)
 			self.MAP_DATA[0x6E:0x70] = bytearray([0x00] * 2)
-			#self.MAP_DATA[0x70:0x78] = struct.pack("=8s", "{:s}".format(Util.VERSION_PEP440).encode("ascii").ljust(8, b'\xFF'))
 			self.MAP_DATA[0x7E:0x80] = bytearray([0x00] * 2)
 			for i in range(0, len(menu_items)):
 				pos = i * 3

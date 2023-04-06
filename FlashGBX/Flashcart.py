@@ -22,15 +22,15 @@ class Flashcart:
 	CFI = None
 	LAST_SR = 0x00
 
-	def __init__(self, config=None, cart_write_fncptr=None, cart_write_fast_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, progress_fncptr=None, set_we_pin_wr=None, set_we_pin_audio=None):
+	def __init__(self, config=None, fncptr=None):
 		if config is None: config = {}
-		self.CART_WRITE_FNCPTR = cart_write_fncptr
-		self.CART_WRITE_FAST_FNCPTR = cart_write_fast_fncptr
-		self.CART_READ_FNCPTR = cart_read_fncptr
-		self.CART_POWERCYCLE_FNCPTR = cart_powercycle_fncptr
-		self.PROGRESS_FNCPTR = progress_fncptr
-		self.SET_WE_PIN_WR = set_we_pin_wr
-		self.SET_WE_PIN_AUDIO = set_we_pin_audio
+		self.CART_WRITE_FNCPTR = fncptr["cart_write_fncptr"]
+		self.CART_WRITE_FAST_FNCPTR = fncptr["cart_write_fast_fncptr"]
+		self.CART_READ_FNCPTR = fncptr["cart_read_fncptr"]
+		self.CART_POWERCYCLE_FNCPTR = fncptr["cart_powercycle_fncptr"]
+		self.PROGRESS_FNCPTR = fncptr["progress_fncptr"]
+		self.SET_WE_PIN_WR = fncptr["set_we_pin_wr"]
+		self.SET_WE_PIN_AUDIO = fncptr["set_we_pin_audio"]
 		self.CONFIG = config
 		if "command_set" in config:
 			self.CONFIG["_command_set"] = config["command_set"]
@@ -54,7 +54,7 @@ class Flashcart:
 	
 	def CartWrite(self, commands, fast_write=True, sram=False):
 		if "command_set" in self.CONFIG and self.CONFIG["command_set"] in ("GBMEMORY", "DMG-MBC5-32M-FLASH"): fast_write = False
-		dprint(commands, fast_write, sram)
+		#dprint(commands, fast_write, sram)
 		if fast_write and not sram:
 			self.CART_WRITE_FAST_FNCPTR(commands, flashcart=True)
 		else:
@@ -188,29 +188,46 @@ class Flashcart:
 			self.CartWrite(self.CONFIG["commands"]["reset"])
 			time.sleep(0.001)
 	
-	def VerifyFlashID(self):
-		if "read_identifier" not in self.CONFIG["commands"]: return (False, [])
-		if len(self.CONFIG["flash_ids"]) == 0: return (False, [])
-		if "power_cycle" in self.CONFIG and self.CONFIG["power_cycle"] is True:
+	def _VerifyFlashID(self, config):
+		if "read_identifier" not in config["commands"]: return (False, [])
+		if len(config["flash_ids"]) == 0: return (False, [])
+		if "power_cycle" in config and config["power_cycle"] is True:
 			self.CART_POWERCYCLE_FNCPTR()
 		self.Reset()
-		rom = list(self.CartRead(0, len(self.CONFIG["flash_ids"][0])))
+		rom = list(self.CartRead(0, len(config["flash_ids"][0])))
 		self.Unlock()
-		self.CartWrite(self.CONFIG["commands"]["read_identifier"])
+		self.CartWrite(config["commands"]["read_identifier"])
 		time.sleep(0.001)
 		read_identifier_at = 0
-		if "read_identifier_at" in self.CONFIG: read_identifier_at = self.CONFIG["read_identifier_at"]
-		cart_flash_id = list(self.CartRead(read_identifier_at, len(self.CONFIG["flash_ids"][0])))
+		if "read_identifier_at" in config: read_identifier_at = config["read_identifier_at"]
+		cart_flash_id = list(self.CartRead(read_identifier_at, len(config["flash_ids"][0])))
 		self.Reset()
-		dprint(self.CONFIG["names"], self.CONFIG["commands"]["read_identifier"])
+		dprint(config["names"], config["commands"]["read_identifier"])
 		dprint("Flash ID: {:s}".format(' '.join(format(x, '02X') for x in cart_flash_id)))
 		verified = True
 		if (rom == cart_flash_id):
 			dprint("ROM data matched Flash ID response.")
 			verified = False
-		elif cart_flash_id not in self.CONFIG["flash_ids"]:
+		elif cart_flash_id not in config["flash_ids"]:
 			dprint("This Flash ID does not exist in flashcart handler file.")
 			verified = False
+		return (verified, cart_flash_id)
+
+	def VerifyFlashID(self):
+		if "flash_ids_banks" in self.CONFIG:
+			cart_flash_ids = []
+			for i in range(0, len(self.CONFIG["flash_ids_banks"])):
+				self.SelectBankROM(i)
+				config = copy.copy(self.CONFIG)
+				config["flash_ids"] = [ self.CONFIG["flash_ids_banks"][i] ]
+				del(config["flash_ids_banks"])
+				(verified, cart_flash_id) = self._VerifyFlashID(config)
+				cart_flash_ids.append(cart_flash_id)
+				if not verified: return (verified, cart_flash_id)
+			cart_flash_id = cart_flash_ids[0]
+			self.SelectBankROM(0)
+		else:
+			(verified, cart_flash_id) = self._VerifyFlashID(self.CONFIG)
 		return (verified, cart_flash_id)
 	
 	def ReadCFI(self):
@@ -252,12 +269,8 @@ class Flashcart:
 				size = region[0]
 				count = region[1]
 				for _ in range(0, count):
-					# offsets.append([ pos, math.floor(pos / rom_bank_size) ])
 					offsets.append([ pos, size ])
 					pos += size
-			# for i in range(0, len(offsets)):
-			# 	#print(hex(offsets[i][0]), hex(offsets[i][1]))
-			# 	print(hex(offsets[i]))
 		else:
 			while pos < rom_size:
 				offsets.append([ pos, regions ])
@@ -334,7 +347,7 @@ class Flashcart:
 									self.SET_WE_PIN_WR()
 								elif self.DEFAULT_WE == "AUDIO":
 									self.SET_WE_PIN_AUDIO()
-
+					
 					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
 					self.LAST_SR = wait_for
@@ -409,7 +422,6 @@ class Flashcart:
 					temp = self.CartRead(addr, 2)
 					if len(temp) != 2:
 						dprint("Communication error in SectorErase():", temp)
-						#self.PROGRESS_FNCPTR({"info_type":"msgbox_critical", "info_msg":"A critical communication error occured during sector erase. Please avoid passive USB hubs, try different USB ports/cables and re-connect the device."})
 						return False
 					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
 					self.LAST_SR = wait_for
@@ -444,6 +456,17 @@ class Flashcart:
 		if self.CONFIG["flash_bank_select_type"] == 1:
 			dprint(self.GetName(), "|", index)
 			self.CartWrite([[2, index << 4]], sram=True)
+			return True
+		elif self.CONFIG["flash_bank_select_type"] == 2: # Flash2Advance Ultra
+			bank1 = 0 if index < 4 else 0x10
+			bank2 = index % 4 * 0x400
+			self.CartWrite([[0x987654*2, 0x5354]], fast_write=False)
+			self.CartWrite([[0xE12345*2, 0xA55A]], fast_write=False)
+			self.CartWrite([[6, bank1]], fast_write=False, sram=True)
+			self.CartWrite([[0x987654*2, 0x5354]], fast_write=False)
+			self.CartWrite([[0xB5AC97*2, bank2]], fast_write=False)
+			self.CartWrite([[0x987654*2, 0x5354]], fast_write=False)
+			self.CartWrite([[0xF12345*2, 0x9413]], fast_write=False)
 			return True
 		
 		return False
@@ -576,7 +599,6 @@ class CFI:
 			if pos >= info['device_size']:
 				pos = 0
 				oversize = True
-		#s += "\nSHA-1: {:s}".format(info["sha1"])
 		info["info"] = s
 
 		return info
@@ -659,7 +681,6 @@ class Flashcart_DMG_MMSA(Flashcart):
 		if lives == 0:
 			self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing the hidden sector timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
 			return False
-			#raise("Hidden Sector Erase Timeout Error")
 		
 		# Write Hidden Sector
 		cmds = [
@@ -796,7 +817,6 @@ class Flashcart_DMG_MMSA(Flashcart):
 		if lives == 0:
 			self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing the flash chip timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
 			return False
-			#raise Exception("Chip Erase Timeout Error")
 
 		# Reset flash to read mode
 		cmds = [

@@ -1,4 +1,19 @@
 # Release notes
+### v3.23 (released 2023-04-06)
+- Bundles GBxCart RW v1.4/v1.4a firmware version R40+L8 (Game Boy Camera flash cart fix on insideGadgets software, Pokémon Mini support on insideGadgets software, fixes a problem with reading GBA Video cartridges and other minor improvements)
+- Confirmed support for Flash Advance Pro 256M *(thanks Erba Verde)*
+- Added support for Flash2Advance Ultra 2G with 4× 4400L0Y0Q0
+- Added support for DIY cart with Fujitsu-branded 29F016 *(thanks sillyhatday)*
+- Save data is now read twice if the extra data verification option is enabled
+- Added a save chip stress test feature, can be used to detect a dry SRAM battery or bad soldering
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums and also added a database for Game Boy and Game Boy Color titles
+- No-Intro-style file names are now enabled by default when creating backups (e.g. `Pocket Monsters Gin (Japan) (Rev 1) (SGB Enhanced) (GB Compatible).gbc` instead of `POKEMON_SLV_AAXJ-1.gbc`) (GUI-mode only)
+- Now supports Batteryless SRAM save data backup and restore for Game Boy Advance reproduction cartridges (GUI-mode only) *(thanks BennVenn, metroid-maniac)*
+- Improved support for the BennVenn MBC3000 RTC cart; can now write the entire 8 MiB *(thanks BennVenn)*
+- Fixed a problem with forward-adjusting the Real Time Clock from Game Boy Advance save data files *(thanks Smelly-Ghost)*
+- Windows Setup Package: Updated the CH340/CH341 driver to the latest version (02/11/2023, 3.8.2023.02)
+- Minor bug fixes and improvements
+
 ### v3.22 (released 2023-02-09)
 - Added support for DRV with AM29LV160DB and ALTERA CPLD *(thanks ccs21)*
 - Added support for DIY cart with HY29F800 *(thanks Kaede)*
@@ -380,7 +395,7 @@
 - Fixed config files for MSP55LV128 and MSP55LV128M flash chips
 - Confirmed support for SD007_48BALL_64M_V6 with 36VF3204
 - Confirmed support for SD007_TSOP_48BALL with 36VF3204
-- Added the option to add date and time to suggested filenames for save data backups *(thanks easthighNerd for the suggestion)*
+- Added the option to add date and time to suggested file names for save data backups *(thanks easthighNerd for the suggestion)*
 - Added a check and warning for unstable ROM readings
 - Added Common Flash Interface query for both unknown and known flash cartridge types
 - Added support for 36L0R8-39VF512 with M36L0R8060B *(thanks LucentW)*

@@ -1,7 +1,8 @@
 {
 	"type":"AGB",
 	"names":[
-		"Flash2Advance 256M with 2× 28F128J3A150"
+		"Flash2Advance 256M with 2× 28F128J3A150",
+		"Flash Advance Pro 256M with 2× 28F128J3A150"
 	],
 	"flash_ids":[
 		[ 0x89, 0x00, 0x89, 0x00, 0x18, 0x00, 0x18, 0x00 ]

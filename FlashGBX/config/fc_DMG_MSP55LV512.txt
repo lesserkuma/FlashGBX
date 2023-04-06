@@ -15,7 +15,6 @@
 	"first_bank":1,
 	"sector_size":0x10000,
 	"reset_every":0x800000,
-	"power_cycle":true,
 	"mbc":0x201,
 	"write_pin":"WR",
 	"command_set":"AMD",

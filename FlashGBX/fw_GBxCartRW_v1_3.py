@@ -295,11 +295,13 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		lives = 10
 		buffer = bytearray()
 
+		msgWarnBadResponse = "Failed to update your GBxCart RW {:s} ({:s})!\n\nThe firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ Note that FlashGBX is not designed to be used with feature-stripped clone hardware such as the license-violating “FLASH&nbsp;BOY” series devices. These will not work as intended and have a considerable risk of causing damage.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>")
+
 		fncSetStatus(text="Status: Waiting for bootloader...", setProgress=0)
 		if self.ResetAVR(delay) is False:
 			fncSetStatus(text="Status: Bootloader error.", enableUI=True)
 			self.prgStatus.setValue(0)
-			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX – Firmware Updater for GBxCart RW {:s}".format(self.PCB_VER), text="Failed updating your GBxCart RW {:s} ({:s})!\n\nThe firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ For safety reasons and to avoid potential fire hazards, do not use this software with unauthorized clone hardware that has no electrical fuses, such as the “FLASH&nbsp;BOY” series.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX {:s} – Firmware Updater for GBxCart RW {:s}".format(Util.VERSION, self.PCB_VER), text=msgWarnBadResponse, standardButtons=QtWidgets.QMessageBox.Ok)
 			answer = msgbox.exec()
 			return 2
 		
@@ -327,13 +329,13 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 				fncSetStatus("Status: Waiting for bootloader... (+{:d}ms)".format(math.ceil(delay * 1000)))
 				if self.ResetAVR(delay) is False:
 					fncSetStatus(text="Status: Bootloader error.", enableUI=True)
-					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX – Firmware Updater for GBxCart RW {:s}".format(self.PCB_VER), text="Failed updating your GBxCart RW {:s} ({:s})!\n\nThe firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ For safety reasons and to avoid potential fire hazards, do not use this software with unauthorized clone hardware that has no electrical fuses, such as the “FLASH&nbsp;BOY” series.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX {:s} – Firmware Updater for GBxCart RW {:s}".format(Util.VERSION, self.PCB_VER), text=msgWarnBadResponse, standardButtons=QtWidgets.QMessageBox.Ok)
 					answer = msgbox.exec()
 					return 2
 				lives -= 1
 				if lives < 0:
 					fncSetStatus(text="Status: Bootloader timeout.", enableUI=True)
-					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX – Firmware Updater for GBxCart RW {:s}".format(self.PCB_VER), text="Failed updating your GBxCart RW {:s} ({:s})!\n\nThe firmware update was not successful as the GBxCart RW bootloader is not responding. If it doesn’t work even after multiple retries, please use the insideGadgets standalone firmware updater instead.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX {:s} – Firmware Updater for GBxCart RW {:s}".format(Util.VERSION, self.PCB_VER), text=msgWarnBadResponse, standardButtons=QtWidgets.QMessageBox.Ok)
 					answer = msgbox.exec()
 					return 2
 				continue

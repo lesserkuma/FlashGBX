@@ -20,6 +20,7 @@ class DMG_MBC:
 	CURRENT_ROM_BANK = 0
 	CURRENT_FLASH_BANK = 0
 	START_BANK = 0
+	RTC_BUFFER = None
 
 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
 		if args is None: args = {}
@@ -124,6 +125,9 @@ class DMG_MBC:
 	def GetROMSize(self):
 		return self.ROM_BANK_SIZE * self.ROM_BANK_NUM
 	
+	def GetMaxROMSize(self):
+		return 32*1024
+
 	def CalcChecksum(self, buffer):
 		chk = 0
 		for i in range(0, len(buffer), 2):
@@ -144,10 +148,18 @@ class DMG_MBC:
 	
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
-		commands = [
-			[ 0x2100, index & 0xFF ]
-		]
+		if index == 0 or index >= 256:
+			commands = [
+				[ 0x3000, ((index >> 8) & 0xFF) ],
+				[ 0x2100, index & 0xFF ],
+			]
+		else:
+			commands = [
+				[ 0x2100, index & 0xFF ],
+			]
+		
 		start_address = 0 if index == 0 else 0x4000
+
 		self.CartWrite(commands)
 		return (start_address, self.ROM_BANK_SIZE)
 	
@@ -186,6 +198,9 @@ class DMG_MBC:
 	
 	def WriteRTC(self, buffer, advance=False):
 		pass
+
+	def GetRTCString(self):
+		return "Not available"
 
 	def ResetBeforeBankChange(self, index):
 		return False
@@ -226,12 +241,18 @@ class DMG_MBC1(DMG_MBC):
 		self.CartWrite(commands)
 		return (start_address, self.ROM_BANK_SIZE)
 
+	def GetMaxROMSize(self):
+		return 2*1024*1024
+
 class DMG_MBC2(DMG_MBC):
 	def GetName(self):
 		return "MBC2"
 
 	def SelectBankRAM(self, index):
 		return (0, self.RAM_BANK_SIZE)
+
+	def GetMaxROMSize(self):
+		return 256*1024
 
 class DMG_MBC3(DMG_MBC):
 	def GetName(self):
@@ -258,13 +279,14 @@ class DMG_MBC3(DMG_MBC):
 			self.CLK_TOGGLE_FNCPTR(60)
 			self.CartWrite([ [0x4000, i] ])
 			data = self.CartRead(0xA000, 0x800)
+			if len(data) == 0: return False
 			if data[0] in (0, 0xFF): continue
 			skipped = False
 			if data != bytearray([data[0]] * 0x800):
 				dprint("No RTC because whole bank is not the same value", data[0])
 				skipped = True
 				break
-
+		
 		self.EnableRAM(enable=False)
 		self.CartWrite([ [0x4000, 0] ])
 		return skipped is False
@@ -300,6 +322,7 @@ class DMG_MBC3(DMG_MBC):
 		
 		self.EnableRAM(enable=False)
 		self.CartWrite([ [0x4000, 0] ])
+		self.RTC_BUFFER = buffer
 		return buffer
 
 	def WriteRTC(self, buffer, advance=False):
@@ -390,6 +413,36 @@ class DMG_MBC3(DMG_MBC):
 
 		self.CartWrite([ [0x4000, 0] ])
 		self.EnableRAM(enable=False)
+	
+	def GetRTCString(self):
+		s = ""
+		if self.RTC_BUFFER is None:
+			self.ReadRTC()
+		rtc_buffer = self.RTC_BUFFER
+
+		rtc_s = rtc_buffer[0x00]
+		rtc_m = rtc_buffer[0x04]
+		rtc_h = rtc_buffer[0x08]
+		rtc_d = (rtc_buffer[0x0C] | rtc_buffer[0x10] << 8) & 0x1FF
+		rtc_carry = ((rtc_buffer[0x10] & 0x80) != 0)
+		if rtc_carry: rtc_d += 512
+		if rtc_h > 24 or rtc_m > 60 or rtc_s > 60:
+			try:
+				dprint("Invalid RTC state: {:d} days, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s))
+			except:
+				pass
+			s = "Invalid state"
+		elif rtc_h == 0 and rtc_m == 0 and rtc_s == 0 and rtc_d == 0 and rtc_carry == 0:
+			s = "Not available"
+		else:
+			if rtc_d == 1:
+				s = "{:d} day, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s)
+			else:
+				s = "{:d} days, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s)
+		return s
+
+	def GetMaxROMSize(self):
+		return 4*1024*1024
 
 class DMG_MBC5(DMG_MBC):
 	def GetName(self):
@@ -409,22 +462,25 @@ class DMG_MBC5(DMG_MBC):
 			]
 		self.CartWrite(commands)
 	
-	def SelectBankROM(self, index):
-		dprint(self.GetName(), "|", index)
-		if index == 0 or index >= 256:
-			commands = [
-				[ 0x2100, index & 0xFF ],
-				[ 0x3000, ((index >> 8) & 0xFF) ],
-			]
-		else:
-			commands = [
-				[ 0x2100, index & 0xFF ],
-			]
+	# def SelectBankROM(self, index):
+	# 	dprint(self.GetName(), "|", index)
+	# 	if index == 0 or index >= 256:
+	# 		commands = [
+	# 			[ 0x3000, ((index >> 8) & 0xFF) ],
+	# 			[ 0x2100, index & 0xFF ],
+	# 		]
+	# 	else:
+	# 		commands = [
+	# 			[ 0x2100, index & 0xFF ],
+	# 		]
 		
-		start_address = 0 if index == 0 else 0x4000
+	# 	start_address = 0 if index == 0 else 0x4000
 
-		self.CartWrite(commands)
-		return (start_address, self.ROM_BANK_SIZE)
+	# 	self.CartWrite(commands)
+	# 	return (start_address, self.ROM_BANK_SIZE)
+	
+	def GetMaxROMSize(self):
+		return 8*1024*1024
 
 class DMG_MBC6(DMG_MBC):
 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
@@ -537,6 +593,9 @@ class DMG_MBC6(DMG_MBC):
 		self.SelectBankROM(self.CURRENT_ROM_BANK)
 		return flash_id
 
+	def GetMaxROMSize(self):
+		return 1*1024*1024
+
 class DMG_MBC7(DMG_MBC):
 	def GetName(self):
 		return "MBC7"
@@ -551,6 +610,9 @@ class DMG_MBC7(DMG_MBC):
 			[ 0x4000, 0x40 ]
 		]
 		self.CartWrite(commands)
+
+	def GetMaxROMSize(self):
+		return 4*1024*1024
 
 class DMG_MBC1M(DMG_MBC1):
 	def GetName(self):
@@ -567,6 +629,9 @@ class DMG_MBC1M(DMG_MBC1):
 
 		self.CartWrite(commands)
 		return (start_address, self.ROM_BANK_SIZE)
+
+	def GetMaxROMSize(self):
+		return 1*1024*1024
 
 class DMG_MMM01(DMG_MBC):
 	def GetName(self):
@@ -609,9 +674,15 @@ class DMG_MMM01(DMG_MBC):
 		self.CartWrite(commands)
 		return (start_address, self.ROM_BANK_SIZE)
 
+	def GetMaxROMSize(self):
+		return 1*1024*1024
+
 class DMG_GBD(DMG_MBC5):
 	def GetName(self):
 		return "GBD"
+
+	def GetMaxROMSize(self):
+		return 1*1024*1024
 
 class DMG_GMMC1(DMG_MBC5):
 	def GetName(self):
@@ -748,6 +819,9 @@ class DMG_GMMC1(DMG_MBC5):
 		else:
 			return super().CalcChecksum(buffer=buffer)
 
+	def GetMaxROMSize(self):
+		return 1*1024*1024
+
 class DMG_M161(DMG_MBC):
 	def GetName(self):
 		return "M161"
@@ -760,9 +834,6 @@ class DMG_M161(DMG_MBC):
 	def ResetBeforeBankChange(self, index):
 		return True
 	
-	#def GetROMSize(self):
-	#	return self.ROM_BANK_SIZE * math.floor(self.ROM_BANK_NUM / 2)
-
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
 		commands = [
@@ -770,6 +841,9 @@ class DMG_M161(DMG_MBC):
 		]
 		self.CartWrite(commands)
 		return (0, 0x8000)
+
+	def GetMaxROMSize(self):
+		return 256*1024
 
 class DMG_HuC1(DMG_MBC5):
 	def GetName(self):
@@ -781,6 +855,9 @@ class DMG_HuC1(DMG_MBC5):
 			[ 0x0000, 0x0A if enable else 0x0E ]
 		]
 		self.CartWrite(commands)
+
+	def GetMaxROMSize(self):
+		return 1*1024*1024
 
 class DMG_HuC3(DMG_MBC):
 	def GetName(self):
@@ -799,6 +876,10 @@ class DMG_HuC3(DMG_MBC):
 			[ 0xA000, 0x60 ],
 			[ 0x0000, 0x0D ],
 			[ 0xA000, 0xFE ],
+		]
+		self.CartWrite(commands)
+		time.sleep(0.01)
+		commands = [
 			[ 0x0000, 0x0C ],
 			[ 0x0000, 0x00 ],
 
@@ -806,10 +887,14 @@ class DMG_HuC3(DMG_MBC):
 			[ 0xA000, 0x40 ],
 			[ 0x0000, 0x0D ],
 			[ 0xA000, 0xFE ],
+		]
+		self.CartWrite(commands)
+		time.sleep(0.01)
+		commands = [
 			[ 0x0000, 0x0C ],
 			[ 0x0000, 0x00 ]
 		]
-		self.CartWrite(commands, delay=0.01)
+		self.CartWrite(commands)
 
 		rtc = 0
 		for i in range(0, 6):
@@ -818,9 +903,13 @@ class DMG_HuC3(DMG_MBC):
 				[ 0xA000, 0x10 ],
 				[ 0x0000, 0x0D ],
 				[ 0xA000, 0xFE ],
+			]
+			self.CartWrite(commands)
+			time.sleep(0.01)
+			commands = [
 				[ 0x0000, 0x0C ]
 			]
-			self.CartWrite(commands, delay=0.01)
+			self.CartWrite(commands)
 			rtc |= (self.CartRead(0xA000) & 0x0F) << (i * 4)
 			self.CartWrite([[ 0x0000, 0x00 ]], delay=0.01)
 		
@@ -832,14 +921,15 @@ class DMG_HuC3(DMG_MBC):
 		
 		#dstr = ' '.join(format(x, '02X') for x in buffer)
 		#dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
-
+		
+		self.RTC_BUFFER = buffer
 		return buffer
 
 	def WriteRTC(self, buffer, advance=False):
 		if advance:
 			try:
 				dt_now = datetime.datetime.fromtimestamp(time.time())
-				print(buffer)
+				dprint(buffer)
 				if buffer == bytearray([0x00] * len(buffer)): # Reset
 					hours = 0
 					minutes = 0
@@ -929,6 +1019,21 @@ class DMG_HuC3(DMG_MBC):
 		dstr = ' '.join(format(x, '02X') for x in buffer)
 		dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
 	
+	def GetRTCString(self):
+		if self.RTC_BUFFER is None:
+			self.ReadRTC()
+		rtc_buffer = struct.unpack("<I", self.RTC_BUFFER[0:4])[0]
+		rtc_h = math.floor((rtc_buffer & 0xFFF) / 60)
+		rtc_m = (rtc_buffer & 0xFFF) % 60
+		rtc_d = (rtc_buffer >> 12) & 0xFFF
+		if rtc_d == 1:
+			return "{:d} day, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
+		else:
+			return "{:d} days, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
+
+	def GetMaxROMSize(self):
+		return 2*1024*1024
+	
 class DMG_TAMA5(DMG_MBC):
 	def GetName(self):
 		return "TAMA5"
@@ -1011,6 +1116,7 @@ class DMG_TAMA5(DMG_MBC):
 		self.CartWrite(commands, sram=True)
 		self.SelectBankROM(0)
 
+		self.RTC_BUFFER = buffer
 		return buffer
 
 	def WriteRTC(self, buffer, advance=False):
@@ -1145,11 +1251,32 @@ class DMG_TAMA5(DMG_MBC):
 					value2 = value1
 					value1 = self.CartRead(0xA000)
 
+	def GetRTCString(self):
+		if self.RTC_BUFFER is None:
+			self.ReadRTC()
+		rtc_buffer = self.RTC_BUFFER
+		seconds = Util.DecodeBCD(rtc_buffer[0x00])
+		minutes = Util.DecodeBCD(rtc_buffer[0x01])
+		hours = Util.DecodeBCD(rtc_buffer[0x02])
+		#weekday = rtc_buffer[0x03] & 0xF
+		days = Util.DecodeBCD(rtc_buffer[0x03] >> 4 | (rtc_buffer[0x04] & 0xF) << 4)
+		months = Util.DecodeBCD(rtc_buffer[0x04] >> 4 | (rtc_buffer[0x05] & 0xF) << 4)
+		years = Util.DecodeBCD(rtc_buffer[0x05] >> 4 | (rtc_buffer[0x06] & 0xF) << 4)
+		leap_year_state = Util.DecodeBCD(rtc_buffer[0x0D] >> 4)
+		if leap_year_state == 0:
+			return "Year {:d}*, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
+		else:
+			return "Year {:d}, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
+	
+
 	def ReadWithCSPulse(self):
 		return False
 
 	def WriteWithCSPulse(self):
 		return True
+
+	def GetMaxROMSize(self):
+		return 512*1024
 
 class DMG_Unlicensed_256M(DMG_MBC5):
 	def GetName(self):
@@ -1175,15 +1302,14 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|SelectBankROM()|", index)
 
-		#if index % 512 == 0 or abs(self.CURRENT_ROM_BANK - index) > 1:
 		if (index % 512 == 0) or (self.CURRENT_FLASH_BANK != math.floor(index / 512)):
 			self.SelectBankFlash(index)
 		self.CURRENT_ROM_BANK = index
 		index = index % 512
 
 		commands = [
-			[ 0x2100, index & 0xFF ],
 			[ 0x3000, ((index >> 8) & 0xFF) ],
+			[ 0x2100, index & 0xFF ],
 		]
 		
 		start_address = 0 if index == 0 else 0x4000
@@ -1216,6 +1342,9 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 
 		return (start_address, self.RAM_BANK_SIZE)
 
+	def GetMaxROMSize(self):
+		return 32*1024*1024
+
 class DMG_Unlicensed_WisdomTree(DMG_MBC):
 	def GetName(self):
 		return "Wisdom Tree"
@@ -1232,6 +1361,9 @@ class DMG_Unlicensed_WisdomTree(DMG_MBC):
 		]
 		self.CartWrite(commands)
 		return (0, 0x8000)
+
+	def GetMaxROMSize(self):
+		return 2*1024*1024
 
 class DMG_Unlicensed_XploderGB(DMG_MBC):
 	def GetName(self):
@@ -1258,6 +1390,9 @@ class DMG_Unlicensed_XploderGB(DMG_MBC):
 			self.CartRead(0x0102, 1)
 		return self.SelectBankROM(index + 8)
 
+	def GetMaxROMSize(self):
+		return 128*1024
+
 class DMG_Unlicensed_Sachen(DMG_MBC):
 	def GetName(self):
 		return "Sachen"
@@ -1270,6 +1405,9 @@ class DMG_Unlicensed_Sachen(DMG_MBC):
 		self.CartWrite(commands)
 		start_address = 0x4000
 		return (start_address, self.ROM_BANK_SIZE)
+
+	def GetMaxROMSize(self):
+		return 2*1024*1024
 
 class DMG_Unlicensed_DatelOrbitV2(DMG_MBC):
 	def GetName(self):
@@ -1290,12 +1428,16 @@ class DMG_Unlicensed_DatelOrbitV2(DMG_MBC):
 		start_address = 0x4000
 		return (start_address, self.ROM_BANK_SIZE)
 
+	def GetMaxROMSize(self):
+		return 128*1024
+
 
 class AGB_GPIO:
 	CART_WRITE_FNCPTR = None
 	CART_READ_FNCPTR = None
 	CLK_TOGGLE_FNCPTR = None
 	RTC = False
+	RTC_BUFFER = None
 
 	# Addresses
 	GPIO_REG_DAT = 0xC4 # Data
@@ -1476,9 +1618,11 @@ class AGB_GPIO:
 		# "27 days, 06:51:55"
 		#[07] 00 01 27 05 06 52 18
 		#     YY MM DD WW HH MM SS
+		self.RTC_BUFFER = buffer
 		return buffer
 	
 	def WriteRTC(self, buffer, advance=False):
+		rtc_status = None
 		if advance:
 			try:
 				dt_now = datetime.datetime.fromtimestamp(time.time())
@@ -1506,7 +1650,7 @@ class AGB_GPIO:
 					timestamp_now = int(time.time())
 					if timestamp_then < timestamp_now:
 						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
-						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(years + 2000, months % 12, days % 31, hours % 60, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
+						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(years + 2000, months % 13, days % 32, hours % 60, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
 						rd = relativedelta(dt_now, dt_then)
 						dt_new = dt_buffer + rd
 						years = dt_new.year - 2000
@@ -1552,5 +1696,32 @@ class AGB_GPIO:
 			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
 		])
 
-		self.RTCWriteStatus(rtc_status)
+		if rtc_status is not None:
+			self.RTCWriteStatus(rtc_status)
 
+	def GetRTCString(self):
+		has_rtc = self.HasRTC()
+		if has_rtc is not True:
+			if has_rtc is False:
+				return "Not available"
+			elif has_rtc == 1:
+				return "Not available / Battery dry"
+			elif has_rtc == 3:
+				return "Not available"
+		
+		if self.RTC_BUFFER is None:
+			self.ReadRTC()
+		rtc_buffer = self.RTC_BUFFER
+		#weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+		rtc_y = (rtc_buffer[0] & 0x0F) + ((rtc_buffer[0] >> 4) * 10)
+		rtc_m = (rtc_buffer[1] & 0x0F) + ((rtc_buffer[1] >> 4) * 10)
+		rtc_d = (rtc_buffer[2] & 0x0F) + ((rtc_buffer[2] >> 4) * 10)
+		#rtc_w = (rtc_buffer[3] & 0x0F) + ((rtc_buffer[3] >> 4) * 10)
+		rtc_h = ((rtc_buffer[4] & 0x0F) + (((rtc_buffer[4] >> 4) & 0x7) * 10))
+		rtc_i = (rtc_buffer[5] & 0x0F) + ((rtc_buffer[5] >> 4) * 10)
+		rtc_s = (rtc_buffer[6] & 0x0F) + ((rtc_buffer[6] >> 4) * 10)
+
+		if rtc_y == 0 and rtc_m == 0 and rtc_d == 0 and rtc_h == 0 and rtc_i == 0 and rtc_s == 0:
+			return "Not available"
+		else:
+			return "20{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(rtc_y, rtc_m, rtc_d, rtc_h, rtc_i, rtc_s)

@@ -14,7 +14,6 @@
 	"mbc":0x203,
 	"write_pin":"WR",
 	"read_identifier_at":0x4000,
-	"power_cycle":true,
 	"sector_size":0x4000,
 	"command_set":"BLAZE_XPLODER",
 	"commands":{

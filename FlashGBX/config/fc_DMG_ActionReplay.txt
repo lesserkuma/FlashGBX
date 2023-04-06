@@ -15,10 +15,6 @@
 	"write_pin":"WR",
 	"chip_erase_timeout":10,
 	"read_identifier_at":0x4000,
-	"_first_bank":2,
-	"_flash_commands_on_bank_1":true,
-	"_power_cycle":true,
-	"_sector_size":0x1000,
 	"command_set":"DATEL_ORBITV2",
 	"commands":{
 		"reset":[

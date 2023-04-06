@@ -82,7 +82,6 @@ def main(portableMode=False):
 	
 	print("{:s} {:s} by Lesserkuma".format(Util.APPNAME, Util.VERSION))
 	print("https://github.com/lesserkuma/FlashGBX")
-	#print("\nDISCLAIMER: This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!")
 	
 	if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 		app_path = os.path.dirname(sys.executable)

@@ -175,13 +175,8 @@ class GbxDevice:
 						self.DEVICE = None
 						self.BAUDRATE = 1000000
 						return False
+				
 				elif len(self.FW) > 0 and self.FW[1] == 5 and self.BAUDRATE < 1700000 and max_baud >= 1700000:
-					# Switch to higher baud rate
-					#self.set_mode(self.DEVICE_CMD["USART_1_7M_SPEED"])
-					#self.BAUDRATE = 1700000
-					#dev.close()
-					#dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
-					#self.DEVICE = dev
 					pass
 				
 				if self.DEVICE is None or not self.IsConnected() or self.FW == [] or self.FW[0] == b'' or self.QBL is False:
@@ -208,23 +203,17 @@ class GbxDevice:
 					pass
 				
 				if self.FW[1] not in self.PCB_VERSIONS.keys():
-					# if Util.DEBUG is True and self.FW[1] == 5:
-					# 	self.PCB_VERSIONS[5] = "v1.4"
-					# elif Util.DEBUG is True and self.FW[1] == 6:
-					# 	self.PCB_VERSIONS[5] = "v1.4a"
-					# else:
 					dev.close()
 					self.DEVICE = None
 					continue
 				
-				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
-				if (self.FW[1] not in (4, 5)):
-					conn_msg.append([0, "\nNow running in Legacy Mode.\nThis version of FlashGBX has been tested with GBxCart RW v1.3 and v1.4.\nOther revisions may not be fully compatible.\n"])
+				if self.FW[1] not in (4, 5):
+					conn_msg.append([0, "{:s}Now running in Legacy Mode.\nNote that FlashGBX works with insideGadgets GBxCart RW v1.3 and newer.\nOlder revisions are not fully compatible! More info: https://www.gbxcart.com/{:s}".format(ANSI.YELLOW, ANSI.RESET)])
 				elif self.FW[1] == 4:
-					conn_msg.append([0, "{:s}Now running in Legacy Mode. You can install the optimized firmware version L1 in GUI mode from the “Tools” menu.{:s}".format(ANSI.YELLOW, ANSI.RESET)])
+					conn_msg.append([0, "{:s}Now running in Legacy Mode.\nFor full support install firmware version L1 from the “Tools” menu in GUI mode.{:s}".format(ANSI.YELLOW, ANSI.RESET)])
 
 				self.PORT = ports[i]
-				self.DEVICE.timeout = 0.5
+				self.DEVICE.timeout = 1
 				
 				# Load Flash Cartridge Handlers
 				self.UpdateFlashCarts(flashcarts)
@@ -381,7 +370,7 @@ class GbxDevice:
 			return ["DMG", "AGB"]
 	
 	def IsSupportedMbc(self, mbc):
-		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x10, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0xFC, 0xFE, 0xFF, 0x101, 0x103 )
+		return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x10, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0xFC, 0xFE, 0xFF, 0x101, 0x103 )
 
 	def IsSupported3dMemory(self):
 		return False
@@ -400,22 +389,24 @@ class GbxDevice:
 	
 	def SetProgress(self, args):
 		if self.CANCEL and args["action"] not in ("ABORT", "FINISHED"): return
-		if args["action"] == "UPDATE_POS":
-			self.POS = args["pos"]
-			self.INFO["transferred"] = args["pos"]
+		if "pos" in args: self.POS = args["pos"]
+		if args["action"] == "UPDATE_POS": self.INFO["transferred"] = args["pos"]
 		try:
 			self.SIGNAL.emit(args)
 		except AttributeError:
 			if self.SIGNAL is not None:
 				self.SIGNAL(args)
 		
-		if args["action"] == "FINISHED":
+		if args["action"] == "INITIALIZE":
+			self.POS = 0
+		elif args["action"] == "FINISHED":
+			self.POS = 0
 			self.SIGNAL = None
 	
 	def SetWriteDelay(self, enable=True):
 		self.WRITE_DELAY = enable
 	
-	def SetTimeout(self, seconds=0.5):
+	def SetTimeout(self, seconds=1):
 		self.DEVICE.timeout = seconds
 
 	def wait_for_ack(self):
@@ -1152,7 +1143,7 @@ class GbxDevice:
 		return (flash_id, cfi_info, cfi)
 	
 	def CheckROMStable(self):
-		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
+		if not self.IsConnected(): raise ConnectionError("Couldn’t access the the device.")
 		self.ReadROM(0, 64)
 		buffer = self.ReadROM(0, 0x180)
 		time.sleep(0.1)
@@ -1161,9 +1152,8 @@ class GbxDevice:
 		return True
 	
 	def ReadInfo(self, setPinsAsInputs=False, checkRtc=False):
-		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
+		if not self.IsConnected(): raise ConnectionError("Couldn’t access the the device.")
 		data = {}
-		self.POS = 0
 		if self.MODE == "DMG":
 			self.set_mode(self.DEVICE_CMD["VOLTAGE_5V"])
 			time.sleep(0.1)
@@ -1174,7 +1164,7 @@ class GbxDevice:
 			# Firmware check R26+
 		
 		header = self.ReadROM(0, 0x180)
-		if header is False or len(header) != 0x180: raise Exception("Couldn’t read the cartridge information. Please try again.")
+		if header is False or len(header) != 0x180: raise ConnectionError("Couldn’t read the cartridge information. Please try again.")
 		if Util.DEBUG:
 			with open("debug_header.bin", "wb") as f: f.write(header)
 		
@@ -1212,7 +1202,9 @@ class GbxDevice:
 		self.INFO["last_action"] = 0
 		self.INFO["has_rtc"] = False
 		self.INFO["no_rtc_reason"] = -1
+		self.INFO["rtc_string"] = "(Unsupported in Legacy Mode)"
 		self.INFO["dump_info"] = {}
+		self.INFO["dump_info"]["header"] = data
 		
 		if self.MODE == "DMG" and setPinsAsInputs: self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
 		return data
@@ -1222,7 +1214,7 @@ class GbxDevice:
 
 	def GetReadErrors(self):
 		return self.READ_ERRORS
-	
+
 	#################################################################
 
 	def BackupROM(self, fncSetProgress=None, args=None):
@@ -1273,7 +1265,7 @@ class GbxDevice:
 		self.WORKER.start()
 	
 	def TransferData(self, args, signal):
-		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
+		if not self.IsConnected(): raise ConnectionError("Couldn’t access the the device.")
 		self.SIGNAL = signal
 		mode = args["mode"]
 		path = args["path"]
@@ -1531,10 +1523,6 @@ class GbxDevice:
 						break
 				self.INFO["dump_info"]["agb_savelib"] = temp_ver
 				self.INFO["dump_info"]["agb_save_flash_id"] = None
-				#if "FLASH" in temp_ver:
-				#	agb_save_flash_id = self.ReadFlashSaveID()
-				#	if agb_save_flash_id is not False and len(agb_save_flash_id) == 3:
-				#		self.INFO["dump_info"]["agb_save_flash_id"] = agb_save_flash_id
 
 			self.INFO["rom_checksum_calc"] = chk
 			
@@ -1563,7 +1551,8 @@ class GbxDevice:
 			if self.MODE == "DMG":
 				bank_size = 0x2000
 				mbc = args["mbc"]
-				save_size = args["save_type"]
+				#save_size = args["save_type"]
+				save_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(args["save_type"])]
 				bank_count = int(max(save_size, bank_size) / bank_size)
 				self.EnableRAM(mbc=mbc, enable=True)
 				startAddr = 0xA000
@@ -1672,11 +1661,6 @@ class GbxDevice:
 
 			# Prepare some stuff
 			if mode == 2: # Backup
-				#try:
-				#	file = open(path, "wb")
-				#except PermissionError:
-				#	self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"FlashGBX doesn’t have permission to access this file for writing:\n" + path, "abortable":False})
-				#	return False
 				self.SetProgress({"action":"INITIALIZE", "method":"SAVE_READ", "size":save_size})
 			
 			elif mode == 3: # Restore
@@ -1689,8 +1673,6 @@ class GbxDevice:
 				else:
 					with open(path, "rb") as file: data_import = file.read()
 				
-				#if save_size > len(data_import):
-				#	data_import += b'\xFF' * (save_size - len(data_import))
 				while len(data_import) < save_size:
 					data_import += bytearray(data_import)
 				data_import = data_import[:save_size]
@@ -1875,7 +1857,6 @@ class GbxDevice:
 						buffer.extend(struct.pack("<L", rtc))
 						ts = int(time.time())
 						buffer.extend(struct.pack("<Q", ts))
-						#file.write(buffer)
 					
 					elif mode == 3 and len(data_import) == save_size + 0x0C: # Restore
 						buffer = data_import[-0x0C:-0x08]
@@ -1972,7 +1953,7 @@ class GbxDevice:
 	#######################################################################################################################################
 	
 	def _FlashROM(self, buffer=bytearray(), start_addr=0, cart_type=None, voltage=3.3, signal=None, prefer_chip_erase=False, fast_read_mode=False, verify_write=False, fix_header=False, manual_mbc=0):
-		if not self.IsConnected(): raise Exception("Couldn’t access the the device.")
+		if not self.IsConnected(): raise ConnectionError("Couldn’t access the the device.")
 		if self.INFO == None: self.ReadInfo()
 		self.INFO["last_action"] = 4
 		bank_size = 0x4000
@@ -2516,36 +2497,6 @@ class GbxDevice:
 						else: # super slow -- for testing purposes only!
 							self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge is currently not supported by {:s} using the current firmware version of the {:s} device. Please try a differnt firmware version or newer hardware revision.".format(APPNAME, self.GetFullName()), "abortable":False})
 							return False
-							'''
-							for i in range(0, len(flashcart_meta["commands"]["single_write"])):
-								addr = flashcart_meta["commands"]["single_write"][i][0]
-								data = flashcart_meta["commands"]["single_write"][i][1]
-								if addr == "PA": addr = int(currAddr)
-								if data == "PD": data = struct.unpack('H', data_import[pos:pos+2])[0]
-								self.gbx_flash_write_address_byte(addr, data)
-
-							if flashcart_meta["commands"]["single_write_wait_for"][i][0] != None:
-								addr = flashcart_meta["commands"]["single_write_wait_for"][i][0]
-								data = flashcart_meta["commands"]["single_write_wait_for"][i][1]
-								if addr == "SA": addr = int(currAddr)
-								if data == "PD": data = struct.unpack('H', data_import[pos:pos+2])[0]
-								#time.sleep(0.05)
-								timeout = 1000
-								while True:
-									wait_for = self.ReadROM(currAddr, 64)
-									wait_for = ((wait_for[1] << 8 | wait_for[0]) & flashcart_meta["commands"]["single_write_wait_for"][i][2])
-									dprint("SW_SR {:X}=={:X}?".format(wait_for, data))
-									timeout -= 1
-									if timeout < 1:
-										self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Writing a single word timed out. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.", "abortable":False})
-										return False
-									if wait_for == data: break
-									time.sleep(0.01)
-
-							currAddr += 2
-							pos += 2
-							data = data_import[pos:pos+2]
-							'''
 				
 				if ack == False:
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t write {:d} bytes to flash at position 0x{:X}. Please make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(len(data), pos-len(data)), "abortable":False})

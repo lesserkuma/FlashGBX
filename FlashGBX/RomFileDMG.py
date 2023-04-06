@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import hashlib, re, string, struct
+import hashlib, re, string, struct, os, json
 from . import Util
 
 try:
@@ -14,6 +14,7 @@ except:
 class RomFileDMG:
 	ROMFILE_PATH = None
 	ROMFILE = bytearray()
+	DATA = None
 	
 	def __init__(self, file=None):
 		if isinstance(file, str):
@@ -130,6 +131,7 @@ class RomFileDMG:
 			data["ram_size"] = "?"
 			if buffer[0x149]  < len(Util.DMG_Header_RAM_Sizes):
 				data["ram_size"] = Util.DMG_Header_RAM_Sizes[buffer[0x149]]
+		data["header_sha1"] = hashlib.sha1(buffer[0x0:0x180]).hexdigest()
 		data["version"] = int(buffer[0x14C])
 		data["header_checksum"] = int(buffer[0x14D])
 		data["header_checksum_calc"] = self.CalcChecksumHeader()
@@ -142,6 +144,7 @@ class RomFileDMG:
 			# MBC1M
 			if data["mapper_raw"] == 0x03 and data["game_title"] == "MOMOCOL" and data["header_checksum"] == 0x28 or \
 			data["mapper_raw"] == 0x01 and data["game_title"] == "BOMCOL" and data["header_checksum"] == 0x86 or \
+			data["mapper_raw"] == 0x01 and data["game_title"] == "BOMSEL" and data["header_checksum"] == 0x9C or \
 			data["mapper_raw"] == 0x01 and data["game_title"] == "GENCOL" and data["header_checksum"] == 0x8A or \
 			data["mapper_raw"] == 0x01 and data["game_title"] == "SUPERCHINESE 123" and data["header_checksum"] == 0xE4 or \
 			data["mapper_raw"] == 0x01 and data["game_title"] == "MORTALKOMBATI&II" and data["header_checksum"] == 0xB9 or \
@@ -394,4 +397,21 @@ class RomFileDMG:
 		elif data["logo_correct"]:
 			print("{:s}WARNING: Unknown memory bank controller type 0x{:02X}{:s}".format(Util.ANSI.YELLOW, data["mapper_raw"], Util.ANSI.RESET))
 
+		self.DATA = data
+		data["db"] = self.GetDatabaseEntry()
+		if data["db"] is not None and data["game_code"] == "" and data["db"]["gc"] != "":
+			data["game_code"] = data["db"]["gc"][4:]
 		return data
+
+	def GetDatabaseEntry(self):
+		data = self.DATA
+		db_entry = None
+		if os.path.exists("{0:s}/db_DMG.json".format(Util.CONFIG_PATH)):
+			with open("{0:s}/db_DMG.json".format(Util.CONFIG_PATH), encoding="UTF-8") as f:
+				db = f.read()
+				db = json.loads(db)
+				if data["header_sha1"] in db.keys():
+					db_entry = db[data["header_sha1"]]
+		else:
+			print("FAIL: Database for Game Boy titles not found at {0:s}/db_DMG.json".format(Util.CONFIG_PATH))
+		return db_entry

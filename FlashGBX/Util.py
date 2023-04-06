@@ -7,27 +7,29 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.22"
+VERSION_PEP440 = "3.23"
 VERSION = "v{:s}".format(VERSION_PEP440)
 DEBUG = False
 DEBUG_LOG = []
+APP_PATH = ""
+CONFIG_PATH = ""
 
 AGB_Header_ROM_Sizes = [ "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB", "256 MiB" ]
 AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
-AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1008 KiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)" ]
-AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1032192, 65536, 131072 ]
+AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1008 KiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)", "Unlicensed Batteryless SRAM" ]
+AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1032192, 65536, 131072, 0 ]
 AGB_Global_CRC32 = 0
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000 ]
 
-DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
-DMG_Mapper_Types = { "None":[ 0x00 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x06 ], "MBC3":[ 0x10, 0x13 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "256M Multi Cart":[ 0x201 ], "Wisdom Tree":[ 0x202 ], "Xploder GB":[ 0x203 ], "Sachen":[ 0x204 ], "Datel Orbit V2":[ 0x205 ] }
+DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
+DMG_Mapper_Types = { "None":[ 0x00 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x06 ], "MBC3/MBC30":[ 0x10, 0x12, 0x13 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "256M Multi Cart":[ 0x201 ], "Wisdom Tree":[ 0x202 ], "Xploder GB":[ 0x203 ], "Sachen":[ 0x204 ], "Datel Orbit V2":[ 0x205 ] }
 DMG_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000 ]
-DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KiB)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)" ]
-DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203 ]
-DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000 ] # RAM size in bytes
+DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)" ]
+DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203, 0x204 ]
+DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000 ] # RAM size in bytes
 DMG_Header_SGB = { 0x00:'No support', 0x03:'Supported' }
 DMG_Header_CGB = { 0x00:'No support', 0x80:'Supported', 0xC0:'Required' }
 
@@ -125,12 +127,16 @@ class Progress():
 			if args["action"] == "INITIALIZE":
 				self.PROGRESS["action"] = args["action"]
 				self.PROGRESS["method"] = args["method"]
+				if "flash_offset" in args:
+					self.PROGRESS["flash_offset"] = args["flash_offset"]
+				else:
+					self.PROGRESS["flash_offset"] = 0
 				if "size" in args:
-					self.PROGRESS["size"] = args["size"]
+					self.PROGRESS["size"] = args["size"] - self.PROGRESS["flash_offset"]
 				else:
 					self.PROGRESS["size"] = 0
 				if "pos" in args:
-					self.PROGRESS["pos"] = args["pos"]
+					self.PROGRESS["pos"] = args["pos"] - self.PROGRESS["flash_offset"]
 				else:
 					self.PROGRESS["pos"] = 0
 				if "time_start" in args:
@@ -162,7 +168,7 @@ class Progress():
 				return
 			
 			elif args["action"] == "UPDATE_POS":
-				self.PROGRESS["pos"] = args["pos"]
+				self.PROGRESS["pos"] = args["pos"] - self.PROGRESS["flash_offset"]
 				self.PROGRESS["action"] = "PROGRESS"
 				if "time_start" in self.PROGRESS:
 					self.PROGRESS["time_elapsed"] = now - self.PROGRESS["time_start"]
@@ -232,7 +238,7 @@ class Progress():
 		
 		finally:
 			self.MUTEX.release()
-
+	
 class TAMA5_CMD(Enum):
 	RAM_WRITE = 0x0
 	RAM_READ = 0x1
@@ -283,25 +289,26 @@ def roundup(x):
 	else:
 		return math.ceil(x * d) / d
 
-def formatFileSize(size, asInt=False, roundUp=False):
+def formatFileSize(size, asInt=False, roundUp=False, nobr=True):
+	space = " " if nobr else " "
 	if size == 1:
-		return "{:d} Byte".format(size)
+		return "{:d}{:s}Byte".format(size, space)
 	elif size < 1024:
-		return "{:d} Bytes".format(size)
+		return "{:d}{:s}Bytes".format(size, space)
 	elif size < 1024 * 1024:
 		val = size/1024
 		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} KiB".format(int(val))
+			return "{:d}{:s}KiB".format(int(val), space)
 		else:
-			return "{:.1f} KiB".format(val)
+			return "{:.1f}{:s}KiB".format(val, space)
 	else:
 		val = size/1024/1024
 		if roundUp: val = roundup(val)
 		if asInt:
-			return "{:d} MiB".format(int(val))
+			return "{:d}{:s}MiB".format(int(val), space)
 		else:
-			return "{:.2f} MiB".format(val)
+			return "{:.2f}{:s}MiB".format(val, space)
 
 def formatProgressTimeShort(sec):
 	sec = sec % (24 * 3600)
@@ -421,8 +428,6 @@ def ParseCFI(buffer):
 					info["tb_boot_sector"] = "{:s} (0x{:02X})".format(temp[buffer[pri_address + 0x1E]], buffer[pri_address + 0x1E])
 				except:
 					info["tb_boot_sector"] = "0x{:02X}".format(buffer[pri_address + 0x1E])
-		#elif "{:s}{:s}{:s}".format(chr(buffer[0x214]), chr(buffer[0x216]), chr(buffer[0x218])) == "PRI":
-		#	pass
 		
 		info["device_size"] = int(math.pow(2, buffer[0x4E]))
 		info["buffer_size"] = buffer[0x56] << 8 | buffer[0x54]
@@ -655,6 +660,10 @@ def GetDumpReport(di, device):
 	return s
 
 def GenerateFileName(mode, header, settings):
+	fe_ni = False
+	if settings is not None:
+		fe_ni = settings.value(key="UseNoIntroFilenames", default="disabled").lower() == "enabled"
+	
 	path = "ROM"
 	if mode == "DMG":
 		path_title = header["game_title"]
@@ -666,15 +675,17 @@ def GenerateFileName(mode, header, settings):
 		if settings is not None:
 			path = settings.value(key="FileNameFormatDMG", default=path)
 			fe_sgb = settings.value(key="AutoFileExtensionSGB", default="enabled")
-		if header["mapper_raw"] > 0xFF:
+
+		if len(header["game_code"]) > 0:
+			path_title = header["game_title"]
+			path_code = header["game_code"]
+			path = "%TITLE%_%CODE%-%REVISION%"
+			if settings is not None:
+				path = settings.value(key="FileNameFormatCGB", default=path)
+
+		if header["mapper_raw"] >= 0x200:
 			path = "%TITLE%"
 		if header["cgb"] in (0xC0, 0x80):
-			if len(header["game_code"]) > 0:
-				path_title = header["game_title"]
-				path_code = header["game_code"]
-				path = "%TITLE%_%CODE%-%REVISION%"
-				if settings is not None:
-					path = settings.value(key="FileNameFormatCGB", default=path)
 			path_extension = "gbc"
 		elif header["old_lic"] == 0x33 and header["sgb"] == 0x03 and fe_sgb.lower() == "enabled":
 			path_extension = "sgb"
@@ -695,15 +706,19 @@ def GenerateFileName(mode, header, settings):
 		path_title = header["game_title"]
 		path_code = header["game_code"]
 		path_revision = str(header["version"])
+		path_extension = "gba"
 		if (path_title == "" and path_code == ""):
-			path = "ROM.gba"
+			path = "ROM"
 		else:
 			path = path.replace("%TITLE%", path_title.strip())
 			path = path.replace("%CODE%", path_code.strip())
 			path = path.replace("%REVISION%", path_revision)
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
-			path += ".gba"
-	#path = path.replace(" ", "_")
+		path += "." + path_extension
+	
+	if fe_ni and header["db"] is not None and (mode != "DMG" or get_mbc_name(header["mapper_raw"]) != "G-MMC1"):
+		path = "{:s} {:s}.{:s}".format(header["db"]["gn"], header["db"]["ne"], path_extension)
+	
 	return path
 
 def compare_mbc(a, b):
@@ -734,13 +749,12 @@ def find_size(data, max_size, min_size=0x20):
 	return offset
 
 def dprint(*args, **kwargs):
+	global DEBUG_LOG
 	stack = traceback.extract_stack()
 	stack = stack[len(stack)-2]
 	msg = "[{:s}] [{:s}:{:d}] {:s}(): {:s}".format(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), stack.filename[stack.filename.replace("\\", "/").rindex("/")+1:], stack.lineno, stack.name, " ".join(map(str, args)), **kwargs)
+	DEBUG_LOG.append(msg)
+	DEBUG_LOG = DEBUG_LOG[-32768:]
 	if DEBUG:
 		msg = "{:s}{:s}".format(ANSI.CLEAR_LINE, msg)
-		print(msg)
-	else:
-		global DEBUG_LOG
-		DEBUG_LOG.append(msg)
-		DEBUG_LOG = DEBUG_LOG[-16384:]
+		#print(msg)

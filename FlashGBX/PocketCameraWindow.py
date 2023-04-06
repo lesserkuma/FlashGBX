@@ -173,14 +173,11 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			palette = json.loads(palette)
 		except:
 			palette = None
-			#self.optColorCGB1.setChecked(True)
 			self.cmbColor.setCurrentIndex(3)
 		palette_found = False
 		if palette is not None:
 			for i in range(0, len(self.PALETTES)):
 				if palette == self.PALETTES[i]:
-					#if i >= self.rowOptions1.count(): continue
-					#self.rowOptions1.itemAt(i).widget().setChecked(True)
 					self.cmbColor.setCurrentIndex(i)
 					self.CUR_PALETTE = i
 					palette_found = True
@@ -212,9 +209,6 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	
 	def SetColors(self):
 		if self.CUR_PC is None: return
-		#for i in range(0, self.rowOptions1.count()):
-			#if self.rowOptions1.itemAt(i).widget().isChecked():
-			#	self.CUR_PALETTE = i
 		self.CUR_PALETTE = self.cmbColor.currentIndex()
 		self.CUR_PC.SetPalette(self.PALETTES[self.CUR_PALETTE])
 		self.BuildPhotoList()
@@ -292,9 +286,6 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.reject()
 	
 	def hideEvent(self, event):
-		#for i in range(0, self.rowOptions1.count()):
-		#	if self.rowOptions1.itemAt(i).widget().isChecked():
-		#		self.APP.SETTINGS.setValue("PocketCameraPalette", json.dumps(self.PALETTES[i]))
 		self.APP.SETTINGS.setValue("PocketCameraPalette", json.dumps(self.PALETTES[self.cmbColor.currentIndex()]))
 		self.APP.SETTINGS.setValue("PocketCameraZoom", str(self.spnZoom.value()))
 		self.APP.SETTINGS.setValue("PocketCameraFrame", str(self.chkFrame.isChecked()).lower().replace("true", "enabled").replace("false", "disabled"))
@@ -309,9 +300,6 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			self.lblPhoto[i].setToolTip("")
 			if cam.IsEmpty(i):
 				pass
-				#draw = ImageDraw.Draw(pic, "RGBA")
-				#draw.line([0, 0, 128, 112], fill=(255, 0, 0), width=8)
-				#draw.line([0, 112, 128, 0], fill=(255, 0, 0), width=8)
 			elif cam.IsDeleted(i):
 				draw_bg = Image.new("RGBA", pic.size)
 				draw = ImageDraw.Draw(draw_bg)
