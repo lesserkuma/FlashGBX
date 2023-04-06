@@ -1,5 +1,5 @@
 # Release notes
-### v3.23 (released 2023-04-06)
+### v3.23.1 (released 2023-04-06)
 - Bundles GBxCart RW v1.4/v1.4a firmware version R40+L8 (Game Boy Camera flash cart fix on insideGadgets software, Pokémon Mini support on insideGadgets software, fixes a problem with reading GBA Video cartridges and other minor improvements)
 - Confirmed support for Flash Advance Pro 256M *(thanks Erba Verde)*
 - Added support for Flash2Advance Ultra 2G with 4× 4400L0Y0Q0
@@ -12,6 +12,7 @@
 - Improved support for the BennVenn MBC3000 RTC cart; can now write the entire 8 MiB *(thanks BennVenn)*
 - Fixed a problem with forward-adjusting the Real Time Clock from Game Boy Advance save data files *(thanks Smelly-Ghost)*
 - Windows Setup Package: Updated the CH340/CH341 driver to the latest version (02/11/2023, 3.8.2023.02)
+- Fixed an issue with restoring Batteryless SRAM save data that is smaller than the flash chip’s sector size *(thanks marv17)*
 - Minor bug fixes and improvements
 
 ### v3.22 (released 2023-02-09)

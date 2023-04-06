@@ -4,12 +4,13 @@ with open("README.md", "r", encoding="utf-8") as fh: long_description = fh.read(
 
 setuptools.setup(
 	name="FlashGBX",
-	version="3.23",
+	version="3.23.1",
 	author="Lesserkuma",
 	description="Reads and writes Game Boy and Game Boy Advance cartridge data. Supported hardware: GBxCart RW by insideGadgets.",
 	url="https://github.com/lesserkuma/FlashGBX",
 	packages=setuptools.find_packages(),
 	install_requires=['pyserial>=3.5', 'Pillow', 'setuptools', 'requests', 'python-dateutil'],
+	#install_requires=['pyserial>=3.5', 'Pillow', 'setuptools', 'python-dateutil'],
 	extras_require={
 		"qt5":["PySide2"],
 		"qt6":["PySide6"]

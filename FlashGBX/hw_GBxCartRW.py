@@ -3234,18 +3234,18 @@ class GbxDevice:
 						flash_size = len(data_import) - flash_offset
 					else:
 						flash_size = args["flash_size"]
+						data_import = data_import[:flash_size]
 					bl_sectors = []
 					for sector in sector_offsets:
 						if flash_offset > sector[0]: continue
-						if (flash_offset + flash_size) < (sector[0] + sector[1]): break
+						if len(bl_sectors) > 0 and (flash_offset + flash_size) < (sector[0] + sector[1]): break
 						bl_sectors.append(sector)
 					write_sectors = bl_sectors
 					if "bl_save" in args:
 						data_import = bytearray([0] * bl_sectors[0][0]) + data_import
-
 				else:
 					write_sectors = sector_offsets
-
+			
 			dprint("Sectors to update:", write_sectors)
 		# ↑↑↑ Read Sector Map
 		

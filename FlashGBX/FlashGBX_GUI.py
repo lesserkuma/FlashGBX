@@ -3,6 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import sys, os, time, datetime, json, platform, subprocess, requests, webbrowser, pkg_resources, threading
+#import sys, os, time, datetime, json, platform, subprocess, threading #NOTE#UC
 from .pyside import QtCore, QtWidgets, QtGui, QApplication
 from PIL.ImageQt import ImageQt
 from serial import SerialException
@@ -211,6 +212,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Show &configuration directory", self.OpenPath)
 		self.mnuConfig.actions()[0].setCheckable(True)
+		#self.mnuConfig.actions()[0].setVisible(False) #NOTE#UC
 		self.mnuConfig.actions()[1].setCheckable(True)
 		self.mnuConfig.actions()[2].setCheckable(True)
 		self.mnuConfig.actions()[3].setCheckable(True)
@@ -484,6 +486,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if update_check is None:
 			self.UpdateCheck()
 			return
+		
+		#NOTE#UC
 		new_value = str(self.mnuConfig.actions()[0].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")
 		if new_value == "enabled":
 			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Would you like to automatically check for new versions at application startup? This will make use of the PyPI API (<a href=\"https://www.python.org/privacy/\">privacy policy</a>).", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
@@ -499,6 +503,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.SETTINGS.setValue("UpdateCheck", "disabled")
 	
 	def UpdateCheck(self):
+		#NOTE#UC
+		# update_check = self.SETTINGS.value("UpdateCheck")
+		# if update_check is None or datetime.datetime.now() > datetime.datetime.fromtimestamp(1682892000):
+		# 	QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "This version has version update check feature stripped out, so please regularily check the <a href=\"https://github.com/lesserkuma/FlashGBX/\">FlashGBX GitHub page</a> for the latest updates.", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
+		# 	self.SETTINGS.setValue("UpdateCheck", "disabled")
 		update_check = self.SETTINGS.value("UpdateCheck")
 		if update_check is None:
 			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "Would you like to automatically check for new versions at application startup? This will make use of the PyPI API (<a href=\"https://www.python.org/privacy/\">privacy policy</a>).", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
@@ -508,7 +517,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				update_check = "enabled"
 			else:
 				self.SETTINGS.setValue("UpdateCheck", "disabled")
-		
 		if update_check and update_check.lower() == "enabled":
 			print("")
 			if ".dev" in VERSION_PEP440:
@@ -530,7 +538,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			except Exception as e:
 				print("ERROR: An unexpected error occured while querying the latest version information from PyPI.", e, sep="\n")
 				ret = False
-			
 			if ret is not False and ret.status_code == 200:
 				ret = ret.content
 				try:
@@ -1348,7 +1355,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		else:
 			args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc, "flash_offset":flash_offset }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
-		#self.CONN._FlashROM(args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		buffer = None
 		self.STATUS["time_start"] = time.time()
@@ -1769,6 +1775,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					args["buffer"] = bytearray([0xFF] * bl_args["bl_size"])
 				self.STATUS["args"] = args
 				self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
+				#self.CONN._FlashROM(args=args)
 			else:
 				args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase, "verify_write":verify_write }
 				self.STATUS["args"] = args
