@@ -1,5 +1,11 @@
 # Release notes
-### v3.23.1 (released 2023-04-06)
+### v3.24 (released 2023-04-09)
+- Improved support for Batteryless SRAM save data backup and restore for Game Boy Advance reproduction cartridges *(thanks metroid-maniac and LucentW)*
+- When checking for available updates, version information is now read via the GitHub API instead of the PyPI API
+- Updated InnoSetup and the PyInstaller bootloader (Windows binaries only)
+- Minor bug fixes and improvements
+
+### v3.23/v3.23.1 (released 2023-04-06)
 - Bundles GBxCart RW v1.4/v1.4a firmware version R40+L8 (Game Boy Camera flash cart fix on insideGadgets software, Pokémon Mini support on insideGadgets software, fixes a problem with reading GBA Video cartridges and other minor improvements)
 - Confirmed support for Flash Advance Pro 256M *(thanks Erba Verde)*
 - Added support for Flash2Advance Ultra 2G with 4× 4400L0Y0Q0
@@ -8,7 +14,7 @@
 - Added a save chip stress test feature, can be used to detect a dry SRAM battery or bad soldering
 - Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums and also added a database for Game Boy and Game Boy Color titles
 - No-Intro-style file names are now enabled by default when creating backups (e.g. `Pocket Monsters Gin (Japan) (Rev 1) (SGB Enhanced) (GB Compatible).gbc` instead of `POKEMON_SLV_AAXJ-1.gbc`) (GUI-mode only)
-- Now supports Batteryless SRAM save data backup and restore for Game Boy Advance reproduction cartridges (GUI-mode only) *(thanks BennVenn, metroid-maniac)*
+- Now supports Batteryless SRAM save data backup and restore for Game Boy Advance reproduction cartridges (GUI-mode only) *(thanks BennVenn and metroid-maniac)*
 - Improved support for the BennVenn MBC3000 RTC cart; can now write the entire 8 MiB *(thanks BennVenn)*
 - Fixed a problem with forward-adjusting the Real Time Clock from Game Boy Advance save data files *(thanks Smelly-Ghost)*
 - Windows Setup Package: Updated the CH340/CH341 driver to the latest version (02/11/2023, 3.8.2023.02)

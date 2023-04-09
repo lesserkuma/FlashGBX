@@ -891,6 +891,7 @@ class GbxDevice:
 						pass
 				
 				if save_type is None:
+					checkBatterylessSRAM = True
 					if info["dacs_8m"] is True:
 						save_size = 1032192
 						save_type = 6
@@ -924,9 +925,11 @@ class GbxDevice:
 						elif (eeprom_4k == eeprom_64k[:len(eeprom_4k)]):
 							save_type = 2
 							save_size = 8192
+							checkBatterylessSRAM = False
 						else:
 							save_type = 1
 							save_size = 512
+							checkBatterylessSRAM = False
 
 				if checkBatterylessSRAM:
 					batteryless = self.CheckBatterylessSRAM()
@@ -938,7 +941,6 @@ class GbxDevice:
 		self._write(self.DEVICE_CMD["DMG_MBC_RESET"], wait=True)
 		self.INFO["last_action"] = 0
 		self.INFO["action"] = None
-
 		return (info, save_size, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, cfi, flash_id)
 	
 	def CheckBatterylessSRAM(self):
@@ -964,23 +966,26 @@ class GbxDevice:
 			else:
 				boot_vector = (struct.unpack("<I", buffer[0:3] + bytearray([0]))[0] + 2) << 2
 				batteryless_loader = self.ReadROM(boot_vector, 0x2000)
-				for i in range(len(batteryless_loader), 0, -4):
-					if list(batteryless_loader[i-4:i]) != [0xFF, 0xFF, 0xFF, 0xFF]: break
-
-				if (
-					bytearray([0x09, 0x04, 0xA0, 0xE3]) in batteryless_loader or
-					bytearray([0x09, 0x14, 0xA0, 0xE3]) in batteryless_loader or
-					bytearray([0x09, 0x24, 0xA0, 0xE3]) in batteryless_loader or
-					bytearray([0x09, 0x34, 0xA0, 0xE3]) in batteryless_loader
-				):
-					bl_size = 0x20000
-				else:
-					bl_size = 0x10000
-
-				if bytearray(b'<3 from Maniac\0\0') in batteryless_loader:
-					bl_offset = batteryless_loader.index(bytearray(b'<3 from Maniac\0\0')) + boot_vector + 0x10
+				if bytearray(b'<3 from Maniac') in batteryless_loader:
+					payload_size = struct.unpack("<H", batteryless_loader[batteryless_loader.index(bytearray(b'<3 from Maniac')):][0x0E:0x10])[0]
+					if payload_size == 0:
+						payload_size = 0x414
+					bl_offset = batteryless_loader.index(bytearray(b'<3 from Maniac')) + boot_vector + 0x10
+					payload = self.ReadROM(bl_offset - payload_size, payload_size)
+					bl_size = struct.unpack("<I", payload[0x8:0xC])[0]
 					dprint("Detected Batteryless SRAM ROM made with the Automatic batteryless saving patcher for GBA by metroid-maniac")
+					if bl_size not in (0x2000, 0x8000, 0x10000, 0x20000):
+						print("{:s}Warning: Unsupported Batteryless SRAM size value detected: 0x{:X}{:s}".format(ANSI.YELLOW, bl_size, ANSI.RESET))
 				elif (bytearray([0x02, 0x13, 0xA0, 0xE3]) in batteryless_loader):
+					if (
+						bytearray([0x09, 0x04, 0xA0, 0xE3]) in batteryless_loader or
+						bytearray([0x09, 0x14, 0xA0, 0xE3]) in batteryless_loader or
+						bytearray([0x09, 0x24, 0xA0, 0xE3]) in batteryless_loader or
+						bytearray([0x09, 0x34, 0xA0, 0xE3]) in batteryless_loader
+					):
+						bl_size = 0x20000
+					else:
+						bl_size = 0x10000
 					base_addr = batteryless_loader.index(bytearray([0x02, 0x13, 0xA0, 0xE3]))
 					addr_value = batteryless_loader[base_addr - 8]
 					addr_rotate_right = batteryless_loader[base_addr - 7] * 2
@@ -991,11 +996,10 @@ class GbxDevice:
 						bl_offset = address
 						dprint("Detected Chinese bootleg Batteryless SRAM ROM")
 					else:
-						dprint("Bad offset with Chinese bootleg Batteryless SRAM ROM:", hex(bl_offset))
+						dprint("Bad offset with Chinese bootleg Batteryless SRAM ROM:", hex(address))
 				else:
 					bl_offset = None
 					bl_size = None
-
 		if bl_offset is None or bl_size is None:
 			dprint("No Batteryless SRAM routine detected")
 			return False
@@ -3238,7 +3242,8 @@ class GbxDevice:
 					bl_sectors = []
 					for sector in sector_offsets:
 						if flash_offset > sector[0]: continue
-						if len(bl_sectors) > 0 and (flash_offset + flash_size) < (sector[0] + sector[1]): break
+						#if len(bl_sectors) > 0 and (flash_offset + flash_size) < (sector[0] + sector[1]): break
+						if (flash_offset + flash_size) < sector[0]: break
 						bl_sectors.append(sector)
 					write_sectors = bl_sectors
 					if "bl_save" in args:

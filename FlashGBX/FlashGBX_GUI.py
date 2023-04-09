@@ -3,7 +3,6 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import sys, os, time, datetime, json, platform, subprocess, requests, webbrowser, pkg_resources, threading
-#import sys, os, time, datetime, json, platform, subprocess, threading #NOTE#UC
 from .pyside import QtCore, QtWidgets, QtGui, QApplication
 from PIL.ImageQt import ImageQt
 from serial import SerialException
@@ -175,6 +174,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		# List devices
 		self.layout_devices = QtWidgets.QHBoxLayout()
 		self.lblDevice = QtWidgets.QLabel()
+		self.lblDevice.mousePressEvent = self.WriteDebugLogOnShiftKey
 		self.cmbDevice = QtWidgets.QComboBox()
 		self.cmbDevice.setStyleSheet("QComboBox { border: 0; margin: 0; padding: 0; max-width: 0px; }")
 		self.layout_devices.addWidget(self.lblDevice)
@@ -212,7 +212,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Show &configuration directory", self.OpenPath)
 		self.mnuConfig.actions()[0].setCheckable(True)
-		#self.mnuConfig.actions()[0].setVisible(False) #NOTE#UC
 		self.mnuConfig.actions()[1].setCheckable(True)
 		self.mnuConfig.actions()[2].setCheckable(True)
 		self.mnuConfig.actions()[3].setCheckable(True)
@@ -486,11 +485,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if update_check is None:
 			self.UpdateCheck()
 			return
-		
-		#NOTE#UC
 		new_value = str(self.mnuConfig.actions()[0].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")
 		if new_value == "enabled":
-			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Would you like to automatically check for new versions at application startup? This will make use of the PyPI API (<a href=\"https://www.python.org/privacy/\">privacy policy</a>).", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Would you like to automatically check for new versions at application startup? This will make use of the GitHub API (<a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement\">privacy policy</a>).", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 			if answer == QtWidgets.QMessageBox.Yes:
 				self.SETTINGS.setValue("UpdateCheck", "enabled")
 				self.mnuConfig.actions()[0].setChecked(True)
@@ -501,16 +498,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.SETTINGS.setValue("UpdateCheck", "disabled")
 		else:
 			self.SETTINGS.setValue("UpdateCheck", "disabled")
-	
+
 	def UpdateCheck(self):
-		#NOTE#UC
-		# update_check = self.SETTINGS.value("UpdateCheck")
-		# if update_check is None or datetime.datetime.now() > datetime.datetime.fromtimestamp(1682892000):
-		# 	QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "This version has version update check feature stripped out, so please regularily check the <a href=\"https://github.com/lesserkuma/FlashGBX/\">FlashGBX GitHub page</a> for the latest updates.", QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
-		# 	self.SETTINGS.setValue("UpdateCheck", "disabled")
 		update_check = self.SETTINGS.value("UpdateCheck")
 		if update_check is None:
-			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "Would you like to automatically check for new versions at application startup? This will make use of the PyPI API (<a href=\"https://www.python.org/privacy/\">privacy policy</a>).", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "Would you like to automatically check for new versions at application startup? This will make use of the GitHub API (<a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement\">privacy policy</a>).", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 			if answer == QtWidgets.QMessageBox.Yes:
 				self.SETTINGS.setValue("UpdateCheck", "enabled")
 				self.mnuConfig.actions()[0].setChecked(True)
@@ -519,14 +511,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.SETTINGS.setValue("UpdateCheck", "disabled")
 		if update_check and update_check.lower() == "enabled":
 			print("")
-			if ".dev" in VERSION_PEP440:
-				type = "test "
-				url = "https://test.pypi.org/pypi/FlashGBX/json"
-				site = "https://test.pypi.org/project/FlashGBX/"
-			else:
-				type = ""
-				url = "https://pypi.org/pypi/FlashGBX/json"
-				site = "https://github.com/lesserkuma/FlashGBX"
+			url = "https://api.github.com/repos/lesserkuma/FlashGBX/releases?per_page=1"
+			site = "https://github.com/lesserkuma/FlashGBX/releases/latest"
 			try:
 				ret = requests.get(url, allow_redirects=True, timeout=1.5)
 			except requests.exceptions.ConnectTimeout as e:
@@ -536,20 +522,21 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				print("ERROR: Update check failed due to a connection error. Please check your network connection.", e, sep="\n")
 				ret = False
 			except Exception as e:
-				print("ERROR: An unexpected error occured while querying the latest version information from PyPI.", e, sep="\n")
+				print("ERROR: An unexpected error occured while querying the latest version information from GitHub.", e, sep="\n")
 				ret = False
 			if ret is not False and ret.status_code == 200:
 				ret = ret.content
 				try:
-					ret = json.loads(ret)
-					if 'info' in ret and 'version' in ret['info']:
-						if pkg_resources.parse_version(ret['info']['version']) == pkg_resources.parse_version(VERSION_PEP440):
-							print("You are using the latest {:s}version of {:s}.".format(type, APPNAME))
-						elif pkg_resources.parse_version(ret['info']['version']) > pkg_resources.parse_version(VERSION_PEP440):
-							msg_text = "A new {:s}version of {:s} has been released!\nVersion {:s} is now available.".format(type, APPNAME, ret['info']['version'])
+					ret = json.loads(ret)[0]
+					if 'tag_name' in ret:
+						latest_version = str(ret['tag_name'])
+						if pkg_resources.parse_version(latest_version) == pkg_resources.parse_version(VERSION_PEP440):
+							print("You are using the latest version of {:s}.".format(APPNAME))
+						elif pkg_resources.parse_version(latest_version) > pkg_resources.parse_version(VERSION_PEP440):
+							msg_text = "A new version of {:s} has been released!\nVersion {:s} is now available.".format(APPNAME, latest_version)
 							print(msg_text)
 							msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} Update Check".format(APPNAME), text=msg_text)
-							button_open = msgbox.addButton("  Open &website  ", QtWidgets.QMessageBox.ActionRole)
+							button_open = msgbox.addButton("  Open &release notes  ", QtWidgets.QMessageBox.ActionRole)
 							button_cancel = msgbox.addButton("&OK", QtWidgets.QMessageBox.RejectRole)
 							msgbox.setDefaultButton(button_open)
 							msgbox.setEscapeButton(button_cancel)
@@ -557,16 +544,23 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 							if msgbox.clickedButton() == button_open:
 								webbrowser.open(site)
 						else:
-							print("This version of {:s} ({:s}) seems to be newer than the latest {:s}release ({:s}). Please check for updates manually.".format(APPNAME, VERSION_PEP440, type, ret['info']['version']))
+							print("This version of {:s} ({:s}) seems to be newer than the latest release ({:s}). Please check for updates manually.".format(APPNAME, VERSION_PEP440, latest_version))
 					else:
-						print("ERROR: Update check failed due to missing version information in JSON data from PyPI.")
+						print("Error: Update check failed due to missing version information in JSON data from GitHub.")
 				except json.decoder.JSONDecodeError:
-					print("ERROR: Update check failed due to malformed JSON data from PyPI.")
+					print("Error: Update check failed due to malformed JSON data from GitHub.")
 				except Exception as e:
-					print("ERROR: An unexpected error occured while querying the latest version information from PyPI.", e, sep="\n")
+					print("Error: An unexpected error occured while querying the latest version information from GitHub.", e, sep="\n")
 			elif ret is not False:
-				print("ERROR: Failed to check for updates (HTTP status {:d}).".format(ret.status_code))
-	
+				if ret.status_code == 403 and "X-RateLimit-Remaining" in ret.headers and ret.headers["X-RateLimit-Remaining"] == '0':
+					print("Error: Failed to check for updates (too many API requests). Try again later.")
+				else:
+					print("Error: Failed to check for updates (HTTP status {:d}).".format(ret.status_code))
+		else:
+			update_check = self.SETTINGS.value("UpdateCheck")
+			if update_check is None or (time.time() > (Util.VERSION_TIMESTAMP + (2*30*24*60*60))):
+				QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "The version update check has been disabled in the config menu and this version is now older than {:d} days. Please regularily check the <a href=\"https://github.com/lesserkuma/FlashGBX/releases/latest\">FlashGBX GitHub page</a> for the latest release notes and updates.".format(int((time.time() - Util.VERSION_TIMESTAMP)/60/60/24)), QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
+
 	def DisconnectDevice(self):
 		try:
 			devname = self.CONN.GetFullNameExtended()
@@ -619,16 +613,29 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				subprocess.Popen(["xdg-open", path])
 		except:
 			QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "The path is:\n{:s}".format(path), QtWidgets.QMessageBox.Ok)
+		self.WriteDebugLogOnShiftKey()
 		
+	def WriteDebugLogOnShiftKey(self, event=None):
 		kbmod = QtWidgets.QApplication.keyboardModifiers()
 		if kbmod == QtCore.Qt.ShiftModifier:
-			if self.WriteDebugLog(): print("debug.log written.")
+			self.WriteDebugLog()
 
 	def WriteDebugLog(self):
+		try:
+			Util.dprint("{:s} version: {:s} ({:d})".format(Util.APPNAME, Util.VERSION_PEP440, Util.VERSION_TIMESTAMP))
+			Util.dprint("Platform: {:s}".format(platform.platform()))
+			if self.CONN is not None:
+				Util.dprint("Connected device: {:s}".format(self.CONN.GetFullNameExtended(more=True)))
+			else:
+				Util.dprint("No devices connected.")
+			Util.dprint("Now writing debug log file.")
+		except:
+			pass
 		try:
 			fn = Util.CONFIG_PATH + "/debug.log"
 			with open(fn, "wb") as f:
 				f.write("\n".join(Util.DEBUG_LOG).encode("UTF-8-SIG"))
+				print("debug.log written.")
 			return True
 		except:
 			return False
@@ -1060,7 +1067,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.CONN.INFO["dump_info"]["batteryless_sram"] = temp3
 			else:
 				self.ReadCartridge(resetStatus=False)
-			# self.STATUS["operation"] = None
 
 		else:
 			self.lblStatus4a.setText("Ready.")
@@ -1403,7 +1409,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			return
 		
 		if not self.CheckHeader(): return
-		path = QtWidgets.QFileDialog.getSaveFileName(self, "Backup Save Data", last_dir + "/" + path, "Save Data File (*.sav);;All Files (*.*)")[0]
+		path = QtWidgets.QFileDialog.getSaveFileName(self, "Backup Save Data", last_dir + "/" + path, "Save Data File (*.sav *.srm *.fla *.eep);;All Files (*.*)")[0]
 		if (path == ""): return
 
 		verify_read = self.SETTINGS.value("VerifyData", default="enabled")
@@ -1536,7 +1542,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge’s save chip will be tested for potential problems as follows:\n- Read the same data multiple times\n- Writing and reading different test patterns\n\nPlease ensure the cartridge pins are freshly cleaned and the save data is backed up before proceeding.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 			if answer == QtWidgets.QMessageBox.Cancel: return
 		else:
-			path = QtWidgets.QFileDialog.getOpenFileName(self, "Restore Save Data", last_dir + "/" + path, "Save Data File (*.sav);;All Files (*.*)")[0]
+			path = QtWidgets.QFileDialog.getOpenFileName(self, "Restore Save Data", last_dir + "/" + path, "Save Data File (*.sav *.srm *.fla *.eep);;All Files (*.*)")[0]
 			if not path == "": self.SETTINGS.setValue(setting_name, os.path.dirname(path))
 			if (path == ""): return
 		
@@ -1798,7 +1804,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 	def GetBLArgs(self, rom_size, detected=False):
 		locs = [ 0x3C0000, 0x7C0000, 0xFC0000, 0x1FC0000 ]
-		lens = [ 0x10000, 0x20000 ]
+		lens = [ 0x2000, 0x8000, 0x10000, 0x20000 ]
 		temp = self.SETTINGS.value("BatterylessSramLocations{:s}".format(self.CONN.GetMode()), "[]")
 		loc_index = None
 		len_index = None
@@ -1814,10 +1820,13 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			pass
 		
 		if detected is not False:
-			loc_index = locs.index(detected["bl_offset"])
-			len_index = lens.index(detected["bl_size"])
-			intro_msg = "In order to access Batteryless SRAM save data, its ROM location and size must\nbe specified. The previously detected parameters have been pre-selected.\nPlease adjust if necessary, then click “OK” to continue."
-		else:
+			try:
+				loc_index = locs.index(detected["bl_offset"])
+				len_index = lens.index(detected["bl_size"])
+				intro_msg = "In order to access Batteryless SRAM save data, its ROM location and size must\nbe specified. The previously detected parameters have been pre-selected.\nPlease adjust if necessary, then click “OK” to continue."
+			except:
+				detected = False
+		if detected is False:
 			intro_msg = "In order to access Batteryless SRAM save data, its ROM location and size must\nbe specified.\n\n⚠️ The required parameters could not be auto-detected.\nPlease enter the ROM location and size manually below."
 
 		try:
@@ -1833,7 +1842,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if l + 0x40000 >= rom_size: break
 				loc_index += 1
 			if loc_index >= len(locs): loc_index = len(locs) - 1
-		if len_index is None: len_index = 0
+		if len_index is None: len_index = 2
 
 		dlg_args = {
 			"title":"Batteryless SRAM Parameters",
@@ -2280,7 +2289,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						temp = "{:s}".format(Util.AGB_Header_Save_Types[save_type])
 						try:
 							if "Batteryless SRAM" in Util.AGB_Header_Save_Types[save_type]:
-								if save_size == header["batteryless_sram"]["bl_size"]:
+								if save_size == 0:
+									temp += " (unknown size)<br><b>Possible Batteryless SRAM Location:</b> 0x{:X} (expecting {:s} of SRAM)".format(header["batteryless_sram"]["bl_offset"], Util.formatFileSize(header["batteryless_sram"]["bl_size"], asInt=True))
+								elif save_size == header["batteryless_sram"]["bl_size"]:
 									temp += " ({:s})<br><b>Possible Batteryless SRAM Location:</b> 0x{:X}".format(Util.formatFileSize(save_size, asInt=True), header["batteryless_sram"]["bl_offset"])
 								else:
 									temp += " ({:s})<br><b>Possible Batteryless SRAM Location:</b> 0x{:X} (expecting {:s} of SRAM)".format(Util.formatFileSize(save_size, asInt=True), header["batteryless_sram"]["bl_offset"], Util.formatFileSize(header["batteryless_sram"]["bl_size"], asInt=True))
@@ -2705,7 +2716,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					fn = str(url.toLocalFile())
 				
 				fn_split = os.path.splitext(os.path.abspath(fn))
-				if fn_split[1].lower() == ".sav":
+				if fn_split[1].lower() in (".sav", ".srm", ".fla", ".eep"):
 					return True
 				elif self.CONN.GetMode() == "DMG" and fn_split[1].lower() in (".gb", ".sgb", ".gbc", ".bin", ".isx"):
 					return True
@@ -2729,7 +2740,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				fn_split = os.path.splitext(os.path.abspath(fn))
 				if fn_split[1].lower() in (".gb", ".sgb", ".gbc", ".bin", ".isx", ".gba", ".srl"):
 					self.FlashROM(fn)
-				elif fn_split[1].lower() == ".sav":
+				elif fn_split[1].lower() in (".sav", ".srm", ".fla", ".eep"):
 					self.WriteRAM(fn)
 		else:
 			e.ignore()
