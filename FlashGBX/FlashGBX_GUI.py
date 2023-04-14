@@ -1411,7 +1411,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		
 		rtc = False
 		if self.CONN.INFO["has_rtc"]:
-			if self.CONN.GetMode() == "DMG" and mbc == 0x10 and not self.CONN.IsClkConnected():
+			if self.CONN.GetMode() == "DMG" and mbc in (0x10, 0x110) and not self.CONN.IsClkConnected():
 				rtc = False
 			else:
 				msg = "A Real Time Clock cartridge was detected. Do you want the cartridge’s Real Time Clock register values also to be saved?"
@@ -1546,9 +1546,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		rtc = False
 		rtc_advance = False
 		if not test and self.CONN.INFO["has_rtc"]:
-			if self.CONN.GetMode() == "DMG" and mbc == 0x10 and not self.CONN.IsClkConnected():
+			if self.CONN.GetMode() == "DMG" and mbc in (0x10, 0x110) and not self.CONN.IsClkConnected():
 				rtc = False
-			elif (self.CONN.GetMode() == "DMG" and ((mbc == 0xFD and (filesize == save_size + 0x28 or erase)) or (mbc == 0xFE and (filesize == save_size + 0xC or erase)) or (self.CONN.IsClkConnected() and mbc == 0x10 and filesize == save_size + 0x30 or erase))) or \
+			elif (self.CONN.GetMode() == "DMG" and ((mbc == 0xFD and (filesize == save_size + 0x28 or erase)) or (mbc == 0xFE and (filesize == save_size + 0xC or erase)) or (self.CONN.IsClkConnected() and mbc in (0x10, 0x110) and filesize == save_size + 0x30 or erase))) or \
 			     (self.CONN.GetMode() == "AGB" and (filesize == save_size + 0x10 or erase)):
 				msg = "A Real Time Clock cartridge was detected. Do you want the Real Time Clock register values to be also written?"
 				cb = QtWidgets.QCheckBox("&Adjust RTC", checked=True)

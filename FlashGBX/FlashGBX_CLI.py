@@ -1075,7 +1075,7 @@ class FlashGBX_CLI():
 		if self.CONN.GetMode() == "AGB":
 			print("Using Save Type “{:s}”.".format(Util.AGB_Header_Save_Types[save_type]))
 		elif self.CONN.GetMode() == "DMG":
-			if rtc and header["mapper_raw"] in (0x10, 0xFE): # RTC of MBC3, HuC-3
+			if rtc and header["mapper_raw"] in (0x10, 0x110, 0xFE): # RTC of MBC3, HuC-3
 				print("Real Time Clock register values will also be written if applicable/possible.")
 
 		try:

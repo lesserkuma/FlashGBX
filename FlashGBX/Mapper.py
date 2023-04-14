@@ -267,9 +267,6 @@ class DMG_MBC3(DMG_MBC):
 	
 	def HasRTC(self):
 		dprint("Checking for RTC")
-		if self.MBC_ID != 16:
-			dprint("No RTC because wrong MBC ID", self.MBC_ID)
-			return False
 		self.EnableRAM(enable=False)
 		self.EnableRAM(enable=True)
 		self.LatchRTC()
