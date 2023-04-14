@@ -39,11 +39,11 @@ class DMG_MBC:
 		mbc_id = args["mbc"]
 		if mbc_id in (0x01, 0x02, 0x03):						# 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY',
 			return DMG_MBC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
-		elif mbc_id == 0x06:									# 0x06:'MBC2+SRAM+BATTERY',
+		elif mbc_id in (0x05, 0x06):							# 0x06:'MBC2+SRAM+BATTERY',
 			return DMG_MBC2(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
-		elif mbc_id in (0x10, 0x13):							# 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY',
+		elif mbc_id in (0x10, 0x11, 0x12, 0x13, 0x110):			# 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY',
 			return DMG_MBC3(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
-		elif mbc_id in (0x19, 0x1B, 0x1C, 0x1E):				# 0x19:'MBC5', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY',
+		elif mbc_id in (0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E):	# 0x19:'MBC5', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY',
 			return DMG_MBC5(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x20:									# 0x20:'MBC6+FLASH+SRAM+BATTERY',
 			return DMG_MBC6(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
@@ -53,7 +53,7 @@ class DMG_MBC:
 			return DMG_MBC1M(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id in (0x0B, 0x0D):							# 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY',
 			return DMG_MMM01(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
-		elif mbc_id == 0xFC:									# 0xFC:'GBD+SRAM+BATTERY',
+		elif mbc_id == 0xFC:									# 0xFC:'MAC-GBD+SRAM+BATTERY',
 			return DMG_GBD(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x105:									# 0x105:'G-MMC1+SRAM+BATTERY',
 			return DMG_GMMC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
@@ -462,23 +462,6 @@ class DMG_MBC5(DMG_MBC):
 			]
 		self.CartWrite(commands)
 	
-	# def SelectBankROM(self, index):
-	# 	dprint(self.GetName(), "|", index)
-	# 	if index == 0 or index >= 256:
-	# 		commands = [
-	# 			[ 0x3000, ((index >> 8) & 0xFF) ],
-	# 			[ 0x2100, index & 0xFF ],
-	# 		]
-	# 	else:
-	# 		commands = [
-	# 			[ 0x2100, index & 0xFF ],
-	# 		]
-		
-	# 	start_address = 0 if index == 0 else 0x4000
-
-	# 	self.CartWrite(commands)
-	# 	return (start_address, self.ROM_BANK_SIZE)
-	
 	def GetMaxROMSize(self):
 		return 8*1024*1024
 
@@ -679,7 +662,7 @@ class DMG_MMM01(DMG_MBC):
 
 class DMG_GBD(DMG_MBC5):
 	def GetName(self):
-		return "GBD"
+		return "MAC-GBD"
 
 	def GetMaxROMSize(self):
 		return 1*1024*1024

@@ -1,4 +1,14 @@
 # Release notes
+### v3.25 (released 2023-04-14)
+- Bundles GBxCart RW v1.4/v1.4a firmware version R41+L9 (minor improvements)
+- Fixed an issue with the Game Boy Camera Album Viewer *(thanks CodyWick13)*
+- Switched from PyInstaller to providing Windows Setup/Portable packages with embedded Python runtimes, so FlashGBX can be run from source as well (requires 64-bit Windows installation)
+- Added support for DRV with AM29LV160DT and ALTERA CPLD *(thanks Corborg)*
+- Verification after writing a ROM is now a lot faster (requires firmware R41+L9)
+- Now shows the No-Intro game title in the main window if the cartridge is in the database
+- Cleaned up the list of Game Boy mappers in the GUI to only list the unique types; detailed info is still available in dump reports
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums
+
 ### v3.24 (released 2023-04-09)
 - Improved support for Batteryless SRAM save data backup and restore for Game Boy Advance reproduction cartridges *(thanks metroid-maniac and LucentW)*
 - When checking for available updates, version information is now read via the GitHub API instead of the PyPI API

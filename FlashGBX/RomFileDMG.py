@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import hashlib, re, string, struct, os, json
+import hashlib, re, string, struct, os, json, copy
 from . import Util
 
 try:
@@ -139,8 +139,31 @@ class RomFileDMG:
 		data["rom_checksum"] = int(256 * buffer[0x14E] + buffer[0x14F])
 		data["rom_checksum_calc"] = self.CalcChecksumGlobal()
 		data["rom_checksum_correct"] = data["rom_checksum"] == data["rom_checksum_calc"]
-
+		
+		data["unchanged"] = copy.copy(data)
 		if not unchanged:
+			# MBC2
+			if data["mapper_raw"] == 0x06:
+				data["ram_size_raw"] = 0x100
+
+			# MBC30
+			if data["mapper_raw"] == 0x10 and data["ram_size_raw"] == 0x05:
+				data["mapper_raw"] += 0x100
+
+			# MBC6
+			if data["mapper_raw"] == 0x20:
+				data["ram_size_raw"] = 0x104
+
+			# MBC7
+			if data["mapper_raw"] == 0x22 and data["game_title"] in ("KORO2 KIRBY", "KIRBY TNT"):
+				data["ram_size_raw"] = 0x101
+			elif data["mapper_raw"] == 0x22 and data["game_title"] == "CMASTER":
+				data["ram_size_raw"] = 0x102
+
+			# TAMA5
+			if data["mapper_raw"] == 0xFD:
+				data["ram_size_raw"] = 0x103
+
 			# MBC1M
 			if data["mapper_raw"] == 0x03 and data["game_title"] == "MOMOCOL" and data["header_checksum"] == 0x28 or \
 			data["mapper_raw"] == 0x01 and data["game_title"] == "BOMCOL" and data["header_checksum"] == 0x86 or \

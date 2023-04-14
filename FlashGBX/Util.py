@@ -7,9 +7,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.24"
+VERSION_PEP440 = "3.25"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1680999807
+VERSION_TIMESTAMP = 1681494424
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -23,14 +23,14 @@ AGB_Global_CRC32 = 0
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000 ]
 
-DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
-DMG_Mapper_Types = { "None":[ 0x00 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x06 ], "MBC3/MBC30":[ 0x10, 0x12, 0x13 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "256M Multi Cart":[ 0x201 ], "Wisdom Tree":[ 0x202 ], "Xploder GB":[ 0x203 ], "Sachen":[ 0x204 ], "Datel Orbit V2":[ 0x205 ] }
+DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x110:'MBC30+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'MAC-GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
+DMG_Mapper_Types = { "None":[ 0x00, 0x08, 0x09 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x05, 0x06 ], "MBC3":[ 0x10, 0x11, 0x12, 0x13 ], "MBC30":[ 0x110 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "MAC-GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "Unlicensed 256M Multi Cart Mapper":[ 0x201 ], "Unlicensed Wisdom Tree Mapper":[ 0x202 ], "Unlicensed Xploder GB Mapper":[ 0x203 ], "Unlicensed Sachen Mapper":[ 0x204 ], "Unlicensed Datel Orbit V2 Mapper":[ 0x205 ] }
 DMG_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000 ]
-DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)" ]
-DMG_Header_RAM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203, 0x204 ]
-DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000 ] # RAM size in bytes
+DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KiB)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)" ]
+DMG_Header_RAM_Sizes_Map = [ 0x00, 0x100, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203, 0x204 ]
+DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000 ] # RAM size in bytes
 DMG_Header_SGB = { 0x00:'No support', 0x03:'Supported' }
 DMG_Header_CGB = { 0x00:'No support', 0x80:'Supported', 0xC0:'Required' }
 
@@ -57,7 +57,7 @@ class IniSettings():
 				else:
 					with open(path, "w+", encoding="UTF-8") as f: f.close()
 			except:
-				print("Error accessing the configuration directory or settings file.")
+				print("Can’t access the configuration directory or settings file.")
 				return
 			self.FILENAME = path
 			self.SETTINGS = configparser.RawConfigParser()
@@ -66,7 +66,7 @@ class IniSettings():
 				self.Reload()
 			except configparser.MissingSectionHeaderError:
 				print("Resetting invalid configuration file...")
-				os.unlink(path)
+				with open(path, "w+", encoding="UTF-8") as f: f.close()
 				path = ""
 		
 		if path == "":
@@ -460,7 +460,29 @@ def ParseCFI(buffer):
 	
 	return info
 
+def ConvertMapperToMapperType(mapper_raw):
+	i = 0
+	for (k, v) in DMG_Mapper_Types.items():
+		if i == 0:
+			retval = (k, v, i)
+		if mapper_raw in v:
+			retval = (k, v, i)
+			break
+		i += 1
+	# (string, list of ids, index in DMG_Mapper_Types)
+	return retval
+
+def ConvertMapperTypeToMapper(mapper_type):
+	i = 0
+	for (_, v) in DMG_Mapper_Types.items():
+		if mapper_type == i:
+			return v[0]
+		i += 1
+	return 0
+
 def GetDumpReport(di, device):
+	header = di["header"]["unchanged"]
+	if "db" in di["header"]: header["db"] = di["header"]["db"]
 	if di["system"] == "DMG":
 		mode = "DMG"
 		di["system"] = "Game Boy"
@@ -470,7 +492,7 @@ def GetDumpReport(di, device):
 			di["rom_size"] = "{:,} bytes".format(di["rom_size"])
 		
 		if di["mapper_type"] in DMG_Header_Mapper:
-			di["mapper_type"] = "{:s}".format(DMG_Header_Mapper[di["mapper_type"]])
+			di["mapper_type"] = "{:s}".format(ConvertMapperToMapperType(di["mapper_type"])[0])
 		else:
 			di["mapper_type"] = "0x{:02X}".format(di["mapper_type"])
 	
@@ -530,41 +552,41 @@ def GetDumpReport(di, device):
 			"* Cartridge Type:  {cart_type:s}\n" \
 		.format(system=di["system"], rom_size=di["rom_size"], cart_type=di["cart_type"])
 
-	di["hdr_logo"] = "OK" if di["header"]["logo_correct"] else "Invalid"
-	di["header"]["game_title_raw"] = di["header"]["game_title_raw"].replace("\0", "␀")
+	di["hdr_logo"] = "OK" if header["logo_correct"] else "Invalid"
+	header["game_title_raw"] = header["game_title_raw"].replace("\0", "␀")
 	if mode == "DMG":
-		game_title = di["header"]["game_title"]
+		game_title = header["game_title"]
 		game_code = ""
-		if di["header"]["cgb"] in (0xC0, 0x80):
-			if "game_code" in di["header"] and len(di["header"]["game_code"]) > 0:
-				game_code = "* Game Code:       {:s}\n".format(di["header"]["game_code"])
+		if header["cgb"] in (0xC0, 0x80):
+			if "game_code" in header and len(header["game_code"]) > 0:
+				game_code = "* Game Code:       {:s}\n".format(header["game_code"])
 			di["hdr_target_platform"] = "Game Boy Color"
-		elif di["header"]["old_lic"] == 0x33 and di["header"]["sgb"] == 0x03:
+		elif header["old_lic"] == 0x33 and header["sgb"] == 0x03:
 			di["hdr_target_platform"] = "Super Game Boy"
 		else:
 			di["hdr_target_platform"] = "Game Boy"
 
-		if di["header"]["old_lic"] == 0x33 and di["header"]["sgb"] == 0x03:
+		if header["old_lic"] == 0x33 and header["sgb"] == 0x03:
 			di["hdr_sgb"] = "Supported"
 		else:
-			di["hdr_sgb"] = "No support" # (146h=0x{:02X}, 14Bh=0x{:02X})".format(di["header"]["sgb"], di["header"]["old_lic"])
-		if di["header"]["cgb"] in DMG_Header_CGB:
-			di["hdr_cgb"] = "{:s}".format(DMG_Header_CGB[di["header"]["cgb"]])
+			di["hdr_sgb"] = "No support" # (146h=0x{:02X}, 14Bh=0x{:02X})".format(header["sgb"], header["old_lic"])
+		if header["cgb"] in DMG_Header_CGB:
+			di["hdr_cgb"] = "{:s}".format(DMG_Header_CGB[header["cgb"]])
 		else:
-			di["hdr_cgb"] = "Unknown (0x{:02X})".format(di["header"]["cgb"])
+			di["hdr_cgb"] = "Unknown (0x{:02X})".format(header["cgb"])
 		
-		di["hdr_header_checksum"] = "OK (0x{:02X})".format(di["header"]["header_checksum"]) if di["header"]["header_checksum_correct"] else "Invalid (0x{:02X}≠0x{:02X})".format(di["header"]["header_checksum_calc"], di["header"]["header_checksum"])
-		di["header"]["rom_checksum_calc"] = device.INFO["rom_checksum_calc"]
-		di["header"]["rom_checksum_correct"] = di["header"]["rom_checksum_calc"] == di["header"]["rom_checksum"]
-		di["hdr_rom_checksum"] = "OK (0x{:04X})".format(di["header"]["rom_checksum"]) if di["header"]["rom_checksum_correct"] else "Invalid (0x{:04X}≠0x{:04X})".format(di["header"]["rom_checksum_calc"], di["header"]["rom_checksum"])
+		di["hdr_header_checksum"] = "OK (0x{:02X})".format(header["header_checksum"]) if header["header_checksum_correct"] else "Invalid (0x{:02X}≠0x{:02X})".format(header["header_checksum_calc"], header["header_checksum"])
+		header["rom_checksum_calc"] = device.INFO["rom_checksum_calc"]
+		header["rom_checksum_correct"] = header["rom_checksum_calc"] == header["rom_checksum"]
+		di["hdr_rom_checksum"] = "OK (0x{:04X})".format(header["rom_checksum"]) if header["rom_checksum_correct"] else "Invalid (0x{:04X}≠0x{:04X})".format(header["rom_checksum_calc"], header["rom_checksum"])
 		
-		di["hdr_rom_size"] = di["header"]["rom_size_raw"]
+		di["hdr_rom_size"] = header["rom_size_raw"]
 		if di["hdr_rom_size"] in DMG_Header_ROM_Sizes_Map:
 			di["hdr_rom_size"] = "{:s} (0x{:02X})".format(DMG_Header_ROM_Sizes[DMG_Header_ROM_Sizes_Map.index(di["hdr_rom_size"])], di["hdr_rom_size"])
 		else:
 			di["hdr_rom_size"] = "Unknown (0x{:02X})".format(di["hdr_rom_size"])
 		
-		di["hdr_save_type"] = di["header"]["ram_size_raw"]
+		di["hdr_save_type"] = header["ram_size_raw"]
 		if di["hdr_save_type"] == 0x00:
 			di["hdr_save_type"] = "No SRAM (0x{:02X})".format(di["hdr_save_type"])
 		elif di["hdr_save_type"] in DMG_Header_RAM_Sizes_Map:
@@ -572,7 +594,7 @@ def GetDumpReport(di, device):
 		else:
 			di["hdr_save_type"] = "Unknown (0x{:02X})".format(di["hdr_save_type"])
 		
-		di["hdr_mapper_type"] = di["header"]["mapper_raw"]
+		di["hdr_mapper_type"] = header["mapper_raw"]
 		if di["hdr_mapper_type"] in DMG_Header_Mapper:
 			di["hdr_mapper_type"] = "{:s} (0x{:02X})".format(DMG_Header_Mapper[di["hdr_mapper_type"]], di["hdr_mapper_type"])
 		else:
@@ -592,7 +614,7 @@ def GetDumpReport(di, device):
 			"* SRAM Size:       {hdr_save_type:s}\n" \
 			"* Mapper Type:     {hdr_mapper_type:s}\n" \
 			"* Target Platform: {hdr_target_platform:s}\n" \
-		.format(hdr_game_title=game_title, hdr_game_code=game_code, hdr_revision=str(di["header"]["version"]), hdr_sgb=di["hdr_sgb"], hdr_cgb=di["hdr_cgb"], hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], hdr_rom_checksum=di["hdr_rom_checksum"], hdr_rom_size=di["hdr_rom_size"], hdr_save_type=di["hdr_save_type"], hdr_mapper_type=di["hdr_mapper_type"], hdr_target_platform=di["hdr_target_platform"])
+		.format(hdr_game_title=game_title, hdr_game_code=game_code, hdr_revision=str(header["version"]), hdr_sgb=di["hdr_sgb"], hdr_cgb=di["hdr_cgb"], hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], hdr_rom_checksum=di["hdr_rom_checksum"], hdr_rom_size=di["hdr_rom_size"], hdr_save_type=di["hdr_save_type"], hdr_mapper_type=di["hdr_mapper_type"], hdr_target_platform=di["hdr_target_platform"])
 		if "gbmem" in di and di["gbmem"] is not None:
 			raw_data = ""
 			for i in range(0, 4):
@@ -622,10 +644,22 @@ def GetDumpReport(di, device):
 				s += "" \
 					"* GB-Memory Data:  {:s}\n" \
 				.format(raw_data)
-	
+		
+		if header["db"] is not None and header["db"]["rc"] == di["hash_crc32"]:
+			db = header["db"]
+			s += "\n== Database Match ==\n"
+			if "gn" in db and "ne" in db: s += "* Game Name:       {:s} {:s}\n".format(db["gn"], db["ne"])
+			elif "gn" in db: s += "* Game Name:       {:s}\n".format(db["gn"])
+			if "rg" in db: s += "* Region:          {:s}\n".format(db["rg"])
+			if "lg" in db: s += "* Language(s):     {:s}\n".format(db["lg"])
+			if "rv" in db: s += "* Revision:        {:s}\n".format(db["rv"])
+			if "gc" in db: s += "* Game Code:       {:s}\n".format(db["gc"])
+			if "rc" in db: s += "* ROM CRC32:       {:08x}\n".format(db["rc"])
+			if "rs" in db: s += "* ROM Size:        {:s}\n".format(formatFileSize(db["rs"], asInt=True))
+
 	if mode == "AGB":
-		di["header"]["game_code_raw"] = di["header"]["game_code_raw"].replace("\0", "␀")
-		di["hdr_header_checksum"] = "OK (0x{:02X})".format(di["header"]["header_checksum"]) if di["header"]["header_checksum_correct"] else "Invalid (0x{:02X}≠0x{:02X})".format(di["header"]["header_checksum_calc"], di["header"]["header_checksum"])
+		header["game_code_raw"] = header["game_code_raw"].replace("\0", "␀")
+		di["hdr_header_checksum"] = "OK (0x{:02X})".format(header["header_checksum"]) if header["header_checksum_correct"] else "Invalid (0x{:02X}≠0x{:02X})".format(header["header_checksum_calc"], header["header_checksum"])
 		if "agb_savelib" not in di:
 			di["agb_savelib"] = "None"
 		elif "SRAM_F_" in di["agb_savelib"]:
@@ -652,11 +686,25 @@ def GetDumpReport(di, device):
 			"* Nintendo Logo:   {hdr_logo:s}\n" \
 			"* Header Checksum: {hdr_header_checksum:s}\n" \
 			"* Save Type:       {agb_savetype}\n" \
-		.format(hdr_game_title=di["header"]["game_title_raw"], hdr_game_code=di["header"]["game_code_raw"], hdr_revision=str(di["header"]["version"]), hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], agb_savetype=di["agb_savelib"])
+		.format(hdr_game_title=header["game_title_raw"], hdr_game_code=header["game_code_raw"], hdr_revision=str(header["version"]), hdr_logo=di["hdr_logo"], hdr_header_checksum=di["hdr_header_checksum"], agb_savetype=di["agb_savelib"])
 		if "agb_save_flash_id" in di and di["agb_save_flash_id"] is not None:
 			s += "" \
 				"* Save Flash Chip: {agb_save_flash_chip_name:s} (0x{agb_save_flash_chip_id:04X})\n" \
 			.format(agb_save_flash_chip_name=di["agb_save_flash_id"][1], agb_save_flash_chip_id=di["agb_save_flash_id"][0])
+		
+		if header["db"] is not None and header["db"]["rc"] == di["hash_crc32"]:
+			db = header["db"]
+			s += "\n== Database Match ==\n"
+			if "gn" in db and "ne" in db: s += "* Game Name:       {:s} {:s}\n".format(db["gn"], db["ne"])
+			elif "gn" in db: s += "* Game Name:       {:s}\n".format(db["gn"])
+			if "rg" in db: s += "* Region:          {:s}\n".format(db["rg"])
+			if "lg" in db: s += "* Language(s):     {:s}\n".format(db["lg"])
+			if "rv" in db: s += "* Revision:        {:s}\n".format(db["rv"])
+			if "gc" in db: s += "* Game Code:       {:s}\n".format(db["gc"])
+			if "rc" in db: s += "* ROM CRC32:       {:08x}\n".format(db["rc"])
+			if "rs" in db: s += "* ROM Size:        {:s}\n".format(formatFileSize(db["rs"], asInt=True))
+			if "st" in db: s += "* Save Type:       {:s}\n".format(AGB_Header_Save_Types[db["st"]])
+			#if "ss" in db: s += "* Save Size:       {:s}\n".format(formatFileSize(db["ss"], asInt=True))
 	
 	return s
 
@@ -717,8 +765,11 @@ def GenerateFileName(mode, header, settings):
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 		path += "." + path_extension
 	
-	if fe_ni and header["db"] is not None and (mode != "DMG" or get_mbc_name(header["mapper_raw"]) != "G-MMC1"):
-		path = "{:s} {:s}.{:s}".format(header["db"]["gn"], header["db"]["ne"], path_extension)
+	if fe_ni and header["db"] is not None:
+		if mode == "DMG" and get_mbc_name(header["mapper_raw"]) == "G-MMC1":
+			path = "{:s}.{:s}".format(header["db"]["gn"], path_extension)
+		else:
+			path = "{:s} {:s}.{:s}".format(header["db"]["gn"], header["db"]["ne"], path_extension)
 	
 	return path
 

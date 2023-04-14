@@ -7,9 +7,6 @@ from .pyside import QtCore, QtWidgets, QtGui
 class UserInputDialog(QtWidgets.QDialog):
 	APP = None
 
-	def greetings(self):
-		print("hi")
-	
 	def __init__(self, app, icon=None, args=None):
 		super(UserInputDialog, self).__init__(app)
 		if icon is not None: self.setWindowIcon(QtGui.QIcon(icon))

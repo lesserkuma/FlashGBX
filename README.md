@@ -24,7 +24,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 ## Installing and running
 
-### Windows Binaries
+### Windows Packages
 
 Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section:
 
@@ -72,7 +72,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - MBC7
   - MBC1M
   - MMM01
-  - GBD (Game Boy Camera)
+  - MAC-GBD (Game Boy Camera)
   - G-MMC1 (GB Memory)
   - M161
   - HuC-1
@@ -82,6 +82,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Unlicensed Wisdom Tree Mapper
   - Unlicensed Xploder GB Mapper
   - Unlicensed Sachen Mapper
+  - Unlicensed Datel Orbit V2 Mapper
 
 - Game Boy Advance
   - All cartridges without memory mapping
@@ -158,6 +159,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DMG-DHCN-20 with MX29LV320ET
   - DMG-GBRW-20 with 29LV320ETMI-70G
   - DRV with AM29LV160DB and ALTERA CPLD
+  - DRV with AM29LV160DT and ALTERA CPLD
   - ES29LV160_DRV with 29DL32TF-70
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
@@ -299,7 +301,7 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, crizzlycruz, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kscheel, kyokohunter, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, metroid-maniac, Mr_V, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, Shinichi999, sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, Timville, twitnic, velipso, Veund, voltagex, Voultar, Wkr, x7l7j8cc, xactoes, Zeii, Zelante, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, crizzlycruz, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kscheel, kyokohunter, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, metroid-maniac, Mr_V, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, Shinichi999, sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, Timville, twitnic, velipso, Veund, voltagex, Voultar, Wkr, x7l7j8cc, xactoes, Zeii, Zelante, zvxr
 
 ## DISCLAIMER
 

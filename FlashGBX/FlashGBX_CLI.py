@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import datetime, shutil, platform, os, json, math, traceback, re, time, serial, zipfile
+import datetime, shutil, platform, os, math, traceback, re, time, serial, zipfile
 try:
 	# pylint: disable=import-error
 	import readline
@@ -1176,11 +1176,6 @@ class FlashGBX_CLI():
 					print("CFI data was extracted to “cfi.bin”.")
 			except:
 				pass
-
-			os.unlink(Util.CONFIG_PATH + "/test1.bin")
-			os.unlink(Util.CONFIG_PATH + "/test2.bin")
-			os.unlink(Util.CONFIG_PATH + "/test3.bin")
-			os.unlink(Util.CONFIG_PATH + "/test4.bin")
 
 	def UpdateFirmwareGBxCartRW_PrintText(self, text, enableUI=False, setProgress=None):
 		if setProgress is not None:

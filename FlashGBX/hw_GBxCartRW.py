@@ -16,8 +16,8 @@ from . import Util
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
-	DEVICE_MAX_FW = 8
-	DEVICE_LATEST_FW_TS = { 4:1619427330, 5:1680535740, 6:1680535740 }
+	DEVICE_MAX_FW = 9
+	DEVICE_LATEST_FW_TS = { 4:1619427330, 5:1681395695, 6:1681395696 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -69,6 +69,7 @@ class GbxDevice:
 		"AGB_FLASH_WRITE_SHORT":0xD2,
 		"FLASH_PROGRAM":0xD3,
 		"CART_WRITE_FLASH_CMD":0xD4,
+		"CALC_CRC32":0xD5,
 	}
 	# \#define VAR(\d+)_([^\t]+)\t+(.+)
 	DEVICE_VAR = {
@@ -280,9 +281,9 @@ class GbxDevice:
 	
 	def IsSupportedMbc(self, mbc):
 		if self.CanPowerCycleCart():
-			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x201, 0x202, 0x203, 0x204, 0x205 )
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x05, 0x06, 0x08, 0x09, 0x0B, 0x0D, 0x10, 0x11, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x110, 0x201, 0x202, 0x203, 0x204, 0x205 )
 		else:
-			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x06, 0x0B, 0x0D, 0x10, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x202, 0x205 )
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x05, 0x06, 0x08, 0x09, 0x0B, 0x0D, 0x10, 0x11, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x110, 0x202, 0x205 )
 	
 	def IsSupported3dMemory(self):
 		return True
@@ -454,7 +455,11 @@ class GbxDevice:
 		if self.DEVICE.in_waiting > 1000: dprint("in_waiting = {:d} bytes".format(self.DEVICE.in_waiting))
 		buffer = self.DEVICE.read(count)
 		if len(buffer) != count:
-			dprint("Warning: Received {:d} byte(s) instead of the expected {:d} byte(s)".format(len(buffer), count))
+			tb_stack = traceback.extract_stack()
+			stack = tb_stack[len(tb_stack)-2] # caller only
+			if stack.name == "_read": stack = tb_stack[len(tb_stack)-3]
+			#traceback.print_stack()
+			dprint("Warning: Received {:d} byte(s) instead of the expected {:d} byte(s) ({:s}(), line {:d})".format(len(buffer), count, stack.name, stack.lineno))
 			self.READ_ERRORS += 1
 			while self.DEVICE.in_waiting > 0:
 				self.DEVICE.reset_input_buffer()
@@ -591,51 +596,27 @@ class GbxDevice:
 	def CartPowerCycle(self, delay=0.1):
 		if self.CanPowerCycleCart():
 			dprint("Power cycling cartridge with a delay of {:.1f} seconds".format(delay))
-			try:
-				self.CartPowerOff(delay=delay)
-				self.CartPowerOn(delay=delay)
-				if self.MODE == "DMG":
-					self._write(self.DEVICE_CMD["SET_MODE_DMG"])
-				elif self.MODE == "AGB":
-					self._write(self.DEVICE_CMD["SET_MODE_AGB"])
-			except:
-				if self.DEVICE is None:
-					print("The USB connection was lost after power cycling")
-				else:
-					print("An unknown error occured after power cycling")
-				return False
+			self.CartPowerOff(delay=delay)
+			self.CartPowerOn(delay=delay)
+			if self.MODE == "DMG":
+				self._write(self.DEVICE_CMD["SET_MODE_DMG"])
+			elif self.MODE == "AGB":
+				self._write(self.DEVICE_CMD["SET_MODE_AGB"])
 
 	def CartPowerOff(self, delay=0.1):
-		if not self.IsConnected(): return
 		if self.FW["pcb_ver"] in (5, 6):
-			self._write(self.DEVICE_CMD["OFW_QUERY_CART_PWR"])
-			if self._read(1) == 1:
-				dprint("Turning off cartridge power ({:s})".format(self.MODE))
-				self._write(self.DEVICE_CMD["OFW_CART_PWR_OFF"])
-				time.sleep(delay)
-				while True:
-					self._write(self.DEVICE_CMD["OFW_QUERY_CART_PWR"])
-					if self._read(1) == 0: return
+			self._write(self.DEVICE_CMD["OFW_CART_PWR_OFF"])
+			time.sleep(delay)
 		else:
 			self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"])
 	
 	def CartPowerOn(self, delay=0.1):
-		if not self.IsConnected(): return
 		if self.FW["pcb_ver"] in (5, 6):
 			self._write(self.DEVICE_CMD["OFW_QUERY_CART_PWR"])
 			if self._read(1) == 0:
-				dprint("Turning on cartridge power ({:s})".format(self.MODE))
 				self._write(self.DEVICE_CMD["OFW_CART_PWR_ON"])
 				time.sleep(delay)
-				self._write(self.DEVICE_CMD["OFW_QUERY_CART_PWR"])
-				while True:
-					temp = self._read(1)
-					if temp is False:
-						self.DEVICE.reset_input_buffer()
-						self.DEVICE.reset_output_buffer()
-						return
-					elif temp == 1:
-						return
+				self.DEVICE.reset_input_buffer() # bug workaround
 
 	def GetMode(self):
 		return self.MODE
@@ -726,20 +707,21 @@ class GbxDevice:
 				header[0xD0:0xE0] = self.ReadROM(0x40D0, 0x10)
 				data = RomFileDMG(header).GetHeader()
 			
-			_mbc = DMG_MBC().GetInstance(args={"mbc":data["mapper_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
-			if checkRtc:
-				data["has_rtc"] = _mbc.HasRTC() is True
-				if data["has_rtc"] is True:
-					if _mbc.GetName() == "TAMA5": _mbc.EnableMapper()
-					_mbc.LatchRTC()
-					data["rtc_buffer"] = _mbc.ReadRTC()
-					if _mbc.GetName() == "TAMA5": self._set_fw_variable("DMG_READ_CS_PULSE", 0)
-			else:
-				data["has_rtc"] = False
-			try:
-				data["rtc_string"] = _mbc.GetRTCString()
-			except:
-				data["rtc_string"] = "Invalid data"
+			data["has_rtc"] = False
+			data["rtc_string"] = "Not available"
+			if data["logo_correct"] is True:
+				_mbc = DMG_MBC().GetInstance(args={"mbc":data["mapper_raw"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
+				if checkRtc:
+					data["has_rtc"] = _mbc.HasRTC() is True
+					if data["has_rtc"] is True:
+						if _mbc.GetName() == "TAMA5": _mbc.EnableMapper()
+						_mbc.LatchRTC()
+						data["rtc_buffer"] = _mbc.ReadRTC()
+						if _mbc.GetName() == "TAMA5": self._set_fw_variable("DMG_READ_CS_PULSE", 0)
+				try:
+					data["rtc_string"] = _mbc.GetRTCString()
+				except:
+					data["rtc_string"] = "Invalid data"
 
 		elif self.MODE == "AGB":
 			# Unlock DACS carts on older firmware
@@ -2201,7 +2183,31 @@ class GbxDevice:
 				if (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY"):
 					temp = self.ReadROM_3DMemory(address=pos, length=buffer_len, max_length=max_length)
 				else:
-					temp = self.ReadROM(address=pos, length=buffer_len, skip_init=skip_init, max_length=max_length)
+					if self.FW["fw_ver"] >= 9 and "verify_write" in args and (self.MODE != "AGB" or args["verify_base_pos"] > 0xC9):
+						# Verify mode (by checksum)
+						dprint("Checksum verification (verify_base_pos=0x{:X}, pos=0x{:X}, pos_total=0x{:X}, buffer_len=0x{:X})".format(args["verify_base_pos"], pos, pos_total, buffer_len))
+						if self.MODE == "DMG":
+							self._set_fw_variable("ADDRESS", pos)
+						elif self.MODE == "AGB":
+							self._set_fw_variable("ADDRESS", pos >> 1)
+						self._write(self.DEVICE_CMD["CALC_CRC32"])
+						self._write(bytearray(struct.pack(">I", buffer_len)))
+						checksum_expected = zlib.crc32(args["verify_write"][pos_total:pos_total+buffer_len])
+						checksum_calculated = struct.unpack(">I", self._read(4))[0]
+						dprint("Expected Checksum: 0x{:X}".format(checksum_expected))
+						dprint("Calculated Checksum: 0x{:X}".format(checksum_calculated))
+						if checksum_expected == checksum_calculated:
+							pos += buffer_len
+							pos_total += buffer_len
+							dprint("Verification successful between 0x{:X} and 0x{:X}".format(pos_total-buffer_len, pos_total))
+							self.SetProgress({"action":"UPDATE_POS", "pos":args["verify_from"]+pos_total})
+							continue
+						else:
+							dprint("Mismatch during verification between 0x{:X} and 0x{:X}".format(pos_total, pos_total+buffer_len))
+							return pos_total
+					else:
+						# Normal read
+						temp = self.ReadROM(address=pos, length=buffer_len, skip_init=skip_init, max_length=max_length)
 					skip_init = True
 				
 				if len(temp) != buffer_len:
@@ -2748,6 +2754,9 @@ class GbxDevice:
 				self.SetProgress({"action":"UPDATE_POS", "pos":len(buffer)+len(rtc_buffer)})
 			
 			if args["path"] is not None:
+				if self.MODE == "DMG" and _mbc.GetName() == "MBC2":
+					for i in range(0, len(buffer)):
+						buffer[i] = buffer[i] & 0x0F
 				file = open(args["path"], "wb")
 				file.write(buffer)
 				if rtc_buffer is not None:
@@ -3426,6 +3435,7 @@ class GbxDevice:
 							break
 						elif buffer_pos == 0 or not self.DEVICE.is_open or self.DEVICE is None:
 							self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"An error occured while writing 0x{:X} bytes at position 0x{:X} ({:s}). Please re-connect the device and try again from the beginning.\n\nTroubleshooting advice:\n- Clean cartridge contacts\n- Avoid passive USB hubs and try different USB ports/cables\n- Check cartridge type selection{:s}".format(buffer_len, buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=False), errmsg_mbc_selection)})
+							break
 						else:
 							if chip_erase: retry_hp = 0
 							if "iteration" in self.ERROR_ARGS and self.ERROR_ARGS["iteration"] > 0:
@@ -3452,7 +3462,7 @@ class GbxDevice:
 							self.SetProgress({"action":"ERROR", "abortable":True, "pos":buffer_pos, "text":"Write error! Retrying from 0x{:X}...".format(rev_buffer_pos)})
 							delay = 0.5 + (100-retry_hp)/50
 							if self.CanPowerCycleCart():
-								self.CartPowerOff(0)
+								self.CartPowerOff()
 								time.sleep(delay)
 								self.CartPowerOn()
 								if self.MODE == "DMG" and _mbc.HasFlashBanks(): _mbc.SelectBankFlash(bank)
@@ -3587,7 +3597,10 @@ class GbxDevice:
 			ret = False
 			self.SIGNAL = signal
 			try:
-				dprint("args:", args)
+				temp = copy.copy(args)
+				if "buffer" in temp: temp["buffer"] = "(data)"
+				dprint("args:", temp)
+				del(temp)
 				self.NO_PROG_UPDATE = False
 				self.READ_ERRORS = 0
 				if args['mode'] == 1: ret = self._BackupROM(args)

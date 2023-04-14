@@ -157,8 +157,28 @@ def main(portableMode=False):
 		Util.DEBUG = True
 	
 	args = {"app_path":app_path, "config_path":config_path, "argparsed":args}
+	while True:
+		try:
+			if not os.path.exists(config_path):
+				os.mkdir(config_path)
+			tf = "{:s}/settings.ini".format(config_path)
+			f = open(tf, "ab")
+			f.close()
+			break
+		except PermissionError:
+			print("\n{:s}Error: This program has no permission to use the configuration directory “{:s}”!{:s}".format(Util.ANSI.RED, config_path, Util.ANSI.RESET))
+			if "appdata" in cp and args["argparsed"].cfgdir == "subdir":
+				answer = input("Use directory “{:s}” instead? [y/N] ".format(cp["appdata"])).strip().lower()
+				if answer != "y":
+					return
+				config_path = cp["appdata"]
+				args["config_path"]  = config_path
+				continue
+			else:
+				input("")
+			return
 	args.update(LoadConfig(args))
-	
+
 	app = None
 	exc = None
 	if not args["argparsed"].cli:

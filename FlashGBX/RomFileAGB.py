@@ -102,6 +102,7 @@ class RomFileAGB:
 		if (data["game_title"] == "NGC-HIKARU3" and data["game_code"] == "GHTJ" and data["header_checksum"] == 0xB3):
 			data["dacs_8m"] = True
 		
+		data["unchanged"] = data
 		self.DATA = data
 		data["db"] = self.GetDatabaseEntry()
 		return data
@@ -115,6 +116,16 @@ class RomFileAGB:
 				db = json.loads(db)
 				if data["header_sha1"] in db.keys():
 					db_entry = db[data["header_sha1"]]
+					if db_entry["gc"] in ("ZMAJ", "ZMBJ", "ZMDE"):
+						db_entry["gc"] = "AGS-{:s}".format(db_entry["gc"])
+					elif db_entry["gc"] == "ZBBJ":
+						db_entry["gc"] = "NTR-{:s}".format(db_entry["gc"])
+					elif db_entry["gc"] == "PEAJ":
+						db_entry["gc"] = "PEC-{:s}".format(db_entry["gc"])
+					elif db_entry["gc"] in ("PSAJ", "PSAE"):
+						db_entry["gc"] = "PES-{:s}".format(db_entry["gc"])
+					else:
+						db_entry["gc"] = "AGB-{:s}".format(db_entry["gc"])
 		else:
 			print("FAIL: Database for Game Boy Advance titles not found at {0:s}/db_AGB.json".format(Util.CONFIG_PATH))
 		return db_entry
