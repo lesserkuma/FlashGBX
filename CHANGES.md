@@ -1,4 +1,9 @@
 # Release notes
+### v3.26 (released 2023-04-18)
+- Fixed a bug that made exporting Game Boy Camera pictures with a frame not work *(thanks Ell)*
+- Fixed a bug with Game Boy ROM write verification on sectors smaller than 0x4000 bytes *(thanks KOOORAY)*
+- Improved auto-detect for the BennVenn MBC3000 RTC cart
+
 ### v3.25 (released 2023-04-14)
 - Bundles GBxCart RW v1.4/v1.4a firmware version R41+L9 (minor improvements)
 - Fixed an issue with the Game Boy Camera Album Viewer *(thanks CodyWick13)*

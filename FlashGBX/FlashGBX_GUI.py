@@ -1017,7 +1017,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					if dontShowAgainCameraSavePopup: self.SETTINGS.setValue("SkipCameraSavePopup", "enabled")
 					if answer == QtWidgets.QMessageBox.Yes:
 						self.CAMWIN = None
-						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"], config_path=Util.CONFIG_PATH)
+						self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=self.CONN.INFO["last_path"], config_path=Util.CONFIG_PATH, app_path=Util.APP_PATH)
 						self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 						self.CAMWIN.setModal(True)
 						self.CAMWIN.run()
@@ -2690,7 +2690,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					data = self.CONN.INFO["data"]
 		
 		self.CAMWIN = None
-		self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=data, config_path=Util.CONFIG_PATH)
+		self.CAMWIN = PocketCameraWindow(self, icon=self.windowIcon(), file=data, config_path=Util.CONFIG_PATH, app_path=Util.APP_PATH)
 		self.CAMWIN.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		self.CAMWIN.setModal(True)
 		self.CAMWIN.run()

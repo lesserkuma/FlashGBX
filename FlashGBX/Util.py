@@ -7,9 +7,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.25"
+VERSION_PEP440 = "3.26"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1681495829
+VERSION_TIMESTAMP = 1681817120
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -809,4 +809,4 @@ def dprint(*args, **kwargs):
 	DEBUG_LOG = DEBUG_LOG[-32768:]
 	if DEBUG:
 		msg = "{:s}{:s}".format(ANSI.CLEAR_LINE, msg)
-		#print(msg)
+		print(msg)

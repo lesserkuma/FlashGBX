@@ -17,6 +17,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	CUR_EXPORT_PATH = "."
 	CUR_PC = None
 	CUR_PALETTE = 3
+	APP_PATH = "."
 	CONFIG_PATH = "."
 	APP = None
 	PALETTES = [
@@ -28,12 +29,13 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		[ 240, 240, 240,   134, 200, 100,   58, 96, 132,   30, 30, 30 ], # Game Boy Color (USA/EUR)
 	]
 	
-	def __init__(self, app, file=None, icon=None, config_path="."):
+	def __init__(self, app, file=None, icon=None, config_path=".", app_path="."):
 		QtWidgets.QDialog.__init__(self)
 		self.setAcceptDrops(True)
 		if icon is not None: self.setWindowIcon(QtGui.QIcon(icon))
 		self.CUR_FILE = file
 		self.CONFIG_PATH = config_path
+		self.APP_PATH = app_path
 		self.setWindowTitle("FlashGBX – GB Camera Album Viewer")
 		self.setWindowFlags((self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint) & ~QtCore.Qt.WindowContextHelpButtonHint)
 		
@@ -343,7 +345,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			frame = True
 			own_frame = self.CONFIG_PATH + "/pc_frame.png"
 			if not os.path.exists(own_frame):
-				shutil.copy(self.APP.APP_PATH + "/res/pc_frame.png", own_frame)
+				shutil.copy(self.APP_PATH + "/res/pc_frame.png", own_frame)
 			with open(own_frame, "rb") as f: frame = f.read()
 		
 		if index == 31: frame = False # last seen image

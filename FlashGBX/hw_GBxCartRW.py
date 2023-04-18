@@ -17,7 +17,7 @@ class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 9
-	DEVICE_LATEST_FW_TS = { 4:1619427330, 5:1681395695, 6:1681395696 }
+	DEVICE_LATEST_FW_TS = { 4:1681739002, 5:1681395695, 6:1681395696 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -114,7 +114,7 @@ class GbxDevice:
 	FAST_READ = False
 	SKIPPING = False
 	BAUDRATE = 1000000
-	MAX_BUFFER_LEN = 0x2000
+	MAX_BUFFER_LEN = 0x800
 	DEVICE_TIMEOUT = 0.75
 	WRITE_DELAY = False
 	READ_ERRORS = 0
@@ -144,14 +144,12 @@ class GbxDevice:
 				if not self.LoadFirmwareVersion() and max_baud >= 1700000:
 					dev.close()
 					self.BAUDRATE = 1700000
-					self.MAX_BUFFER_LEN = 0x2000
 					dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
 					self.DEVICE = dev
-					if not self.LoadFirmwareVersion():
+					if not self.LoadFirmwareVersion() or self.FW["pcb_ver"] not in (5, 6, 101):
 						dev.close()
 						self.DEVICE = None
 						self.BAUDRATE = 1000000
-						self.MAX_BUFFER_LEN = 0x100
 						continue
 				elif max_baud >= 1700000 and self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE < 1700000:
 					self.ChangeBaudRate(baudrate=1700000)
@@ -176,15 +174,17 @@ class GbxDevice:
 					self.DEVICE = None
 					conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version L" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
 					continue
-				#elif self.FW["fw_ver"] < self.DEVICE_MAX_FW:
-				#	conn_msg.append([1, "The GBxCart RW device on port " + ports[i] + " is running an older firmware version. Please consider updating to version L" + str(self.DEVICE_MAX_FW) + " to make use of the latest features.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
-				elif self.FW["fw_ver"] > self.DEVICE_MAX_FW:
+				elif self.FW["fw_ts"] > self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
 					conn_msg.append([0, "Note: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with, so errors may occur."])
 				
-				if (self.FW["pcb_ver"] not in (4, 5, 6, 101)): # only the v1.3, v1.4, v1.4a, Mini v1.1 PCB revisions are supported
+				if self.FW["pcb_ver"] not in (4, 5, 6, 101): # only the v1.3, v1.4, v1.4a, Mini v1.1 PCB revisions are supported
 					dev.close()
 					self.DEVICE = None
 					continue
+				elif self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE > 1000000:
+					self.MAX_BUFFER_LEN = 0x2000
+				else:
+					self.MAX_BUFFER_LEN = 0x800
 				
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 
@@ -213,7 +213,6 @@ class GbxDevice:
 			self.DEVICE.reset_output_buffer()
 			self._write(self.DEVICE_CMD["OFW_PCB_VER"])
 			temp = self.DEVICE.read(1)
-			#if len(temp) == 0: return False
 			pcb = temp[0]
 			if pcb == b'': return False
 			self._write(self.DEVICE_CMD["OFW_FW_VER"])
@@ -255,12 +254,10 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
 			self.Close()
 			self.BAUDRATE = baudrate
-			self.MAX_BUFFER_LEN = 0x2000
 		elif baudrate == 1000000:
 			self._write(self.DEVICE_CMD["OFW_USART_1_0M_SPEED"])
 			self.Close()
 			self.BAUDRATE = baudrate
-			self.MAX_BUFFER_LEN = 0x100
 	
 	def CanSetVoltageManually(self):
 		return False
@@ -377,8 +374,10 @@ class GbxDevice:
 		return self.FW["pcb_ver"] in (4, 5, 6)
 	
 	def FirmwareUpdateAvailable(self):
-		if self.FW["pcb_ver"] not in (5, 6): return False
-		return (self.FW["pcb_ver"] in (4, 5, 6) and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]])
+		if self.FW["pcb_ver"] not in (4, 5, 6): return False
+		if (self.FW["pcb_ver"] in (4, 5, 6) and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]):
+			if self.FW["pcb_ver"] == 4: self.FW_UPDATE_REQ = True
+			return True
 	
 	def GetFirmwareUpdaterClass(self):
 		if self.FW["pcb_ver"] == 4: # v1.3
@@ -1115,7 +1114,10 @@ class GbxDevice:
 			buffer += temp
 			if not self.NO_PROG_UPDATE:
 				self.SetProgress({"action":"READ", "bytes_added":len(temp)})
-		
+
+		if self.MODE == "DMG":
+			self._set_fw_variable("DMG_READ_CS_PULSE", 0)
+
 		return buffer
 
 	def ReadRAM_MBC7(self, address, length):
@@ -1167,6 +1169,8 @@ class GbxDevice:
 			data = ((data_h & 0xF) << 4) | (data_l & 0xF)
 			buffer.append(data)
 			self.SetProgress({"action":"UPDATE_POS", "abortable":False, "pos":i+1})
+		
+		self._set_fw_variable("DMG_READ_CS_PULSE", 0)
 		
 		self.NO_PROG_UPDATE = npu
 		return buffer
@@ -2128,11 +2132,8 @@ class GbxDevice:
 			end_bank = math.ceil((buffer_pos + args["bl_size"]) / rom_bank_size)
 			rom_banks = end_bank
 
-		dprint("start_address=0x{:X}, end_address=0x{:X}, start_bank=0x{:X}, rom_banks=0x{:X}".format(start_address, end_address, start_bank, rom_banks))
-		
+		dprint("start_address=0x{:X}, end_address=0x{:X}, start_bank=0x{:X}, rom_banks=0x{:X}, buffer_len=0x{:X}, max_length=0x{:X}".format(start_address, end_address, start_bank, rom_banks, buffer_len, max_length))
 		bank = start_bank
-
-		#for bank in range(0, rom_banks):
 		while bank < rom_banks:
 			# ↓↓↓ Switch ROM bank
 			if self.MODE == "DMG":
@@ -2141,17 +2142,16 @@ class GbxDevice:
 					self._write(self.DEVICE_CMD["DMG_MBC_RESET"], wait=True)
 				(start_address, bank_size) = _mbc.SelectBankROM(bank)
 				end_address = start_address + bank_size
-				buffer_len = _mbc.GetROMBankSize()
+				buffer_len = min(buffer_len, _mbc.GetROMBankSize())
 				if "verify_write" in args:
-					buffer_len = min(buffer_len, bank_size)
-					#if "start_addr" in flashcart.CONFIG and bank == 0: start_address = flashcart.CONFIG["start_addr"]
+					buffer_len = min(buffer_len, bank_size, len(args["verify_write"]))
 					end_address = start_address + bank_size
 					start_address += (buffer_pos % rom_bank_size)
 					if end_address > start_address + args["verify_len"]:
 						end_address = start_address + args["verify_len"]
-				
-				# dprint("{:X}/{:X}/{:X}".format(start_address, bank_size, buffer_len))
 			elif self.MODE == "AGB":
+				if "verify_write" in args:
+					buffer_len = min(buffer_len, len(args["verify_write"]))
 				if "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] > 0:
 					flashcart.SelectBankROM(bank)
 					temp = end_address - start_address
@@ -2162,8 +2162,6 @@ class GbxDevice:
 			skip_init = False
 			pos = start_address
 			lives = 20
-
-			# dprint("pos_total=0x{:X}, start_address=0x{:X}, end_address=0x{:X}".format(pos_total, start_address, end_address))
 
 			while pos < end_address:
 				temp = bytearray()
@@ -2184,26 +2182,26 @@ class GbxDevice:
 					temp = self.ReadROM_3DMemory(address=pos, length=buffer_len, max_length=max_length)
 				else:
 					if self.FW["fw_ver"] >= 9 and "verify_write" in args and (self.MODE != "AGB" or args["verify_base_pos"] > 0xC9):
-						# Verify mode (by checksum)
-						dprint("Checksum verification (verify_base_pos=0x{:X}, pos=0x{:X}, pos_total=0x{:X}, buffer_len=0x{:X})".format(args["verify_base_pos"], pos, pos_total, buffer_len))
+						# Verify mode (by CRC32)
+						dprint("CRC32 verification (verify_base_pos=0x{:X}, pos=0x{:X}, pos_total=0x{:X}, buffer_len=0x{:X})".format(args["verify_base_pos"], pos, pos_total, buffer_len))
 						if self.MODE == "DMG":
 							self._set_fw_variable("ADDRESS", pos)
 						elif self.MODE == "AGB":
 							self._set_fw_variable("ADDRESS", pos >> 1)
 						self._write(self.DEVICE_CMD["CALC_CRC32"])
 						self._write(bytearray(struct.pack(">I", buffer_len)))
-						checksum_expected = zlib.crc32(args["verify_write"][pos_total:pos_total+buffer_len])
-						checksum_calculated = struct.unpack(">I", self._read(4))[0]
-						dprint("Expected Checksum: 0x{:X}".format(checksum_expected))
-						dprint("Calculated Checksum: 0x{:X}".format(checksum_calculated))
-						if checksum_expected == checksum_calculated:
+						crc32_expected = zlib.crc32(args["verify_write"][pos_total:pos_total+buffer_len])
+						crc32_calculated = struct.unpack(">I", self._read(4))[0]
+						dprint("Expected CRC32: 0x{:X}".format(crc32_expected))
+						dprint("Calculated CRC32: 0x{:X}".format(crc32_calculated))
+						if crc32_expected == crc32_calculated:
 							pos += buffer_len
 							pos_total += buffer_len
-							dprint("Verification successful between 0x{:X} and 0x{:X}".format(pos_total-buffer_len, pos_total))
+							dprint("CRC32 verification successful between 0x{:X} and 0x{:X}".format(pos_total-buffer_len, pos_total))
 							self.SetProgress({"action":"UPDATE_POS", "pos":args["verify_from"]+pos_total})
 							continue
 						else:
-							dprint("Mismatch during verification between 0x{:X} and 0x{:X}".format(pos_total, pos_total+buffer_len))
+							dprint("Mismatch during CRC32 verification between 0x{:X} and 0x{:X}".format(pos_total, pos_total+buffer_len))
 							return pos_total
 					else:
 						# Normal read
@@ -3468,7 +3466,7 @@ class GbxDevice:
 								if self.MODE == "DMG" and _mbc.HasFlashBanks(): _mbc.SelectBankFlash(bank)
 							time.sleep(delay)
 							if self.DEVICE is None:
-								raise ConnectionAbortedError("An critical connection error occured while writing 0x{:X} bytes at position 0x{:X} ({:s}). Please re-connect the device and try again from the beginning.".format(buffer_len, buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=False)))
+								raise ConnectionAbortedError("A critical connection error occured while writing 0x{:X} bytes at position 0x{:X} ({:s}). Please re-connect the device and try again from the beginning.".format(buffer_len, buffer_pos, Util.formatFileSize(size=buffer_pos, asInt=False)))
 
 							self.CANCEL_ARGS = {}
 							self.CANCEL = False
