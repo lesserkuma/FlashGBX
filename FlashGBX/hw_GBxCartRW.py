@@ -16,8 +16,8 @@ from . import Util
 class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
-	DEVICE_MAX_FW = 9
-	DEVICE_LATEST_FW_TS = { 4:1681739002, 5:1681395695, 6:1681395696 }
+	DEVICE_MAX_FW = 10
+	DEVICE_LATEST_FW_TS = { 4:1682502626, 5:1681900614, 6:1681900614 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -165,14 +165,9 @@ class GbxDevice:
 					if self.FW is not None:
 						conn_msg.append([0, "Couldn’t communicate with the GBxCart RW device on port " + ports[i] + ". Please disconnect and reconnect the device, then try again."])
 					continue
-				elif self.FW is None or "cfw_id" not in self.FW or self.FW["cfw_id"] != 'L': # Not a CFW by Lesserkuma
+				elif self.FW is None or "cfw_id" not in self.FW or self.FW["cfw_id"] != 'L' or self.FW["fw_ver"] < self.DEVICE_MIN_FW or (self.FW["pcb_ver"] < 5 and self.FW["fw_ver"] != 1): # Not a CFW by Lesserkuma
 					dev.close()
 					self.DEVICE = None
-					continue
-				elif self.FW["fw_ver"] < self.DEVICE_MIN_FW:
-					dev.close()
-					self.DEVICE = None
-					conn_msg.append([3, "The GBxCart RW device on port " + ports[i] + " requires a firmware update to work with this software. Please try again after updating it to version L" + str(self.DEVICE_MIN_FW) + " or higher.<br><br>Firmware updates are available at <a href=\"https://www.gbxcart.com/\">https://www.gbxcart.com/</a>."])
 					continue
 				elif self.FW["fw_ts"] > self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
 					conn_msg.append([0, "Note: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with, so errors may occur."])
@@ -375,8 +370,10 @@ class GbxDevice:
 	
 	def FirmwareUpdateAvailable(self):
 		if self.FW["pcb_ver"] not in (4, 5, 6): return False
-		if (self.FW["pcb_ver"] in (4, 5, 6) and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]):
-			if self.FW["pcb_ver"] == 4: self.FW_UPDATE_REQ = True
+		if self.FW["pcb_ver"] in (5, 6) and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
+			return True
+		if self.FW["pcb_ver"] == 4 and self.FW["fw_ts"] != self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
+			self.FW_UPDATE_REQ = True
 			return True
 	
 	def GetFirmwareUpdaterClass(self):
@@ -2181,7 +2178,7 @@ class GbxDevice:
 				if (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY"):
 					temp = self.ReadROM_3DMemory(address=pos, length=buffer_len, max_length=max_length)
 				else:
-					if self.FW["fw_ver"] >= 9 and "verify_write" in args and (self.MODE != "AGB" or args["verify_base_pos"] > 0xC9):
+					if self.FW["fw_ver"] >= 10 and "verify_write" in args and (self.MODE != "AGB" or args["verify_base_pos"] > 0xC9):
 						# Verify mode (by CRC32)
 						dprint("CRC32 verification (verify_base_pos=0x{:X}, pos=0x{:X}, pos_total=0x{:X}, buffer_len=0x{:X})".format(args["verify_base_pos"], pos, pos_total, buffer_len))
 						if self.MODE == "DMG":
@@ -2202,7 +2199,7 @@ class GbxDevice:
 							continue
 						else:
 							dprint("Mismatch during CRC32 verification between 0x{:X} and 0x{:X}".format(pos_total, pos_total+buffer_len))
-							return pos_total
+							temp = self.ReadROM(address=pos, length=buffer_len, skip_init=skip_init, max_length=max_length)
 					else:
 						# Normal read
 						temp = self.ReadROM(address=pos, length=buffer_len, skip_init=skip_init, max_length=max_length)
@@ -3556,6 +3553,15 @@ class GbxDevice:
 			
 			if len(broken_sectors) > 0:
 				self.INFO["broken_sectors"] = broken_sectors
+				self.INFO["verify_error_params"] = {}
+				self.INFO["verify_error_params"]["rom_size"] = len(data_import)
+				if self.MODE == "DMG":
+					self.INFO["verify_error_params"]["mapper_name"] = _mbc.GetName()
+					if flashcart.GetMBC() == "manual":
+						self.INFO["verify_error_params"]["mapper_selection_type"] = 1 # manual
+					else:
+						self.INFO["verify_error_params"]["mapper_selection_type"] = 2 # forced by cart type
+					self.INFO["verify_error_params"]["mapper_max_size"] = _mbc.GetMaxROMSize()
 				verified = False
 		# ↑↑↑ Flash verify
 

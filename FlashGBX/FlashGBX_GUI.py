@@ -815,7 +815,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					msg += message + "\n\n"
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), msg[:-2], QtWidgets.QMessageBox.Ok)
 			else:
-				QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No compatible devices found. Please ensure the device is connected properly.\n\nTroubleshooting advice:\n- Reconnect the device and check if the operating system detects it\n- Try different USB ports and cables, avoid passive USB hubs\n- Use a USB data cable (battery charging cables may not work)\n- Ensure your user account has permissions to use the device\n- Refer to the device compatibility list on the <a href=\"https://github.com/lesserkuma/FlashGBX/#compatible-cartridge-readerwriter-hardware\">GitHub page</a>".replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok).exec()
+				QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="No compatible devices found. Please ensure the device is connected properly.\n\nTroubleshooting advice:\n- Reconnect the device, try different USB ports/cables, avoid passive USB hubs\n- Use a USB data cable (battery charging cables may not work)\n- Check if the operating system detects the device (if not, reboot your machine)\n- Ensure your user account has permissions to use the device\n- Refer to the device compatibility list on the <a href=\"https://github.com/lesserkuma/FlashGBX/#compatible-cartridge-readerwriter-hardware\">GitHub page</a>".replace("\n", "<br>"), standardButtons=QtWidgets.QMessageBox.Ok).exec()
 			
 			self.lblDevice.setText("No devices found.")
 			self.lblDevice.setStyleSheet("")
@@ -1047,7 +1047,24 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if "broken_sectors" in self.CONN.INFO:
 				s = ""
 				for sector in self.CONN.INFO["broken_sectors"]: s += "0x{:X}~0x{:X}, ".format(sector[0], sector[0]+sector[1]-1)
-				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "The ROM was written completely, but verification of written data failed in the following sector(s): {:s}.\n\nDo you want to try and write the sectors again that failed verification?".format(s[:-2]), QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+				msg_v = "The ROM was written completely, but verification of written data failed in the following sector(s): {:s}.".format(s[:-2])
+				if "verify_error_params" in self.CONN.INFO:
+					if self.CONN.GetMode() == "DMG":
+						cart_types = self.CONN.GetSupportedCartridgesDMG()[0]
+					elif self.CONN.GetMode() == "AGB":
+						cart_types = self.CONN.GetSupportedCartridgesAGB()[0]
+					cart_type_str = " ({:s})".format(cart_types[self.CONN.INFO["dump_info"]["cart_type"]])
+					msg_v += "\n\nTips:\n- Clean cartridge contacts\n- Check soldering if it’s a DIY cartridge\n- Avoid passive USB hubs and try different USB ports/cables\n- Check cartridge type selection{:s}\n- Check cartridge ROM storage size (at least {:s} is required)".format(cart_type_str, Util.formatFileSize(self.CONN.INFO["verify_error_params"]["rom_size"]))
+					if "mapper_selection_type" in self.CONN.INFO["verify_error_params"]:
+						if self.CONN.INFO["verify_error_params"]["mapper_selection_type"] == 1: # manual
+							msg_v += "\n- Check mapper type used: {:s} (manual selection)".format(self.CONN.INFO["verify_error_params"]["mapper_name"])
+						elif self.CONN.INFO["verify_error_params"]["mapper_selection_type"] == 2: # forced by cart type
+							msg_v += "\n- Check mapper type used: {:s} (forced by selected cartridge type)".format(self.CONN.INFO["verify_error_params"]["mapper_name"])
+						if self.CONN.INFO["verify_error_params"]["rom_size"] > self.CONN.INFO["verify_error_params"]["mapper_max_size"]:
+							msg_v += "\n- Check mapper type ROM size limit: likely up to {:s}".format(Util.formatFileSize(self.CONN.INFO["verify_error_params"]["mapper_max_size"]))
+				msg_v += "\n\nDo you want to try and write the sectors again that failed verification?"
+				
+				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg_v, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 				if answer == QtWidgets.QMessageBox.Yes:
 					args = self.STATUS["args"]
 					args.update({"flash_sectors":self.CONN.INFO["broken_sectors"]})

@@ -307,7 +307,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		
 		while True:
 			try:
-				dev = serial.Serial(port=port, baudrate=9600, timeout=1)
+				dev = serial.Serial(port=port, baudrate=9600*4, timeout=1)
 			except:
 				fncSetStatus(text="Status: Device access error.", enableUI=True)
 				return 2

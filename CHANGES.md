@@ -1,4 +1,10 @@
 # Release notes
+### v3.27 (released 2023-04-26)
+- Bundles GBxCart RW v1.4/v1.4a firmware version R42+L10 (improves flash cart compatibility) *(thanks wickawack)*
+- Added support for cartridges with MX29GL128EHT2I and ALTERA CPLD *(thanks Merkin)*
+- Improved writing speed for cartridges with MSP54LV512 (no PCB text) *(thanks SH for the contribution)*
+- Minor bug fixes and improvements *(thanks ide)*
+
 ### v3.26 (released 2023-04-18)
 - Fixed a bug that made exporting Game Boy Camera pictures with a frame not work *(thanks Ell)*
 - Fixed a bug with Game Boy ROM write verification on sectors smaller than 0x4000 bytes *(thanks KOOORAY)*

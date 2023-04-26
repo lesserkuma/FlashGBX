@@ -1,10 +1,12 @@
 {
 	"type":"AGB",
 	"names":[
-		"AGB-E20-30 with M29W128GH"
+		"AGB-E20-30 with M29W128GH",
+		"MX29GL128EHT2I and ALTERA CPLD"
 	],
 	"flash_ids":[
-		[ 0x20, 0x00, 0x7E, 0x22 ]
+		[ 0x20, 0x00, 0x7E, 0x22 ],
+		[ 0xC2, 0x00, 0x7E, 0x22 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x1000000,

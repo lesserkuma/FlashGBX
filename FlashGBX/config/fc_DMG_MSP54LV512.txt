@@ -1,16 +1,16 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD008-6810-512S with MSP55LV512"
+		"MSP54LV512 (no PCB text)"
 	],
 	"flash_ids":[
-		[ 0x02, 0x7D, 0x00, 0x08 ]
+		[ 0x02, 0x7D, 0x00, 0x09 ]
 	],
-	"voltage":3.3,
-	"voltage_variants":true,
+	"voltage":5,
 	"flash_size":0x2000000,
 	"start_addr":0,
 	"first_bank":1,
+	"buffer_size":32,
 	"sector_size":0x10000,
 	"reset_every":0x800000,
 	"mbc":0x201,
@@ -40,6 +40,22 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ "SA", 0xFF, 0xFF ]
+		],
+		"buffer_write":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ "SA", 0x26 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0x2A ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", "PD", 0xFFFF ]
 		],
 		"single_write":[
 			[ 0x555, 0xA9 ],

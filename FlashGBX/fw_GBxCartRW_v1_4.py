@@ -98,7 +98,7 @@ try:
 			QtWidgets.QDialog.__init__(self)
 			if icon is not None: self.setWindowIcon(QtGui.QIcon(icon))
 			self.setStyleSheet("QMessageBox { messagebox-text-interaction-flags: 5; }")
-			self.setWindowTitle("FlashGBX – Firmware Updater for GBxCart RW v1.4")
+			self.setWindowTitle("FlashGBX – Firmware Updater for GBxCart RW")
 			self.setWindowFlags((self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint) & ~QtCore.Qt.WindowContextHelpButtonHint)
 
 			self.APP = app
@@ -110,7 +110,7 @@ try:
 				self.DEVICE = device
 			else:
 				self.APP.QT_APP.processEvents()
-				text = "This Firmware Updater is for insideGadgets GBxCart RW v1.4 devices only. Please only proceed if your device matches this hardware revision.\n\nOlder GBxCart RW revisions can be updated only after connecting to them first."
+				text = "This Firmware Updater is for insideGadgets GBxCart RW v1.4/v1.4a devices only. Please only proceed if your device matches this hardware revision.\n\nOlder GBxCart RW revisions can be updated only after connecting to them first."
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
 				answer = msgbox.exec()
