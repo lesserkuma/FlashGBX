@@ -11,7 +11,7 @@ setuptools.setup(
 	packages=setuptools.find_packages(),
 	install_requires=['pyserial>=3.5', 'Pillow', 'setuptools', 'requests', 'python-dateutil'],
 	extras_require={
-		"qt5":["PySide2"],
+		"qt5":["PySide2>=15.4"],
 		"qt6":["PySide6"]
 	},
 	include_package_data=True,

@@ -9,6 +9,10 @@ from .Util import dprint
 
 try:
 	import PySide2
+	# PySide2>=5.14 is required
+	major, minor, *_ = PySide2.__version_info__
+	if (major, minor) < (5, 14):
+		raise ImportError('Requires PySide2>=5.14', name=PySide2.__package__, path=PySide2.__path__)
 	psversion = 2
 except ImportError as err:
 	try:
