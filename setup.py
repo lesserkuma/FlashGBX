@@ -1,10 +1,14 @@
+# -*- coding: utf-8 -*-
+# FlashGBX
+# Author: Lesserkuma (github.com/lesserkuma)
+
 import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh: long_description = fh.read()
 
 setuptools.setup(
 	name="FlashGBX",
-	version="3.27",
+	version="3.28",
 	author="Lesserkuma",
 	description="Reads and writes Game Boy and Game Boy Advance cartridge data using the GBxCart RW by insideGadgets",
 	url="https://github.com/lesserkuma/FlashGBX",

@@ -41,7 +41,7 @@ class DMG_MBC:
 			return DMG_MBC1(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id in (0x05, 0x06):							# 0x06:'MBC2+SRAM+BATTERY',
 			return DMG_MBC2(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
-		elif mbc_id in (0x10, 0x11, 0x12, 0x13, 0x110):			# 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY',
+		elif mbc_id in (0x0F, 0x10, 0x11, 0x12, 0x13, 0x110):	# 0x10:'MBC3+RTC+SRAM+BATTERY', 0x13:'MBC3+SRAM+BATTERY',
 			return DMG_MBC3(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id in (0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E):	# 0x19:'MBC5', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY',
 			return DMG_MBC5(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
@@ -389,7 +389,7 @@ class DMG_MBC3(DMG_MBC):
 		self.CLK_TOGGLE_FNCPTR(50)
 		self.CartWrite([ [ 0x4000, 0x0C ] ])
 		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0xA000, 0x40 ] ])
+		self.CartWrite([ [ 0xA000, 0x40 ] ], sram=True)
 		time.sleep(0.1)
 		
 		# Write to registers
@@ -398,7 +398,7 @@ class DMG_MBC3(DMG_MBC):
 			self.CartWrite([ [ 0x4000, i ] ])
 			self.CLK_TOGGLE_FNCPTR(50)
 			data = struct.unpack("<I", buffer[(i-8)*4:(i-8)*4+4])[0] & 0xFF
-			self.CartWrite([ [ 0xA000, data ] ])
+			self.CartWrite([ [ 0xA000, data ] ], sram=True)
 		time.sleep(0.1)
 
 		# Latch RTC

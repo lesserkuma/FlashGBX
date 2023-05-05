@@ -174,7 +174,7 @@ class RomFileDMG:
 			data["mapper_raw"] == 0x01 and data["game_title"] == "MORTALKOMBAT DUO" and data["header_checksum"] == 0xA7:
 				data["mapper_raw"] += 0x100
 
-			# GB Memory
+			# GB-Memory (DMG-MMSA-JPN)
 			if data["mapper_raw"] == 0x19 and data["game_title"] == "NP M-MENU MENU" and data["header_checksum"] == 0xD3:
 				data["rom_size_raw"] = 0x05
 				data["ram_size_raw"] = 0x04

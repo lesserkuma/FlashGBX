@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import hashlib, re, zlib, string, os, json
+import hashlib, re, zlib, string, os, json, copy
 from . import Util
 
 class RomFileAGB:
@@ -102,7 +102,14 @@ class RomFileAGB:
 		if (data["game_title"] == "NGC-HIKARU3" and data["game_code"] == "GHTJ" and data["header_checksum"] == 0xB3):
 			data["dacs_8m"] = True
 		
-		data["unchanged"] = data
+		# e-Reader
+		data["ereader"] = False
+		if (data["game_title"] == "CARDE READER" and data["game_code"] == "PEAJ" and data["header_checksum"] == 0x9E) or \
+		(data["game_title"] == "CARDEREADER+" and data["game_code"] == "PSAJ" and data["header_checksum"] == 0x85) or \
+		(data["game_title"] == "CARDE READER" and data["game_code"] == "PSAE" and data["header_checksum"] == 0x95):
+			data["ereader"] = True
+
+		data["unchanged"] = copy.copy(data)
 		self.DATA = data
 		data["db"] = self.GetDatabaseEntry()
 		return data

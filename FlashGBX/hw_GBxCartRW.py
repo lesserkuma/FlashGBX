@@ -17,7 +17,7 @@ class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 10
-	DEVICE_LATEST_FW_TS = { 4:1682502626, 5:1681900614, 6:1681900614 }
+	DEVICE_LATEST_FW_TS = { 4:1683283512, 5:1681900614, 6:1681900614 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -146,7 +146,7 @@ class GbxDevice:
 					self.BAUDRATE = 1700000
 					dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
 					self.DEVICE = dev
-					if not self.LoadFirmwareVersion() or self.FW["pcb_ver"] not in (5, 6, 101):
+					if not self.LoadFirmwareVersion():
 						dev.close()
 						self.DEVICE = None
 						self.BAUDRATE = 1000000
@@ -179,7 +179,7 @@ class GbxDevice:
 				elif self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE > 1000000:
 					self.MAX_BUFFER_LEN = 0x2000
 				else:
-					self.MAX_BUFFER_LEN = 0x800
+					self.MAX_BUFFER_LEN = 0x1000
 				
 				conn_msg.append([0, "For help please visit the insideGadgets Discord: https://gbxcart.com/discord"])
 
@@ -273,9 +273,9 @@ class GbxDevice:
 	
 	def IsSupportedMbc(self, mbc):
 		if self.CanPowerCycleCart():
-			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x05, 0x06, 0x08, 0x09, 0x0B, 0x0D, 0x10, 0x11, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x110, 0x201, 0x202, 0x203, 0x204, 0x205 )
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x05, 0x06, 0x08, 0x09, 0x0B, 0x0D, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x110, 0x201, 0x202, 0x203, 0x204, 0x205 )
 		else:
-			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x05, 0x06, 0x08, 0x09, 0x0B, 0x0D, 0x10, 0x11, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x110, 0x202, 0x205 )
+			return mbc in ( 0x00, 0x01, 0x02, 0x03, 0x05, 0x06, 0x08, 0x09, 0x0B, 0x0D, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0xFC, 0xFD, 0xFE, 0xFF, 0x101, 0x103, 0x104, 0x105, 0x110, 0x202, 0x205 )
 	
 	def IsSupported3dMemory(self):
 		return True
@@ -514,7 +514,7 @@ class GbxDevice:
 				return self.ReadROM(address, length)
 
 	def _cart_write(self, address, value, flashcart=False, sram=False):
-		dprint("Writing to cartridge: 0x{:X} = 0x{:X} (flashcart={:s}, sram={:s})".format(address, value & 0xFF, str(flashcart), str(sram)))
+		dprint("Writing to cartridge: 0x{:X} = 0x{:X} (args: {:s}, {:s})".format(address, value & 0xFF, str(flashcart), str(sram)))
 		if self.MODE == "DMG":
 			if flashcart:
 				buffer = bytearray([self.DEVICE_CMD["DMG_FLASH_WRITE_BYTE"]])
@@ -714,10 +714,26 @@ class GbxDevice:
 						_mbc.LatchRTC()
 						data["rtc_buffer"] = _mbc.ReadRTC()
 						if _mbc.GetName() == "TAMA5": self._set_fw_variable("DMG_READ_CS_PULSE", 0)
-				try:
-					data["rtc_string"] = _mbc.GetRTCString()
-				except:
-					data["rtc_string"] = "Invalid data"
+						try:
+							data["rtc_string"] = _mbc.GetRTCString()
+						except:
+							data["rtc_string"] = "Invalid data"
+				if _mbc.GetName() == "G-MMC1":
+					try:
+						temp = bytearray([0] * 0x100000)
+						temp[0:0x180] = header
+						_mbc.SelectBankROM(7)
+						if data["game_title"] == "NP M-MENU MENU":
+							gbmem_menudata = self.ReadROM(0x4000, 0x1000)
+							temp[0x1C000:0x1C000+0x1000] = gbmem_menudata
+						elif data["game_title"] == "DMG MULTI MENU ":
+							gbmem_menudata = self.ReadROM(0x4000, 0x4000)
+							temp[0x1C000:0x1C000+0x4000] = gbmem_menudata
+						_mbc.SelectBankROM(0)
+						data["gbmem_parsed"] = (GBMemoryMap()).ParseMapData(buffer_map=_mbc.ReadHiddenSector(), buffer_rom=temp)
+					except:
+						print(traceback.format_exc())
+						print("{:s}An error occured while trying to read the hidden sector data of the NP GB-Memory cartridge.{:s}".format(ANSI.RED, ANSI.RESET))
 
 		elif self.MODE == "AGB":
 			# Unlock DACS carts on older firmware
@@ -747,8 +763,8 @@ class GbxDevice:
 					currAddr *= 2
 				data["rom_size"] = currAddr
 				
-				if (self.ReadROM(0x1FFE000, 0x0C) == b"AGBFLASHDACS"):
-					data["dacs_8m"] = True
+			if (self.ReadROM(0x1FFE000, 0x0C) == b"AGBFLASHDACS"):
+				data["dacs_8m"] = True
 			
 			if checkRtc and data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
 				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
@@ -767,6 +783,23 @@ class GbxDevice:
 				data["has_rtc"] = False
 				data["no_rtc_reason"] = None
 				data["rtc_string"] = "Not available"
+			
+			if data["ereader"] is True:
+				bank = 0
+				dprint("Switching to FLASH bank {:d}".format(bank))
+				cmds = [
+					[ 0x5555, 0xAA ],
+					[ 0x2AAA, 0x55 ],
+					[ 0x5555, 0xB0 ],
+					[ 0, bank ]
+				]
+				self._cart_write_flash(cmds)
+				temp = self.ReadRAM(address=0xD000, length=0x2000, command=self.DEVICE_CMD["AGB_CART_READ_SRAM"])
+				if temp[0:0x14] == b'Card-E Reader 2001\0\0':
+					data["ereader_calibration"] = temp
+				else:
+					data["ereader_calibration"] = None
+					del(data["ereader_calibration"])
 		
 		dprint("Header data:", data)
 		data["raw"] = header
@@ -808,7 +841,23 @@ class GbxDevice:
 			checkSaveType = False
 		elif self.MODE == "AGB" and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] > 0:
 			checkSaveType = False
-
+		elif self.MODE == "DMG" and "mbc" in cart_type and cart_type["mbc"] == 0x105: # G-MMC1
+			header = self.ReadROM(0, 0x180)
+			data = RomFileDMG(header).GetHeader()
+			_mbc = DMG_MBC().GetInstance(args={"mbc":cart_type["mbc"]}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
+			temp = bytearray([0] * 0x100000)
+			temp[0:0x180] = header
+			_mbc.SelectBankROM(7)
+			if data["game_title"] == "NP M-MENU MENU":
+				gbmem_menudata = self.ReadROM(0x4000, 0x1000)
+				temp[0x1C000:0x1C000+0x1000] = gbmem_menudata
+			elif data["game_title"] == "DMG MULTI MENU ":
+				gbmem_menudata = self.ReadROM(0x4000, 0x4000)
+				temp[0x1C000:0x1C000+0x4000] = gbmem_menudata
+			_mbc.SelectBankROM(0)
+			info["gbmem"] = _mbc.ReadHiddenSector()
+			info["gbmem_parsed"] = (GBMemoryMap()).ParseMapData(buffer_map=info["gbmem"], buffer_rom=temp)
+		
 		# Save Type and Size
 		if checkSaveType:
 			if self.MODE == "DMG":
@@ -871,7 +920,7 @@ class GbxDevice:
 				if save_type is None:
 					checkBatterylessSRAM = True
 					if info["dacs_8m"] is True:
-						save_size = 1032192
+						save_size = 1048576
 						save_type = 6
 					elif save_size > 256: # SRAM
 						if save_size == 131072:
@@ -1145,17 +1194,17 @@ class GbxDevice:
 
 		# Read save state
 		for i in range(0, 0x20):
-			self._cart_write(0xA001, 0x06) # register select and address (high)
-			self._cart_write(0xA000, i >> 4 | 0x01 << 1) # bit 0 = higher ram address, rest = command
-			self._cart_write(0xA001, 0x07) # address (low)
-			self._cart_write(0xA000, i & 0x0F) # bits 0-3 = lower ram address
-			self._cart_write(0xA001, 0x0D) # data out (high)
+			self._cart_write(0xA001, 0x06, sram=True) # register select and address (high)
+			self._cart_write(0xA000, i >> 4 | 0x01 << 1, sram=True) # bit 0 = higher ram address, rest = command
+			self._cart_write(0xA001, 0x07, sram=True) # address (low)
+			self._cart_write(0xA000, i & 0x0F, sram=True) # bits 0-3 = lower ram address
+			self._cart_write(0xA001, 0x0D, sram=True) # data out (high)
 			value1, value2 = None, None
 			while value1 is None or value1 != value2:
 				value2 = value1
 				value1 = self._cart_read(0xA000)
 			data_h = value1
-			self._cart_write(0xA001, 0x0C) # data out (low)
+			self._cart_write(0xA001, 0x0C, sram=True) # data out (low)
 
 			value1, value2 = None, None
 			while value1 is None or value1 != value2:
@@ -1172,11 +1221,10 @@ class GbxDevice:
 		self.NO_PROG_UPDATE = npu
 		return buffer
 	
-	def WriteRAM(self, address, buffer, command=None):
+	def WriteRAM(self, address, buffer, command=None, max_length=256):
 		length = len(buffer)
-		max_length = 256
 		num = math.ceil(length / max_length)
-		dprint("Write 0x{:X} bytes to cartridge RAM in {:d} iteration(s)".format(length, num))
+		dprint("Writing 0x{:X} bytes to cartridge RAM in {:d} iteration(s)".format(length, num))
 		if length > max_length: length = max_length
 
 		self._set_fw_variable("TRANSFER_SIZE", length)
@@ -1272,14 +1320,14 @@ class GbxDevice:
 		self.NO_PROG_UPDATE = True
 
 		for i in range(0, 0x20):
-			self._cart_write(0xA001, 0x05) # data in (high)
-			self._cart_write(0xA000, buffer[i] >> 4)
-			self._cart_write(0xA001, 0x04) # data in (low)
-			self._cart_write(0xA000, buffer[i] & 0xF)
-			self._cart_write(0xA001, 0x06) # register select and address (high)
-			self._cart_write(0xA000, i >> 4 | 0x00 << 1) # bit 0 = higher ram address, rest = command
-			self._cart_write(0xA001, 0x07) # address (low)
-			self._cart_write(0xA000, i & 0x0F) # bits 0-3 = lower ram address
+			self._cart_write(0xA001, 0x05, sram=True) # data in (high)
+			self._cart_write(0xA000, buffer[i] >> 4, sram=True)
+			self._cart_write(0xA001, 0x04, sram=True) # data in (low)
+			self._cart_write(0xA000, buffer[i] & 0xF, sram=True)
+			self._cart_write(0xA001, 0x06, sram=True) # register select and address (high)
+			self._cart_write(0xA000, i >> 4 | 0x00 << 1, sram=True) # bit 0 = higher ram address, rest = command
+			self._cart_write(0xA001, 0x07, sram=True) # address (low)
+			self._cart_write(0xA000, i & 0x0F, sram=True) # bits 0-3 = lower ram address
 			value1, value2 = None, None
 			while value1 is None or value1 != value2:
 				value2 = value1
@@ -1329,12 +1377,11 @@ class GbxDevice:
 						self._set_fw_variable("ADDRESS", address >> 1)
 					skip_init = True
 				
-				if ret != 0x03:
-					if rumble_stop and i == 1:
-						dprint("Sending rumble stop command")
-						self._cart_write(address=0xC6, value=0x00, flashcart=True)
-					self._write(self.DEVICE_CMD["FLASH_PROGRAM"])
+				if ret != 0x03: self._write(self.DEVICE_CMD["FLASH_PROGRAM"])
 				ret = self._write(data, wait=True)
+				if rumble_stop and i == 0:
+					dprint("Sending rumble stop command")
+					self._cart_write(address=0xC6, value=0x00, flashcart=True)
 				
 				if ret not in (0x01, 0x03):
 					dprint("Flash error at 0x{:X} in iteration {:d} of {:d} while trying to write a total of 0x{:X} bytes (response = {:s})".format(address, i, num, len(buffer), str(ret)))
@@ -1715,11 +1762,10 @@ class GbxDevice:
 			{ 'read_cfi':[[0x4AAA, 0x98]], 'read_identifier':[[ 0x4AAA, 0xAA ], [ 0x4555, 0x55 ], [ 0x4AAA, 0x90 ]], 'reset':[[ 0x4000, 0xF0 ]] },
 			{ 'read_cfi':[[0x7AAA, 0x98]], 'read_identifier':[[ 0x7AAA, 0xAA ], [ 0x7555, 0x55 ], [ 0x7AAA, 0x90 ]], 'reset':[[ 0x7000, 0xF0 ]] },
 			{ 'read_cfi':[[0, 0x98]], 'read_identifier':[[ 0, 0x90 ]], 'reset':[[ 0, 0xFF ]] },
-			#{ 'read_cfi':[[0xAA, 0x9898]], 'read_identifier':[[ 0xAAA, 0xAAAA ], [ 0x555, 0x5555 ], [ 0xAAA, 0x9090 ]], 'reset':[[ 0x0, 0xF0F0 ]] },
-			#{ 'read_cfi':[[0x4000, 0x98]], 'read_identifier':[[ 0x4000, 0x90 ]], 'reset':[[ 0x4000, 0xFF ]] },
 		]
 		
 		if self.MODE == "DMG":
+			del(flash_commands[4]) # 0xAAAA is in SRAM space on DMG
 			if limitVoltage:
 				self._write(self.DEVICE_CMD["SET_VOLTAGE_3_3V"])
 			else:
@@ -1768,7 +1814,7 @@ class GbxDevice:
 					d_swap = ( 0, 0 )
 				elif magic == "RQZ": # D0D1 swapped
 					d_swap = ( 0, 1 )
-				if d_swap is not None:
+				if d_swap is not None and d_swap != ( 0, 0 ):
 					for i in range(0, len(buffer)):
 						buffer[i] = bitswap(buffer[i], d_swap)
 
@@ -1794,7 +1840,7 @@ class GbxDevice:
 					if self.MODE == "DMG": cfi["we"] = we
 					cfi["method_id"] = flash_commands.index(method)
 					
-					if d_swap is not None:
+					if d_swap is not None and d_swap != ( 0, 0 ):
 						for k in method.keys():
 							for c in range(0, len(method[k])):
 								if isinstance(method[k][c][1], int):
@@ -1820,11 +1866,11 @@ class GbxDevice:
 				else:
 					for j in range(0, 2):
 						if j == 1:
-							d_swap = ( 0, 1 )
+							#d_swap = ( 0, 1 )
 							for k in method.keys():
 								for c in range(0, len(method[k])):
 									if isinstance(method[k][c][1], int):
-										method[k][c][1] = bitswap(method[k][c][1], d_swap)
+										method[k][c][1] = bitswap(method[k][c][1], ( 0, 1 ))
 						for i in range(0, len(method['read_identifier'])):
 							self._cart_write(method['read_identifier'][i][0], method["read_identifier"][i][1], flashcart=True)
 						flash_id = self.ReadROM(0, 8)
@@ -2284,6 +2330,16 @@ class GbxDevice:
 				self.INFO["dump_info"]["gbmem_parsed"] = (GBMemoryMap()).ParseMapData(buffer_map=temp, buffer_rom=buffer)
 				file.write(temp)
 				file.close()
+				gbmp = self.INFO["dump_info"]["gbmem_parsed"]
+				if (isinstance(gbmp, list)) and len(args["path"]) > 2:
+					for i in range(1, len(gbmp)):
+						if gbmp[i]["header"] == {} or gbmp[i]["header"]["logo_correct"] is False: continue
+						settings = None
+						if "settings" in args: settings = args["settings"]
+						gbmp_n = Util.GenerateFileName(mode="DMG", header=gbmp[i]["header"], settings=settings)
+						gbmp_p = "{:s} - {:s}".format(os.path.splitext(args["path"])[0], gbmp_n)
+						with open(gbmp_p, "wb") as f:
+							f.write(buffer[gbmp[i]["rom_offset"]:gbmp[i]["rom_offset"]+gbmp[i]["rom_size"]])
 			else:
 				if "hidden_sector" in self.INFO: del(self.INFO["hidden_sector"])
 				if "gbmem" in self.INFO["dump_info"]: del(self.INFO["dump_info"]["gbmem"])
@@ -2474,8 +2530,8 @@ class GbxDevice:
 				self._cart_write(0, 0x50)
 				self._cart_write(0, 0xFF)
 				if flash_id != bytearray([ 0xB0, 0x00, 0x9F, 0x00 ]):
-					print("Warning: Unknown DACS flash chip ID ({:s})".format(' '.join(format(x, '02X') for x in flash_id)))
-					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t detect the DACS flash chip.", "abortable":False})
+					dprint("Warning: Unknown DACS flash chip ID ({:s})".format(' '.join(format(x, '02X') for x in flash_id)))
+					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Couldn’t detect the DACS flash chip.\nUnknown Flash ID: {:s}".format(' '.join(format(x, '02X') for x in flash_id)), "abortable":False})
 					return False
 				buffer_len = 0x2000
 
@@ -2515,6 +2571,7 @@ class GbxDevice:
 				[ self.DEVICE_CMD["AGB_CART_READ_SRAM"], self.DEVICE_CMD["AGB_CART_WRITE_SRAM"] ], # 1M SRAM
 			]
 			command = commands[args["save_type"]][args["mode"] - 2]
+			
 			if args["rtc"] is True:
 				extra_size = 0x10
 		
@@ -2539,9 +2596,14 @@ class GbxDevice:
 						buffer = bytearray(f.read())
 				
 				# Fill too small file
-				if args["mode"] == 3:
-					while len(buffer) < save_size:
-						buffer += bytearray(buffer)
+				if not (self.MODE == "AGB" and args["save_type"] == 6): # Not DACS
+					if args["mode"] == 3:
+						while len(buffer) < save_size:
+							buffer += bytearray(buffer)
+
+				if self.MODE == "AGB" and "ereader" in self.INFO and self.INFO["ereader"] is True: # e-Reader
+					buffer[0xFF80:0x10000] = bytearray([0] * 0x80)
+					buffer[0x1FF80:0x20000] = bytearray([0] * 0x80)
 		
 		# Main loop
 		if not (args["mode"] == 2 and "verify_write" in args and args["verify_write"]):
@@ -2572,10 +2634,10 @@ class GbxDevice:
 				start_address = 0
 				bank_size = 0x10000
 				if args["save_type"] == 6: # DACS
-					bank_size = 0xFC000
-					end_address = 0xFC000
-				else:
-					end_address = min(save_size, bank_size)
+					bank_size = min(save_size, 0x100000)
+					buffer_len = 0x2000
+				
+				end_address = min(save_size, bank_size)
 				
 				if save_size > bank_size:
 					if args["save_type"] == 5: # FLASH 1M
@@ -2677,7 +2739,7 @@ class GbxDevice:
 						if agb_flash_chip == 0x1F3D: # Atmel AT29LV512
 							self.WriteRAM(address=int(pos/128), buffer=buffer[buffer_offset:buffer_offset+buffer_len], command=command)
 						else:
-							dprint("sector_address:", sector_address)
+							dprint("pos=0x{:X}, sector_address={:d}".format(pos, sector_address))
 							cmds = [
 								[ 0x5555, 0xAA ],
 								[ 0x2AAA, 0x55 ],
@@ -2699,32 +2761,66 @@ class GbxDevice:
 									self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Accessing the save data flash chip failed. Please make sure you selected the correct save type. If you are using a reproduction cartridge, check if it really is equipped with a flash chip for save data, or if it uses SRAM for save data instead.", "abortable":False})
 									return False
 							if buffer[buffer_offset:buffer_offset+buffer_len] != bytearray([0xFF] * buffer_len):
-								self.WriteRAM(address=pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len], command=command)
+								if ("ereader" in self.INFO and self.INFO["ereader"] is True and sector_address == 15):
+									self.WriteRAM(address=pos, buffer=buffer[buffer_offset:buffer_offset+0xF80], command=command, max_length=0x80)
+								else:
+									self.WriteRAM(address=pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len], command=command)
 					elif self.MODE == "AGB" and args["save_type"] == 6: # DACS
-						if (pos+0x1F00000) in (0x1F00000, 0x1F10000, 0x1F20000, 0x1F30000, 0x1F40000, 0x1F50000, 0x1F60000, 0x1F70000, 0x1F80000, 0x1F90000, 0x1FA0000, 0x1FB0000, 0x1FC0000, 0x1FD0000, 0x1FE0000, 0x1FF0000, 0x1FF2000, 0x1FF4000, 0x1FF6000, 0x1FF8000, 0x1FFA000):
-							sector_address = pos+0x1F00000
-							dprint("sector_address:", hex(sector_address))
+						sector_address = pos+0x1F00000
+						if sector_address in (0x1F00000, 0x1F10000, 0x1F20000, 0x1F30000, 0x1F40000, 0x1F50000, 0x1F60000, 0x1F70000, 0x1F80000, 0x1F90000, 0x1FA0000, 0x1FB0000, 0x1FC0000, 0x1FD0000, 0x1FE0000, 0x1FF0000, 0x1FF2000, 0x1FF4000, 0x1FF6000, 0x1FF8000, 0x1FFA000, 0x1FFC000):
+							dprint("DACS: Now at sector 0x{:X}".format(sector_address))
 							cmds = [
-								[ sector_address, 0x60 ],
-								[ sector_address, 0xD0 ],
-								[ sector_address, 0x20 ],
-								[ sector_address, 0xD0 ],
-								[ sector_address, 0x70 ]
+								[ # Erase Sector
+									[ 0, 0x50 ],
+									[ sector_address, 0x20 ],
+									[ sector_address, 0xD0 ],
+								]
 							]
-							for c in cmds:
-								self._cart_write(c[0], c[1])
-							sr = 0
-							lives = 20
-							while True:
-								time.sleep(0.1)
-								sr = struct.unpack("<H", self._cart_read(sector_address, 2))[0]
-								dprint("Status Register Check: 0x{:X} == 0x80? {:s}".format(sr, str(sr & 0xE0 == 0x80)))
-								if sr & 0xE0 == 0x80: break
-								lives -= 1
-								if lives == 0:
-									self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An error occured while writing to the cartridge. Please make sure that the cartridge contacts are clean, re-connect the device and try again from the beginning.", "abortable":False})
-									return False
-						self.WriteROM(address=0x1F00000+pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len])
+							if sector_address == 0x1F00000: # First write
+								temp = [
+									[ # Unlock
+										[ 0, 0x50 ],
+										[ 0, 0x60 ],
+										[ 0, 0xD0 ],
+									]
+								]
+								temp.extend(cmds)
+								cmds = temp
+							elif sector_address == 0x1FFC000: # Boot sector
+								temp = [
+									[ # Unlock 1
+										[ 0, 0x50 ],
+										[ 0, 0x60 ],
+										[ 0, 0xD0 ],
+									],
+									[ # Unlock 2
+										[ 0, 0x50 ],
+										[ sector_address, 0x60 ],
+										[ sector_address, 0xDC ],
+									]
+								]
+								temp.extend(cmds)
+								cmds = temp
+							
+							for cmd in cmds:
+								dprint("Executing DACS commands:", cmd)
+								self._cart_write_flash(commands=cmd, flashcart=True)
+								sr = 0
+								lives = 20
+								while True:
+									time.sleep(0.1)
+									sr = struct.unpack("<H", self._cart_read(sector_address, 2))[0]
+									dprint("DACS: Status Register Check: 0x{:X} == 0x80? {:s}".format(sr, str(sr & 0xE0 == 0x80)))
+									if sr & 0xE0 == 0x80: break
+									lives -= 1
+									if lives == 0:
+										self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"An error occured while writing to the DACS cartridge. Please make sure that the cartridge contacts are clean, re-connect the device and try again from the beginning.", "abortable":False})
+										return False
+						if sector_address < 0x1FFE000:
+							dprint("DACS: Writing to area 0x{:X}–0x{:X}".format(0x1F00000+pos, 0x1F00000+pos+buffer_len-1))
+							self.WriteROM(address=0x1F00000+pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len])
+						else:
+							dprint("DACS: Skipping read-only area 0x{:X}–0x{:X}".format(0x1F00000+pos, 0x1F00000+pos+buffer_len-1))
 					else:
 						self.WriteRAM(address=pos, buffer=buffer[buffer_offset:buffer_offset+buffer_len], command=command)
 					self.SetProgress({"action":"UPDATE_POS", "pos":buffer_offset+buffer_len})
@@ -2786,6 +2882,8 @@ class GbxDevice:
 				verify_args = copy.copy(args)
 				start_address = 0
 				end_address = buffer_offset
+				if self.MODE == "AGB" and args["save_type"] == 6: # DACS
+					end_address -= 0x2000
 				
 				path = args["path"] # backup path
 				verify_args.update({"mode":2, "verify_write":buffer, "path":None})
@@ -2801,18 +2899,20 @@ class GbxDevice:
 				args["path"] = path # restore path
 				if self.CANCEL is True:
 					pass
-				elif (self.INFO["data"] != buffer[:buffer_offset]):
+				elif (self.INFO["data"][:end_address] != buffer[:end_address]):
 					msg = ""
 					count = 0
 					for i in range(0, len(self.INFO["data"])):
+						if i >= len(buffer): break
 						data1 = self.INFO["data"][i]
-						data2 = buffer[:buffer_offset][i]
+						data2 = buffer[:end_address][i]
 						if data1 != data2:
 							count += 1
 							if len(msg.split("\n")) <= 10:
 								msg += "- 0x{:06X}: {:02X}≠{:02X}\n".format(i, data1, data2)
 							elif len(msg.split("\n")) == 11:
 								msg += "(more than 10 differences found)\n"
+								break
 					self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The save data was written completely, but {:d} byte(s) ({:.2f}%) didn’t pass the verification check.\n\n{:s}".format(count, (count / len(self.INFO["data"]) * 100), msg[:-1]), "abortable":False})
 					return False
 				else:
@@ -3024,8 +3124,9 @@ class GbxDevice:
 					try:
 						gbmem = GBMemoryMap(rom=temp, oldmap=_mbc.ReadHiddenSector())
 						args["buffer_map"] = gbmem.GetMapData()
-					except Exception as e:
-						print("{:s}An error occured while trying to generate the hidden sector data for the NP GB-Memory cartridge.{:s}\n{:s}".format(ANSI.RED, ANSI.RESET, str(e)))
+					except Exception:
+						print(traceback.format_exc())
+						print("{:s}An error occured while trying to generate the hidden sector data for the NP GB-Memory cartridge.{:s}".format(ANSI.RED, ANSI.RESET))
 						args["buffer_map"] = False
 					
 					if args["buffer_map"] is False:
@@ -3175,7 +3276,7 @@ class GbxDevice:
 		# ↓↓↓ Read Flash ID
 		if "flash_ids" in cart_type:
 			(verified, flash_id) = flashcart.VerifyFlashID()
-			if not verified:
+			if not verified and not command_set_type == "BLAZE_XPLODER":
 				print("Note: This cartridge’s Flash ID ({:s}) doesn’t match the cartridge type selection.".format(' '.join(format(x, '02X') for x in flash_id)))
 		else:
 			if flashcart.Unlock() is False: return False
@@ -3233,6 +3334,10 @@ class GbxDevice:
 										if x[:-1] not in write_sectors2:
 											write_sectors.append(x)
 											dprint("Forcing sector:", x)
+					
+					if len(write_sectors) == 0:
+						self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"No flash sectors were found that would need to be updated for delta flashing.", "abortable":False})
+						return False
 
 				elif "flash_sectors" in args and len(args["flash_sectors"]) > 0:
 					write_sectors = args["flash_sectors"]

@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import datetime, struct, copy
+import datetime, struct, copy, zlib, hashlib
 from . import Util
 from .RomFileDMG import RomFileDMG
 
@@ -25,30 +25,76 @@ class GBMemoryMap:
 	
 	def ParseMapData(self, buffer_map, buffer_rom=None):
 		data = {}
+		num_games = 0
 		try:
 			keys = ["mapper_params", "f_size", "b_size", "game_code", "title", "timestamp", "kiosk_id", "write_count", "cart_id", "padding", "unknown"]
 			values = struct.unpack("=24sHH12s44s18s8sH8s6sH", buffer_map)
 			data = dict(zip(keys, values))
+			for i in range(1, 8):
+				if data["mapper_params"][i*3:i*3+3].hex() != "ffffff":
+					num_games += 1
+			
 			data["mapper_params"] = data["mapper_params"].hex().upper()
 			data["cart_id"] = data["cart_id"].hex().upper()
+			if buffer_rom is None: return data
 
 			rom_header = RomFileDMG(buffer_rom[:0x180]).GetHeader()
 			if (rom_header["game_title"] in ("NP M-MENU MENU", "DMG MULTI MENU ")):
-				keys = ["menu_index", "f_offset", "b_offset", "f_size", "b_size", "game_code", "title", "title_gfx", "timestamp", "kiosk_id", "padding", "comment"]
-				values = struct.unpack("=BBBHH12s44s384s18s8s23s16s", buffer_rom[0x1C000:0x1C200])
-				data_menu = dict(zip(keys, values))
-				data["game_code"] = data_menu["game_code"].decode("ASCII", "ignore")
-				data["title"] = data_menu["title"].decode("SHIFT-JIS", "ignore")
-				data["timestamp"] = data_menu["timestamp"].decode("ASCII", "ignore")
-				data["kiosk_id"] = data_menu["kiosk_id"].decode("ASCII", "ignore")
+				data_list = []
+				data["game_code"] = data["game_code"].decode("ASCII", "ignore")
+				data["title"] = data["title"].decode("SHIFT-JIS", "ignore")
+				data["timestamp"] = data["timestamp"].decode("ASCII", "ignore")
+				data["kiosk_id"] = data["kiosk_id"].decode("ASCII", "ignore")
+				data_list.append(data)
+				data_list[0]["num_games"] = 0
+
+				if len(buffer_rom) < 0x100000: return data_list
+				for i in range(0, 8):
+					keys = ["menu_index", "f_offset", "b_offset", "f_size", "b_size", "game_code", "title", "title_gfx", "timestamp", "kiosk_id", "padding", "comment"]
+					if rom_header["game_title"] == "NP M-MENU MENU":
+						values = struct.unpack("=BBBHH12s44s384s18s8s23s16s", buffer_rom[0x1C000+(i*0x200):0x1C200+(i*0x200)])
+					elif rom_header["game_title"] == "DMG MULTI MENU ":
+						values = struct.unpack("=BBBHH12s44s384s18s8s1559s16s", buffer_rom[0x1C000+(i*0x800):0x1C800+(i*0x800)])
+					data_menu = dict(zip(keys, values))
+					temp = data_menu
+					del(temp["title_gfx"])
+					del(temp["padding"])
+					temp["game_code"] = data_menu["game_code"].decode("ASCII", "ignore")
+					temp["title"] = data_menu["title"].decode("SHIFT-JIS", "ignore")
+					temp["timestamp"] = data_menu["timestamp"].decode("ASCII", "ignore")
+					temp["kiosk_id"] = data_menu["kiosk_id"].decode("ASCII", "ignore")
+					temp["rom_offset"] = data_menu["f_offset"] * (128 * 1024)
+					temp["rom_size"] = data_menu["f_size"] * (128 * 1024)
+					rom_header_game = RomFileDMG(buffer_rom[temp["rom_offset"]:temp["rom_offset"]+temp["rom_size"]]).GetHeader()
+					temp["header"] = rom_header_game
+					#if not ("logo_correct" in rom_header_game and rom_header_game["logo_correct"] is True):
+					#	continue
+					if rom_header_game != {} and len(buffer_rom) >= (temp["rom_offset"] + temp["rom_size"]):
+						temp["rom_size"] = min(temp["rom_size"], Util.DMG_Header_ROM_Sizes_Flasher_Map[rom_header_game["rom_size_raw"]])
+						temp["crc32"] = zlib.crc32(buffer_rom[temp["rom_offset"]:temp["rom_offset"]+temp["rom_size"]]) & 0xFFFFFFFF
+						temp["sha1"] = hashlib.sha1(buffer_rom[temp["rom_offset"]:temp["rom_offset"]+temp["rom_size"]]).hexdigest()
+						temp["sha256"] = hashlib.sha256(buffer_rom[temp["rom_offset"]:temp["rom_offset"]+temp["rom_size"]]).hexdigest()
+						temp["md5"] = hashlib.md5(buffer_rom[temp["rom_offset"]:temp["rom_offset"]+temp["rom_size"]]).hexdigest()
+						if "db" in rom_header_game and rom_header_game["db"] is not None and rom_header_game["db"]["rc"] == temp["crc32"]:
+							temp["db_entry"] = rom_header_game["db"]
+						else:
+							temp["header"]["db"] = None
+					Util.dprint("GB-Memory Game {:d}: {:s}".format(i, str(temp)))
+					data_list.append(temp)
+				data_list[0]["num_games"] = num_games
+				if len(data_list[0]["timestamp"]) == 0:
+					data_list[0]["timestamp"] = data_list[1]["timestamp"]
+					data_list[0]["kiosk_id"] = data_list[1]["kiosk_id"]
+				return data_list
 			else:
 				data["game_code"] = data["game_code"].decode("ASCII", "ignore")
 				data["title"] = data["title"].decode("SHIFT-JIS", "ignore")
 				data["timestamp"] = data["timestamp"].decode("ASCII", "ignore")
 				data["kiosk_id"] = data["kiosk_id"].decode("ASCII", "ignore")
+				return data
 		except:
-			pass
-		return data
+			print("ERROR: Couldn’t parse the GB-Memory Cartridge data.")
+			return None
 
 	def ImportROM(self, data):
 		info = {"map":{}, "menu":{}}
@@ -116,10 +162,13 @@ class GBMemoryMap:
 				info["menu"]["metadata"]["b_size"] = 1024
 			
 			game_code = info["rom_header"]["game_code"]
-			info["menu"]["metadata"]["game_code"] = "{:s} -{:4s}-  ".format("CGB" if info["rom_header"]["cgb"] == 0xC0 else "DMG", game_code).encode("ascii")
-			info["menu"]["metadata"]["title"] = info["rom_header"]["game_title"].encode("ascii").ljust(0x2C)
-			info["menu"]["metadata"]["timestamp"] = datetime.datetime.now().strftime('%d/%m/%Y%H:%M:%S').encode("ascii")
-			info["menu"]["metadata"]["kiosk_id"] = "{:s}".format(Util.APPNAME).encode("ascii").ljust(8, b'\xFF')
+			info["menu"]["metadata"]["game_code"] = "{:s} -{:4s}-  ".format("CGB" if info["rom_header"]["cgb"] == 0xC0 else "DMG", game_code).encode("ASCII")
+			info["menu"]["metadata"]["title"] = info["rom_header"]["game_title"].encode("SHIFT-JIS", "ignore").ljust(0x2C)
+			if "db" in info["rom_header"] and info["rom_header"]["db"] is not None:
+				info["menu"]["metadata"]["title"] = info["rom_header"]["db"]["gn"].encode("SHIFT-JIS", "ignore").ljust(0x2C)[:0x2C]
+			
+			info["menu"]["metadata"]["timestamp"] = datetime.datetime.now().strftime('%d/%m/%Y%H:%M:%S').encode("ASCII")
+			info["menu"]["metadata"]["kiosk_id"] = "{:s}".format(Util.APPNAME).encode("ASCII").ljust(8, b'\xFF')
 			info["menu"]["raw"] = bytearray(0x56)
 			data = info
 			
@@ -144,15 +193,25 @@ class GBMemoryMap:
 			self.MAP_DATA[0:3] = struct.pack(">I", data["map"]["raw"])[:3]
 			self.MAP_DATA[0x18:0x18+len(data["menu"]["raw"])] = data["menu"]["raw"]
 
-		elif info["rom_header"]["game_title"] == "NP M-MENU MENU":
+		elif info["rom_header"]["game_title"] in ("NP M-MENU MENU", "DMG MULTI MENU "):
+			if info["rom_header"]["game_title"] == "NP M-MENU MENU":
+				menu_ver = 0
+			elif info["rom_header"]["game_title"] == "DMG MULTI MENU ":
+				menu_ver = 1
+
 			menu_items = []
 			rom_offset = 0
 			ram_offset = 0
 			for i in range(0, 8):
-				pos = 0x1C000 + (i * 0x200)
-				menu_item = data[pos:pos+0x200]
 				keys = ["menu_index", "f_offset", "b_offset", "f_size", "b_size", "game_code", "title", "title_gfx", "timestamp", "kiosk_id", "padding", "comment"]
-				values = struct.unpack("=BBBHH12s44s384s18s8s23s16s", menu_item)
+				if menu_ver == 0: # final
+					pos = 0x1C000 + (i * 0x200)
+					menu_item = data[pos:pos+0x200]
+					values = struct.unpack("=BBBHH12s44s384s18s8s23s16s", menu_item)
+				elif menu_ver == 1: # prototype
+					pos = 0x1C000 + (i * 0x800)
+					menu_item = data[pos:pos+0x800]
+					values = struct.unpack("=BBBHH12s44s384s18s8s1559s16s", menu_item)
 				info = dict(zip(keys, values))
 				if info["menu_index"] == 0xFF: continue
 				info["rom_data_offset"] = info["f_offset"] * (128 * 1024)
@@ -219,8 +278,8 @@ class GBMemoryMap:
 			for i in range(0, len(menu_items)):
 				pos = i * 3
 				self.MAP_DATA[pos:pos+3] = struct.pack(">I", menu_items[i]["map"]["raw"])[:3]
-			self.MAP_DATA[0x54:0x66] = struct.pack("=18s", datetime.datetime.now().strftime('%d/%m/%Y%H:%M:%S').encode("ascii"))
-			self.MAP_DATA[0x66:0x6E] = struct.pack("=8s", "{:s}".format(Util.APPNAME).encode("ascii").ljust(8, b'\xFF'))
+			self.MAP_DATA[0x54:0x66] = struct.pack("=18s", datetime.datetime.now().strftime('%d/%m/%Y%H:%M:%S').encode("ASCII"))
+			self.MAP_DATA[0x66:0x6E] = struct.pack("=8s", "{:s}".format(Util.APPNAME).encode("ASCII").ljust(8, b'\xFF'))
 
 	def MapperToMBCType(self, mbc):
 		if mbc == 0x00: # ROM only

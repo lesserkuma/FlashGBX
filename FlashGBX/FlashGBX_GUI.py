@@ -536,8 +536,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 							msg_text = "A new version of {:s} has been released!\nVersion {:s} is now available.".format(APPNAME, latest_version)
 							print(msg_text)
 							msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} Update Check".format(APPNAME), text=msg_text)
-							button_open = msgbox.addButton("  Open &release notes  ", QtWidgets.QMessageBox.ActionRole)
-							button_cancel = msgbox.addButton("&OK", QtWidgets.QMessageBox.RejectRole)
+							button_open = msgbox.addButton("  &Open release notes  ", QtWidgets.QMessageBox.ActionRole)
+							button_cancel = msgbox.addButton("&Close", QtWidgets.QMessageBox.RejectRole)
 							msgbox.setDefaultButton(button_open)
 							msgbox.setEscapeButton(button_cancel)
 							answer = msgbox.exec()
@@ -922,7 +922,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					msgbox.exec()
 				else:
 					self.lblStatus4a.setText("Done.")
-					if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x105, 0x202, 0x203, 0x205)):
+					#if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x105, 0x202, 0x203, 0x205)):
+					if "mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x202, 0x203, 0x205):
 						msg = "The ROM backup is complete."
 						msgbox.setText(msg + msg_te)
 						msgbox.exec()
@@ -1183,7 +1184,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.btnConfig.setEnabled(False)
 		self.lblStatus4a.setText("Preparing...")
 		qt_app.processEvents()
-		args = { "path":path, "mbc":mbc, "rom_size":rom_size, "agb_rom_size":rom_size, "fast_read_mode":True, "cart_type":cart_type }
+		args = { "path":path, "mbc":mbc, "rom_size":rom_size, "agb_rom_size":rom_size, "fast_read_mode":True, "cart_type":cart_type, "settings":self.SETTINGS }
 		self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		self.STATUS["time_start"] = time.time()
@@ -1339,7 +1340,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				hdr = RomFileAGB(buffer).GetHeader()
 			
 			if not hdr["logo_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
-				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to invalid logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
+				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to invalid boot logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 				if answer == QtWidgets.QMessageBox.Cancel: return
 			if not hdr["header_checksum_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
 				msg_text = "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"])
@@ -1374,6 +1375,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		else:
 			args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc, "flash_offset":flash_offset }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
+		#self.CONN._FlashROM(args=args)
 		self.grpStatus.setTitle("Transfer Status")
 		buffer = None
 		self.STATUS["time_start"] = time.time()
@@ -1501,7 +1503,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if save_type == 0:
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "No save type was selected.", QtWidgets.QMessageBox.Ok)
 				return
-			save_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(save_type)]
+			#save_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(save_type)]
 
 		elif self.CONN.GetMode() == "AGB":
 			setting_name = "LastDirSaveDataAGB"
@@ -1537,9 +1539,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="This feature only works with newer GBxCart RW hardware revisions.", standardButtons=QtWidgets.QMessageBox.Ok)
 				msgbox.exec()
 				return
-
-			if self.CONN.GetMode() == "AGB" and self.cmbAGBSaveTypeResult.currentIndex() < len(Util.AGB_Header_Save_Types) and "Batteryless SRAM" in Util.AGB_Header_Save_Types[self.cmbAGBSaveTypeResult.currentIndex()]:
+			
+			if self.CONN.GetMode() == "AGB" and self.cmbAGBSaveTypeResult.currentIndex() < len(Util.AGB_Header_Save_Types) and \
+			("Batteryless SRAM" in Util.AGB_Header_Save_Types[self.cmbAGBSaveTypeResult.currentIndex()]) or \
+			("8M DACS" in Util.AGB_Header_Save_Types[self.cmbAGBSaveTypeResult.currentIndex()]):
 				QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Stress test is not supported for this save type.", QtWidgets.QMessageBox.Ok)
+				return
+			if self.CONN.GetMode() == "AGB" and "ereader" in self.CONN.INFO and self.CONN.INFO["ereader"] is True:
+				QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Stress test is not supported for this cartridge.", QtWidgets.QMessageBox.Ok)
 				return
 			answer = QtWidgets.QMessageBox.question(self, "{:s} {:s}".format(APPNAME, VERSION), "The cartridge’s save chip will be tested for potential problems as follows:\n- Read the same data multiple times\n- Writing and reading different test patterns\n\nPlease ensure the cartridge pins are freshly cleaned and the save data is backed up before proceeding.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 			if answer == QtWidgets.QMessageBox.Cancel: return
@@ -1554,6 +1561,46 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The size of this file is not supported.", QtWidgets.QMessageBox.Ok)
 				return
 		
+		buffer = None
+		if self.CONN.GetMode() == "AGB" and "ereader" in self.CONN.INFO and self.CONN.INFO["ereader"] is True:
+			if self.CONN.GetFWBuildDate() == "": # Legacy Mode
+				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="This cartridge is not supported in Legacy Mode.", standardButtons=QtWidgets.QMessageBox.Ok)
+				msgbox.exec()
+				return
+			msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="")
+			button_keep = msgbox.addButton("  &Keep existing calibration data  ", QtWidgets.QMessageBox.ActionRole)
+			self.CONN.ReadInfo()
+			cart_name = "e-Reader"
+			if self.CONN.INFO["db"] is not None:
+				cart_name = self.CONN.INFO["db"]["gn"]
+			if "ereader_calibration" in self.CONN.INFO:
+				if erase:
+					buffer = bytearray([0xFF] * 0x20000)
+					msg_text = "This {:s} cartridge currently has calibration data in place. It is strongly recommended to keep the existing calibration data.\n\nErase everything but the calibration data? Or erase everything?".format(cart_name)
+					button_overwrite = msgbox.addButton("  &Erase everything  ", QtWidgets.QMessageBox.ActionRole)
+					erase = False # Don’t just erase everything
+				else:
+					with open(path, "rb") as f: buffer = bytearray(f.read())
+					msg_text = "This {:s} cartridge currently has calibration data in place that is different from this save file’s data. It is strongly recommended to keep the existing calibration data unless you actually need to restore it from a previous backup.\n\nWould you like to keep the existing calibration data, or overwrite it with data from the file you selected?".format(cart_name)
+					button_overwrite = msgbox.addButton("  &Restore from save data  ", QtWidgets.QMessageBox.ActionRole)
+				button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
+				msgbox.setText(msg_text)
+				msgbox.setDefaultButton(button_keep)
+				msgbox.setEscapeButton(button_cancel)
+
+				if buffer[0xD000:0xF000] != self.CONN.INFO["ereader_calibration"]:
+					answer = msgbox.exec()
+					if msgbox.clickedButton() == button_cancel:
+						return
+					elif msgbox.clickedButton() == button_keep:
+						buffer[0xD000:0xF000] = self.CONN.INFO["ereader_calibration"]
+					elif msgbox.clickedButton() == button_overwrite:
+						pass
+			else:
+				msg_text = "Warning: This {:s} cartridge may currently have calibration data in place. Erasing or overwriting this data may render the “Scan Card” feature unusable. It is strongly recommended to create a backup of the original save data first and store it in a safe place. That way the calibration data can be restored later.\n\nDo you still want to continue?".format(cart_name)
+				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg_text, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+				if answer == QtWidgets.QMessageBox.No: return
+		
 		verify_write = self.SETTINGS.value("VerifyData", default="enabled")
 		if verify_write and verify_write.lower() == "enabled":
 			verify_write = True
@@ -1565,8 +1612,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if not test and self.CONN.INFO["has_rtc"]:
 			if self.CONN.GetMode() == "DMG" and mbc in (0x10, 0x110) and not self.CONN.IsClkConnected():
 				rtc = False
-			elif (self.CONN.GetMode() == "DMG" and ((mbc == 0xFD and (filesize == save_size + 0x28 or erase)) or (mbc == 0xFE and (filesize == save_size + 0xC or erase)) or (self.CONN.IsClkConnected() and mbc in (0x10, 0x110) and filesize == save_size + 0x30 or erase))) or \
-			     (self.CONN.GetMode() == "AGB" and (filesize == save_size + 0x10 or erase)):
+			elif erase or Util.save_size_includes_rtc(mode=self.CONN.GetMode(), mbc=mbc, save_size=filesize, save_type=save_type):
 				msg = "A Real Time Clock cartridge was detected. Do you want the Real Time Clock register values to be also written?"
 				cb = QtWidgets.QCheckBox("&Adjust RTC", checked=True)
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
@@ -1791,8 +1837,13 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				#self.CONN._FlashROM(args=args)
 			else:
 				args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase, "verify_write":verify_write }
+				if buffer is not None:
+					args["buffer"] = buffer
+					args["path"] = None
 				self.STATUS["args"] = args
 				self.CONN.RestoreRAM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
+				#args = { "mode":3, "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase, "verify_write":verify_write }
+				#self.CONN._BackupRestoreRAM(args=args)
 			self.STATUS["time_start"] = time.time()
 			self.STATUS["last_path"] = path
 			self.STATUS["args"] = args
@@ -2183,8 +2234,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if data["db"] != None:
 					if data["db"]['st'] < len(Util.AGB_Header_Save_Types):
 						self.cmbAGBSaveTypeResult.setCurrentIndex(data["db"]['st'])
-				if data["dacs_8m"] is True:
-					self.cmbAGBSaveTypeResult.setCurrentIndex(6)
 
 			if data['empty'] == True: # defaults
 				if data['empty_nocart'] == True:
@@ -2200,6 +2249,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					for i in range(0, len(cart_types[0])):
 						if "3d_memory" in cart_types[1][i]:
 							self.cmbAGBCartridgeTypeResult.setCurrentIndex(i)
+			
+			if data["dacs_8m"] is True:
+				self.cmbAGBSaveTypeResult.setCurrentIndex(6)
 			
 			self.grpDMGCartridgeInfo.setVisible(False)
 			self.grpAGBCartridgeInfo.setVisible(True)
@@ -2397,11 +2449,50 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if msg_cart_type_s_detail == "": msg_cart_type_s_detail = msg_cart_type_s
 			self.SetProgressBars(min=0, max=100, value=100)
 			show_details = False
+			
+			msg_gbmem = ""
+			if "gbmem_parsed" in header:
+				msg_gbmem = "<br><b>NP GB-Memory Cartridge Data:</b><br>"
+				if isinstance(header["gbmem_parsed"], list):
+					msg_gbmem += "" \
+						"- Write Timestamp: {timestamp:s}<br>" \
+						"- Write Kiosk ID: {kiosk_id:s}<br>" \
+						"- Number of Games: {num_games:d}<br>" \
+						"- Write Counter: {write_count:d}<br>" \
+						"- Cartridge ID: {cart_id:s}<br>" \
+					.format(
+						timestamp=header["gbmem_parsed"][0]["timestamp"].replace("\0", ""),
+						kiosk_id=header["gbmem_parsed"][0]["kiosk_id"].replace("\0", ""),
+						cart_id=header["gbmem_parsed"][0]["cart_id"].replace("\0", ""),
+						write_count=header["gbmem_parsed"][0]["write_count"],
+						num_games=header["gbmem_parsed"][0]["num_games"],
+					)
+					for i in range(1, len(header["gbmem_parsed"])):
+						if header["gbmem_parsed"][i]["menu_index"] == 0xFF: continue
+						if i == 1:
+							msg_gbmem += "- Menu ROM: {:s}<br>".format(header["gbmem_parsed"][i]["title"].replace("\0", ""))
+						else:
+							msg_gbmem += "- Game {:d}: {:s}<br>".format(i - 1, header["gbmem_parsed"][i]["title"].replace("\0", ""))
+				else:
+					msg_gbmem += "" \
+						"- Write Timestamp: {timestamp:s}<br>" \
+						"- Write Kiosk ID: {kiosk_id:s}<br>" \
+						"- Write Counter: {write_count:d}<br>" \
+						"- Cartridge ID: {cart_id:s}<br>" \
+						"- Game Title: {game_title:s}<br>" \
+					.format(
+						timestamp=header["gbmem_parsed"]["timestamp"].replace("\0", ""),
+						kiosk_id=header["gbmem_parsed"]["kiosk_id"].replace("\0", ""),
+						cart_id=header["gbmem_parsed"]["cart_id"].replace("\0", ""),
+						write_count=header["gbmem_parsed"]["write_count"],
+						game_title=header["gbmem_parsed"]["title"],
+					)
+			
 			msg = "The following cartridge configuration was detected:<br><br>"
 			if found_supported:
 				dontShowAgain = str(self.SETTINGS.value("SkipAutodetectMessage", default="disabled")).lower() == "enabled"
 				if not dontShowAgain or not canSkipMessage:
-					temp = "{:s}{:s}{:s}{:s}{:s}".format(msg, msg_flash_size_s, msg_save_type_s, msg_flash_mapper_s, msg_cart_type_s)
+					temp = "{:s}{:s}{:s}{:s}{:s}{:s}".format(msg, msg_flash_size_s, msg_save_type_s, msg_flash_mapper_s, msg_cart_type_s, msg_gbmem)
 					temp = temp[:-4]
 					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Information, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=temp)
 					msgbox.setTextFormat(QtCore.Qt.RichText)
@@ -2462,7 +2553,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						self.mnuConfig.actions()[4].setChecked(False)
 						return self.DetectCartridge()
 				
-				temp = "{:s}{:s}{:s}{:s}{:s}{:s}{:s}{:s}{:s}".format(msg, msg_header_s, msg_flash_size_s, msg_save_type_s, msg_flash_mapper_s, msg_flash_id_s, msg_cfi_s, msg_cart_type_s_detail, msg_fw)
+				temp = "{:s}{:s}{:s}{:s}{:s}{:s}{:s}{:s}{:s}{:s}".format(msg, msg_header_s, msg_flash_size_s, msg_save_type_s, msg_flash_mapper_s, msg_flash_id_s, msg_cfi_s, msg_cart_type_s_detail, msg_gbmem, msg_fw)
 				temp = temp[:-4]
 				msgbox.setText(temp)
 				msgbox.setTextFormat(QtCore.Qt.RichText)

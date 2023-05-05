@@ -1057,7 +1057,7 @@ class FlashGBX_CLI():
 			print("The cartridge save data will now be read{:s} and saved to the following file:\n{:s}".format(s_mbc, os.path.abspath(path)))
 		elif args.action == "restore-save":
 			if not args.overwrite:
-				answer = input("Restoring save data to the cartridge will erase the previous save.\nDo you want to overwrite it? [y/N]: ").strip().lower()
+				answer = input("Restoring save data to the cartridge will erase the existing save.\nDo you want to overwrite it? [y/N]: ").strip().lower()
 				if answer != "y":
 					print("Canceled.")
 					return
@@ -1073,9 +1073,27 @@ class FlashGBX_CLI():
 			print("The cartridge save data size will now be examined{:s}.\nNote: This is for debug use only.\n".format(s_mbc))
 		
 		if self.CONN.GetMode() == "AGB":
+			if args.action == "restore-save" or args.action == "erase-save":
+				buffer = None
+				if self.CONN.GetMode() == "AGB" and "ereader" in self.CONN.INFO and self.CONN.INFO["ereader"] is True:
+					if self.CONN.GetFWBuildDate() == "": # Legacy Mode
+						print("This cartridge is not supported in Legacy Mode.")
+						return
+					self.CONN.ReadInfo()
+					if "ereader_calibration" in self.CONN.INFO:
+						with open(path, "rb") as f: buffer = bytearray(f.read())
+						if buffer[0xD000:0xF000] != self.CONN.INFO["ereader_calibration"]:
+							if not args.overwrite:
+								if args.action == "erase-save": args.action = "restore-save"
+								print("Note: Keeping existing e-Reader calibration data.")
+								buffer[0xD000:0xF000] = self.CONN.INFO["ereader_calibration"]
+							else:
+								print("Note: Overwriting existing e-Reader calibration data.")
+					else:
+						print("Note: No existing e-Reader calibration data found.")
 			print("Using Save Type “{:s}”.".format(Util.AGB_Header_Save_Types[save_type]))
 		elif self.CONN.GetMode() == "DMG":
-			if rtc and header["mapper_raw"] in (0x10, 0x110, 0xFE): # RTC of MBC3, HuC-3
+			if rtc and header["mapper_raw"] in (0x10, 0x110, 0xFE): # RTC of MBC3, MBC30, HuC-3
 				print("Real Time Clock register values will also be written if applicable/possible.")
 
 		try:
@@ -1097,7 +1115,11 @@ class FlashGBX_CLI():
 			self.CONN.TransferData(args={ 'mode':2, 'path':path, 'mbc':mbc, 'save_type':save_type, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "restore-save":
 			verify_write = args.no_verify_write is False
-			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc, 'verify_write':verify_write }, signal=self.PROGRESS.SetProgress)
+			targs = { 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc, 'verify_write':verify_write }
+			if buffer is not None:
+				targs["buffer"] = buffer
+				targs["path"] = None
+			self.CONN.TransferData(args=targs, signal=self.PROGRESS.SetProgress)
 		elif args.action == "erase-save":
 			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':True, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "debug-test-save": # debug

@@ -1,4 +1,13 @@
 # Release notes
+### v3.28 (released 2023-05-05)
+- Improved support for the BennVenn MBC3000 RTC cart; can now write to Real Time Clock registers
+- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums
+- Improved support for 8M FLASH DACS cartridges; can now backup and restore the boot sector
+- Nintendo Power GB-Memory Cartridge (DMG-MMSA-JPN): Added more information to the dump reports
+- Nintendo Power GB-Memory Cartridge (DMG-MMSA-JPN): When making a ROM backup, individual games will now also be extracted
+- Improved support for e-Reader, Card e-Reader and Card e-Reader+ cartridges; will now prevent overwriting calibration data accidentally
+- Minor bug fixes and improvements
+
 ### v3.27 (released 2023-04-26)
 - Bundles GBxCart RW v1.4/v1.4a firmware version R42+L10 (improves flash cart compatibility) *(thanks wickawack)*
 - Added support for cartridges with MX29GL128EHT2I and ALTERA CPLD *(thanks Merkin)*
@@ -45,7 +54,7 @@
 ### v3.22 (released 2023-02-09)
 - Added support for DRV with AM29LV160DB and ALTERA CPLD *(thanks ccs21)*
 - Added support for DIY cart with HY29F800 *(thanks Kaede)*
-- Added more information to the dump report with Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN)
+- Added more information to the dump report of Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN)
 - Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums
 - Minor bug fixes and improvements
 
@@ -331,7 +340,7 @@
 - Previously preliminarily added mapper support including for MBC7 and GBA Video cartridges is now working (requires GBxCart RW firmware version L1+)
 - Added support for writing compilation ROMs to Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN); requires a .map file in the same directory as the ROM file; all this can be generated using orangeglo’s [GBNP ROM builder website](https://orangeglo.github.io/gbnp/index.html)
 - Confirmed support for GB-M968 with 29LV160DB *(thanks bbsan)*
-- Added support for ROM backup as well as save data backup and restore for 8M FLASH DACS cartridges; tested with “Hikaru no Go 3 – Joy Carry Cartridge” (AGB-GHTJ-JPN)
+- Added support for ROM backup as well as save data backup and restore for 8M FLASH DACS cartridges
 - Confirmed support for SD007_TSOP_29LV017D with L017D70VC *(thanks marv17)*
 - Added support for 100BS6600_48BALL_V4 with 6600M0U0BE (the “369IN1” cartridge) *(thanks to BennVenn’s research on Discord)*
 - Removed broken support for saving and restoring RTC registers of official TAMA5 cartridges inside the save file as it became clear that the year value was not correctly written; more research needed

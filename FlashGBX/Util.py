@@ -7,9 +7,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.27"
+VERSION_PEP440 = "3.28"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1682502626
+VERSION_TIMESTAMP = 1683283512
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -17,14 +17,14 @@ CONFIG_PATH = ""
 
 AGB_Header_ROM_Sizes = [ "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB", "256 MiB" ]
 AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
-AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1008 KiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)", "Unlicensed Batteryless SRAM" ]
-AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1032192, 65536, 131072, 0 ]
+AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1 MiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)", "Unlicensed Batteryless SRAM" ]
+AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1048576, 65536, 131072, 0 ]
 AGB_Global_CRC32 = 0
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000 ]
 
-DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x110:'MBC30+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'MAC-GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
-DMG_Mapper_Types = { "None":[ 0x00, 0x08, 0x09 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x05, 0x06 ], "MBC3":[ 0x10, 0x11, 0x12, 0x13 ], "MBC30":[ 0x110 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "MAC-GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "Unlicensed 256M Multi Cart Mapper":[ 0x201 ], "Unlicensed Wisdom Tree Mapper":[ 0x202 ], "Unlicensed Xploder GB Mapper":[ 0x203 ], "Unlicensed Sachen Mapper":[ 0x204 ], "Unlicensed Datel Orbit V2 Mapper":[ 0x205 ] }
+DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x0F:'MBC3+RTC+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x110:'MBC30+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'MAC-GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
+DMG_Mapper_Types = { "None":[ 0x00, 0x08, 0x09 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x05, 0x06 ], "MBC3":[ 0x0F, 0x10, 0x11, 0x12, 0x13 ], "MBC30":[ 0x110 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "MAC-GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "Unlicensed 256M Multi Cart Mapper":[ 0x201 ], "Unlicensed Wisdom Tree Mapper":[ 0x202 ], "Unlicensed Xploder GB Mapper":[ 0x203 ], "Unlicensed Sachen Mapper":[ 0x204 ], "Unlicensed Datel Orbit V2 Mapper":[ 0x205 ] }
 DMG_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000 ]
@@ -621,25 +621,72 @@ def GetDumpReport(di, device):
 				raw_data += ''.join(format(x, '02X') for x in di["gbmem"][i*0x20:i*0x20+0x20]) + "\n                   "
 			raw_data = raw_data[:-20]
 			
-			if "gbmem_parsed" in di and len(di["gbmem_parsed"]) > 0:
-				s += "" \
-					"\n== GB-Memory Data ==\n" \
-					"* Game Code:       {game_code:s}\n" \
-					"* Game Title:      {title:s}\n" \
-					"* Write Timestamp: {timestamp:s}\n" \
-					"* Write Kiosk ID:  {kiosk_id:s}\n" \
-					"* Write Counter:   {write_count:d}\n" \
-					"* Cartridge Value: {cart_id:s}\n" \
-					"* Raw Map Data:    {raw_data:s}\n" \
-				.format(
-					game_code=di["gbmem_parsed"]["game_code"],
-					title=di["gbmem_parsed"]["title"],
-					timestamp=di["gbmem_parsed"]["timestamp"],
-					kiosk_id=di["gbmem_parsed"]["kiosk_id"],
-					cart_id=di["gbmem_parsed"]["cart_id"],
-					write_count=di["gbmem_parsed"]["write_count"],
-					raw_data=raw_data
-				)
+			if "gbmem_parsed" in di and di["gbmem_parsed"] is not None and len(di["gbmem_parsed"]) > 0:
+				if (isinstance(di["gbmem_parsed"], list)):
+					s += "" \
+						"\n== GB-Memory Data (Multi Menu) ==\n" \
+						"* Write Timestamp: {timestamp:s}\n" \
+						"* Write Kiosk ID:  {kiosk_id:s}\n" \
+						"* Number of Games: {num_games:d}\n" \
+						"* Write Counter:   {write_count:d}\n" \
+						"* Cartridge ID:    {cart_id:s}\n" \
+						"* Raw Map Data:    {raw_data:s}\n" \
+					.format(
+						timestamp=di["gbmem_parsed"][0]["timestamp"],
+						kiosk_id=di["gbmem_parsed"][0]["kiosk_id"],
+						cart_id=di["gbmem_parsed"][0]["cart_id"],
+						write_count=di["gbmem_parsed"][0]["write_count"],
+						num_games=di["gbmem_parsed"][0]["num_games"],
+						raw_data=raw_data
+					)
+					for i in range(1, len(di["gbmem_parsed"])):
+						if di["gbmem_parsed"][i]["menu_index"] == 0xFF: continue
+						if di["gbmem_parsed"][i]["header"]["logo_correct"] is False: continue
+						if i == 1:
+							s += "\n=== Menu ROM ===\n"
+						else:
+							s += "\n=== Game {:d} ===\n".format(i-1)
+						s += "" \
+							"* Game Code:       {game_code:s}\n" \
+							"* Game Title:      {title:s}\n" \
+							"* Write Timestamp: {timestamp:s}\n" \
+							"* Write Kiosk ID:  {kiosk_id:s}\n" \
+							"* Location:        {location:s}\n" \
+							"* ROM Size:        {size:s}\n" \
+						.format(
+							game_code=di["gbmem_parsed"][i]["game_code"],
+							title=di["gbmem_parsed"][i]["title"],
+							timestamp=di["gbmem_parsed"][i]["timestamp"],
+							kiosk_id=di["gbmem_parsed"][i]["kiosk_id"],
+							location="0x{:06X}–0x{:06X}".format(di["gbmem_parsed"][i]["rom_offset"], di["gbmem_parsed"][i]["rom_offset"]+di["gbmem_parsed"][i]["rom_size"]-1),
+							size="{:s} ({:d} bytes)".format(formatFileSize(di["gbmem_parsed"][i]["rom_size"]), di["gbmem_parsed"][i]["rom_size"]),
+						)
+						if "crc32" in di["gbmem_parsed"][i]: s += "* CRC32:           {:08x}\n".format(di["gbmem_parsed"][i]["crc32"])
+						if "md5" in di["gbmem_parsed"][i]: s += "* MD5:             {:s}\n".format(di["gbmem_parsed"][i]["md5"])
+						if "sha1" in di["gbmem_parsed"][i]: s += "* SHA-1:           {:s}\n".format(di["gbmem_parsed"][i]["sha1"])
+						if "sha256" in di["gbmem_parsed"][i]: s += "* SHA-256:         {:s}\n".format(di["gbmem_parsed"][i]["sha256"])
+						
+						if "db_entry" in di["gbmem_parsed"][i] and "crc32" in di["gbmem_parsed"][i] and di["gbmem_parsed"][i]["db_entry"]["rc"] == di["gbmem_parsed"][i]["crc32"]:
+							s += "* Database Match:  {:s} {:s}\n".format(di["gbmem_parsed"][i]["db_entry"]["gn"], di["gbmem_parsed"][i]["db_entry"]["ne"])
+				elif isinstance(di["gbmem_parsed"]["game_code"], str):
+					s += "" \
+						"\n== GB-Memory Data (Single Game) ==\n" \
+						"* Game Code:       {game_code:s}\n" \
+						"* Game Title:      {title:s}\n" \
+						"* Write Timestamp: {timestamp:s}\n" \
+						"* Write Kiosk ID:  {kiosk_id:s}\n" \
+						"* Write Counter:   {write_count:d}\n" \
+						"* Cartridge ID:    {cart_id:s}\n" \
+						"* Raw Map Data:    {raw_data:s}\n" \
+					.format(
+						game_code=di["gbmem_parsed"]["game_code"],
+						title=di["gbmem_parsed"]["title"],
+						timestamp=di["gbmem_parsed"]["timestamp"],
+						kiosk_id=di["gbmem_parsed"]["kiosk_id"],
+						cart_id=di["gbmem_parsed"]["cart_id"],
+						write_count=di["gbmem_parsed"]["write_count"],
+						raw_data=raw_data
+					)
 			else:
 				s += "" \
 					"* GB-Memory Data:  {:s}\n" \
@@ -708,10 +755,10 @@ def GetDumpReport(di, device):
 	
 	return s
 
-def GenerateFileName(mode, header, settings):
-	fe_ni = False
+def GenerateFileName(mode, header, settings=None):
+	fe_ni = True
 	if settings is not None:
-		fe_ni = settings.value(key="UseNoIntroFilenames", default="disabled").lower() == "enabled"
+		fe_ni = settings.value(key="UseNoIntroFilenames", default="enabled").lower() == "enabled"
 	
 	path = "ROM"
 	if mode == "DMG":
@@ -724,9 +771,8 @@ def GenerateFileName(mode, header, settings):
 		if settings is not None:
 			path = settings.value(key="FileNameFormatDMG", default=path)
 			fe_sgb = settings.value(key="AutoFileExtensionSGB", default="enabled")
-
+		
 		if len(header["game_code"]) > 0:
-			path_title = header["game_title"]
 			path_code = header["game_code"]
 			path = "%TITLE%_%CODE%-%REVISION%"
 			if settings is not None:
@@ -747,6 +793,12 @@ def GenerateFileName(mode, header, settings):
 			path = path.replace("%CODE%", path_code.strip())
 			path = path.replace("%REVISION%", path_revision)
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
+			if get_mbc_name(header["mapper_raw"]) == "G-MMC1":
+				if "gbmem_parsed" in header:
+					if (isinstance(header["gbmem_parsed"], list)):
+						path += "_{:s}".format(header["gbmem_parsed"][0]["cart_id"])
+					else:
+						path += "_{:s}".format(header["gbmem_parsed"]["cart_id"])
 			path += ".{:s}".format(path_extension)
 	elif mode == "AGB":
 		path = "%TITLE%_%CODE%-%REVISION%"
@@ -766,8 +818,11 @@ def GenerateFileName(mode, header, settings):
 		path += "." + path_extension
 	
 	if fe_ni and header["db"] is not None:
-		if mode == "DMG" and get_mbc_name(header["mapper_raw"]) == "G-MMC1":
-			path = "{:s}.{:s}".format(header["db"]["gn"], path_extension)
+		if mode == "DMG" and get_mbc_name(header["mapper_raw"]) == "G-MMC1" and "gbmem_parsed" in header:
+			if (isinstance(header["gbmem_parsed"], list)):
+				path = "NP GB-Memory Cartridge ({:s}).{:s}".format(header["gbmem_parsed"][0]["cart_id"], path_extension)
+			else:
+				path = "NP GB-Memory Cartridge ({:s}).{:s}".format(header["gbmem_parsed"]["cart_id"], path_extension)
 		else:
 			path = "{:s} {:s}.{:s}".format(header["db"]["gn"], header["db"]["ne"], path_extension)
 	
@@ -782,6 +837,18 @@ def get_mbc_name(id):
 	for (k, v) in DMG_Mapper_Types.items():
 		if id in v: return k
 	return "Unknown mapper type 0x{:02X}".format(id)
+
+def save_size_includes_rtc(mode, mbc, save_size, save_type):
+	rtc_size = 0x10
+	if mode == "DMG":
+		if get_mbc_name(mbc) in ("MBC3", "MBC30"): rtc_size = 0x30
+		elif get_mbc_name(mbc) == "HuC-3": rtc_size = 0x0C
+		elif get_mbc_name(mbc) == "TAMA5": rtc_size = 0x28
+		return (((DMG_Header_RAM_Sizes_Flasher_Map[save_type] + rtc_size) % save_size) != rtc_size)
+	elif mode == "AGB":
+		rtc_size = 0x10
+		return (((AGB_Header_Save_Sizes[save_type] + rtc_size) % save_size) != rtc_size)
+	return False
 
 def validate_datetime_format(string, format):
 	try:
