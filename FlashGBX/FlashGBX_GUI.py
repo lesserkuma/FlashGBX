@@ -202,7 +202,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("Check for &updates on application startup", lambda: [ self.EnableUpdateCheck() ])
 		self.mnuConfig.addAction("&Append date && time to filename of save data backups", lambda: self.SETTINGS.setValue("SaveFileNameAddDateTime", str(self.mnuConfig.actions()[1].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("Prefer full &chip erase", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
-		self.mnuConfig.addAction("Extra data &verification", lambda: self.SETTINGS.setValue("VerifyData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
+		self.mnuConfig.addAction("&Verify written data", lambda: self.SETTINGS.setValue("VerifyData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("Limit &baud rate to 1Mbps for GBxCart RW v1.4 devices", lambda: [ self.SETTINGS.setValue("LimitBaudRate", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")), self.SetLimitBaudRate() ])
 		self.mnuConfig.addAction("Always &generate ROM dump reports", lambda: self.SETTINGS.setValue("GenerateDumpReports", str(self.mnuConfig.actions()[6].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
@@ -1613,7 +1613,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if self.CONN.GetMode() == "DMG" and mbc in (0x10, 0x110) and not self.CONN.IsClkConnected():
 				rtc = False
 			elif erase or Util.save_size_includes_rtc(mode=self.CONN.GetMode(), mbc=mbc, save_size=filesize, save_type=save_type):
-				msg = "A Real Time Clock cartridge was detected. Do you want the Real Time Clock register values to be also written?"
+				msg = "A Real Time Clock cartridge was detected. Do you want the Real Time Clock register values to be written as well?"
 				cb = QtWidgets.QCheckBox("&Adjust RTC", checked=True)
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg, standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel)
 				msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)

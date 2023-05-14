@@ -4,13 +4,15 @@
 		"SD007_48BALL_64M with GL032M11BAIR4",
 		"SD007_48BALL_64M_V2 with GL032M11BAIR4",
 		"S29GL032N90T and ALTERA CPLD (MBC5)",
-		"29LV320TE and ALTERA CPLD (no PCB text)"
+		"29LV320TE and ALTERA CPLD (no PCB text)",
+		"SD007_TSOP_64BALL_SOP28_V2 with unlabeled flash chip"
 	],
 	"flash_ids":[
 		[ 0x02, 0x02, 0x7D, 0x7D ],
 		[ 0x02, 0x02, 0x7D, 0x7D ],
 		[ 0x02, 0x02, 0x7D, 0x7D ],
-		[ 0x04, 0x04, 0xF5, 0xF5 ]
+		[ 0x04, 0x04, 0xF5, 0xF5 ],
+		[ 0x02, 0x02, 0x7D, 0x7D ]
 	],
 	"voltage":3.3,
 	"flash_size":0x400000,

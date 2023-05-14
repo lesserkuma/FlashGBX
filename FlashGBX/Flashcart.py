@@ -129,8 +129,8 @@ class Flashcart:
 		if "write_pin" not in self.CONFIG: return False
 		return (self.CONFIG["write_pin"] == "WR+RESET")
 
-	def GetFlashSize(self):
-		if "flash_size" not in self.CONFIG: return False
+	def GetFlashSize(self, default=False):
+		if "flash_size" not in self.CONFIG: return default
 		return self.CONFIG["flash_size"]
 
 	def GetBufferSize(self):

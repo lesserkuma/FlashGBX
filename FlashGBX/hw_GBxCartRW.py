@@ -683,26 +683,26 @@ class GbxDevice:
 		if Util.DEBUG:
 			with open("debug_header.bin", "wb") as f: f.write(header)
 		if header is False or len(header) != 0x180:
-			print("{:s}\n{:s}Couldn’t read the cartridge information. Please try again.{:s}".format(str(header), ANSI.RED, ANSI.RESET))
 			return False
 		
 		# Parse ROM header
 		if self.MODE == "DMG":
 			data = RomFileDMG(header).GetHeader()
-			if data["game_title"] == "TETRIS" and hashlib.sha1(header).digest() != bytearray([0x1D, 0x69, 0x2A, 0x4B, 0x31, 0x7A, 0xA5, 0xE9, 0x67, 0xEE, 0xC2, 0x2F, 0xCC, 0x32, 0x43, 0x8C, 0xCB, 0xC5, 0x78, 0x0B]): # Sachen
+			if "game_title" in data and data["game_title"] == "TETRIS" and hashlib.sha1(header).digest() != bytearray([0x1D, 0x69, 0x2A, 0x4B, 0x31, 0x7A, 0xA5, 0xE9, 0x67, 0xEE, 0xC2, 0x2F, 0xCC, 0x32, 0x43, 0x8C, 0xCB, 0xC5, 0x78, 0x0B]): # Sachen
 				header = self.ReadROM(0, 0x280)
 				data = RomFileDMG(header).GetHeader()
-			if data["logo_correct"] is False and not b"Future Console Design" in header: # workaround for strange bootlegs
+			if "logo_correct" in data and data["logo_correct"] is False and not b"Future Console Design" in header: # workaround for strange bootlegs
 				self._cart_write(0, 0xFF)
 				time.sleep(0.1)
 				header = self.ReadROM(0, 0x280)
 				data = RomFileDMG(header).GetHeader()
-			if data["mapper_raw"] == 0x203 or b"Future Console Design" in header: # Xploder GB version number
+			if "mapper_raw" in data and data["mapper_raw"] == 0x203 or b"Future Console Design" in header: # Xploder GB version number
 				self._cart_write(0x0006, 0)
 				header[0:0x10] = self.ReadROM(0x4000, 0x10)
 				header[0xD0:0xE0] = self.ReadROM(0x40D0, 0x10)
 				data = RomFileDMG(header).GetHeader()
-			
+			if data == {}: return False
+
 			data["has_rtc"] = False
 			data["rtc_string"] = "Not available"
 			if data["logo_correct"] is True:
@@ -1100,11 +1100,13 @@ class GbxDevice:
 		elif self.MODE == "AGB":
 			command = "AGB_CART_READ"
 		
-		for _ in range(0, num):
+		for n in range(0, num):
 			self._write(self.DEVICE_CMD[command])
 			temp = self._read(length)
 			if isinstance(temp, int): temp = bytearray([temp])
-			if temp is False or len(temp) != length: return bytearray()
+			if temp is False or len(temp) != length:
+				print("{:s}Error while trying to read 0x{:X} bytes from cartridge ROM at 0x{:X} in iteration {:d} of {:d}:{:s}\n{:s}".format(ANSI.RED, length, address, n, num, ANSI.RESET, str(temp)))
+				return bytearray()
 			buffer += temp
 			if self.INFO["action"] in (self.ACTIONS["ROM_READ"], self.ACTIONS["SAVE_READ"], self.ACTIONS["ROM_WRITE_VERIFY"]) and not self.NO_PROG_UPDATE:
 				self.SetProgress({"action":"READ", "bytes_added":len(temp)})
@@ -1379,9 +1381,6 @@ class GbxDevice:
 				
 				if ret != 0x03: self._write(self.DEVICE_CMD["FLASH_PROGRAM"])
 				ret = self._write(data, wait=True)
-				if rumble_stop and i == 0:
-					dprint("Sending rumble stop command")
-					self._cart_write(address=0xC6, value=0x00, flashcart=True)
 				
 				if ret not in (0x01, 0x03):
 					dprint("Flash error at 0x{:X} in iteration {:d} of {:d} while trying to write a total of 0x{:X} bytes (response = {:s})".format(address, i, num, len(buffer), str(ret)))
@@ -1389,6 +1388,11 @@ class GbxDevice:
 					self.SKIPPING = False
 					return False
 				pos += len(data)
+				
+				if rumble_stop and pos % flash_buffer_size == 0:
+					dprint("Sending rumble stop command")
+					self._cart_write(address=0xC6, value=0x00, flashcart=True)
+					rumble_stop = False
 			
 			address += length
 			if ((pos % length) * 10 == 0) and (self.INFO["action"] in (self.ACTIONS["ROM_WRITE"], self.ACTIONS["SAVE_WRITE"]) and not self.NO_PROG_UPDATE):
@@ -3292,7 +3296,7 @@ class GbxDevice:
 		flash_capacity = len(data_import)
 		if sector_map is not None and sector_map is not False:
 			smallest_sector_size = flashcart.GetSmallestSectorSize()
-			sector_offsets = flashcart.GetSectorOffsets(rom_size=len(data_import), rom_bank_size=rom_bank_size)
+			sector_offsets = flashcart.GetSectorOffsets(rom_size=flashcart.GetFlashSize(default=len(data_import)), rom_bank_size=rom_bank_size)
 			if len(sector_offsets) > 0:
 				flash_capacity = sector_offsets[-1][0] + sector_offsets[-1][1]
 				if flash_capacity < len(data_import) and not (flashcart.SupportsChipErase() and args["prefer_chip_erase"]):
@@ -3365,7 +3369,7 @@ class GbxDevice:
 		
 		# ↓↓↓ Chip erase
 		chip_erase = False
-		if flashcart.SupportsChipErase():
+		if flashcart.SupportsChipErase() and not flash_offset > 0:
 			if flashcart.SupportsSectorErase() and args["prefer_chip_erase"] is False and sector_map is not False:
 				chip_erase = False
 			else:

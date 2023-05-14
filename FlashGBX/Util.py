@@ -7,9 +7,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.28"
+VERSION_PEP440 = "3.29"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1683283512
+VERSION_TIMESTAMP = 1684066518
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -841,13 +841,14 @@ def get_mbc_name(id):
 def save_size_includes_rtc(mode, mbc, save_size, save_type):
 	rtc_size = 0x10
 	if mode == "DMG":
+		save_type = DMG_Header_RAM_Sizes_Map.index(save_type)
 		if get_mbc_name(mbc) in ("MBC3", "MBC30"): rtc_size = 0x30
 		elif get_mbc_name(mbc) == "HuC-3": rtc_size = 0x0C
 		elif get_mbc_name(mbc) == "TAMA5": rtc_size = 0x28
-		return (((DMG_Header_RAM_Sizes_Flasher_Map[save_type] + rtc_size) % save_size) != rtc_size)
+		return (((DMG_Header_RAM_Sizes_Flasher_Map[save_type] + rtc_size) % save_size) == 0)
 	elif mode == "AGB":
 		rtc_size = 0x10
-		return (((AGB_Header_Save_Sizes[save_type] + rtc_size) % save_size) != rtc_size)
+		return (((AGB_Header_Save_Sizes[save_type] + rtc_size) % save_size) == 0)
 	return False
 
 def validate_datetime_format(string, format):

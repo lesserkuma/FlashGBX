@@ -1,4 +1,11 @@
 # Release notes
+### v3.29 (released 2023-05-14)
+- Fixed an issue with writing to some flash cartridges using the old GBxCart RW v1.3 hardware revision *(thanks yosoo)*
+- Fixed an issue with Batteryless SRAM save data restore *(thanks antPL)*
+- Confirmed support for SD007_TSOP_64BALL_SOP28_V2 with unlabeled flash chip *(thanks DevDavisNunez)*
+- Added support for SD007_BGA48_71TV_T28_DEEP with M29W640 *(thanks Cristóbal)*
+- Minor bug fixes and improvements
+
 ### v3.28 (released 2023-05-05)
 - Improved support for the BennVenn MBC3000 RTC cart; can now write to Real Time Clock registers
 - Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums
