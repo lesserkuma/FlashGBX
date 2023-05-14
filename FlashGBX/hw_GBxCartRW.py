@@ -1105,7 +1105,8 @@ class GbxDevice:
 			temp = self._read(length)
 			if isinstance(temp, int): temp = bytearray([temp])
 			if temp is False or len(temp) != length:
-				print("{:s}Error while trying to read 0x{:X} bytes from cartridge ROM at 0x{:X} in iteration {:d} of {:d}:{:s}\n{:s}".format(ANSI.RED, length, address, n, num, ANSI.RESET, str(temp)))
+				if Util.DEBUG:
+					print("{:s}Error while trying to read 0x{:X} bytes from cartridge ROM at 0x{:X} in iteration {:d} of {:d}:{:s}\n{:s}".format(ANSI.RED, length, address, n, num, ANSI.RESET, str(temp)))
 				return bytearray()
 			buffer += temp
 			if self.INFO["action"] in (self.ACTIONS["ROM_READ"], self.ACTIONS["SAVE_READ"], self.ACTIONS["ROM_WRITE_VERIFY"]) and not self.NO_PROG_UPDATE:
