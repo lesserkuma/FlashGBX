@@ -1083,7 +1083,7 @@ class GbxDevice:
 	
 	def ReadROM(self, address, length, skip_init=False, max_length=64):
 		num = math.ceil(length / max_length)
-		#dprint("Reading 0x{:X} bytes from cartridge ROM at 0x{:X} in {:d} iteration(s)".format(length, address, num))
+		dprint("Reading 0x{:X} bytes from cartridge ROM at 0x{:X} in {:d} iteration(s)".format(length, address, num))
 		if length > max_length: length = max_length
 
 		buffer = bytearray()
@@ -1103,10 +1103,9 @@ class GbxDevice:
 		for n in range(0, num):
 			self._write(self.DEVICE_CMD[command])
 			temp = self._read(length)
-			if isinstance(temp, int): temp = bytearray([temp])
+			if temp is not False and isinstance(temp, int): temp = bytearray([temp])
 			if temp is False or len(temp) != length:
-				if Util.DEBUG:
-					print("{:s}Error while trying to read 0x{:X} bytes from cartridge ROM at 0x{:X} in iteration {:d} of {:d}:{:s}\n{:s}".format(ANSI.RED, length, address, n, num, ANSI.RESET, str(temp)))
+				dprint("Error while trying to read 0x{:X} bytes from cartridge ROM at 0x{:X} in iteration {:d} of {:d} (response: {:s})".format(length, address, n, num, str(temp)))
 				return bytearray()
 			buffer += temp
 			if self.INFO["action"] in (self.ACTIONS["ROM_READ"], self.ACTIONS["SAVE_READ"], self.ACTIONS["ROM_WRITE_VERIFY"]) and not self.NO_PROG_UPDATE:

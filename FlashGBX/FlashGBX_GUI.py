@@ -174,7 +174,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		# List devices
 		self.layout_devices = QtWidgets.QHBoxLayout()
 		self.lblDevice = QtWidgets.QLabel()
-		self.lblDevice.mousePressEvent = self.WriteDebugLogOnShiftKey
+		self.lblDevice.mousePressEvent = self.WriteDebugLog
 		self.cmbDevice = QtWidgets.QComboBox()
 		self.cmbDevice.setStyleSheet("QComboBox { border: 0; margin: 0; padding: 0; max-width: 0px; }")
 		self.layout_devices.addWidget(self.lblDevice)
@@ -621,7 +621,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		if kbmod == QtCore.Qt.ShiftModifier:
 			self.WriteDebugLog()
 
-	def WriteDebugLog(self):
+	def WriteDebugLog(self, event=None):
 		try:
 			Util.dprint("{:s} version: {:s} ({:d})".format(Util.APPNAME, Util.VERSION_PEP440, Util.VERSION_TIMESTAMP))
 			Util.dprint("Platform: {:s}".format(platform.platform()))
