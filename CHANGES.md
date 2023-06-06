@@ -5,7 +5,7 @@
 - Added support for new insideGadgets flash cart revisions *(thanks Smelly-Ghost)*
 - Added support for Sillyhatday MBC5-DUAL-FLASH-4/8MB *(thanks Sillyhatday)*
 - Confirmed support for SD007_T40_48BALL_71_TV_TS28 with M29W640 *(thanks marv17)*
-- Updated the Game Boy Advance lookup database for save types, ROM sizes and checksums
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
 
 ### v3.29 (released 2023-05-14)
 - Fixed an issue with writing to some flash cartridges using the old GBxCart RW v1.3 hardware revision *(thanks yosoo)*
