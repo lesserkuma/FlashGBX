@@ -2,7 +2,7 @@
 	"type":"DMG",
 	"names":[
 		"DIY cart with AM29F016 @ WR",
-		"insideGadgets 2 MB, 32 KB FRAM, v1.0"
+		"insideGadgets 2 MiB, 32 KiB FRAM, v1.0"
 	],
 	"flash_ids":[
 		[ 0x01, 0xAD ],

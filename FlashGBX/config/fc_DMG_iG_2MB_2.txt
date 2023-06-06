@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM (2)"
+		"insideGadgets 2 MiB, 128 KiB SRAM/32 KiB FRAM (2)"
 	],
 	"flash_ids":[
 		[ 0x01, 0x01, 0xD8, 0xD8 ]

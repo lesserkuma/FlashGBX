@@ -628,7 +628,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if self.CONN is not None:
 				Util.dprint("Connected device: {:s}".format(self.CONN.GetFullNameExtended(more=True)))
 			else:
-				Util.dprint("No devices connected.")
+				Util.dprint("No device connected.")
 			Util.dprint("Now writing debug log file.")
 		except:
 			pass
@@ -1945,7 +1945,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.DisconnectDevice()
 					self.CONN = None
 					self.DEVICES = {}
-					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The connection to the device was lost!\n\nThis can be happen in one of the following cases:\n- The USB cable was unplugged or is faulty\n- The inserted cartridge may draw too much peak power (try re-connecting a few times or try hotswapping the cartridge after connecting)\n- The inserted cartrdige may introduce a short circuit (check for bad soldering)\n\nDo you want to try and reconnect to the device?", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="The connection to the device was lost!\n\nThis can be happen in one of the following cases:\n- The USB cable was unplugged or is faulty\n- The inserted cartridge may draw too much peak power (try re-connecting a few times or try hotswapping the cartridge after connecting)\n- The inserted cartrdige may induce a short circuit (check for bad soldering)\n\nDo you want to try and reconnect to the device?", standardButtons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 					msgbox.setDefaultButton(QtWidgets.QMessageBox.Yes)
 					answer = msgbox.exec()
 					if answer == QtWidgets.QMessageBox.No:
@@ -2072,6 +2072,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			
 			self.lblDMGRomTitleResult.setText(data['game_title'])
 			self.lblDMGGameCodeRevision.setText("Game Code and Revision:")
+			self.lblDMGGameNameResult.setToolTip("")
 			if data["db"] is not None:
 				self.lblDMGGameCodeRevisionResult.setText("{:s}-{:s}".format(data["db"]["gc"], str(data["version"])))
 				temp = data["db"]["gn"]
@@ -2081,8 +2082,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.lblDMGGameNameResult.setText(temp + "…")
 				if temp != data["db"]["gn"]:
 					self.lblDMGGameNameResult.setToolTip(data["db"]["gn"])
-				else:
-					self.lblDMGGameNameResult.setToolTip("")
 			else:
 				self.lblDMGGameNameResult.setText("(Not in database)")
 				if len(data['game_code']) > 0:
@@ -2174,6 +2173,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.cmbAGBCartridgeTypeResult.setCurrentIndex(data["flash_type"])
 
 			self.lblAGBRomTitleResult.setText(data['game_title'])
+			self.lblAGBGameNameResult.setToolTip("")
 			if data["db"] is not None:
 				self.lblAGBHeaderGameCodeRevisionResult.setText("{:s}-{:s}".format(data["db"]["gc"], str(data["version"])))
 				temp = data["db"]["gn"]
@@ -2183,8 +2183,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.lblAGBGameNameResult.setText(temp + "…")
 				if temp != data["db"]["gn"]:
 					self.lblAGBGameNameResult.setToolTip(data["db"]["gn"])
-				else:
-					self.lblAGBGameNameResult.setToolTip("")
 			else:
 				if len(data["game_code"]) > 0:
 					self.lblAGBHeaderGameCodeRevisionResult.setText("{:s}-{:s}".format(data['game_code'], str(data['version'])))
@@ -2225,9 +2223,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.cmbAGBHeaderROMSizeResult.setCurrentIndex(Util.AGB_Header_ROM_Sizes_Map.index(data["rom_size"]))
 			else:
 				self.cmbAGBHeaderROMSizeResult.setCurrentIndex(0)
-			
-			if data["3d_memory"] is True:
-				self.cmbAGBHeaderROMSizeResult.setCurrentIndex(Util.AGB_Header_ROM_Sizes_Map.index(0x4000000))
 			
 			if data["save_type"] == None:
 				self.cmbAGBSaveTypeResult.setCurrentIndex(0)

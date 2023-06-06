@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 4 MB (MX29LV320ET)"
+		"insideGadgets 4 MiB (MX29LV320ET)"
 	],
 	"flash_ids":[
 		[ 0xC2, 0xC2, 0xA7, 0xA7 ]

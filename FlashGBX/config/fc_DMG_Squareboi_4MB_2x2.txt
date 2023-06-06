@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"Squareboi 4 MB (2× 2 MB)"
+		"Squareboi 4 MiB (2× 2 MiB)"
 	],
 	"voltage":5,
 	"flash_size":0x400000,

@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 4 MB (S29GL032M)"
+		"insideGadgets 4 MiB (S29GL032M)"
 	],
 	"flash_ids":[
 		[ 0x01, 0x01, 0x7E, 0x7E ]

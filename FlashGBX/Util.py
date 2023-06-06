@@ -7,9 +7,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.29"
+VERSION_PEP440 = "3.30"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1684079394
+VERSION_TIMESTAMP = 1686057604
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""

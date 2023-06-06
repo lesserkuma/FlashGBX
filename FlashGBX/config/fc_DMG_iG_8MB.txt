@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 8 MB"
+		"insideGadgets 8 MiB"
 	],
 	"flash_ids":[
 		[ 0x01, 0x01, 0x7E, 0x7E ]

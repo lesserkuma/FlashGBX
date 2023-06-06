@@ -1,10 +1,9 @@
 {
 	"type":"AGB",
 	"names":[
-		"3D Memory Cartridge (Large-size GBA Video)"
+		"3D Memory Cartridge (GBA Video)"
 	],
 	"voltage":3.3,
-	"flash_size":0x4000000,
 	"3d_memory":true,
 	"command_set":"3DMEMORY",
 	"commands":{}

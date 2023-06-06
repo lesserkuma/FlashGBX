@@ -17,7 +17,7 @@ class GbxDevice:
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 10
-	DEVICE_LATEST_FW_TS = { 4:1683283512, 5:1681900614, 6:1681900614 }
+	DEVICE_LATEST_FW_TS = { 4:1686057604, 5:1681900614, 6:1681900614 }
 	
 	DEVICE_CMD = {
 		"NULL":0x30,
@@ -751,8 +751,6 @@ class GbxDevice:
 			
 			if data["empty"] or data["empty_nocart"]:
 				data["rom_size"] = 0x2000000
-			elif (data["3d_memory"] == True):
-				data["rom_size"] = 0x4000000
 			else:
 				# Check where the ROM data repeats (for unlicensed carts)
 				size_check = header[0xA0:0xA0+16]
@@ -1124,18 +1122,20 @@ class GbxDevice:
 		self._set_fw_variable("ADDRESS", address >> 1)
 
 		buffer = bytearray()
+		error = False
 		for _ in range(0, int(num / (buffer_size / length))): #32
 			for _ in range(0, int(buffer_size / length)): # 0x1000/0x200=8
 				self._write(self.DEVICE_CMD["AGB_CART_READ_3D_MEMORY"])
 				temp = self._read(length)
 				if isinstance(temp, int): temp = bytearray([temp])
-				if temp is False or len(temp) != length: return bytearray()
+				if temp is False or len(temp) != length:
+					error = True
 				buffer += temp
-			
-			if self.INFO["action"] == self.ACTIONS["ROM_READ"] and not self.NO_PROG_UPDATE:
-				self.SetProgress({"action":"READ", "bytes_added":length})
+				if self.INFO["action"] == self.ACTIONS["ROM_READ"] and not self.NO_PROG_UPDATE:
+					self.SetProgress({"action":"READ", "bytes_added":length})
 			self._write(0)
-
+		
+		if error: return bytearray()
 		return buffer
 
 	def ReadRAM(self, address, length, command=None, max_length=64):
@@ -2042,6 +2042,7 @@ class GbxDevice:
 		self.FAST_READ = True
 		
 		flashcart = False
+		#is_3dmemory = False
 		supported_carts = list(self.SUPPORTED_CARTS[self.MODE].values())
 		cart_type = copy.deepcopy(supported_carts[args["cart_type"]])
 		if not isinstance(cart_type, str):
@@ -2129,6 +2130,8 @@ class GbxDevice:
 			else:
 				rom_banks = 1
 				rom_bank_size = 0x2000000
+			
+		is_3dmemory = (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY")
 
 		if "verify_write" in args:
 			size = len(args["verify_write"])
@@ -2153,7 +2156,7 @@ class GbxDevice:
 		max_length = self.MAX_BUFFER_LEN
 		dprint("Max buffer size: 0x{:X}".format(max_length))
 		if self.FAST_READ is True:
-			if (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY"):
+			if is_3dmemory:
 				max_length = min(max_length, 0x1000)
 			else:
 				max_length = min(max_length, 0x2000)
@@ -2225,7 +2228,7 @@ class GbxDevice:
 					if self.CanPowerCycleCart(): self.CartPowerCycle()
 					return
 				
-				if (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY"):
+				if is_3dmemory:
 					temp = self.ReadROM_3DMemory(address=pos, length=buffer_len, max_length=max_length)
 				else:
 					if self.FW["fw_ver"] >= 10 and "verify_write" in args and (self.MODE != "AGB" or args["verify_base_pos"] > 0xC9):
@@ -2267,7 +2270,7 @@ class GbxDevice:
 					if (max_length >> 1) < 64:
 						dprint("Failed to receive 0x{:X} bytes from the device at position 0x{:X}.".format(buffer_len, pos_temp))
 						max_length = 64
-					elif lives > 18:
+					elif lives > 20:
 						dprint("Failed to receive 0x{:X} bytes from the device at position 0x{:X}.".format(buffer_len, pos_temp))
 					else:
 						dprint("Failed to receive 0x{:X} bytes from the device at position 0x{:X}. Decreasing maximum transfer buffer size to 0x{:X}.".format(buffer_len, pos_temp, max_length >> 1))

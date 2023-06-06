@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 1 MB, 32 KB FRAM v2.0"
+		"insideGadgets 1 MiB, 32 KiB FRAM v2.0"
 	],
 	"flash_ids":[],
 	"voltage":5,

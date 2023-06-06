@@ -2,11 +2,13 @@
 	"type":"AGB",
 	"names":[
 		"B54 with MX29LV320ET",
-		"B100 with MX29LV640ET"
+		"B100 with MX29LV640ET",
+		"Unknown 29LV320 variant (no PCB text)"
 	],
 	"flash_ids":[
 		[ 0xC2, 0x00, 0xA7, 0x22 ],
-		[ 0xC2, 0x00, 0xC9, 0x22 ]
+		[ 0xC2, 0x00, 0xC9, 0x22 ],
+		[ 0x04, 0x00, 0xF6, 0x22 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x400000,

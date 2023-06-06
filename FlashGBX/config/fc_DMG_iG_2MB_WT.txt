@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 2 MB, Wisdom Tree"
+		"insideGadgets 2 MiB, Wisdom Tree"
 	],
 	"voltage":5,
 	"flash_size":0x200000,

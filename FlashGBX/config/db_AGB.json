@@ -17361,6 +17361,17 @@
   "lg": "En,Fr,De,Es,It,Nl",
   "rg": "Europe"
  },
+ "79b1b9e4e578b8c5927fa14f54ee6785c8dd2c75": {
+  "gn": "Pocket Monsters Diamond - Pocket Monsters Pearl - Manaphy Present Campaign Senyou Cartridge",
+  "ne": "(Japan) (En)",
+  "gc": "B5BJ",
+  "rc": 3809830607,
+  "rs": 2097152,
+  "st": 0,
+  "ss": 0,
+  "lg": "En",
+  "rg": "Japan"
+ },
  "ad4048b726b9a9538f431cf689878623cf809aa0": {
   "gn": "Namco Museum - 50th Anniversary",
   "ne": "(USA)",
@@ -23154,6 +23165,17 @@
   "ss": 512,
   "lg": "En,Fr,De,Es,It",
   "rg": "Europe"
+ },
+ "d7197b51473664d1f802ab7c16cdb5eba7045fd9": {
+  "gn": "Glucoboy",
+  "ne": "(Australia)",
+  "gc": "BJGE",
+  "rc": 1848475391,
+  "rs": 16777216,
+  "st": 0,
+  "ss": 0,
+  "lg": "En",
+  "rg": "Australia"
  },
  "5b07e6ee13af3ae1d276c00d5fde0be1fa7f1d2c": {
   "gn": "Justice League Heroes - The Flash",
@@ -31441,7 +31463,8 @@
   "ss": 0,
   "rv": "Rev 5",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "abd17359c40ee817066fe3ab12829d4144dfd71f": {
   "gn": "Game Boy Advance Video - Shrek 2",
@@ -31453,7 +31476,8 @@
   "ss": 0,
   "rv": "Rev 6",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "7330e1c53f14ee6c6b570176ab0f4a648252da3d": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Volume 2",
@@ -31464,7 +31488,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": true
  },
  "dd992df47247919cbb252015b4ff093e3156d320": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Limited Edition",
@@ -31475,7 +31500,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "54a6e77c02eae428b8b438035ba8215d621dc54f": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Platinum Edition",
@@ -31486,7 +31512,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": true
  },
  "73f8adcdf1fb2766c13ab65c0470af2b23801a7a": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Edition Platinum",
@@ -31497,7 +31524,8 @@
   "st": 0,
   "ss": 0,
   "lg": "Fr",
-  "rg": "France"
+  "rg": "France",
+  "3d": true
  },
  "e6976665b9e9979e270c95230fbbd08350f09f99": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Premium Edition",
@@ -31508,7 +31536,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": true
  },
  "772d68fe78dc92febbb12b6c1172d26c68031706": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Edition Premium",
@@ -31519,7 +31548,21 @@
   "st": 0,
   "ss": 0,
   "lg": "Fr",
-  "rg": "France"
+  "rg": "France",
+  "3d": true
+ },
+ "790103a28c22bfcfa52de31f9a1061b17708dc3c": {
+  "gn": "Game Boy Advance Video - Cartoon Network Collection - Special Edition",
+  "ne": "(USA) (Rev 5)",
+  "gc": "MCSE",
+  "rc": 464467757,
+  "rs": 33554432,
+  "st": 0,
+  "ss": 0,
+  "rv": "Rev 5",
+  "lg": "En",
+  "rg": "USA",
+  "3d": true
  },
  "d911da50f926a2485cd9dfc9fd8f7326adb12d49": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Special Edition",
@@ -31530,7 +31573,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": true
  },
  "a9861107e3c0eadf7a2c6fbf970155cb059f869e": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Edition Speciale",
@@ -31541,7 +31585,8 @@
   "st": 0,
   "ss": 0,
   "lg": "Fr",
-  "rg": "France"
+  "rg": "France",
+  "3d": true
  },
  "590318cf40cad4d866dd385b6b208a99c6eeec62": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Volume 1",
@@ -31552,7 +31597,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": false
  },
  "c2a1c8c479ada081407c754d23c73afc59f19e60": {
   "gn": "Game Boy Advance Video - Dragon Ball GT - Volume 1",
@@ -31563,7 +31609,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "28c8afa6b5d0d24d2c540413e948d4c9c7c44e63": {
   "gn": "Game Boy Advance Video - Disney Channel Collection - Volume 1",
@@ -31574,7 +31621,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "bfe44e65a6ca22ed091c82b475999a4818f60b83": {
   "gn": "Game Boy Advance Video - Dora the Explorer - Volume 1",
@@ -31585,7 +31633,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "0005b5d625d0b2b491f28f195a50d00e61b92de8": {
   "gn": "Game Boy Advance Video - Disney Channel Collection - Volume 2",
@@ -31597,7 +31646,8 @@
   "ss": 0,
   "rv": "Rev 5",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "17bdd62f02187986ae429e21060473ebb5bb2897": {
   "gn": "Game Boy Advance Video - The Fairly OddParents! - Volume 2",
@@ -31609,7 +31659,8 @@
   "ss": 0,
   "rv": "Rev 1",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "7a4f484966b9591643a9ef2266e9dcd4d358d0bb": {
   "gn": "Game Boy Advance Video - The Fairly OddParents! - Volume 1",
@@ -31620,7 +31671,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "9818575de1f15e8fe74d9fc0cf1411d8fb4775d6": {
   "gn": "Game Boy Advance Video - The Proud Family - Volume 1",
@@ -31631,7 +31683,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "0c411aef0ac6be4e8e9ae9b9e8d259cae942b8b1": {
   "gn": "Game Boy Advance Video - All Grown Up! - Volume 1",
@@ -31642,7 +31695,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "f5f2f476128d979b5137485bc773758035fbf169": {
   "gn": "Game Boy Advance Video - The Adventures of Jimmy Neutron Boy Genius - Volume 1",
@@ -31653,7 +31707,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "0aca8eb33ed5aabd8e5c98331f8210a5561f7130": {
   "gn": "Game Boy Advance Video - Codename - Kids Next Door - Volume 1",
@@ -31664,7 +31719,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": false
  },
  "5f26b36473e99d35011a19a9bae0ef20afce2169": {
   "gn": "Game Boy Advance Video - Nicktoons Collection - Volume 2",
@@ -31675,7 +31731,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "1fc3d70d3f225dfdad2dfb70d8336368d4aa8982": {
   "gn": "Game Boy Advance Video - Nicktoons - Volume 3",
@@ -31686,7 +31743,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "49e8ad4da336076f9b0dc8c885e36f7192701fc9": {
   "gn": "Game Boy Advance Video - Nicktoons Collection - Volume 1",
@@ -31697,7 +31755,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "2a7a051cbecfa02957968cf2096a982029e23c66": {
   "gn": "Game Boy Advance Video - Pokemon - Volume 1",
@@ -31708,7 +31767,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "20c7cca75beb914994e4f813c82ad02d7d2ce380": {
   "gn": "Game Boy Advance Video - Pokemon - Volume 2",
@@ -31719,7 +31779,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "37ebe25dd5006c9c4d4a9fee18646d2624ccc5a0": {
   "gn": "Game Boy Advance Video - Pokemon - Volume 3",
@@ -31730,7 +31791,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "e92e5ced3f55f87aab6627230b93ffbbc1bb3db7": {
   "gn": "Game Boy Advance Video - Pokemon - Volume 4",
@@ -31741,7 +31803,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "3f057e9ec7b0f53e1cdc51aacf06f90fed6321c4": {
   "gn": "Game Boy Advance Video - SpongeBob SquarePants - Volume 2",
@@ -31753,7 +31816,8 @@
   "ss": 0,
   "rv": "Rev 1",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "1e6271fb6a9d7cf0ccd9958b166607bacf15b217": {
   "gn": "Game Boy Advance Video - SpongeBob SquarePants - Volume 3",
@@ -31764,7 +31828,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "41b14883cc3e05653a7f039944b11a1223f4cf66": {
   "gn": "Game Boy Advance Video - Shark Tale",
@@ -31776,7 +31841,8 @@
   "ss": 0,
   "rv": "Rev 6",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "648e46753ccbee3d04a6d12d82bcb265fcebd6f9": {
   "gn": "Game Boy Advance Video - Shark Tale",
@@ -31788,7 +31854,8 @@
   "ss": 0,
   "rv": "Rev 5",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "e7985c20de15e58531c86ae59ea4af1d2dfb24ea": {
   "gn": "Game Boy Advance Video - Strawberry Shortcake - Volume 1",
@@ -31799,7 +31866,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "1ee65f7df7463beb098ad5f574dcc02f41115cdd": {
   "gn": "Game Boy Advance Video - Sonic X - Volume 1",
@@ -31810,7 +31878,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "212cd5a80ab96d5309d2cbe6b2cbfea0211a1018": {
   "gn": "Game Boy Advance Video - Shrek",
@@ -31822,7 +31891,8 @@
   "ss": 0,
   "rv": "Rev 5",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "a31fe8a1abbc8276e87b93ddc9feb0250e116ec1": {
   "gn": "Game Boy Advance Video - Shrek",
@@ -31834,7 +31904,8 @@
   "ss": 0,
   "rv": "Rev 6",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "5da566868ba0be96838eb9b4454fc7a8abf092c0": {
   "gn": "Game Boy Advance Video - Super Robot Monkey Team - Hyper Force Go! - Volume 1",
@@ -31845,7 +31916,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "99bf48542a03e1bceb2a9a82da7257874ec30670": {
   "gn": "Game Boy Advance Video - SpongeBob SquarePants - Volume 1",
@@ -31857,7 +31929,8 @@
   "ss": 0,
   "rv": "Rev 1",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": false
  },
  "18a5b3b3010fd5f584700f711f303caf89937a99": {
   "gn": "Game Boy Advance Video - Shrek + Shark Tale",
@@ -31869,7 +31942,8 @@
   "ss": 0,
   "rv": "Rev 5",
   "lg": "En",
-  "rg": "USA"
+  "rg": "USA",
+  "3d": true
  },
  "11f8d9886d50fcd56334fd4e84bed94eb9995638": {
   "gn": "Game Boy Advance Video - Teenage Mutant Ninja Turtles - Things Change",
@@ -31880,7 +31954,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": false
  },
  "36e93d44ad26dfa8b62bb09e50f9cff58cd4fc03": {
   "gn": "Game Boy Advance Video - Teenage Mutant Ninja Turtles - Le Demenagement",
@@ -31891,7 +31966,8 @@
   "st": 0,
   "ss": 0,
   "lg": "Fr",
-  "rg": "France"
+  "rg": "France",
+  "3d": true
  },
  "dc0c4e5a4c2cdcbbf86e2a16ca9e2060fea6e943": {
   "gn": "Game Boy Advance Video - Yu-Gi-Oh! - Yugi vs. Joey",
@@ -31902,7 +31978,8 @@
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "USA, Europe"
+  "rg": "USA, Europe",
+  "3d": false
  },
  "2f863283e54ac28b2725dc8430adb9a13b2f5095": {
   "gn": "Game Boy Advance Video - Yu-Gi-Oh! - Yugi vs. Joey",
@@ -31913,7 +31990,8 @@
   "st": 0,
   "ss": 0,
   "lg": "Fr",
-  "rg": "France"
+  "rg": "France",
+  "3d": true
  },
  "10b3242f409611c32749f9b42f7c7ea951c5fc6d": {
   "gn": "Card e-Reader",
@@ -31996,25 +32074,25 @@
  },
  "cf39d749e19c054368316def932b94e61351e4b8": {
   "gn": "AGS Aging Cartridge",
-  "ne": "(World) (Rev 3, v9.0) (Test Program)",
+  "ne": "(World) (Rev 3) (v9.0) (Test Program)",
   "gc": "TCHK",
   "rc": 778659949,
   "rs": 2097152,
   "st": 1,
   "ss": 512,
-  "rv": "Rev 3, v9.0",
+  "rv": "Rev 3",
   "lg": "En",
   "rg": "World"
  },
  "d2b43b4883d32d45ce7dcb70270aff278e0c079f": {
   "gn": "AGS Aging Cartridge",
-  "ne": "(World) (Rev 1, v7.0) (Test Program)",
+  "ne": "(World) (Rev 1) (v7.0) (Test Program)",
   "gc": "TCHK",
   "rc": 3149310304,
   "rs": 2097152,
   "st": 1,
   "ss": 512,
-  "rv": "Rev 1, v7.0",
+  "rv": "Rev 1",
   "lg": "En",
   "rg": "World"
  },

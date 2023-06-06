@@ -2,9 +2,11 @@
 	"type":"DMG",
 	"names":[
 		"SD007_48BALL_64M with M29W640",
-		"SD007_BGA48_71TV_T28_DEEP with M29W640"
+		"SD007_BGA48_71TV_T28_DEEP with M29W640",
+		"SD007_T40_48BALL_71_TV_TS28 with M29W640"
 	],
 	"flash_ids":[
+		[ 0x20, 0x00, 0x7D, 0x00 ],
 		[ 0x20, 0x00, 0x7D, 0x00 ],
 		[ 0x20, 0x00, 0x7D, 0x00 ]
 	],

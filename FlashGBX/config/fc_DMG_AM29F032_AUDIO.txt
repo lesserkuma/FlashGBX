@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC",
+		"insideGadgets 4 MiB, 32 KiB FRAM, MBC3+RTC",
 		"DIY cart with AM29F032 @ AUDIO",
 		"DIY cart with M29F032D @ AUDIO",
 		"DIY cart with MBM29F033C @ AUDIO"

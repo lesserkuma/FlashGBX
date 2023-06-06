@@ -117,18 +117,19 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
   - HDR Game Boy Camera Flashcart
-  - insideGadgets 32 KB
-  - insideGadgets 128 KB
-  - insideGadgets 256 KB
-  - insideGadgets 512 KB
-  - insideGadgets 1 MB, 128 KB SRAM
-  - insideGadgets 2 MB, 128 KB SRAM/32 KB FRAM
-  - insideGadgets 2 MB, 32 KB FRAM, v1.0
-  - insideGadgets 4 MB, 128 KB SRAM/FRAM
-  - insideGadgets 4 MB, 32 KB FRAM, MBC3+RTC
-  - insideGadgets 4 MB (2× 2 MB), 32 KB FRAM, MBC5
+  - insideGadgets 32 KiB
+  - insideGadgets 128 KiB
+  - insideGadgets 256 KiB
+  - insideGadgets 512 KiB
+  - insideGadgets 1 MiB, 128 KiB SRAM
+  - insideGadgets 2 MiB, 128 KiB SRAM/32 KiB FRAM
+  - insideGadgets 2 MiB, 32 KiB FRAM, v1.0
+  - insideGadgets 4 MiB, 128 KiB SRAM/FRAM
+  - insideGadgets 4 MiB, 32 KiB FRAM, MBC3+RTC
+  - insideGadgets 4 MiB (2× 2 MiB), 32 KiB FRAM, MBC5
   - Mr Flash 64M
-  - Squareboi 4 MB (2× 2 MB)
+  - Sillyhatday MBC5-DUAL-FLASH-4/8MB
+  - Squareboi 4 MiB (2× 2 MiB)
 
 - Game Boy Advance
 
@@ -143,11 +144,11 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Flash2Advance Ultra 64M (with 2× 28F320C3B)
   - Flash2Advance Ultra 256M (with 8× 3204C3B100)
   - Flash Advance Card 64M (with 28F640J3A120)
-  - insideGadgets 16 MB, 64K EEPROM with Solar Sensor and RTC options
-  - insideGadgets 32 MB, 1M FLASH with RTC option
-  - insideGadgets 32 MB, 512K FLASH
-  - insideGadgets 32 MB, 4K/64K EEPROM
-  - insideGadgets 32 MB, 256K FRAM with Rumble option
+  - insideGadgets 16 MiB, 64K EEPROM with Solar Sensor and RTC options
+  - insideGadgets 32 MiB, 1M FLASH with RTC option
+  - insideGadgets 32 MiB, 512K FLASH
+  - insideGadgets 32 MiB, 4K/64K EEPROM
+  - insideGadgets 32 MiB, 256K FRAM with Rumble option
 
 ### Currently supported and tested reproduction cartridges
 
@@ -186,6 +187,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_BV5_V3 with HY29LV160BT-70
   - SD007_BV5_V3 with AM29LV160MB
   - SD007_K8D3216_32M with MX29LV160CT
+  - SD007_T40_48BALL_71_TV_TS28 with M29W640
   - SD007_T40_64BALL_S71_TV_TS28 with TC58FVB016FT-85
   - SD007_T40_64BALL_SOJ28 with 29LV016T
   - SD007_T40_64BALL_TSOP28 with 29LV016T
@@ -269,6 +271,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - MSP54LV512 (no PCB text)
   - MX29GL128EHT2I and ALTERA CPLD
   - SUN100S_MSP54XXX with MSP54LV100
+  - Unknown 29LV320 variant (no PCB text)"
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
@@ -304,7 +307,7 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, KOOORAY, kscheel, kyokohunter, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, yosoo, Zeii, Zelante, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, KOOORAY, kscheel, kyokohunter, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, yosoo, Zeii, Zelante, Zoo, zvxr
 
 ## DISCLAIMER
 

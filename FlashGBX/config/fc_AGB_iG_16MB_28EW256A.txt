@@ -1,7 +1,7 @@
 {
 	"type":"AGB",
 	"names":[
-		"insideGadgets 16 MB (28EW256A) + RTC/Solar"
+		"insideGadgets 16 MiB (28EW256A) + RTC/Solar"
 	],
 	"flash_ids":[
 		[ 0x89, 0x00, 0x7E, 0x22 ]
