@@ -7,9 +7,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.30"
+VERSION_PEP440 = "3.31"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1686057604
+VERSION_TIMESTAMP = 1687091551
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -19,7 +19,6 @@ AGB_Header_ROM_Sizes = [ "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 
 AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
 AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1 MiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)", "Unlicensed Batteryless SRAM" ]
 AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1048576, 65536, 131072, 0 ]
-AGB_Global_CRC32 = 0
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS" }
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000 ]
 
@@ -282,30 +281,26 @@ def isx2bin(buffer):
 			break
 	return data_output[:temp]
 
-def roundup(x):
-	# https://stackoverflow.com/questions/50405017/
-	d = 10 ** 2
-	if x < 0:
-		return math.floor(x * d) / d
-	else:
-		return math.ceil(x * d) / d
+def round2(num, decimals=2):
+	x = (pow(10, decimals))
+	return int(num * x) / x
 
-def formatFileSize(size, asInt=False, roundUp=False, nobr=True):
+def formatFileSize(size, asInt=False, nobr=True):
 	space = " " if nobr else " "
 	if size == 1:
 		return "{:d}{:s}Byte".format(size, space)
 	elif size < 1024:
 		return "{:d}{:s}Bytes".format(size, space)
 	elif size < 1024 * 1024:
-		val = size/1024
-		if roundUp: val = roundup(val)
+		val = size / 1024
+		val = round2(val)
 		if asInt:
 			return "{:d}{:s}KiB".format(int(val), space)
 		else:
 			return "{:.1f}{:s}KiB".format(val, space)
 	else:
-		val = size/1024/1024
-		if roundUp: val = roundup(val)
+		val = size / 1024 / 1024
+		val = round2(val)
 		if asInt:
 			return "{:d}{:s}MiB".format(int(val), space)
 		else:
@@ -509,7 +504,7 @@ def GetDumpReport(di, device):
 		di["file_name"] = ""
 	else:
 		di["file_name"] = os.path.split(di["file_name"])[1]
-	di["file_size"] = "{:s} ({:d} bytes)".format(formatFileSize(di["file_size"]), di["file_size"])
+	di["file_size"] = "{:s} ({:d} bytes)".format(formatFileSize(size=di["file_size"]), di["file_size"])
 	
 	s = "" \
 		"= FlashGBX Dump Report =\n" \
@@ -659,7 +654,7 @@ def GetDumpReport(di, device):
 							timestamp=di["gbmem_parsed"][i]["timestamp"],
 							kiosk_id=di["gbmem_parsed"][i]["kiosk_id"],
 							location="0x{:06X}–0x{:06X}".format(di["gbmem_parsed"][i]["rom_offset"], di["gbmem_parsed"][i]["rom_offset"]+di["gbmem_parsed"][i]["rom_size"]-1),
-							size="{:s} ({:d} bytes)".format(formatFileSize(di["gbmem_parsed"][i]["rom_size"]), di["gbmem_parsed"][i]["rom_size"]),
+							size="{:s} ({:d} bytes)".format(formatFileSize(size=di["gbmem_parsed"][i]["rom_size"]), di["gbmem_parsed"][i]["rom_size"]),
 						)
 						if "crc32" in di["gbmem_parsed"][i]: s += "* CRC32:           {:08x}\n".format(di["gbmem_parsed"][i]["crc32"])
 						if "md5" in di["gbmem_parsed"][i]: s += "* MD5:             {:s}\n".format(di["gbmem_parsed"][i]["md5"])
@@ -702,7 +697,7 @@ def GetDumpReport(di, device):
 			if "rv" in db: s += "* Revision:        {:s}\n".format(db["rv"])
 			if "gc" in db: s += "* Game Code:       {:s}\n".format(db["gc"])
 			if "rc" in db: s += "* ROM CRC32:       {:08x}\n".format(db["rc"])
-			if "rs" in db: s += "* ROM Size:        {:s}\n".format(formatFileSize(db["rs"], asInt=True))
+			if "rs" in db: s += "* ROM Size:        {:s}\n".format(formatFileSize(size=db["rs"], asInt=True))
 
 	if mode == "AGB":
 		header["game_code_raw"] = header["game_code_raw"].replace("\0", "␀")
@@ -738,7 +733,10 @@ def GetDumpReport(di, device):
 			s += "" \
 				"* Save Flash Chip: {agb_save_flash_chip_name:s} (0x{agb_save_flash_chip_id:04X})\n" \
 			.format(agb_save_flash_chip_name=di["agb_save_flash_id"][1], agb_save_flash_chip_id=di["agb_save_flash_id"][0])
-		
+
+		if "eeprom_data" in di:
+			s += "* EEPROM area:     {:s}…\n".format(''.join(format(x, '02X') for x in di["eeprom_data"]))
+
 		if header["db"] is not None and header["db"]["rc"] == di["hash_crc32"]:
 			db = header["db"]
 			s += "\n== Database Match ==\n"
@@ -749,10 +747,10 @@ def GetDumpReport(di, device):
 			if "rv" in db: s += "* Revision:        {:s}\n".format(db["rv"])
 			if "gc" in db: s += "* Game Code:       {:s}\n".format(db["gc"])
 			if "rc" in db: s += "* ROM CRC32:       {:08x}\n".format(db["rc"])
-			if "rs" in db: s += "* ROM Size:        {:s}\n".format(formatFileSize(db["rs"], asInt=True))
+			if "rs" in db: s += "* ROM Size:        {:s}\n".format(formatFileSize(size=db["rs"], asInt=True))
 			if "st" in db: s += "* Save Type:       {:s}\n".format(AGB_Header_Save_Types[db["st"]])
-			#if "ss" in db: s += "* Save Size:       {:s}\n".format(formatFileSize(db["ss"], asInt=True))
-	
+			#if "ss" in db: s += "* Save Size:       {:s}\n".format(formatFileSize(size=db["ss"], asInt=True))
+
 	return s
 
 def GenerateFileName(mode, header, settings=None):

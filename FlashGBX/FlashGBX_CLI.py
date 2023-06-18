@@ -315,31 +315,32 @@ class FlashGBX_CLI():
 				else:
 					msg = "The ROM was dumped, but the checksum is not correct."
 					if self.CONN.INFO["loop_detected"] is not False:
-						msg += "\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
+						msg += "\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(size=self.CONN.INFO["loop_detected"], asInt=True))
 					else:
 						msg += "\nThis may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
 					print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
 			elif self.CONN.GetMode() == "AGB":
 				print("CRC32: {:08x}".format(self.CONN.INFO["file_crc32"]))
 				print("SHA-1: {:s}\n".format(self.CONN.INFO["file_sha1"]))
-				if Util.AGB_Global_CRC32 == self.CONN.INFO["rom_checksum_calc"]:
-					print("{:s}The ROM backup is complete and the checksum was verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
-				elif Util.AGB_Global_CRC32 == 0:
+				if "db" in self.CONN.INFO and self.CONN.INFO["db"] is not None:
+					if self.CONN.INFO["db"]["rc"] == self.CONN.INFO["file_crc32"]:
+						print("{:s}The ROM backup is complete and the checksum was verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
+					else:
+						msg = "The ROM backup is complete, but the checksum doesn’t match the known database entry."
+						if self.CONN.INFO["loop_detected"] is not False:
+							msg += "\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(size=self.CONN.INFO["loop_detected"], asInt=True))
+						else:
+							msg += "\nThis may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
+						print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
+				else:
 					msg = "The ROM backup is complete! As there is no known checksum for this ROM in the database, verification was skipped."
 					if self.CONN.INFO["loop_detected"] is not False:
-						msg += "\nNOTE: A data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
-					print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
-				else:
-					msg = "The ROM backup is complete, but the checksum doesn’t match the known database entry."
-					if self.CONN.INFO["loop_detected"] is not False:
-						msg += "\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
-					else:
-						msg += "\nThis may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
+						msg += "\nNOTE: A data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(size=self.CONN.INFO["loop_detected"], asInt=True))
 					print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
 
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.CONN.INFO["last_action"] = 0
-			if not "debug" in self.ARGS and self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB: # 128 KB
+			if not "debug" in self.ARGS and self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KiB: # 128 KiB
 				answer = input("Would you like to extract Game Boy Camera pictures to “{:s}” now? [Y/n]: ".format(Util.formatPathOS(os.path.abspath(os.path.splitext(self.CONN.INFO["last_path"])[0]), end_sep=True) + "IMG_PC**.{:s}".format(self.ARGS["argparsed"].gbcamera_outfile_format))).strip().lower()
 				if answer != "n":
 					pc = PocketCamera()
@@ -532,19 +533,19 @@ class FlashGBX_CLI():
 				bad_read = True
 			
 			s += "ROM Checksum:         "
-			Util.AGB_Global_CRC32 = 0
+			#Util.AGB_Global_CRC32 = 0
 			db_agb_entry = data["db"]
 			if db_agb_entry != None:
 				if data["rom_size_calc"] < 0x400000:
 					s += "In database (0x{:06X})\n".format(db_agb_entry['rc'])
-					Util.AGB_Global_CRC32 = db_agb_entry['rc']
-				s += "ROM Size:             {:d} MB\n".format(int(db_agb_entry['rs']/1024/1024))
+					#Util.AGB_Global_CRC32 = db_agb_entry['rc']
+				s += "ROM Size:             {:d} MiB\n".format(int(db_agb_entry['rs']/1024/1024))
 				data['rom_size'] = db_agb_entry['rs']
 			elif data["rom_size"] != 0:
 				s += "Not in database\n"
 				if not data["rom_size"] in Util.AGB_Header_ROM_Sizes_Map:
 					data["rom_size"] = 0x2000000
-				s += "ROM Size:             {:d} MB\n".format(int(data["rom_size"]/1024/1024))
+				s += "ROM Size:             {:d} MiB\n".format(int(data["rom_size"]/1024/1024))
 			else:
 				s += "Not in database\n"
 				s += "ROM Size:             Not detected\n"
@@ -640,7 +641,7 @@ class FlashGBX_CLI():
 
 			if "flash_size" in supp_cart_types[1][cart_type_id]:
 				size = supp_cart_types[1][cart_type_id]["flash_size"]
-				msg_flash_size_s = "ROM Size: {:s}\n".format(Util.formatFileSize(size, asInt=True))
+				msg_flash_size_s = "ROM Size: {:s}\n".format(Util.formatFileSize(size=size, asInt=True))
 
 			if self.CONN.GetMode() == "DMG":
 				if "mbc" in supp_cart_types[1][cart_type_id]:
@@ -724,7 +725,7 @@ class FlashGBX_CLI():
 				try:
 					rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[header["rom_size_raw"]]
 				except:
-					print("{:s}Couldn’t determine ROM size, will use 8 MB. It can also be manually set with the “--dmg-romsize” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
+					print("{:s}Couldn’t determine ROM size, will use 8 MiB. It can also be manually set with the “--dmg-romsize” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 					rom_size = 8 * 1024 * 1024
 			else:
 				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb" ]
@@ -849,10 +850,10 @@ class FlashGBX_CLI():
 		
 		try:
 			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
-				print("{:s}ROM files bigger than 256 MB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
+				print("{:s}ROM files bigger than 256 MiB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
 			elif os.path.getsize(path) < 0x400:
-				print("{:s}ROM files smaller than 1 KB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
+				print("{:s}ROM files smaller than 1 KiB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
 			#with open(path, "rb") as file: buffer = bytearray(file.read())
 
@@ -866,7 +867,7 @@ class FlashGBX_CLI():
 			rom_size = os.stat(path).st_size
 			if "flash_size" in carts[cart_type]:
 				if rom_size > carts[cart_type]['flash_size']:
-					msg = "The selected flash cartridge type seems to support ROMs that are up to {:s} in size, but the file you selected is {:s}.".format(Util.formatFileSize(carts[cart_type]['flash_size']), Util.formatFileSize(os.path.getsize(path), roundUp=True))
+					msg = "The selected flash cartridge type seems to support ROMs that are up to {:s} in size, but the file you selected is {:s}.".format(Util.formatFileSize(size=carts[cart_type]['flash_size']), Util.formatFileSize(size=os.path.getsize(path)))
 					msg += " You can still give it a try, but it’s possible that it’s too large which may cause the ROM writing to fail."
 					print("{:s}{:s}{:s}".format(ANSI.YELLOW, msg, ANSI.RESET))
 					answer = input("Do you want to continue? [y/N]: ").strip().lower()
@@ -1187,9 +1188,9 @@ class FlashGBX_CLI():
 					found_length = len(test2) - found_offset
 				
 				if self.CONN.GetMode() == "DMG":
-					print("\n{:s}Done! The writable save data size is {:s} out of {:s} checked.{:s}".format(ANSI.GREEN, Util.formatFileSize(found_length), Util.formatFileSize(Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(save_type)]), ANSI.RESET))
+					print("\n{:s}Done! The writable save data size is {:s} out of {:s} checked.{:s}".format(ANSI.GREEN, Util.formatFileSize(size=found_length), Util.formatFileSize(size=Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(save_type)]), ANSI.RESET))
 				elif self.CONN.GetMode() == "AGB":
-					print("\n{:s}Done! The writable save data size using save type “{:s}” is {:s}.{:s}".format(ANSI.GREEN, Util.AGB_Header_Save_Types[save_type], Util.formatFileSize(found_length), ANSI.RESET))
+					print("\n{:s}Done! The writable save data size using save type “{:s}” is {:s}.{:s}".format(ANSI.GREEN, Util.AGB_Header_Save_Types[save_type], Util.formatFileSize(size=found_length), ANSI.RESET))
 			
 			try:
 				(_, _, cfi) = self.CONN.CheckFlashChip(limitVoltage=False)

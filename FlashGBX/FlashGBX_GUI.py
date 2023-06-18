@@ -511,7 +511,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.SETTINGS.setValue("UpdateCheck", "disabled")
 		if update_check and update_check.lower() == "enabled":
 			print("")
-			url = "https://api.github.com/repos/lesserkuma/FlashGBX/releases?per_page=1"
+			url = "https://api.github.com/repos/lesserkuma/FlashGBX/releases/latest"
 			site = "https://github.com/lesserkuma/FlashGBX/releases/latest"
 			try:
 				ret = requests.get(url, allow_redirects=True, timeout=1.5)
@@ -527,7 +527,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if ret is not False and ret.status_code == 200:
 				ret = ret.content
 				try:
-					ret = json.loads(ret)[0]
+					ret = json.loads(ret)
 					if 'tag_name' in ret:
 						latest_version = str(ret['tag_name'])
 						if pkg_resources.parse_version(latest_version) == pkg_resources.parse_version(VERSION_PEP440):
@@ -933,7 +933,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						msg = "The ROM was dumped, but the checksum is not correct."
 						button_gmmc1 = None
 						if self.CONN.INFO["loop_detected"] is not False:
-							msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
+							msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(size=self.CONN.INFO["loop_detected"], asInt=True))
 						else:
 							msg += " This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
 							if self.CONN.GetMode() == "DMG" and self.cmbDMGHeaderMapperResult.currentText() == "MBC1":
@@ -959,34 +959,35 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 								QtCore.QTimer.singleShot(1, lambda: [ self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, args=self.STATUS["args"]) ])
 								return
 			elif self.CONN.GetMode() == "AGB":
-				if Util.AGB_Global_CRC32 == self.CONN.INFO["rom_checksum_calc"]:
-					self.lblAGBHeaderROMChecksumResult.setText("Valid (0x{:06X})".format(Util.AGB_Global_CRC32))
-					self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: green; }")
-					self.lblStatus4a.setText("Done!")
-					msg = "The ROM backup is complete and the checksum was verified successfully!"
-					msgbox.setText(msg + msg_te)
-					msgbox.exec()
-				elif Util.AGB_Global_CRC32 == 0:
-					self.lblAGBHeaderROMChecksumResult.setText("0x{:06X}".format(self.CONN.INFO["rom_checksum_calc"]))
+				if "db" in self.CONN.INFO and self.CONN.INFO["db"] is not None:
+					if self.CONN.INFO["db"]["rc"] == self.CONN.INFO["file_crc32"]:
+						self.lblAGBHeaderROMChecksumResult.setText("Valid (0x{:06X})".format(self.CONN.INFO["db"]["rc"]))
+						self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: green; }")
+						self.lblStatus4a.setText("Done!")
+						msg = "The ROM backup is complete and the checksum was verified successfully!"
+						msgbox.setText(msg + msg_te)
+						msgbox.exec()
+					else:
+						self.lblAGBHeaderROMChecksumResult.setText("Invalid (0x{:06X}≠0x{:06X})".format(self.CONN.INFO["file_crc32"], self.CONN.INFO["db"]["rc"]))
+						self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: red; }")
+						self.lblStatus4a.setText("Done.")
+						msg = "The ROM backup is complete, but the checksum doesn’t match the known database entry."
+						if self.CONN.INFO["loop_detected"] is not False:
+							msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(size=self.CONN.INFO["loop_detected"], asInt=True))
+						else:
+							msg += " This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
+						msgbox.setText(msg + msg_te)
+						msgbox.setIcon(QtWidgets.QMessageBox.Warning)
+						msgbox.exec()
+				else:
+					self.lblAGBHeaderROMChecksumResult.setText("0x{:06X}".format(self.CONN.INFO["file_crc32"]))
 					self.lblAGBHeaderROMChecksumResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
 					self.lblStatus4a.setText("Done!")
 					msg = "The ROM backup is complete! As there is no known checksum for this ROM in the database, verification was skipped."
 					if self.CONN.INFO["loop_detected"] is not False:
-						msg += "\n\nNOTE: A data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
+						msg += "\n\nNOTE: A data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(size=self.CONN.INFO["loop_detected"], asInt=True))
 						msgbox.setIcon(QtWidgets.QMessageBox.Warning)
 					msgbox.setText(msg + msg_te)
-					msgbox.exec()
-				else:
-					self.lblAGBHeaderROMChecksumResult.setText("Invalid (0x{:06X}≠0x{:06X})".format(self.CONN.INFO["rom_checksum_calc"], Util.AGB_Global_CRC32))
-					self.lblAGBHeaderROMChecksumResult.setStyleSheet("QLabel { color: red; }")
-					self.lblStatus4a.setText("Done.")
-					msg = "The ROM backup is complete, but the checksum doesn’t match the known database entry."
-					if self.CONN.INFO["loop_detected"] is not False:
-						msg += "\n\nA data loop was detected in the ROM backup at position 0x{:X} ({:s}). This may indicate a bad dump or overdump.".format(self.CONN.INFO["loop_detected"], Util.formatFileSize(self.CONN.INFO["loop_detected"], asInt=True))
-					else:
-						msg += " This may indicate a bad dump, however this can be normal for some reproduction cartridges, unlicensed games, prototypes, patched games and intentional overdumps."
-					msgbox.setText(msg + msg_te)
-					msgbox.setIcon(QtWidgets.QMessageBox.Warning)
 					msgbox.exec()
 			
 			if msgbox.clickedButton() == button_dump_report:
@@ -1007,7 +1008,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 			dontShowAgainCameraSavePopup = str(self.SETTINGS.value("SkipCameraSavePopup", default="disabled")).lower() == "enabled"
 			if not dontShowAgainCameraSavePopup:
-				if self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KB
+				if self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KiB
 					cbCameraSavePopup = QtWidgets.QCheckBox("Don’t show this message again", checked=dontShowAgain)
 					msgboxCameraPopup = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Question, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text="Would you like to load your save data with the GB Camera Viewer now?")
 					msgboxCameraPopup.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -1055,14 +1056,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					elif self.CONN.GetMode() == "AGB":
 						cart_types = self.CONN.GetSupportedCartridgesAGB()[0]
 					cart_type_str = " ({:s})".format(cart_types[self.CONN.INFO["dump_info"]["cart_type"]])
-					msg_v += "\n\nTips:\n- Clean cartridge contacts\n- Check soldering if it’s a DIY cartridge\n- Avoid passive USB hubs and try different USB ports/cables\n- Check cartridge type selection{:s}\n- Check cartridge ROM storage size (at least {:s} is required)".format(cart_type_str, Util.formatFileSize(self.CONN.INFO["verify_error_params"]["rom_size"]))
+					msg_v += "\n\nTips:\n- Clean cartridge contacts\n- Check soldering if it’s a DIY cartridge\n- Avoid passive USB hubs and try different USB ports/cables\n- Check cartridge type selection{:s}\n- Check cartridge ROM storage size (at least {:s} is required)".format(cart_type_str, Util.formatFileSize(size=self.CONN.INFO["verify_error_params"]["rom_size"]))
 					if "mapper_selection_type" in self.CONN.INFO["verify_error_params"]:
 						if self.CONN.INFO["verify_error_params"]["mapper_selection_type"] == 1: # manual
 							msg_v += "\n- Check mapper type used: {:s} (manual selection)".format(self.CONN.INFO["verify_error_params"]["mapper_name"])
 						elif self.CONN.INFO["verify_error_params"]["mapper_selection_type"] == 2: # forced by cart type
 							msg_v += "\n- Check mapper type used: {:s} (forced by selected cartridge type)".format(self.CONN.INFO["verify_error_params"]["mapper_name"])
 						if self.CONN.INFO["verify_error_params"]["rom_size"] > self.CONN.INFO["verify_error_params"]["mapper_max_size"]:
-							msg_v += "\n- Check mapper type ROM size limit: likely up to {:s}".format(Util.formatFileSize(self.CONN.INFO["verify_error_params"]["mapper_max_size"]))
+							msg_v += "\n- Check mapper type ROM size limit: likely up to {:s}".format(Util.formatFileSize(size=self.CONN.INFO["verify_error_params"]["mapper_max_size"]))
 				msg_v += "\n\nDo you want to try and write the sectors again that failed verification?"
 				
 				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg_v, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
@@ -1132,7 +1133,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if cart_types[1][index] == "RETAIL": # special keyword
 				pass
 			else:
-				if "flash_size" in cart_types[1][index]:
+				if "flash_size" in cart_types[1][index] and cart_types[1][index]["flash_size"] in Util.AGB_Header_ROM_Sizes_Map:
 					self.cmbAGBHeaderROMSizeResult.setCurrentIndex(Util.AGB_Header_ROM_Sizes_Map.index(cart_types[1][index]["flash_size"]))
 				self.STATUS["cart_type"] = cart_types[1][index]
 	
@@ -1260,7 +1261,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The selected ROM file is empty.", QtWidgets.QMessageBox.Ok)
 				return
 			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
-				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MB are not supported.", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MiB are not supported.", QtWidgets.QMessageBox.Ok)
 				return
 			
 			with open(path, "rb") as file:
@@ -1273,7 +1274,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			rom_size = os.stat(path).st_size
 			if "flash_size" in carts[cart_type]:
 				if rom_size > carts[cart_type]['flash_size']:
-					msg = "The selected flash cartridge type seems to support ROMs that are up to {:s} in size, but the file you selected is {:s}.".format(Util.formatFileSize(carts[cart_type]['flash_size']), Util.formatFileSize(os.path.getsize(path), roundUp=True))
+					msg = "The selected flash cartridge type seems to support ROMs that are up to {:s} in size, but the file you selected is {:s}.".format(Util.formatFileSize(size=carts[cart_type]['flash_size']), Util.formatFileSize(size=os.path.getsize(path)))
 					msg += " You can still give it a try, but it’s possible that it’s too large which may cause the ROM writing to fail."
 					answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
 					if answer == QtWidgets.QMessageBox.Cancel: return
@@ -1514,7 +1515,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if save_type == 0:
 				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "No save type was selected.", QtWidgets.QMessageBox.Ok)
 				return
-			save_size = Util.AGB_Header_Save_Sizes[save_type]
+			#save_size = Util.AGB_Header_Save_Sizes[save_type]
 		else:
 			return
 		if not self.CheckHeader(): return
@@ -1908,7 +1909,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			"params": [
 				# ID, Type, Value(s), Default Index
 				[ "loc", "cmb_e", "Location:", [ "0x{:X}".format(l) for l in locs ], loc_index ],
-				[ "len", "cmb", "Size:", [ Util.formatFileSize(s, asInt=True) for s in lens ], len_index ],
+				[ "len", "cmb", "Size:", [ Util.formatFileSize(size=s, asInt=True) for s in lens ], len_index ],
 			]
 		}
 		dlg = UserInputDialog(self, icon=self.windowIcon(), args=dlg_args)
@@ -2208,7 +2209,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			
 			self.lblAGBHeaderROMChecksumResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
 			self.lblAGBHeaderROMChecksumResult.setText("Not available")
-			Util.AGB_Global_CRC32 = 0
 			
 			if data["db"] is None:
 				self.lblAGBHeaderROMChecksumResult.setText("(Not in database)")
@@ -2216,7 +2216,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.cmbAGBHeaderROMSizeResult.setCurrentIndex(Util.AGB_Header_ROM_Sizes_Map.index(data["db"]['rs']))
 				if data["rom_size_calc"] < 0x400000:
 					self.lblAGBHeaderROMChecksumResult.setText("In database (0x{:06X})".format(data["db"]['rc']))
-					Util.AGB_Global_CRC32 = data["db"]['rc']
 			elif data["rom_size"] != 0:
 				if not data["rom_size"] in Util.AGB_Header_ROM_Sizes_Map:
 					data["rom_size"] = 0x2000000
@@ -2355,11 +2354,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						try:
 							if "Batteryless SRAM" in Util.AGB_Header_Save_Types[save_type]:
 								if save_size == 0:
-									temp += " (unknown size)<br><b>Batteryless SRAM Location:</b> 0x{:X}–0x{:X} ({:s})".format(header["batteryless_sram"]["bl_offset"], header["batteryless_sram"]["bl_offset"]+header["batteryless_sram"]["bl_size"]-1, Util.formatFileSize(header["batteryless_sram"]["bl_size"], asInt=True))
+									temp += " (unknown size)<br><b>Batteryless SRAM Location:</b> 0x{:X}–0x{:X} ({:s})".format(header["batteryless_sram"]["bl_offset"], header["batteryless_sram"]["bl_offset"]+header["batteryless_sram"]["bl_size"]-1, Util.formatFileSize(size=header["batteryless_sram"]["bl_size"], asInt=True))
 								elif save_size == header["batteryless_sram"]["bl_size"]:
-									temp += " ({:s})<br><b>Batteryless SRAM Location:</b> 0x{:X}–0x{:X} ({:s})".format(Util.formatFileSize(save_size, asInt=True), header["batteryless_sram"]["bl_offset"], header["batteryless_sram"]["bl_offset"]+header["batteryless_sram"]["bl_size"]-1, Util.formatFileSize(header["batteryless_sram"]["bl_size"], asInt=True))
+									temp += " ({:s})<br><b>Batteryless SRAM Location:</b> 0x{:X}–0x{:X} ({:s})".format(Util.formatFileSize(size=save_size, asInt=True), header["batteryless_sram"]["bl_offset"], header["batteryless_sram"]["bl_offset"]+header["batteryless_sram"]["bl_size"]-1, Util.formatFileSize(size=header["batteryless_sram"]["bl_size"], asInt=True))
 								else:
-									temp += " ({:s})<br><b>Batteryless SRAM Location:</b> 0x{:X}–0x{:X} ({:s})".format(Util.formatFileSize(save_size, asInt=True), header["batteryless_sram"]["bl_offset"], header["batteryless_sram"]["bl_offset"]+header["batteryless_sram"]["bl_size"]-1, Util.formatFileSize(header["batteryless_sram"]["bl_size"], asInt=True))
+									temp += " ({:s})<br><b>Batteryless SRAM Location:</b> 0x{:X}–0x{:X} ({:s})".format(Util.formatFileSize(size=save_size, asInt=True), header["batteryless_sram"]["bl_offset"], header["batteryless_sram"]["bl_offset"]+header["batteryless_sram"]["bl_size"]-1, Util.formatFileSize(size=header["batteryless_sram"]["bl_size"], asInt=True))
 						except:
 							pass
 
@@ -2391,7 +2390,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 
 				if "flash_size" in supp_cart_types[1][cart_type_id]:
 					size = supp_cart_types[1][cart_type_id]["flash_size"]
-					msg_flash_size_s = "<b>ROM Size:</b> {:s}<br>".format(Util.formatFileSize(size, asInt=True))
+					msg_flash_size_s = "<b>ROM Size:</b> {:s}<br>".format(Util.formatFileSize(size=size, asInt=True))
 				
 				if self.CONN.GetMode() == "DMG":
 					if "mbc" in supp_cart_types[1][cart_type_id]:
@@ -2675,7 +2674,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.SetProgressBars(min=0, max=size, value=pos)
 			elif args["action"] == "FINISHED":
 				if pos > 0:
-					self.lblStatus1aResult.setText(Util.formatFileSize(pos))
+					self.lblStatus1aResult.setText(Util.formatFileSize(size=pos))
 				self.FinishOperation()
 			elif args["action"] == "ABORT":
 				wd = 10
@@ -2727,7 +2726,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.btnCancel.setEnabled(args["abortable"])
 				else:
 					self.btnCancel.setEnabled(True)
-				self.lblStatus1aResult.setText("{:s}".format(Util.formatFileSize(pos)))
+				self.lblStatus1aResult.setText("{:s}".format(Util.formatFileSize(size=pos)))
 				if speed > 0:
 					self.lblStatus2aResult.setText("{:.2f} KiB/s".format(speed))
 				else:

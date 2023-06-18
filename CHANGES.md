@@ -1,4 +1,10 @@
 # Release notes
+### v3.31 (released 2023-06-18)
+- Improved support for 32 MiB cartridges that have one of the EEPROM save types (fixes both backups and writes of B3CJ, B53E, B53P, BBAE, BBAP, BC2J, BFRP, BH3E, BH3P, BH8E, BJPP, BU7E, BU7P, BX3E, BX3P, BYUE, BYUJ, BYUP)
+- Confirmed support for BGA64B-71-TV-DEEP with 256M29EML *(thanks Leitplanke)*
+- Updated the Game Boy Advance lookup databases for save types, ROM sizes and checksums
+- Minor bug fixes and improvements
+
 ### v3.30 (released 2023-06-06)
 - Improved auto-detection of official GBA Video cartridges with the 3D Memory mapper including those that are less than 64 MiB
 - Added support for Unknown 29LV320 variant (no PCB text) *(thanks Zoo)*
