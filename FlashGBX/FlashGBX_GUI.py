@@ -922,7 +922,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					msgbox.exec()
 				else:
 					self.lblStatus4a.setText("Done.")
-					#if ("cart_type" in self.STATUS and "dmg-mmsa-jpn" in self.STATUS["cart_type"]) or ("mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x105, 0x202, 0x203, 0x205)):
 					if "mapper_raw" in self.CONN.INFO and self.CONN.INFO["mapper_raw"] in (0x202, 0x203, 0x205):
 						msg = "The ROM backup is complete."
 						msgbox.setText(msg + msg_te)
@@ -1306,6 +1305,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		else:
 			verify_write = False
 		
+		fix_bootlogo = False
 		fix_header = False
 		if not just_erase and len(buffer) >= 0x1000:
 			if self.CONN.GetMode() == "DMG":
@@ -1341,8 +1341,42 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				hdr = RomFileAGB(buffer).GetHeader()
 			
 			if not hdr["logo_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
-				answer = QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "Warning: The ROM file you selected will not boot on actual hardware due to invalid boot logo data.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Cancel)
-				if answer == QtWidgets.QMessageBox.Cancel: return
+				msg_text = "Warning: The ROM file you selected will not boot on actual hardware due to invalid boot logo data."
+				bootlogo = None
+				if self.CONN.GetMode() == "DMG":
+					if os.path.exists(Util.CONFIG_PATH + "/bootlogo_dmg.bin"):
+						with open(Util.CONFIG_PATH + "/bootlogo_dmg.bin", "rb") as f:
+							bootlogo = bytearray(f.read(0x30))
+				elif self.CONN.GetMode() == "AGB":
+					if os.path.exists(Util.CONFIG_PATH + "/bootlogo_agb.bin"):
+						with open(Util.CONFIG_PATH + "/bootlogo_agb.bin", "rb") as f:
+							bootlogo = bytearray(f.read(0x9C))
+				if bootlogo is not None:
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
+					button_1 = msgbox.addButton("  &Fix and Continue  ", QtWidgets.QMessageBox.ActionRole)
+					button_2 = msgbox.addButton("  Continue &without fixing  ", QtWidgets.QMessageBox.ActionRole)
+					button_cancel = msgbox.addButton("&Cancel", QtWidgets.QMessageBox.RejectRole)
+					msgbox.setDefaultButton(button_1)
+					msgbox.setEscapeButton(button_cancel)
+					msgbox.exec()
+					if msgbox.clickedButton() == button_1:
+						fix_bootlogo = bootlogo
+					elif msgbox.clickedButton() == button_cancel:
+						return
+					elif msgbox.clickedButton() == button_2:
+						pass
+				else:
+					Util.dprint("Couldn’t find boot logo file in configuration directory.")
+					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
+					msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+					msgbox.setDefaultButton(QtWidgets.QMessageBox.Cancel)
+					msgbox.setEscapeButton(QtWidgets.QMessageBox.Cancel)
+					retval = msgbox.exec()
+					if retval == QtWidgets.QMessageBox.Cancel:
+						return
+					else:
+						pass
+			
 			if not hdr["header_checksum_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
 				msg_text = "Warning: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).".format(hdr["header_checksum_calc"], hdr["header_checksum"])
 				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
@@ -1372,9 +1406,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if just_erase:
 				prefer_chip_erase = True
 				verify_write = False
-			args = { "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc }
+			args = { "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "fix_bootlogo":fix_bootlogo, "mbc":mbc }
 		else:
-			args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc, "flash_offset":flash_offset }
+			args = { "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "fix_bootlogo":fix_bootlogo, "mbc":mbc, "flash_offset":flash_offset }
 		self.CONN.FlashROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		#self.CONN._FlashROM(args=args)
 		self.grpStatus.setTitle("Transfer Status")
@@ -1828,7 +1862,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				bl_args = self.GetBLArgs(rom_size=Util.AGB_Header_ROM_Sizes_Map[self.cmbAGBHeaderROMSizeResult.currentIndex()], detected=detected)
 				if bl_args is False: return
 
-				args = { "path":path, "cart_type":cart_type, "override_voltage":False, "prefer_chip_erase":False, "fast_read_mode":True, "verify_write":verify_write, "fix_header":False, "mbc":mbc }
+				args = { "path":path, "cart_type":cart_type, "override_voltage":False, "prefer_chip_erase":False, "fast_read_mode":True, "verify_write":verify_write, "fix_header":False, "fix_bootlogo":False, "mbc":mbc }
 				args.update({"bl_save":True, "flash_offset":bl_args["bl_offset"], "flash_size":bl_args["bl_size"]})
 				if erase:
 					args["path"] = ""
@@ -2096,6 +2130,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if data['logo_correct'] and data['header_checksum_correct']:
 				self.lblDMGHeaderBootlogoResult.setText("OK")
 				self.lblDMGHeaderBootlogoResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
+				if not os.path.exists(Util.CONFIG_PATH + "/bootlogo_dmg.bin"):
+					with open(Util.CONFIG_PATH + "/bootlogo_dmg.bin", "wb") as f:
+						f.write(data['raw'][0x104:0x134])
 			else:
 				self.lblDMGHeaderBootlogoResult.setText("Invalid")
 				self.lblDMGHeaderBootlogoResult.setStyleSheet("QLabel { color: red; }")
@@ -2136,7 +2173,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblDMGHeaderBootlogoResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
 				self.lblDMGHeaderROMChecksumResult.setText("")
 				self.lblDMGHeaderROMChecksumResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
-			elif data["mapper_raw"] == 0x205: # Datel Orbit V2
+			elif data["mapper_raw"] == 0x205: # Datel
 				self.lblDMGHeaderRtcResult.setText("")
 				self.lblDMGHeaderBootlogoResult.setText("")
 				self.lblDMGHeaderBootlogoResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
@@ -2153,14 +2190,20 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblDMGHeaderBootlogoResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
 				if "logo_sachen" in data:
 					data["logo_sachen"].putpalette([ 255, 255, 255, 128, 128, 128 ])
-					self.lblDMGHeaderBootlogoResult.setPixmap(QtGui.QPixmap.fromImage(ImageQt(data["logo_sachen"].convert("RGBA"))))
+					try:
+						self.lblDMGHeaderBootlogoResult.setPixmap(QtGui.QPixmap.fromImage(ImageQt(data["logo_sachen"].convert("RGBA"))))
+					except:
+						pass
 			else:
 				if "logo" in data:
 					if data['logo_correct']:
 						data["logo"].putpalette([ 255, 255, 255, self.TEXT_COLOR[0], self.TEXT_COLOR[1], self.TEXT_COLOR[2] ])
 					else:
 						data["logo"].putpalette([ 255, 255, 255, 251, 0, 24 ])
-					self.lblDMGHeaderBootlogoResult.setPixmap(QtGui.QPixmap.fromImage(ImageQt(data["logo"].convert("RGBA"))))
+					try:
+						self.lblDMGHeaderBootlogoResult.setPixmap(QtGui.QPixmap.fromImage(ImageQt(data["logo"].convert("RGBA"))))
+					except:
+						pass
 			
 			self.grpAGBCartridgeInfo.setVisible(False)
 			self.grpDMGCartridgeInfo.setVisible(True)
@@ -2194,6 +2237,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if data['logo_correct']:
 				self.lblAGBHeaderLogoValidResult.setText("OK")
 				self.lblAGBHeaderLogoValidResult.setStyleSheet(self.lblAGBRomTitleResult.styleSheet())
+				if not os.path.exists(Util.CONFIG_PATH + "/bootlogo_agb.bin"):
+					with open(Util.CONFIG_PATH + "/bootlogo_agb.bin", "wb") as f:
+						f.write(data['raw'][0x04:0xA0])
 			else:
 				self.lblAGBHeaderLogoValidResult.setText("Invalid")
 				self.lblAGBHeaderLogoValidResult.setStyleSheet("QLabel { color: red; }")
@@ -2619,18 +2665,23 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		speed = 0
 		elapsed = 0
 		left = 0
+		estimated = 0
 		if "pos" in args: pos = args["pos"]
 		if "size" in args: size = args["size"]
 		if "speed" in args: speed = args["speed"]
 		if "time_elapsed" in args: elapsed = args["time_elapsed"]
 		if "time_left" in args: left = args["time_left"]
+		if "time_estimated" in args: estimated = args["time_estimated"]
 		
 		if "action" in args:
 			if args["action"] == "ERASE":
 				self.lblStatus1aResult.setText("Pending...")
 				self.lblStatus2aResult.setText("Pending...")
 				self.lblStatus3aResult.setText(Util.formatProgressTime(elapsed))
-				self.lblStatus4a.setText("Erasing flash... This may take some time.")
+				if estimated != 0:
+					self.lblStatus4a.setText("Erasing... This may take up to {:d} seconds.".format(estimated))
+				else:
+					self.lblStatus4a.setText("Erasing... This may take some time.")
 				self.lblStatus4aResult.setText("")
 				self.btnCancel.setEnabled(args["abortable"])
 				self.SetProgressBars(min=0, max=size, value=pos)

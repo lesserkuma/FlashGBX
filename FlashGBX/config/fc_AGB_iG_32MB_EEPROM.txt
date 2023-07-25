@@ -1,20 +1,16 @@
 {
-	"type":"DMG",
+	"type":"AGB",
 	"names":[
-		"insideGadgets 4 MiB (S29JL032J)",
-		"Gamebank-web DMG-29W-04 with M29W320ET"
+		"insideGadgets 32 MiB + EEPROM"
 	],
-	"flash_ids":[
-		[ 0x01, 0x01, 0x56, 0x56 ],
-		[ 0x20, 0x20, 0x56, 0x56 ]
-	],
-	"voltage":5,
-	"flash_size":0x400000,
-	"start_addr":0x4000,
-	"first_bank":0,
-	"write_pin":"WR",
-	"sector_size_from_cfi":true,
-	"chip_erase_timeout":60,
+	"flash_ids":[],
+	"voltage":3.3,
+	"flash_size":0x1FFFF00,
+	"sector_size":0x20000,
+	"chip_erase_timeout":300,
+	"single_write_first_256_bytes":true,
+	"rtc":true,
+	"rumble":true,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -25,21 +21,8 @@
 			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x90 ]
 		],
-		"chip_erase":[
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ 0xAAA, 0x10 ]
-		],
-		"chip_erase_wait_for":[
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ 0, 0xFF, 0xFF ]
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
 		],
 		"sector_erase":[
 			[ 0xAAA, 0xAA ],
@@ -55,7 +38,39 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0xFF, 0xFF ]
+			[ "SA", 0xFFFF, 0xFFFF ]
+		],
+		"chip_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFFFF, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ "SA", 0x25 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0x29 ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", "PD", 0xFFFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xAA ],

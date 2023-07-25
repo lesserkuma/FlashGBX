@@ -75,6 +75,8 @@ class DMG_MBC:
 			return DMG_Unlicensed_Sachen(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x205:									# 0x205:'Datel Orbit V2',
 			return DMG_Unlicensed_DatelOrbitV2(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+		# elif mbc_id == 0x206:									# 0x206:'Datel MegaMem',
+		# 	return DMG_Unlicensed_DatelMegaMem(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		else:
 			self.__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 			return self
@@ -667,6 +669,17 @@ class DMG_GBD(DMG_MBC5):
 	def GetName(self):
 		return "MAC-GBD"
 
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|", index)
+		commands = [
+			[ 0x2100, index & 0xFF ],
+		]
+		
+		start_address = 0 if index == 0 else 0x4000
+
+		self.CartWrite(commands)
+		return (start_address, self.ROM_BANK_SIZE)
+	
 	def GetMaxROMSize(self):
 		return 1*1024*1024
 
@@ -830,6 +843,17 @@ class DMG_HuC1(DMG_MBC5):
 	def GetName(self):
 		return "HuC-1"
 
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), "|", index)
+		commands = [
+			[ 0x2100, index & 0xFF ],
+		]
+		
+		start_address = 0 if index == 0 else 0x4000
+
+		self.CartWrite(commands)
+		return (start_address, self.ROM_BANK_SIZE)
+	
 	def EnableRAM(self, enable=True):
 		dprint(self.GetName(), "|", enable)
 		commands = [
@@ -1412,6 +1436,31 @@ class DMG_Unlicensed_DatelOrbitV2(DMG_MBC):
 	def GetMaxROMSize(self):
 		return 128*1024
 
+# class DMG_Unlicensed_DatelMegaMem(DMG_MBC):
+# 	def GetName(self):
+# 		return "Datel MegaMem"
+	
+# 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
+# 		if args is None: args = {}
+# 		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
+# 		self.ROM_BANK_SIZE = 0x4000
+# 		self.RAM_BANK_SIZE = 0x4000
+
+# 	def SelectBankROM(self, index):
+# 		dprint(self.GetName(), "|", index)
+# 		return (0, self.ROM_BANK_SIZE)
+
+# 	def SelectBankRAM(self, index):
+# 		dprint(self.GetName(), "|", index)
+# 		self.CartWrite([[ 0x2000, index & 0x20 ]])
+# 		return (0x4000, self.RAM_BANK_SIZE)
+
+# 	def GetROMBanks(self, rom_size):
+# 		return 1
+	
+# 	def GetMaxROMSize(self):
+# 		return 16*1024
+
 
 class AGB_GPIO:
 	CART_WRITE_FNCPTR = None
@@ -1590,8 +1639,7 @@ class AGB_GPIO:
 		buffer.append(self.RTCReadStatus()) # 24h mode = 0x40, reset flag = 0x80
 		buffer.extend(struct.pack("<Q", ts))
 
-		dstr = ' '.join(format(x, '02X') for x in buffer)
-		dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+		dprint(' '.join(format(x, '02X') for x in buffer))
 		
 		# Digits are BCD (Binary Coded Decimal)
 		#[07] 00 01 27 05 06 30 20
@@ -1703,6 +1751,6 @@ class AGB_GPIO:
 		rtc_s = (rtc_buffer[6] & 0x0F) + ((rtc_buffer[6] >> 4) * 10)
 
 		if rtc_y == 0 and rtc_m == 0 and rtc_d == 0 and rtc_h == 0 and rtc_i == 0 and rtc_s == 0:
-			return "Not available"
+			raise Exception("Invalid RTC data")
 		else:
 			return "20{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(rtc_y, rtc_m, rtc_d, rtc_h, rtc_i, rtc_s)

@@ -149,7 +149,7 @@ class FlashGBX_CLI():
 			print("\n{:s}Couldn’t read cartridge header. Please try again.{:s}\n".format(ANSI.RED, ANSI.RESET))
 			self.DisconnectDevice()
 			return
-		elif bad_read and not args.ignore_bad_header and ("mapper_raw" in header and header["mapper_raw"] != 0x203):
+		if bad_read and not args.ignore_bad_header and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and "mapper_raw" in header and header["mapper_raw"] != 0x203)):
 			print("\n{:s}Invalid data was detected which usually means that the cartridge couldn’t be read correctly. Please make sure you selected the correct mode and that the cartridge contacts are clean. This check can be disabled with the command line switch “--ignore-bad-header”.{:s}\n".format(ANSI.RED, ANSI.RESET))
 			print("Cartridge Information:")
 			print(s_header)
@@ -462,6 +462,9 @@ class FlashGBX_CLI():
 
 			if data["logo_correct"]:
 				s += "Nintendo Logo:   OK\n"
+				if not os.path.exists(Util.CONFIG_PATH + "/bootlogo_dmg.bin"):
+					with open(Util.CONFIG_PATH + "/bootlogo_dmg.bin", "wb") as f:
+						f.write(data['raw'][0x104:0x134])
 			else:
 				s += "Nintendo Logo:   {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
@@ -517,6 +520,9 @@ class FlashGBX_CLI():
 
 			if data["logo_correct"]:
 				s += "Nintendo Logo:        OK\n"
+				if not os.path.exists(Util.CONFIG_PATH + "/bootlogo_agb.bin"):
+					with open(Util.CONFIG_PATH + "/bootlogo_agb.bin", "wb") as f:
+						f.write(data['raw'][0x04:0xA0])
 			else:
 				s += "Nintendo Logo:        {:s}Invalid{:s}\n".format(ANSI.RED, ANSI.RESET)
 				bad_read = True
@@ -895,6 +901,7 @@ class FlashGBX_CLI():
 		
 		verify_write = args.no_verify_write is False
 		
+		fix_bootlogo = False
 		fix_header = False
 		if self.CONN.GetMode() == "DMG":
 			hdr = RomFileDMG(buffer).GetHeader()
@@ -938,7 +945,24 @@ class FlashGBX_CLI():
 		elif self.CONN.GetMode() == "AGB":
 			hdr = RomFileAGB(buffer).GetHeader()
 		if not hdr["logo_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
-			print("{:s}WARNING: The ROM file you selected will not boot on actual hardware due to invalid logo data.{:s}".format(ANSI.YELLOW, ANSI.RESET))
+			print("{:s}Warning: The ROM file you selected will not boot on actual hardware due to invalid boot logo data.{:s}".format(ANSI.YELLOW, ANSI.RESET))
+			bootlogo = None
+			if self.CONN.GetMode() == "DMG":
+				if os.path.exists(Util.CONFIG_PATH + "/bootlogo_dmg.bin"):
+					with open(Util.CONFIG_PATH + "/bootlogo_dmg.bin", "rb") as f:
+						bootlogo = bytearray(f.read(0x30))
+			elif self.CONN.GetMode() == "AGB":
+				if os.path.exists(Util.CONFIG_PATH + "/bootlogo_agb.bin"):
+					with open(Util.CONFIG_PATH + "/bootlogo_agb.bin", "rb") as f:
+						bootlogo = bytearray(f.read(0x9C))
+			if bootlogo is not None:
+				answer = input("Fix the boot logo before continuing? [Y/n]: ").strip().lower()
+				print("")
+				if answer != "n":
+					fix_bootlogo = bootlogo
+			else:
+				Util.dprint("Couldn’t find boot logo file in configuration directory.")
+		
 		if not hdr["header_checksum_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
 			print("{:s}WARNING: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).{:s}".format(ANSI.YELLOW, hdr["header_checksum_calc"], hdr["header_checksum"], ANSI.RESET))
 			answer = input("Fix the header checksum before continuing? [Y/n]: ").strip().lower()
@@ -953,9 +977,9 @@ class FlashGBX_CLI():
 		
 		print("")
 		if len(buffer) > 0x1000:
-			args = { "mode":4, "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc }
+			args = { "mode":4, "path":"", "buffer":buffer, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "fix_bootlogo":fix_bootlogo, "mbc":mbc }
 		else:
-			args = { "mode":4, "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "mbc":mbc }
+			args = { "mode":4, "path":path, "cart_type":cart_type, "override_voltage":override_voltage, "prefer_chip_erase":prefer_chip_erase, "fast_read_mode":True, "verify_write":verify_write, "fix_header":fix_header, "fix_bootlogo":fix_bootlogo, "mbc":mbc }
 		self.CONN.TransferData(signal=self.PROGRESS.SetProgress, args=args)
 
 		buffer = None

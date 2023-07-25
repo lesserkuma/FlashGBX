@@ -114,6 +114,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Ferrante Crafts cart 32 KB
   - Ferrante Crafts cart 64 KB
   - Ferrante Crafts cart 512 KB
+  - FunnyPlaying MidnightTrace 4 MiB Flash Cart
+  - Gamebank-web DMG-29W-04 with M29W320ET
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
   - HDR Game Boy Camera Flashcart
@@ -137,6 +139,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Development AGB Cartridge 64M Flash S, E201843
   - Development AGB Cartridge 128M Flash S, E201850
   - Development AGB Cartridge 256M Flash S, E201868
+  - DL9SEC GBA flashcart with TE28F128
+  - DL9SEC GBA flashcart with TE28F256
   - Flash Advance Pro 256M
   - Flash2Advance 128M (with 2× 28F640J3A120)
   - Flash2Advance 256M (with 2× 28F128J3A150)
@@ -144,6 +148,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Flash2Advance Ultra 64M (with 2× 28F320C3B)
   - Flash2Advance Ultra 256M (with 8× 3204C3B100)
   - Flash Advance Card 64M (with 28F640J3A120)
+  - FunnyPlaying MidnightTrace 32 MiB Flash Cart
   - insideGadgets 16 MiB, 64K EEPROM with Solar Sensor and RTC options
   - insideGadgets 32 MiB, 1M FLASH with RTC option
   - insideGadgets 32 MiB, 512K FLASH
@@ -183,6 +188,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - SD007_BV5_DRV with S29GL032M90TFIR4
   - SD007_BV5_V2 with HY29LV160TT
   - SD007_BV5_V2 with MX29LV320BTC
+  - SD007_BV5_V3 with 26LV160BTC
   - SD007_BV5_V3 with 29LV160BE-90PFTN
   - SD007_BV5_V3 with HY29LV160BT-70
   - SD007_BV5_V3 with AM29LV160MB
@@ -220,9 +226,11 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 0121 with 0121M0Y0BE
   - 100BS6600_48BALL_V4 with 6600M0U0BE
   - 100SOP with MSP55LV100S
+  - 2006-36-71_V2 with M36L0R8060B
   - 2006_TSOP_64BALL_6106 with W29GL128SH9B
   - 28F256L03B-DRV with 256L30B
   - 29LV128DBT2C-90Q and ALTERA CPLD
+  - 3680x2 with TH50VSF3680
   - 36L0R8-39VF512 with M36L0R8060B
   - 36L0R8-39VF512 with M36L0R8060T
   - 4000L0ZBQ0 DRV with 3000L0YBQ0
@@ -267,6 +275,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - F864-3 with M36L0R7050B
   - GA-07 with unlabeled flash chip
   - GE28F128W30 with 128W30B0
+  - M36XXX_T32_32D_16D with M36L0R806
+  - M5M29-39VF512 with M5M29HD528
   - M5M29G130AN (no PCB text)
   - M6MGJ927 (no PCB text)
   - MSP54LV512 (no PCB text)
@@ -308,7 +318,7 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, yosoo, Zeii, Zelante, Zoo, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
 
 ## DISCLAIMER
 

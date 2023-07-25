@@ -1,9 +1,13 @@
 {
 	"type":"AGB",
 	"names":[
-		"Generic Flash Cartridge (0/90)"
+		"DL9SEC GBA flashcart with TE28F256"
+	],
+	"flash_ids":[
+		[ 0x89, 0x00, 0x1D, 0x00 ]
 	],
 	"voltage":3.3,
+	"flash_size":0x2000000,
 	"sector_size_from_cfi":true,
 	"command_set":"INTEL",
 	"commands":{
@@ -25,6 +29,20 @@
 			[ "SA", 0x80, 0xFFFF ],
 			[ null, null, null ],
 			[ "SA", 0x80, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ "SA", 0xE8 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
+		],
+		"buffer_write_wait_for":[
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFFFF ],
+			[ null, null, null ]
 		],
 		"single_write":[
 			[ 0, 0x70 ],

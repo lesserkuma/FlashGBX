@@ -1,31 +1,4 @@
 {
- "523920f7199a60b49357ba21c4abec6b9a3c9734": {
-  "gn": "2097 ROM Pack II",
-  "ne": "(USA) (Test Program)",
-  "gc": "",
-  "rc": 177911527,
-  "rs": 32768,
-  "lg": "En",
-  "rg": "USA"
- },
- "539cbc25e424e40a31a01160fcb47fa3487b1654": {
-  "gn": "2420 ROM Pack V",
-  "ne": "(USA) (Test Program)",
-  "gc": "",
-  "rc": 2539003264,
-  "rs": 32768,
-  "lg": "En",
-  "rg": "USA"
- },
- "8f5d0235df4ae4b8840b669c0dd979a177054eeb": {
-  "gn": "2440 ROM Pack",
-  "ne": "(USA) (Test Program)",
-  "gc": "",
-  "rc": 2056477162,
-  "rs": 32768,
-  "lg": "En",
-  "rg": "USA"
- },
  "b4abb29a67c3351eaf60be9d89320fc927937618": {
   "gn": "Aladdin",
   "ne": "(Europe) (SGB Enhanced)",
@@ -10981,7 +10954,7 @@
  },
  "0129d7a3c58b6271e6d4cdab034c397e0e355aae": {
   "gn": "Loppi Puzzle Magazine - Kangaeru Puzzle Dai-2-gou",
-  "ne": "(Japan) (Rev 1) (SGB Enhanced, GB Compatible) (NP) [b]",
+  "ne": "(Japan) (Rev 1) (SGB Enhanced, GB Compatible) (NP)",
   "gc": "DMG-B62J",
   "rc": 665526663,
   "rs": 262144,

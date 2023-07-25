@@ -1,19 +1,19 @@
 {
-	"type":"DMG",
+	"type":"AGB",
 	"names":[
-		"BennVenn MBC3000 RTC cart (ROM2)"
+		"3680x2 with TH50VSF3680"
 	],
 	"flash_ids":[
-		[ 0xC2, 0xC2, 0xCB, 0xCB ],
-		[ 0xC2, 0xC2, 0x7E, 0x7E ]
+		[ 0x98, 0x00, 0x93, 0x00 ]
 	],
-	"voltage":5,
-	"flash_size":0x400000,
-	"start_addr":0,
-	"first_bank":1,
-	"write_pin":"WR",
-	"sector_size":0x10000,
-	"mbc":"manual",
+	"voltage":3.3,
+	"flash_size":0x800000,
+	"sector_size":[
+		[0x10000, 127],
+		[0x2000, 8],
+		[0x10000, 127],
+		[0x2000, 8]
+	],
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -25,7 +25,7 @@
 			[ 0xAAA, 0x90 ]
 		],
 		"read_cfi":[
-			[ 0xAAA, 0x98 ]
+			[ 0xAA, 0x98 ]
 		],
 		"sector_erase":[
 			[ 0xAAA, 0xAA ],
@@ -41,7 +41,7 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0xFF, 0xFF ]
+			[ "SA", 0xFFFF, 0xFFFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xAA ],

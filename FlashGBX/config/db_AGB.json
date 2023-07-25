@@ -3080,7 +3080,7 @@
   "rg": "Japan"
  },
  "c5273c7680baf28bf8f67cd02656c21c698dec58": {
-  "gn": "Aero the Acro-Bat - Rascal Rival Revenge",
+  "gn": "Aero the Acro-Bat",
   "ne": "(USA)",
   "gc": "AAOE",
   "rc": 3027943456,
@@ -3102,7 +3102,7 @@
   "rg": "Japan"
  },
  "b071b79502414d994dfdc504668bbc3aecfb6cb7": {
-  "gn": "Aero the Acro-Bat - Rascal Rival Revenge",
+  "gn": "Aero the Acro-Bat",
   "ne": "(Europe)",
   "gc": "AAOP",
   "rc": 2817101502,
@@ -21771,8 +21771,8 @@
   "gc": "BGYJ",
   "rc": 4094564777,
   "rs": 16777216,
-  "st": 0,
-  "ss": 0,
+  "st": 1,
+  "ss": 512,
   "rv": "Rev 1",
   "lg": "Ja",
   "rg": "Japan"
@@ -23172,8 +23172,8 @@
   "gc": "BJGE",
   "rc": 1848475391,
   "rs": 16777216,
-  "st": 0,
-  "ss": 0,
+  "st": 2,
+  "ss": 8192,
   "lg": "En",
   "rg": "Australia"
  },
@@ -31489,7 +31489,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA, Europe",
-  "3d": true
+  "3d": false
  },
  "dd992df47247919cbb252015b4ff093e3156d320": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Limited Edition",
@@ -31501,7 +31501,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "54a6e77c02eae428b8b438035ba8215d621dc54f": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Platinum Edition",
@@ -31513,7 +31513,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA, Europe",
-  "3d": true
+  "3d": false
  },
  "73f8adcdf1fb2766c13ab65c0470af2b23801a7a": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Edition Platinum",
@@ -31525,7 +31525,7 @@
   "ss": 0,
   "lg": "Fr",
   "rg": "France",
-  "3d": true
+  "3d": false
  },
  "e6976665b9e9979e270c95230fbbd08350f09f99": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Premium Edition",
@@ -31537,7 +31537,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA, Europe",
-  "3d": true
+  "3d": false
  },
  "772d68fe78dc92febbb12b6c1172d26c68031706": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Edition Premium",
@@ -31549,7 +31549,7 @@
   "ss": 0,
   "lg": "Fr",
   "rg": "France",
-  "3d": true
+  "3d": false
  },
  "790103a28c22bfcfa52de31f9a1061b17708dc3c": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Special Edition",
@@ -31574,7 +31574,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA, Europe",
-  "3d": true
+  "3d": false
  },
  "a9861107e3c0eadf7a2c6fbf970155cb059f869e": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Edition Speciale",
@@ -31586,7 +31586,7 @@
   "ss": 0,
   "lg": "Fr",
   "rg": "France",
-  "3d": true
+  "3d": false
  },
  "590318cf40cad4d866dd385b6b208a99c6eeec62": {
   "gn": "Game Boy Advance Video - Cartoon Network Collection - Volume 1",
@@ -31610,7 +31610,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "28c8afa6b5d0d24d2c540413e948d4c9c7c44e63": {
   "gn": "Game Boy Advance Video - Disney Channel Collection - Volume 1",
@@ -31622,7 +31622,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "bfe44e65a6ca22ed091c82b475999a4818f60b83": {
   "gn": "Game Boy Advance Video - Dora the Explorer - Volume 1",
@@ -31684,7 +31684,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "0c411aef0ac6be4e8e9ae9b9e8d259cae942b8b1": {
   "gn": "Game Boy Advance Video - All Grown Up! - Volume 1",
@@ -31732,7 +31732,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "1fc3d70d3f225dfdad2dfb70d8336368d4aa8982": {
   "gn": "Game Boy Advance Video - Nicktoons - Volume 3",
@@ -31744,7 +31744,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "49e8ad4da336076f9b0dc8c885e36f7192701fc9": {
   "gn": "Game Boy Advance Video - Nicktoons Collection - Volume 1",
@@ -31829,7 +31829,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "41b14883cc3e05653a7f039944b11a1223f4cf66": {
   "gn": "Game Boy Advance Video - Shark Tale",
@@ -31917,7 +31917,7 @@
   "ss": 0,
   "lg": "En",
   "rg": "USA",
-  "3d": true
+  "3d": false
  },
  "99bf48542a03e1bceb2a9a82da7257874ec30670": {
   "gn": "Game Boy Advance Video - SpongeBob SquarePants - Volume 1",
@@ -31967,7 +31967,7 @@
   "ss": 0,
   "lg": "Fr",
   "rg": "France",
-  "3d": true
+  "3d": false
  },
  "dc0c4e5a4c2cdcbbf86e2a16ca9e2060fea6e943": {
   "gn": "Game Boy Advance Video - Yu-Gi-Oh! - Yugi vs. Joey",
@@ -31991,7 +31991,7 @@
   "ss": 0,
   "lg": "Fr",
   "rg": "France",
-  "3d": true
+  "3d": false
  },
  "10b3242f409611c32749f9b42f7c7ea951c5fc6d": {
   "gn": "Card e-Reader",

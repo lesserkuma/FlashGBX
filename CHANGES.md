@@ -1,4 +1,21 @@
 # Release notes
+### v3.32 (released 2023-07-25)
+- Added support for M5M29-39VF512 with M5M29HD528 *(thanks marv17)*
+- Added support for SD007_BV5_V3 with 26LV160BTC
+- Added support for DL9SEC GBA flashcart with TE28F128 *(thanks olDirdey)*
+- Added support for DL9SEC GBA flashcart with TE28F256 *(thanks olDirdey)*
+- Added support for M36XXX_T32_32D_16D with M36L0R8060T *(thanks Merkin)*
+- Added support for Gamebank-web DMG-29W-04 with M29W320ET *(thanks zipplet)*
+- Added support for a new bootleg save type based on 1M FLASH
+- Added support for another flash chip used on the BennVenn MBC3000 RTC cart
+- Added support for 3680x2 with TH50VSF3680 (only up to 8 MiB) *(thanks kane159)*
+- Fixed support for BGA64B-71-TV-DEEP with 256M29EML
+- Confirmed support for FunnyPlaying MidnightTrace 4 MiB Game Boy Flash Cart *(thanks AlexiG)*
+- Confirmed support for FunnyPlaying MidnightTrace 32 MiB Game Boy Advance Flash Cart *(thanks AlexiG)*
+- Confirmed support for 2006-36-71_V2 with M36L0R8060B *(thanks kane159)*
+- Updated the Game Boy Advance lookup databases for save types, ROM sizes and checksums
+- Minor bug fixes and improvements *(thanks Falknör, Crystal)*
+
 ### v3.31 (released 2023-06-18)
 - Improved support for 32 MiB cartridges that have one of the EEPROM save types (fixes both backups and writes of B3CJ, B53E, B53P, BBAE, BBAP, BC2J, BFRP, BH3E, BH3P, BH8E, BJPP, BU7E, BU7P, BX3E, BX3P, BYUE, BYUJ, BYUP)
 - Confirmed support for BGA64B-71-TV-DEEP with 256M29EML *(thanks Leitplanke)*

@@ -1,12 +1,15 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 8 MiB"
+		"insideGadgets 8 MiB",
+		"FunnyPlaying MidnightTrace 4 MiB Flash Cart"
 	],
 	"flash_ids":[
+		[ 0x01, 0x01, 0x7E, 0x7E ],
 		[ 0x01, 0x01, 0x7E, 0x7E ]
 	],
 	"voltage":3.3,
+	"voltage_variants":true,
 	"flash_size":0x800000,
 	"start_addr":0x4000,
 	"first_bank":0,

@@ -304,7 +304,7 @@ class Flashcart:
 	def ChipErase(self):
 		self.Reset(full_reset=True)
 		time_start = time.time()
-		if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "abortable":False})
+		if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "time_estimated": self.CONFIG["chip_erase_timeout"], "abortable":False})
 		for i in range(0, len(self.CONFIG["commands"]["chip_erase"])):
 			addr = self.CONFIG["commands"]["chip_erase"][i][0]
 			data = self.CONFIG["commands"]["chip_erase"][i][1]
@@ -331,10 +331,9 @@ class Flashcart:
 				data = self.CONFIG["commands"]["chip_erase_wait_for"][i][1]
 				timeout = self.CONFIG["chip_erase_timeout"]
 				while True:
-					if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "abortable":False})
+					if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "time_estimated": self.CONFIG["chip_erase_timeout"], "abortable":False})
 					if "wait_read_status_register" in self.CONFIG and self.CONFIG["wait_read_status_register"]:
 						for j in range(0, len(self.CONFIG["commands"]["read_status_register"])):
-							#sr_addr = self.CONFIG["commands"]["read_status_register"][j][0]
 							sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
 							
 							if we == "WR":

@@ -224,6 +224,7 @@ class GBMemoryMap:
 				info["ram_start_block"] = int(ram_offset / 0x800)
 				ram_offset += info["ram_data_size"]
 				info["rom_header"] = RomFileDMG(data[info["rom_data_offset"]:info["rom_data_offset"]+0x180]).GetHeader()
+				if len(info["rom_header"]) == 0: return
 				mbc_type = self.MapperToMBCType(info["rom_header"]["mapper_raw"])
 				if mbc_type is False: return
 
