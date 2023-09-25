@@ -433,7 +433,7 @@ class FlashGBX_CLI():
 	def DisconnectDevice(self):
 		try:
 			devname = self.CONN.GetFullNameExtended()
-			self.CONN.Close()
+			self.CONN.Close(cartPowerOff=True)
 			print("Disconnected from {:s}".format(devname))
 		except:
 			pass

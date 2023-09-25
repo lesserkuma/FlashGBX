@@ -1,4 +1,7 @@
 # Release notes
+### v3.33
+- Minor bug fixes and improvements *(thanks Eldram, Grender)*
+
 ### v3.32 (released 2023-07-25)
 - Added support for M5M29-39VF512 with M5M29HD528 *(thanks marv17)*
 - Added support for SD007_BV5_V3 with 26LV160BTC

@@ -202,7 +202,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addAction("Check for &updates on application startup", lambda: [ self.EnableUpdateCheck() ])
 		self.mnuConfig.addAction("&Append date && time to filename of save data backups", lambda: self.SETTINGS.setValue("SaveFileNameAddDateTime", str(self.mnuConfig.actions()[1].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("Prefer full &chip erase", lambda: self.SETTINGS.setValue("PreferChipErase", str(self.mnuConfig.actions()[2].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
-		self.mnuConfig.addAction("&Verify written data", lambda: self.SETTINGS.setValue("VerifyData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
+		self.mnuConfig.addAction("&Verify transferred data", lambda: self.SETTINGS.setValue("VerifyData", str(self.mnuConfig.actions()[3].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("&Limit voltage to 3.3V when detecting Game Boy flash cartridges", lambda: self.SETTINGS.setValue("AutoDetectLimitVoltage", str(self.mnuConfig.actions()[4].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
 		self.mnuConfig.addAction("Limit &baud rate to 1Mbps for GBxCart RW v1.4 devices", lambda: [ self.SETTINGS.setValue("LimitBaudRate", str(self.mnuConfig.actions()[5].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")), self.SetLimitBaudRate() ])
 		self.mnuConfig.addAction("Always &generate ROM dump reports", lambda: self.SETTINGS.setValue("GenerateDumpReports", str(self.mnuConfig.actions()[6].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
@@ -564,7 +564,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	def DisconnectDevice(self):
 		try:
 			devname = self.CONN.GetFullNameExtended()
-			self.CONN.Close()
+			self.CONN.Close(cartPowerOff=True)
 			self.CONN = None
 			self.DEVICES = {}
 			print("Disconnected from {:s}".format(devname))
@@ -1085,11 +1085,13 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if self.CONN.GetMode() == "AGB" and "Batteryless SRAM" in Util.AGB_Header_Save_Types[self.cmbAGBSaveTypeResult.currentIndex()]:
 				temp1 = self.cmbAGBCartridgeTypeResult.currentIndex()
 				temp2 = self.cmbAGBSaveTypeResult.currentIndex()
-				temp3 = self.CONN.INFO["dump_info"]["batteryless_sram"]
+				if "batteryless_sram" in self.CONN.INFO["dump_info"]:
+					temp3 = self.CONN.INFO["dump_info"]["batteryless_sram"]
 				self.ReadCartridge(resetStatus=False)
 				self.cmbAGBCartridgeTypeResult.setCurrentIndex(temp1)
 				self.cmbAGBSaveTypeResult.setCurrentIndex(temp2)
-				self.CONN.INFO["dump_info"]["batteryless_sram"] = temp3
+				if "batteryless_sram" in self.CONN.INFO["dump_info"]:
+					self.CONN.INFO["dump_info"]["batteryless_sram"] = temp3
 			else:
 				self.ReadCartridge(resetStatus=False)
 
@@ -1717,7 +1719,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblStatus4a.setText("Testing ({:s} 1/2)...".format(test_patterns_names[0]))
 				self.SetProgressBars(min=0, max=len(test_patterns)+3, value=0)
 				qt_app.processEvents()
-				args = { "mode":2, "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc }
+				args = { "mode":2, "path":path, "mbc":mbc, "save_type":save_type, "rtc":False }
 				t = threading.Thread(target=lambda a: self.CONN.TransferData(args=a, signal=None), args=[args])
 				t.start()
 				while t.is_alive():
@@ -1764,7 +1766,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					self.SetProgressBars(min=0, max=len(test_patterns)+3, value=i+2)
 					qt_app.processEvents()
 					towrite = test_patterns[i]
-					args = { "mode":3, "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase, "verify_write":False, "buffer":towrite }
+					args = { "mode":3, "path":path, "mbc":mbc, "save_type":save_type, "rtc":False, "rtc_advance":rtc_advance, "erase":erase, "verify_write":False, "buffer":towrite }
 					t = threading.Thread(target=lambda a: self.CONN.TransferData(args=a, signal=None), args=[args])
 					t.start()
 					while t.is_alive():
@@ -1776,7 +1778,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						self.CONN.CartPowerOff()
 						time.sleep(0.5)
 						self.CONN.CartPowerOn()
-					args = { "mode":2, "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc }
+					args = { "mode":2, "path":path, "mbc":mbc, "save_type":save_type, "rtc":False }
 					t = threading.Thread(target=lambda a: self.CONN.TransferData(args=a, signal=None), args=[args])
 					t.start()
 					while t.is_alive():
@@ -1791,14 +1793,14 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.lblStatus4a.setText("Restoring original save data...")
 				self.SetProgressBars(min=0, max=len(test_patterns)+3, value=len(test_patterns)+2)
 				qt_app.processEvents()
-				args = { "mode":3, "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "rtc_advance":rtc_advance, "erase":erase, "verify_write":False, "buffer":save1 }
+				args = { "mode":3, "path":path, "mbc":mbc, "save_type":save_type, "rtc":False, "rtc_advance":rtc_advance, "erase":erase, "verify_write":False, "buffer":save1 }
 				t = threading.Thread(target=lambda a: self.CONN.TransferData(args=a, signal=None), args=[args])
 				t.start()
 				while t.is_alive():
 					qt_app.processEvents()
 					time.sleep(0.02)
 				t.join()
-				args = { "mode":2, "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc }
+				args = { "mode":2, "path":path, "mbc":mbc, "save_type":save_type, "rtc":False }
 				t = threading.Thread(target=lambda a: self.CONN.TransferData(args=a, signal=None), args=[args])
 				t.start()
 				while t.is_alive():
@@ -1820,8 +1822,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					if test_ok == 0:
 						towrite = save1
 						readback = save2
-					with open("debug_savetest_1.bin", "wb") as f: f.write(towrite[:len(readback)])
-					with open("debug_savetest_2.bin", "wb") as f: f.write(readback)
+					with open(Util.CONFIG_PATH + "/debug_stress_test_1.bin", "wb") as f: f.write(towrite[:len(readback)])
+					with open(Util.CONFIG_PATH + "/debug_stress_test_2.bin", "wb") as f: f.write(readback)
 				except:
 					pass
 				if test_ok > 0:
@@ -2344,7 +2346,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				try:
 					if save_type is not None and save_type is not False:
 						if self.CONN.GetMode() == "DMG":
-							self.cmbDMGHeaderSaveTypeResult.setCurrentIndex(save_type)
+							self.cmbDMGHeaderSaveTypeResult.setCurrentIndex(Util.DMG_Header_RAM_Sizes_Map.index(save_type))
 						elif self.CONN.GetMode() == "AGB":
 							self.cmbAGBSaveTypeResult.setCurrentIndex(save_type)
 				except:
@@ -2392,7 +2394,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				else:
 					if self.CONN.GetMode() == "DMG":
 						try:
-							temp = "{:s}".format(Util.DMG_Header_RAM_Sizes[save_type])
+							temp = "{:s}".format(Util.DMG_Header_RAM_Sizes[Util.DMG_Header_RAM_Sizes_Map.index(save_type)])
 						except:
 							temp = "Unknown"
 					elif self.CONN.GetMode() == "AGB":

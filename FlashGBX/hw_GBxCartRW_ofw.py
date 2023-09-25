@@ -253,10 +253,11 @@ class GbxDevice:
 		except SerialException:
 			return False
 	
-	def Close(self):
+	def Close(self, cartPowerOff=False):
 		if self.IsConnected():
 			try:
-				self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
+				if cartPowerOff:
+					self.set_mode(self.DEVICE_CMD["SET_PINS_AS_INPUTS"])
 				self.DEVICE.close()
 			except:
 				self.DEVICE = None

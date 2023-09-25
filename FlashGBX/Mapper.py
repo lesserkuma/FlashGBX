@@ -263,6 +263,9 @@ class DMG_MBC3(DMG_MBC):
 	
 	def HasRTC(self):
 		dprint("Checking for RTC")
+		if self.MBC_ID not in (0x0F, 0x10, 0x110):
+			dprint("No RTC because mapper value is not used for RTC:", self.MBC_ID)
+			return False
 		self.EnableRAM(enable=False)
 		self.EnableRAM(enable=True)
 		self.LatchRTC()
@@ -271,12 +274,12 @@ class DMG_MBC3(DMG_MBC):
 		for i in range(0x08, 0x0D):
 			self.CLK_TOGGLE_FNCPTR(60)
 			self.CartWrite([ [0x4000, i] ])
-			data = self.CartRead(0xA000, 0x800)
+			data = self.CartRead(0xA880, 0x100)
 			if len(data) == 0: return False
 			if data[0] in (0, 0xFF): continue
 			skipped = False
-			if data != bytearray([data[0]] * 0x800):
-				dprint("No RTC because whole bank is not the same value", data[0])
+			if data != bytearray([data[0]] * 0x100):
+				dprint("No RTC because whole bank is not the same value:", data[0])
 				skipped = True
 				break
 		

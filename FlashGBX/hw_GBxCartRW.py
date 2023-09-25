@@ -154,6 +154,7 @@ class GbxDevice:
 						continue
 				elif max_baud >= 1700000 and self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE < 1700000:
 					self.ChangeBaudRate(baudrate=1700000)
+					self.DEVICE.close()
 					dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
 					self.DEVICE = dev
 				
@@ -250,12 +251,9 @@ class GbxDevice:
 		if not self.IsConnected(): return
 		if baudrate == 1700000:
 			self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
-			self.Close()
-			self.BAUDRATE = baudrate
 		elif baudrate == 1000000:
 			self._write(self.DEVICE_CMD["OFW_USART_1_0M_SPEED"])
-			self.Close()
-			self.BAUDRATE = baudrate
+		self.BAUDRATE = baudrate
 	
 	def CanSetVoltageManually(self):
 		return False
@@ -316,14 +314,15 @@ class GbxDevice:
 			print(str(e))
 			return False
 	
-	def Close(self):
+	def Close(self, cartPowerOff=False):
 		if self.IsConnected():
 			try:
-				if self.FW["pcb_ver"] in (5, 6, 101):
-					self._write(self.DEVICE_CMD["OFW_CART_MODE"])
-					self._read(1)
-					self._write(self.DEVICE_CMD["OFW_CART_PWR_OFF"])
-				self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"])
+				if cartPowerOff:
+					if self.FW["pcb_ver"] in (5, 6, 101):
+						self._write(self.DEVICE_CMD["OFW_CART_MODE"])
+						self._read(1)
+						self._write(self.DEVICE_CMD["OFW_CART_PWR_OFF"])
+					self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"])
 				self.DEVICE.close()
 			except:
 				self.DEVICE = None
@@ -445,7 +444,7 @@ class GbxDevice:
 		# On MacOS it’s possible not all bytes are transmitted successfully,
 		# even though we’re using flush() which is the tcdrain function.
 		# Still looking for a better solution than delaying here.
-		if platform.system() == "Darwin": # or self.WRITE_DELAY is True:
+		if platform.system() == "Darwin" or self.WRITE_DELAY is True:
 			time.sleep(0.00125)
 		
 		if wait: return self.wait_for_ack()
@@ -624,7 +623,7 @@ class GbxDevice:
 		return self.MODE
 	
 	def SetMode(self, mode, delay=0.1):
-		self.CartPowerOff(delay=delay)
+		# self.CartPowerOff(delay=delay)
 		if mode == "DMG":
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
@@ -866,45 +865,60 @@ class GbxDevice:
 		# Save Type and Size
 		if checkSaveType:
 			if self.MODE == "DMG":
-				save_type = 5
+				save_size = 131072
+				save_type = 0x04
 				if mbc == 0x20: # MBC6
 					save_size = 1081344
-					save_type = 6
+					save_type = 0x104
 					return (info, save_size, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, cfi, flash_id)
 				elif mbc == 0x22: # MBC7
-					save_type = 8
+					save_type = 0x102
 					save_size = 512
 				elif mbc == 0xFD: # TAMA5
 					save_size = 32
-					save_type = 9
+					save_type = 0x103
 					return (info, save_size, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, cfi, flash_id)
 				args = { 'mode':2, 'path':None, 'mbc':mbc, 'save_type':save_type, 'rtc':False }
 			elif self.MODE == "AGB":
 				args = { 'mode':2, 'path':None, 'mbc':mbc, 'save_type':8, 'rtc':False }
 			
 			ret = self._BackupRestoreRAM(args=args)
-
+			
 			if ret is not False and "data" in self.INFO:
 				save_size = Util.find_size(self.INFO["data"], len(self.INFO["data"]))
 			else:
 				save_size = 0
-			
+			try:
+				save_type = Util.DMG_Header_RAM_Sizes_Map[Util.DMG_Header_RAM_Sizes_Flasher_Map.index(save_size)]
+			except:
+				save_size = 0
+				save_type = 0
+
 			if self.MODE == "DMG":
 				if save_size > 0x20:
-					if save_size in Util.DMG_Header_RAM_Sizes_Flasher_Map:
-						save_type = Util.DMG_Header_RAM_Sizes_Flasher_Map.index(save_size)
-						if mbc == 0x22: # MBC7
-							if save_size == 256:
-								save_type = 7
-							elif save_size == 512:
-								save_type = 8
-						elif len(self.INFO["data"]) >= 0x12000 and self.INFO["data"][0x12000:0x14000] == bytearray([self.INFO["data"][0x12000]] * 0x2000):
-							if self.INFO["data"][0x8000:0x10000] == bytearray([self.INFO["data"][0x8000]] * 0x8000):
-								save_size = 32768
-								save_type = 3
-							else:
+					if mbc == 0x22: # MBC7
+						if save_size == 256:
+							save_type = 0x101
+						elif save_size == 512:
+							save_type = 0x102
+					elif save_size > 0x10000: # MBC30+RTC?
+						check = True
+						for i in range(0x8000, 0x10000, 0x40):
+							if self.INFO["data"][i:i+3] != bytearray([self.INFO["data"][i]] * 3):
+								check = False
+								break
+						if check:
+							save_size = 32768
+							save_type = 0x03
+						else:
+							check = True
+							for i in range(0x1A000, 0x20000, 0x40):
+								if self.INFO["data"][i:i+3] != bytearray([self.INFO["data"][i]] * 3):
+									check = False
+									break
+							if check:
 								save_size = 65536
-								save_type = 4
+								save_type = 0x05
 			
 			elif self.MODE == "AGB":
 				# Check for FLASH
@@ -2076,7 +2090,6 @@ class GbxDevice:
 
 		buffer_len = 0x4000
 		
-		self.INFO["dump_info"] = {}
 		self.INFO["dump_info"]["timestamp"] = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
 		self.INFO["dump_info"]["file_name"] = args["path"]
 		self.INFO["dump_info"]["file_size"] = args["rom_size"]
@@ -2449,7 +2462,10 @@ class GbxDevice:
 				msg = "This cartridge uses a mapper that is not supported by {:s} using your {:s} device. An updated hardware revision is required.".format(Util.APPNAME, self.GetFullName())
 				self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":msg, "abortable":False})
 				return False
-			save_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(args["save_type"])]
+			if "save_size" in args:
+				save_size = args["save_size"]
+			else:
+				save_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(args["save_type"])]
 			ram_banks = _mbc.GetRAMBanks(save_size)
 			buffer_len = min(0x200, _mbc.GetRAMBankSize())
 			self._write(self.DEVICE_CMD["SET_MODE_DMG"])
@@ -2522,7 +2538,10 @@ class GbxDevice:
 			self._write(self.DEVICE_CMD["SET_MODE_AGB"])
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_3_3V"])
 			buffer_len = 0x2000
-			save_size = Util.AGB_Header_Save_Sizes[args["save_type"]]
+			if "save_size" in args:
+				save_size = args["save_size"]
+			else:
+				save_size = Util.AGB_Header_Save_Sizes[args["save_type"]]
 			ram_banks = math.ceil(save_size / 0x10000)
 			agb_flash_chip = 0
 
@@ -2539,7 +2558,7 @@ class GbxDevice:
 					return False
 				buffer_len = 0x1000
 				(agb_flash_chip, _) = ret
-				if agb_flash_chip == 0xBF5B: # Bootlegs
+				if agb_flash_chip in (0xBF5B, 0xFFFF): # Bootlegs
 					buffer_len = 0x800
 			elif args["save_type"] == 6: # DACS
 				self._write(self.DEVICE_CMD["AGB_BOOTUP_SEQUENCE"], wait=True)
@@ -2661,7 +2680,7 @@ class GbxDevice:
 				end_address = min(save_size, bank_size)
 				
 				if save_size > bank_size:
-					if args["save_type"] == 8 or agb_flash_chip == 0xBF5B: # Bootleg 1M
+					if args["save_type"] == 8 or agb_flash_chip in (0xBF5B, 0xFFFF): # Bootleg 1M
 						dprint("Switching to bootleg save bank {:d}".format(bank))
 						self._cart_write(0x1000000, bank)
 					elif args["save_type"] == 5: # FLASH 1M
