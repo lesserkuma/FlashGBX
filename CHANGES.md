@@ -1,5 +1,6 @@
 # Release notes
 ### v3.33 (released 2023-09-25)
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
 - Minor bug fixes and improvements *(thanks Eldram, Grender)*
 
 ### v3.32 (released 2023-07-25)

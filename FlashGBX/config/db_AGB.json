@@ -2606,7 +2606,7 @@
   "rg": "Japan"
  },
  "062b103bad19ab6aeccbbe95db9de3dbc94f9aca": {
-  "gn": "Motoracer Advance",
+  "gn": "Moto Racer Advance",
   "ne": "(USA) (En,Fr,De,Es,It)",
   "gc": "A9ME",
   "rc": 802940840,
@@ -2617,7 +2617,7 @@
   "rg": "USA"
  },
  "f34f0868970fa0ac43ea2a672ff48a564959a25f": {
-  "gn": "Motoracer Advance",
+  "gn": "Moto Racer Advance",
   "ne": "(Europe) (En,Fr,De,Es,It)",
   "gc": "A9MP",
   "rc": 2360450464,
@@ -25284,14 +25284,14 @@
  },
  "1f1ee9a4a77fc79c3d6b29182d29a4958703c23f": {
   "gn": "Ratatouille",
-  "ne": "(Greece) (En)",
+  "ne": "(Australia, Greece) (En)",
   "gc": "BNLU",
   "rc": 1041699271,
   "rs": 8388608,
   "st": 0,
   "ss": 0,
   "lg": "En",
-  "rg": "Greece"
+  "rg": "Australia, Greece"
  },
  "d9f57aef1addd82c8a5f362b094d0ace819228f3": {
   "gn": "Ratatouille",
