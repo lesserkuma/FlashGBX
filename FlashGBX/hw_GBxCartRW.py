@@ -888,13 +888,14 @@ class GbxDevice:
 				save_size = Util.find_size(self.INFO["data"], len(self.INFO["data"]))
 			else:
 				save_size = 0
-			try:
-				save_type = Util.DMG_Header_RAM_Sizes_Map[Util.DMG_Header_RAM_Sizes_Flasher_Map.index(save_size)]
-			except:
-				save_size = 0
-				save_type = 0
 
 			if self.MODE == "DMG":
+				try:
+					save_type = Util.DMG_Header_RAM_Sizes_Map[Util.DMG_Header_RAM_Sizes_Flasher_Map.index(save_size)]
+				except:
+					save_size = 0
+					save_type = 0
+				
 				if save_size > 0x20:
 					if mbc == 0x22: # MBC7
 						if save_size == 256:
@@ -921,68 +922,72 @@ class GbxDevice:
 								save_type = 0x05
 			
 			elif self.MODE == "AGB":
-				# Check for FLASH
-				ret = self.ReadFlashSaveID()
-				if ret is not False:
-					(flash_save_id, _) = ret
-					try:
-						if flash_save_id != 0 and flash_save_id in Util.AGB_Flash_Save_Chips:
-							save_size = Util.AGB_Flash_Save_Chips_Sizes[list(Util.AGB_Flash_Save_Chips).index(flash_save_id)]
-							save_chip = Util.AGB_Flash_Save_Chips[flash_save_id]
+				if info["3d_memory"] is True:
+					save_type = None
+					save_size = 0
+				else:
+					# Check for FLASH
+					ret = self.ReadFlashSaveID()
+					if ret is not False:
+						(flash_save_id, _) = ret
+						try:
+							if flash_save_id != 0 and flash_save_id in Util.AGB_Flash_Save_Chips:
+								save_size = Util.AGB_Flash_Save_Chips_Sizes[list(Util.AGB_Flash_Save_Chips).index(flash_save_id)]
+								save_chip = Util.AGB_Flash_Save_Chips[flash_save_id]
+								if save_size == 131072:
+									save_type = 5
+								elif save_size == 65536:
+									save_type = 4
+						except:
+							pass
+					
+					if save_type is None:
+						checkBatterylessSRAM = True
+						if info["dacs_8m"] is True:
+							save_size = 1048576
+							save_type = 6
+						elif save_size > 256: # SRAM
 							if save_size == 131072:
-								save_type = 5
+								save_type = 8
+								checkBatterylessSRAM = True
 							elif save_size == 65536:
-								save_type = 4
-					except:
-						pass
-				
-				if save_type is None:
-					checkBatterylessSRAM = True
-					if info["dacs_8m"] is True:
-						save_size = 1048576
-						save_type = 6
-					elif save_size > 256: # SRAM
-						if save_size == 131072:
-							save_type = 8
-							checkBatterylessSRAM = True
-						elif save_size == 65536:
-							save_type = 7
-							checkBatterylessSRAM = True
-						elif save_size == 32768:
-							save_type = 3
-						elif save_size in Util.AGB_Header_Save_Sizes:
-							save_type = Util.AGB_Header_Save_Sizes.index(save_size)
+								save_type = 7
+								checkBatterylessSRAM = True
+							elif save_size == 32768:
+								save_type = 3
+							elif save_size in Util.AGB_Header_Save_Sizes:
+								save_type = Util.AGB_Header_Save_Sizes.index(save_size)
+							else:
+								save_type = None
+								save_size = 0
 						else:
-							save_type = None
-							save_size = 0
-					else:
-						dprint("Testing EEPROM")
-						# Check for 4K EEPROM
-						self._BackupRestoreRAM(args={ 'mode':2, 'path':None, 'mbc':mbc, 'save_type':1, 'rtc':False })
-						save_size = Util.find_size(self.INFO["data"], len(self.INFO["data"]))
-						eeprom_4k = self.INFO["data"]
-						# Check for 64K EEPROM
-						self._BackupRestoreRAM(args={ 'mode':2, 'path':None, 'mbc':mbc, 'save_type':2, 'rtc':False })
-						save_size = Util.find_size(self.INFO["data"], len(self.INFO["data"]))
-						eeprom_64k = self.INFO["data"]
-						if eeprom_64k in (bytearray([0xFF] * len(eeprom_64k)), bytearray([0] * len(eeprom_64k))):
-							save_type = None
-							save_size = 0
-						elif (eeprom_4k == eeprom_64k[:len(eeprom_4k)]):
-							save_type = 2
-							save_size = 8192
-							checkBatterylessSRAM = False
-						else:
-							save_type = 1
-							save_size = 512
-							checkBatterylessSRAM = False
+							dprint("Testing EEPROM")
+							# Check for 4K EEPROM
+							self._BackupRestoreRAM(args={ 'mode':2, 'path':None, 'mbc':mbc, 'save_type':1, 'rtc':False })
+							save_size = Util.find_size(self.INFO["data"], len(self.INFO["data"]))
+							eeprom_4k = self.INFO["data"]
+							# Check for 64K EEPROM
+							self._BackupRestoreRAM(args={ 'mode':2, 'path':None, 'mbc':mbc, 'save_type':2, 'rtc':False })
+							save_size = Util.find_size(self.INFO["data"], len(self.INFO["data"]))
+							eeprom_64k = self.INFO["data"]
+							if eeprom_64k in (bytearray([0xFF] * len(eeprom_64k)), bytearray([0] * len(eeprom_64k))):
+								save_type = None
+								save_size = 0
+							elif (eeprom_4k == eeprom_64k[:len(eeprom_4k)]):
+								save_type = 2
+								save_size = 8192
+								checkBatterylessSRAM = False
+							else:
+								save_type = 1
+								save_size = 512
+								checkBatterylessSRAM = False
 
-				if checkBatterylessSRAM:
-					batteryless = self.CheckBatterylessSRAM()
-					if batteryless is not False:
-						save_type = 9
-						info["batteryless_sram"] = batteryless
-						self.INFO["dump_info"]["batteryless_sram"] = batteryless
+					if checkBatterylessSRAM:
+						batteryless = self.CheckBatterylessSRAM()
+						if batteryless is not False:
+							save_type = 9
+							info["batteryless_sram"] = batteryless
+							self.INFO["dump_info"]["batteryless_sram"] = batteryless
 
 		self._write(self.DEVICE_CMD["DMG_MBC_RESET"], wait=True)
 		self.INFO["last_action"] = 0
@@ -1066,7 +1071,7 @@ class GbxDevice:
 		temp5555 = self._cart_read(0x5555, agb_save_flash=True) >> 8
 		temp2AAA = self._cart_read(0x2AAA, agb_save_flash=True) >> 8
 		temp0000 = self._cart_read(0x0000, agb_save_flash=True) >> 8
-
+		
 		cmds = [
 			[ 0x5555, 0xAA ],
 			[ 0x2AAA, 0x55 ],
