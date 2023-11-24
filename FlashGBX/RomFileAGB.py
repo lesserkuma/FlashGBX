@@ -85,18 +85,6 @@ class RomFileAGB:
 		data["save_type"] = None
 		data["save_size"] = 0
 
-		# 3D Memory (GBA Video 64 MB)
-		data["3d_memory"] = False
-		# if (data["game_title"] == "DISNEYVOL002" and data["game_code"] == "MDSE" and data["header_checksum"] == 0x58) or \
-		# (data["game_title"] == "SHARKS TALE" and data["game_code"] == "MSAE" and data["header_checksum"] == 0x98) or \
-		# (data["game_title"] == "SHARKS TALE" and data["game_code"] == "MSAE" and data["header_checksum"] == 0x97) or \
-		# (data["game_title"] == "SHREK MOVIE" and data["game_code"] == "MSKE" and data["header_checksum"] == 0x83) or \
-		# (data["game_title"] == "SHREK MOVIE" and data["game_code"] == "MSKE" and data["header_checksum"] == 0x82) or \
-		# (data["game_title"] == "SHREKSHARK21" and data["game_code"] == "MSTE" and data["header_checksum"] == 0x3E) or \
-		# (data["game_title"] == "SHREK2MOVIE" and data["game_code"] == "M2SE" and data["header_checksum"] == 0x8A) or \
-		# (data["game_title"] == "SHREK2MOVIE" and data["game_code"] == "M2SE" and data["header_checksum"] == 0x89):
-		# 	data["3d_memory"] = True
-
 		# 8M FLASH DACS
 		data["dacs_8m"] = False
 		if (data["game_title"] == "NGC-HIKARU3" and data["game_code"] == "GHTJ" and data["header_checksum"] == 0xB3):
@@ -112,6 +100,9 @@ class RomFileAGB:
 		data["unchanged"] = copy.copy(data)
 		self.DATA = data
 		data["db"] = self.GetDatabaseEntry()
+
+		# 3D Memory (GBA Video 64 MB)
+		data["3d_memory"] = False
 		if data["db"] is not None and "3d" in data["db"]:
 			data["3d_memory"] = data["db"]["3d"]
 		

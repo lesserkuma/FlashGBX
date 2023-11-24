@@ -54,7 +54,7 @@ class FlashGBX_CLI():
 		
 		args = self.ARGS["argparsed"]
 		config_path = Util.formatPathOS(Util.CONFIG_PATH)
-		print("Configuration directory: {:s}\n".format(config_path))
+		print("Configuration folder: {:s}\n".format(config_path))
 		
 		# Ask interactively if no args set
 		if args.action is None:
@@ -961,7 +961,7 @@ class FlashGBX_CLI():
 				if answer != "n":
 					fix_bootlogo = bootlogo
 			else:
-				Util.dprint("Couldn’t find boot logo file in configuration directory.")
+				Util.dprint("Couldn’t find boot logo file in configuration folder.")
 		
 		if not hdr["header_checksum_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
 			print("{:s}WARNING: The ROM file you selected will not boot on actual hardware due to an invalid header checksum (expected 0x{:02X} instead of 0x{:02X}).{:s}".format(ANSI.YELLOW, hdr["header_checksum_calc"], hdr["header_checksum"], ANSI.RESET))

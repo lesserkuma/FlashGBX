@@ -8,17 +8,19 @@
 from .Util import dprint
 
 try:
-	import PySide2
+	import PySide2, PIL
 	# PySide2>=5.14 is required
 	major, minor, *_ = PySide2.__version_info__
 	if (major, minor) < (5, 14):
 		raise ImportError('Requires PySide2>=5.14', name=PySide2.__package__, path=PySide2.__path__)
 	psversion = 2
+
 except ImportError as err:
 	try:
 		import PySide6
 	except ImportError:
 		raise err
+	
 	dprint('Using PySide6 code path.')
 	psversion = 6
 	from PySide6 import QtCore
@@ -31,6 +33,15 @@ else:
 	from PySide2 import QtWidgets
 	from PySide2 import QtGui
 	from PySide2.QtWidgets import QApplication
+
+	try:
+		# Pillow<10.0.0 is required
+		major, minor = map(int, PIL.__version__.split('.')[:2])
+		if (major, minor) >= (10, 0):
+			raise ImportError('Requires Pillow<10.0.0', name=PIL.__package__, path=PIL.__path__)
+	except ImportError as err2:
+		raise err2
+
 
 __all__ = ['QtCore', 'QtWidgets', 'QtGui', 'QApplication', 'QDesktopWidget']
 

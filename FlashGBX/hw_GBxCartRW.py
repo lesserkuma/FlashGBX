@@ -843,7 +843,11 @@ class GbxDevice:
 		cart_type = supported_carts[cart_type_id]
 		if self.MODE == "DMG" and "command_set" in cart_type and cart_type["command_set"] == "DMG-MBC5-32M-FLASH":
 			checkSaveType = False
-		elif self.MODE == "AGB" and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] > 0:
+		elif self.MODE == "AGB" and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] == 1:
+			save_size == 65536
+			save_type = 7
+			checkSaveType = False
+		elif self.MODE == "AGB" and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] > 1:
 			checkSaveType = False
 		elif self.MODE == "DMG" and "mbc" in cart_type and cart_type["mbc"] == 0x105: # G-MMC1
 			header = self.ReadROM(0, 0x180)
@@ -1757,6 +1761,7 @@ class GbxDevice:
 		if self.MODE == "DMG" and not flash_id_found:
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"])
 			time.sleep(0.1)
+
 		return (flash_types, flash_type_id, flash_id, cfi_s, cfi)
 
 	def CheckFlashChip(self, limitVoltage=False, cart_type=None): # aka. the most horribly written function
@@ -2461,6 +2466,12 @@ class GbxDevice:
 		empty_data_byte = 0x00
 		extra_size = 0
 		audio_low = False
+
+		cart_type = None
+		if "cart_type" in args:
+			supported_carts = list(self.SUPPORTED_CARTS[self.MODE].values())
+			cart_type = copy.deepcopy(supported_carts[args["cart_type"]])
+
 		if self.MODE == "DMG":
 			_mbc = DMG_MBC().GetInstance(args=args, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycle, clk_toggle_fncptr=self._clk_toggle)
 			if not self.IsSupportedMbc(args["mbc"]):
@@ -2603,6 +2614,11 @@ class GbxDevice:
 						dprint("Setting command #{:d} to 0x{:X}=0x{:X}".format(i, address, value))
 						self._write(bytearray(struct.pack(">I", address)) + bytearray(struct.pack(">H", value)))
 				# ↑↑↑ Load commands into firmware
+			
+			# Bootleg mapper
+			if cart_type is not None and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] == 1:
+				sram_5 = struct.unpack("B", bytes(self._cart_read(address=5, length=1, agb_save_flash=True)))[0]
+				self._cart_write(address=5, value=1, sram=True)
 			
 			commands = [ # save type commands
 				[ [None], [None] ], # No save
@@ -2889,6 +2905,10 @@ class GbxDevice:
 				self.NO_PROG_UPDATE = False
 				self.SetProgress({"action":"UPDATE_POS", "pos":len(buffer)+len(rtc_buffer)})
 			
+			# Bootleg mapper
+			if self.MODE == "AGB" and cart_type is not None and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] == 1:
+				buffer[5] = sram_5
+			
 			if args["path"] is not None:
 				if self.MODE == "DMG" and _mbc.GetName() == "MBC2":
 					for i in range(0, len(buffer)):
@@ -2928,8 +2948,8 @@ class GbxDevice:
 				start_address = 0
 				end_address = buffer_offset
 				if self.MODE == "AGB" and args["save_type"] == 6: # DACS
-					end_address -= 0x2000
-				
+					end_address = min(len(buffer), 0xFE000)
+
 				path = args["path"] # backup path
 				verify_args.update({"mode":2, "verify_write":buffer, "path":None})
 				self.ReadROM(0, 4) # dummy read
@@ -2971,6 +2991,11 @@ class GbxDevice:
 			self._set_fw_variable("DMG_READ_CS_PULSE", 0)
 			if audio_low: self._set_fw_variable("FLASH_WE_PIN", 0x02)
 			self._write(self.DEVICE_CMD["SET_ADDR_AS_INPUTS"]) # Prevent hotplugging corruptions on rare occasions
+		
+		# Bootleg mapper
+		elif self.MODE == "AGB" and cart_type is not None and "flash_bank_select_type" in cart_type and cart_type["flash_bank_select_type"] == 1:
+			self._cart_write(address=5, value=0, sram=True)
+			self._cart_write(address=5, value=sram_5, sram=True)
 
 		# Clean up
 		self.INFO["last_action"] = self.INFO["action"]

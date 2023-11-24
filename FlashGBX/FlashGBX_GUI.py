@@ -210,7 +210,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.addSeparator()
 		self.mnuConfig.addAction("Re-&enable suppressed messages", self.ReEnableMessages)
 		self.mnuConfig.addSeparator()
-		self.mnuConfig.addAction("Show &configuration directory", self.OpenPath)
+		self.mnuConfig.addAction("Open &config folder", self.OpenPath)
 		self.mnuConfig.actions()[0].setCheckable(True)
 		self.mnuConfig.actions()[1].setCheckable(True)
 		self.mnuConfig.actions()[2].setCheckable(True)
@@ -604,7 +604,9 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 	def OpenPath(self, path=None):
 		if path is None:
 			path = Util.CONFIG_PATH
-			self.WriteDebugLogOnShiftKey()
+			kbmod = QtWidgets.QApplication.keyboardModifiers()
+			if kbmod != QtCore.Qt.ShiftModifier:
+				self.WriteDebugLog()
 		path = 'file://{0:s}'.format(path)
 		try:
 			if platform.system() == "Windows":
@@ -615,11 +617,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				subprocess.Popen(["xdg-open", path])
 		except:
 			QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "The path is:\n{:s}".format(path), QtWidgets.QMessageBox.Ok)
-		
-	def WriteDebugLogOnShiftKey(self, event=None):
-		kbmod = QtWidgets.QApplication.keyboardModifiers()
-		if kbmod == QtCore.Qt.ShiftModifier:
-			self.WriteDebugLog()
 
 	def WriteDebugLog(self, event=None):
 		try:
@@ -910,7 +907,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			else:
 				button_dump_report = msgbox.addButton("  Generate Dump &Report  ", QtWidgets.QMessageBox.ActionRole)
 			
-			button_open_dir = msgbox.addButton("  Open &Directory  ", QtWidgets.QMessageBox.ActionRole)
+			button_open_dir = msgbox.addButton("  Open Fol&der  ", QtWidgets.QMessageBox.ActionRole)
 
 			if self.CONN.GetMode() == "DMG":
 				if self.CONN.INFO["rom_checksum"] == self.CONN.INFO["rom_checksum_calc"]:
@@ -1025,7 +1022,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						return
 			
 			if "last_path" in self.CONN.INFO:
-				button_open_dir = msgbox.addButton("  Open &Directory  ", QtWidgets.QMessageBox.ActionRole)
+				button_open_dir = msgbox.addButton("  Open Fol&der  ", QtWidgets.QMessageBox.ActionRole)
 			msgbox.setText("The save data backup is complete!" + msg_te)
 			msgbox.exec()
 			if "last_path" in self.CONN.INFO and msgbox.clickedButton() == button_open_dir:
@@ -1368,7 +1365,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					elif msgbox.clickedButton() == button_2:
 						pass
 				else:
-					Util.dprint("Couldn’t find boot logo file in configuration directory.")
+					Util.dprint("Couldn’t find boot logo file in configuration folder.")
 					msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="{:s} {:s}".format(APPNAME, VERSION), text=msg_text)
 					msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 					msgbox.setDefaultButton(QtWidgets.QMessageBox.Cancel)
@@ -1431,6 +1428,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		path = Util.GenerateFileName(mode=self.CONN.GetMode(), header=self.CONN.INFO, settings=self.SETTINGS)
 		path = os.path.splitext(path)[0]
 		path += "{:s}.sav".format(path_datetime)
+		cart_type = 0
 		if self.CONN.GetMode() == "DMG":
 			setting_name = "LastDirSaveDataDMG"
 			last_dir = self.SETTINGS.value(setting_name)
@@ -1440,6 +1438,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if save_type == 0:
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "No save type was selected.", QtWidgets.QMessageBox.Ok)
 				return
+			cart_type = self.cmbDMGCartridgeTypeResult.currentIndex()
 			#save_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(save_type)]
 		
 		elif self.CONN.GetMode() == "AGB":
@@ -1451,6 +1450,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if save_type == 0:
 				QtWidgets.QMessageBox.warning(self, "{:s} {:s}".format(APPNAME, VERSION), "No save type was selected.", QtWidgets.QMessageBox.Ok)
 				return
+			cart_type = self.cmbAGBCartridgeTypeResult.currentIndex()
 			#save_size = Util.AGB_Header_Save_Sizes[save_type]
 		else:
 			return
@@ -1515,7 +1515,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			args.update(bl_args)
 			self.CONN.BackupROM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		else:
-			args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "verify_read":verify_read }
+			args = { "path":path, "mbc":mbc, "save_type":save_type, "rtc":rtc, "verify_read":verify_read, "cart_type":cart_type }
 			self.CONN.BackupRAM(fncSetProgress=self.PROGRESS.SetProgress, args=args)
 		
 		self.grpStatus.setTitle("Transfer Status")

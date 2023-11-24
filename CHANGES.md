@@ -1,4 +1,10 @@
 # Release notes
+### v3.35 (released 2023-11-25)
+- Added support for DRV with 29LV320DB and ALTERA CPLD *(thanks TheNFCookie)*
+- Added support for HC007-BGA-V2 with M29W640 *(thanks LucentW)*
+- Added support for reading and writing the save data of some GBA multigame bootleg cartridges
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
+
 ### v3.34 (released 2023-09-26)
 - Minor bug fixes and improvements
 

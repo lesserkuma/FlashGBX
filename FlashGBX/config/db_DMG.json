@@ -63,6 +63,15 @@
   "lg": "En",
   "rg": "USA"
  },
+ "dc52b66850f63b354f5aaec225902be58923f89a": {
+  "gn": "Humans, The",
+  "ne": "(USA) (QUByte Classics)",
+  "gc": "",
+  "rc": 1166077064,
+  "rs": 262144,
+  "lg": "En",
+  "rg": "USA"
+ },
  "a8e6ef37e84a9190a7c23244f98379fd2488db5a": {
   "gn": "M&M's Minis Madness",
   "ne": "(USA) (Sample)",
@@ -152,6 +161,16 @@
   "lg": "En",
   "rg": "USA"
  },
+ "32ccbcbd4edd7cd5a391f0b85b9dde79b427cff7": {
+  "gn": "SGB Test Program",
+  "ne": "(World) (1994.4) (Demo) (SGB Enhanced)",
+  "gc": "",
+  "rc": 2304814109,
+  "rs": 49152,
+  "rv": "1994.4",
+  "lg": "En",
+  "rg": "World"
+ },
  "81fc6bc03e7e094ba544d8d9c1f684271939865b": {
   "gn": "Shantae",
   "ne": "(World) (GBA Enhanced) (Switch)",
@@ -205,6 +224,26 @@
   "rs": 4194304,
   "lg": "En",
   "rg": "USA"
+ },
+ "affa8b29cfe1addebb6b436566dc5eeb4fce04e3": {
+  "gn": "Zelda no Densetsu - Yume o Miru Shima",
+  "ne": "(Japan) (Rev 1) (Demo) (Special Version)",
+  "gc": "",
+  "rc": 3166706074,
+  "rs": 524288,
+  "rv": "Rev 1",
+  "lg": "Ja",
+  "rg": "Japan"
+ },
+ "4c6867774bf7936969ffcae71511a1546df15490": {
+  "gn": "Zelda no Densetsu - Yume o Miru Shima DX",
+  "ne": "(Japan) (Rev 1) (Demo) (Special Version 2) (GB Compatible)",
+  "gc": "",
+  "rc": 3859812658,
+  "rs": 1048576,
+  "rv": "Rev 1",
+  "lg": "Ja",
+  "rg": "Japan"
  },
  "49127b4b99e43568ae9d83089c57fc81068f9654": {
   "gn": "Mani 4 in 1 - Tetris + Alleyway + Yakuman + Tennis",
@@ -20928,6 +20967,16 @@
   "rs": 262144,
   "lg": "Ja",
   "rg": "Japan"
+ },
+ "2861fc1debb7191f1f966597d3f823953e37795b": {
+  "gn": "Jetsons, The - Robot Panic",
+  "ne": "(USA, Europe) (Rev 1)",
+  "gc": "DMG-JSE",
+  "rc": 3426275085,
+  "rs": 131072,
+  "rv": "Rev 1",
+  "lg": "En",
+  "rg": "USA, Europe"
  },
  "e20196d19e705dadef444ba7a04b14a1d4df7070": {
   "gn": "Jetsons, The - Robot Panic",
