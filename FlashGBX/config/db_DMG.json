@@ -109,7 +109,7 @@
  },
  "296c39c40bdc6061bff718a468b79e7e5f46553e": {
   "gn": "Pocket Camera - Debug Game Tester - Second Impact",
-  "ne": "(Japan) (v10.24) (SGB Enhanced) (Test Program)",
+  "ne": "(Japan) (Test Program) (v10.24) (SGB Enhanced)",
   "gc": "",
   "rc": 359820684,
   "rs": 1048576,
@@ -2010,11 +2010,11 @@
  },
  "114138976f5eba947748ab1c858b14ad93c0c505": {
   "gn": "Brain Drain",
-  "ne": "(Japan) (SGB Enhanced)",
+  "ne": "(Japan) (En) (SGB Enhanced)",
   "gc": "DMG-ABRJ",
   "rc": 3847793357,
   "rs": 131072,
-  "lg": "Ja",
+  "lg": "En",
   "rg": "Japan"
  },
  "525290fa07ff8f3656071a663e4164438191ed15": {
@@ -10366,11 +10366,11 @@
  },
  "5e90d5552a6998dc15dd78fb96a462a7c80548c7": {
   "gn": "Zoop",
-  "ne": "(Japan)",
+  "ne": "(Japan) (En)",
   "gc": "DMG-AZPJ",
   "rc": 283222284,
   "rs": 65536,
-  "lg": "Ja",
+  "lg": "En",
   "rg": "Japan"
  },
  "604c8be3949ba822f41fa3ca9ec46cd2ba6ae4a1": {
@@ -21668,7 +21668,7 @@
   "rg": "Japan"
  },
  "dd9575d82c7233bc98713ff5020629578eb78373": {
-  "gn": "Lock n' Chase ~ Lock 'n' Chase",
+  "gn": "Lock n' Chase",
   "ne": "(World)",
   "gc": "DMG-LCA",
   "rc": 3669564538,

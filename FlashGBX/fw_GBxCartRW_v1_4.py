@@ -148,7 +148,7 @@ try:
 			self.lblDevicePCBVer.setMinimumWidth(120)
 			self.optDevicePCBVer14 = QtWidgets.QRadioButton("v1.4")
 			self.connect(self.optDevicePCBVer14, QtCore.SIGNAL("clicked()"), self.SetPCBVersion)
-			self.optDevicePCBVer14a = QtWidgets.QRadioButton("v1.4a/b")
+			self.optDevicePCBVer14a = QtWidgets.QRadioButton("v1.4a/b/c")
 			self.connect(self.optDevicePCBVer14a, QtCore.SIGNAL("clicked()"), self.SetPCBVersion)
 			rowDeviceInfo2.addWidget(self.lblDevicePCBVer)
 			rowDeviceInfo2.addWidget(self.optDevicePCBVer14)
@@ -217,7 +217,7 @@ try:
 			self.lblDeviceFWVerResult.setText(self.FW_VER)
 			if self.PCB_VER == "v1.4":
 				self.optDevicePCBVer14.setChecked(True)
-			elif self.PCB_VER == "v1.4a/b":
+			elif self.PCB_VER == "v1.4a/b/c":
 				self.optDevicePCBVer14a.setChecked(True)
 			self.SetPCBVersion()
 		
@@ -275,7 +275,7 @@ try:
 				file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4.zip"
 				led = "Done"
 			elif self.optDevicePCBVer14a.isChecked():
-				device_name = "v1.4a/b"
+				device_name = "v1.4a/b/c"
 				file_name = self.FWUPD.APP_PATH + "/res/fw_GBxCart_RW_v1_4a.zip"
 				led = "Status"
 			else:

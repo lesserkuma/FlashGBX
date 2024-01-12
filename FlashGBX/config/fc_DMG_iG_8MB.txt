@@ -16,6 +16,7 @@
 	"write_pin":"WR",
 	"sector_size_from_cfi":true,
 	"chip_erase_timeout":60,
+	"mbc":"manual",
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

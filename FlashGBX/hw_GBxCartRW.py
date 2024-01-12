@@ -92,7 +92,7 @@ class GbxDevice:
 		"AGB_READ_METHOD":[8, 0x0C],
 	}
 
-	PCB_VERSIONS = {4:'v1.3', 5:'v1.4', 6:'v1.4a/b', 101:'Mini v1.0d'}
+	PCB_VERSIONS = {4:'v1.3', 5:'v1.4', 6:'v1.4a/b/c', 101:'Mini v1.0d'}
 	ACTIONS = {"ROM_READ":1, "SAVE_READ":2, "SAVE_WRITE":3, "ROM_WRITE":4, "ROM_WRITE_VERIFY":4, "SAVE_WRITE_VERIFY":3}
 	SUPPORTED_CARTS = {}
 	
@@ -174,7 +174,7 @@ class GbxDevice:
 				elif self.FW["fw_ts"] > self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
 					conn_msg.append([0, "Note: The GBxCart RW device on port " + ports[i] + " is running a firmware version that is newer than what this version of FlashGBX was developed to work with, so errors may occur."])
 				
-				if self.FW["pcb_ver"] not in (4, 5, 6, 101): # only the v1.3, v1.4, v1.4a/b, Mini v1.1 PCB revisions are supported
+				if self.FW["pcb_ver"] not in (4, 5, 6, 101): # only the v1.3, v1.4, v1.4a/b/c, Mini v1.1 PCB revisions are supported
 					dev.close()
 					self.DEVICE = None
 					continue
@@ -385,7 +385,7 @@ class GbxDevice:
 				return (None, fw_GBxCartRW_v1_3.FirmwareUpdaterWindow)
 			except:
 				return False
-		elif self.FW["pcb_ver"] in (5, 6): # v1.4 / v1.4a/b
+		elif self.FW["pcb_ver"] in (5, 6): # v1.4 / v1.4a/b/c
 			try:
 				from . import fw_GBxCartRW_v1_4
 				return (fw_GBxCartRW_v1_4.FirmwareUpdater, fw_GBxCartRW_v1_4.FirmwareUpdaterWindow)
@@ -420,6 +420,7 @@ class GbxDevice:
 			if "from_user" in self.CANCEL_ARGS and self.CANCEL_ARGS["from_user"]:
 				return False
 			elif buffer is False:
+				print("{:s}Error: The USB connection timed out.{:s}".format(ANSI.RED, ANSI.RESET))
 				dprint("Timeout error ({:s}(), line {:d})".format(stack.name, stack.lineno))
 				self.CANCEL_ARGS.update({"info_type":"msgbox_critical", "info_msg":"A timeout error has occured at {:s}() in line {:d}. Please make sure that the cartridge contacts are clean, re-connect the device and try again from the beginning.".format(stack.name, stack.lineno)})
 			else:
@@ -1415,7 +1416,7 @@ class GbxDevice:
 					return False
 				pos += len(data)
 				
-				if rumble_stop and pos % flash_buffer_size == 0:
+				if rumble_stop and flash_buffer_size > 0 and pos % flash_buffer_size == 0:
 					dprint("Sending rumble stop command")
 					self._cart_write(address=0xC6, value=0x00, flashcart=True)
 					rumble_stop = False
@@ -2128,6 +2129,9 @@ class GbxDevice:
 				self._set_fw_variable("DMG_READ_CS_PULSE", 1)
 				_mbc.EnableMapper()
 				self._set_fw_variable("DMG_READ_CS_PULSE", 0)
+			elif _mbc.GetName() == "Sachen":
+				start_bank = int(args["rom_size"] / 0x4000)
+				_mbc.SetStartBank(start_bank)
 			else:
 				_mbc.EnableMapper()
 			

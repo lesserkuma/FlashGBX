@@ -558,7 +558,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					print("Error: Failed to check for updates (HTTP status {:d}).".format(ret.status_code))
 		else:
 			update_check = self.SETTINGS.value("UpdateCheck")
-			if update_check is None or (time.time() > (Util.VERSION_TIMESTAMP + (2*30*24*60*60))):
+			if update_check is None or (time.time() > (Util.VERSION_TIMESTAMP + (3*30*24*60*60))):
 				QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "The version update check has been disabled in the config menu and this version is now older than {:d} days. Please regularily check the <a href=\"https://github.com/lesserkuma/FlashGBX/releases/latest\">FlashGBX GitHub page</a> for the latest release notes and updates.".format(int((time.time() - Util.VERSION_TIMESTAMP)/60/60/24)), QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
 
 	def DisconnectDevice(self):
@@ -1613,7 +1613,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if "ereader_calibration" in self.CONN.INFO:
 				if erase:
 					buffer = bytearray([0xFF] * 0x20000)
-					msg_text = "This {:s} cartridge currently has calibration data in place. It is strongly recommended to keep the existing calibration data.\n\nErase everything but the calibration data? Or erase everything?".format(cart_name)
+					msg_text = "This {:s} cartridge currently has calibration data in place. It is strongly recommended to keep the existing calibration data.\n\nHow do you want to proceed?".format(cart_name)
 					button_overwrite = msgbox.addButton("  &Erase everything  ", QtWidgets.QMessageBox.ActionRole)
 					erase = False # Don’t just erase everything
 				else:
@@ -2916,27 +2916,35 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.setAcceptDrops(True)
 		self.show()
 		
-		# Taskbar Progress on Windows only
-		try:
-			from  PySide2.QtWinExtras import QWinTaskbarButton, QtWin
-			myappid = 'lesserkuma.flashgbx'
-			QtWin.setCurrentProcessExplicitAppUserModelID(myappid)
-			taskbar_button = QWinTaskbarButton()
-			self.TBPROG = taskbar_button.progress()
-			self.TBPROG.setRange(0, 100)
-			taskbar_button.setWindow(self.windowHandle())
-			self.TBPROG.setVisible(False)
-		except ImportError:
-			pass
-		
-		if callable(getattr(qt_app, "exec", None)):
-			qt_app.exec() # PySide6
-		else:
-			qt_app.exec_() # PySide2
+		if callable(getattr(qt_app, "exec", None)): # PySide6
+			qt_app.exec()
+			# Taskbar Progress on Windows only
+			try:
+				from PySide6.QtWin import QtWinTaskbarButton, QtWin
+				myappid = 'lesserkuma.flashgbx'
+				QtWin.setAppUserModelId(myappid)
+				taskbar_button = QtWinTaskbarButton()
+				self.TBPROG = taskbar_button.progress()
+				self.TBPROG.setRange(0, 100)
+				taskbar_button.setWindow(self.windowHandle())
+				self.TBPROG.setVisible(False)
+			except ImportError:
+				pass
 
-os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+		else: # PySide2
+			qt_app.exec_()
+			# Taskbar Progress on Windows only
+			try:
+				from PySide2.QtWinExtras import QWinTaskbarButton, QtWin
+				myappid = 'lesserkuma.flashgbx'
+				QtWin.setCurrentProcessExplicitAppUserModelID(myappid)
+				taskbar_button = QWinTaskbarButton()
+				self.TBPROG = taskbar_button.progress()
+				self.TBPROG.setRange(0, 100)
+				taskbar_button.setWindow(self.windowHandle())
+				self.TBPROG.setVisible(False)
+			except ImportError:
+				pass
+
 qt_app = QApplication(sys.argv)
 qt_app.setApplicationName(APPNAME)

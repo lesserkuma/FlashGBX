@@ -40,7 +40,7 @@ These work for installing fresh and upgrading from an older version.
 1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or newer)
 2. Open a Terminal or Command Prompt window
 3. Install FlashGBX with this command:<br>`pip3 install "FlashGBX[qt6]"`
-* If installation fails, use this command instead:<br>`pip3 install "FlashGBX[qt5]"`
+* If installation fails, try this command instead:<br>`pip3 install "FlashGBX[qt5]"`
 * If installation still fails, you can install the minimal version (command line interface) with this command:<br>`pip3 install FlashGBX`
 
 * Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
@@ -100,6 +100,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - BLAZE Xploder GB
   - BUNG Doctor GB Card 64M
   - Catskull 32k Gameboy Flash Cart
+  - DIY cart with 28F016S5
   - DIY cart with AM29F010
   - DIY cart with AM29F016/29F016
   - DIY cart with AM29F032
@@ -322,7 +323,7 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
 
 ## DISCLAIMER
 

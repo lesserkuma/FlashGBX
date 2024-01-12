@@ -7,9 +7,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.35"
+VERSION_PEP440 = "3.36"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1700872410
+VERSION_TIMESTAMP = 1705328830
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -870,7 +870,7 @@ def dprint(*args, **kwargs):
 	global DEBUG_LOG
 	stack = traceback.extract_stack()
 	stack = stack[len(stack)-2]
-	msg = "[{:s}] [{:s}:{:d}] {:s}(): {:s}".format(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), stack.filename[stack.filename.replace("\\", "/").rindex("/")+1:], stack.lineno, stack.name, " ".join(map(str, args)), **kwargs)
+	msg = "[{:s}] [{:s}:{:d}] {:s}(): {:s}".format(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), os.path.split(stack.filename)[1], stack.lineno, stack.name, " ".join(map(str, args)), **kwargs)
 	DEBUG_LOG.append(msg)
 	DEBUG_LOG = DEBUG_LOG[-32768:]
 	if DEBUG:

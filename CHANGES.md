@@ -1,4 +1,10 @@
 # Release notes
+### v3.36 (released 2024-01-15)
+- Added support for DIY cart with 28F016S5 *(thanks alexbc2999)*
+- Fixed a problem with reading Sachen cartridges *(thanks xukkorz)*
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
+- Minor bug fixes and improvements *(thanks djeddit, AlexiG)*
+
 ### v3.35 (released 2023-11-25)
 - Added support for DRV with 29LV320DB and ALTERA CPLD *(thanks TheNFCookie)*
 - Added support for HC007-BGA-V2 with M29W640 *(thanks LucentW)*
