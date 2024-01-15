@@ -3,7 +3,7 @@
 - Added support for DIY cart with 28F016S5 *(thanks alexbc2999)*
 - Fixed a problem with reading Sachen cartridges *(thanks xukkorz)*
 - Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
-- Minor bug fixes and improvements *(thanks djeddit, AlexiG)*
+- Minor bug fixes and improvements *(thanks djedditt, AlexiG)*
 
 ### v3.35 (released 2023-11-25)
 - Added support for DRV with 29LV320DB and ALTERA CPLD *(thanks TheNFCookie)*
@@ -119,7 +119,7 @@
 - Bundles GBxCart RW v1.4/v1.4a firmware version R39+L8 (adds support for insideGadgets WonderSwan and Game Gear flash carts)
 - Added support for SD007_48BALL_SOP28 with M29W320ET *(thanks DevDavisNunez)*
 - Added support for the BennVenn MBC3000 RTC cart *(thanks LucentW)*
-- Added support for Flash2Advance Ultra 256M with 8× 3204C3B100 *(thanks djeddit)*
+- Added support for Flash2Advance Ultra 256M with 8× 3204C3B100 *(thanks djedditt)*
 - Added support for SD007_T40_64BALL_SOJ28 with 29LV016T *(thanks Stitch)*
 - Confirmed support for SD007_T40_64BALL_S71_TV_TS28 with TC58FVB016FT-85 *(thanks edo999)*
 - Added support for F864-3 with M36L0R7050B *(thanks s1cp)*
@@ -131,7 +131,7 @@
 ### v3.20 (released 2022-11-30)
 - Bundles GBxCart RW v1.4/v1.4a firmware version R38+L8 (minor improvements)
 - Will now retry failed flash sector writes a few times before stopping the process (requires firmware version L1+)
-- Added delta ROM writing (only write the difference between two ROMs); requires both the original &lt;name&gt;.&lt;ext&gt; ROM file and the changed &lt;name&gt;.delta.&lt;ext&gt; ROM file in the same directory (requires firmware version L1+) *(thanks djeddit for the suggestion)*
+- Added delta ROM writing (only write the difference between two ROMs); requires both the original &lt;name&gt;.&lt;ext&gt; ROM file and the changed &lt;name&gt;.delta.&lt;ext&gt; ROM file in the same directory (requires firmware version L1+) *(thanks djedditt for the suggestion)*
 - Fixed support for Flash2Advance Ultra 64M with 2× 28F320C3B
 - Fixed support for BX2006_TSOPBGA_0106/BX2006_TSOPBGA_6108 with M29W640 (requires firmware version L8+)
 - Confirmed support for 4444-39VF512 with 4444LLZBBO *(thanks marv17)*
