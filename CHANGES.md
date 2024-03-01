@@ -1,4 +1,11 @@
 # Release notes
+### v3.37 (released 2024-03-01)
+- Bundles GBxCart RW v1.4/v1.4a firmware version R42+L11 (improves flash cart compatibility)
+- Added support for F0095_4G_V1 with F0095H0 *(thanks Ausar)*
+- Improved support for 256M29EWH (no PCB text)
+- Confirmed and improved support for 512M29EWH (no PCB text)
+- Minor bug fixes and improvements
+
 ### v3.36 (released 2024-01-15)
 - Added support for DIY cart with 28F016S5 *(thanks alexbc2999)*
 - Fixed a problem with reading Sachen cartridges *(thanks xukkorz)*

@@ -1,0 +1,43 @@
+{
+	"type":"DMG",
+	"names":[
+		"DIY cart with 28F016S5 @ AUDIO"
+	],
+	"flash_ids":[
+		[ 0x89, 0xAA ]
+	],
+	"voltage":5,
+	"flash_size":0x200000,
+	"sector_size":0x10000,
+	"start_addr":0,
+	"first_bank":1,
+	"write_pin":"AUDIO",
+	"mbc":"manual",
+	"command_set":"INTEL",
+	"commands":{
+		"reset":[
+			[ 0, 0xFF ]
+		],
+		"read_identifier":[
+			[ 0, 0x90 ]
+		],
+		"sector_erase":[
+			[ 0x4000, 0x20 ],
+			[ 0x4000, 0xD0 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ 0x4000, 0x80, 0x80 ]
+		],
+		"single_write":[
+			[ "PA", 0x70 ],
+			[ "PA", 0x40 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

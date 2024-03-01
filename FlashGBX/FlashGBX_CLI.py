@@ -593,7 +593,7 @@ class FlashGBX_CLI():
 		header = self.CONN.ReadInfo()
 		self.ReadCartridge(header)
 		ret = self.CONN.DetectCartridge(limitVoltage=limitVoltage, checkSaveType=True)
-		(header, _, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, _, flash_id) = ret
+		(header, _, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, _, flash_id, detected_size) = ret
 
 		# Save Type
 		if save_type is None:
@@ -645,7 +645,10 @@ class FlashGBX_CLI():
 			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=supp_cart_types[1][cart_type])
 			msg_cart_type_s = "Cartridge Type: Supported flash cartridge – compatible with:\n{:s}\n".format(msg_cart_type)
 
-			if "flash_size" in supp_cart_types[1][cart_type_id]:
+			if detected_size > 0:
+				size = detected_size
+				msg_flash_size_s = "ROM Size: {:s}\n".format(Util.formatFileSize(size=size, asInt=True))
+			elif "flash_size" in supp_cart_types[1][cart_type_id]:
 				size = supp_cart_types[1][cart_type_id]["flash_size"]
 				msg_flash_size_s = "ROM Size: {:s}\n".format(Util.formatFileSize(size=size, asInt=True))
 
@@ -741,7 +744,7 @@ class FlashGBX_CLI():
 			if args.agb_romsize == "auto":
 				rom_size = header["rom_size"]
 			else:
-				sizes = [ "auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb" ]
+				sizes = [ "auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb", "512mb" ]
 				rom_size = Util.AGB_Header_ROM_Sizes_Map[sizes.index(args.agb_romsize) - 1]
 		
 		if args.path != "auto":
@@ -855,8 +858,8 @@ class FlashGBX_CLI():
 			path = args.path
 		
 		try:
-			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
-				print("{:s}ROM files bigger than 256 MiB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
+			if os.path.getsize(path) > 0x20000000: # reject too large files to avoid exploding RAM
+				print("{:s}ROM files bigger than 512 MiB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
 			elif os.path.getsize(path) < 0x400:
 				print("{:s}ROM files smaller than 1 KiB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))

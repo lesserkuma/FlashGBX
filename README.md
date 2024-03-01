@@ -165,6 +165,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 2006_TSOP_64BALL_QFP48 with AL016J55FFAR2
   - 256M29EWH (no PCB text)
   - 36VF3204 and ALTERA CPLD (no PCB text)
+  - 512M29EWH (no PCB text)
   - DMG-DHCN-20 with MX29LV320ET
   - DMG-GBRW-20 with 29LV320ETMI-70G
   - DRV with 29LV320DB and ALTERA CPLD
@@ -278,6 +279,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - BX2006_TSOPBGA_6108 with M29W640
   - DV15 with MSP55LV100G
   - F864-3 with M36L0R7050B
+  - F0095_4G_V1 with F0095H0
   - GA-07 with unlabeled flash chip
   - GE28F128W30 with 128W30B0
   - M36XXX_T32_32D_16D with M36L0R806
@@ -323,7 +325,7 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, Ausar, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
 
 ## DISCLAIMER
 

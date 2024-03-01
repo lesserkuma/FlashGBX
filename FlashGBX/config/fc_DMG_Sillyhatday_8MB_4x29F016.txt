@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"Sillyhatday MBC5-DUAL-FLASH-4MB"
+		"Sillyhatday MBC5-QUAD-FLASH-8MB"
 	],
 	"voltage":5,
 	"flash_size":0x800000,
@@ -24,6 +24,7 @@
 			[ 0x4AAA, 0x98 ]
 		],
 		"chip_erase":[
+			[ 0x3000, 0x00, "WR" ],
 			[ 0x2100, 0x00, "WR" ],
 			[ 0x4555, 0xAA ],
 			[ 0x42AA, 0x55 ],
@@ -31,6 +32,7 @@
 			[ 0x4555, 0xAA ],
 			[ 0x42AA, 0x55 ],
 			[ 0x4555, 0x10 ],
+			[ 0x3000, 0x00, "WR" ],
 			[ 0x2100, 0x80, "WR" ],
 			[ 0x4555, 0xAA ],
 			[ 0x42AA, 0x55 ],
@@ -38,8 +40,24 @@
 			[ 0x4555, 0xAA ],
 			[ 0x42AA, 0x55 ],
 			[ 0x4555, 0x10 ],
+			[ 0x3000, 0x01, "WR" ],
+			[ 0x2100, 0x00, "WR" ],
+			[ 0x4555, 0xAA ],
+			[ 0x42AA, 0x55 ],
+			[ 0x4555, 0x80 ],
+			[ 0x4555, 0xAA ],
+			[ 0x42AA, 0x55 ],
+			[ 0x4555, 0x10 ],
+			[ 0x3000, 0x01, "WR" ],
+			[ 0x2100, 0x80, "WR" ],
+			[ 0x4555, 0xAA ],
+			[ 0x42AA, 0x55 ],
+			[ 0x4555, 0x80 ],
+			[ 0x4555, 0xAA ],
+			[ 0x42AA, 0x55 ],
+			[ 0x4555, 0x10 ],
+			[ 0x3000, 0x00, "WR" ],
 			[ 0x2100, 0x00, "WR" ]
-
 		],
 		"chip_erase_wait_for":[
 			[ null, null, null ],
@@ -55,7 +73,26 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
 			[ 0x4000, 0xFF, 0xFF ],
+			[ null, null, null ],
 			[ 0x4000, 0xFF, 0xFF ]
 		],
 		"single_write":[

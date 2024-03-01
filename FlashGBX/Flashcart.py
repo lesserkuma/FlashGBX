@@ -133,6 +133,10 @@ class Flashcart:
 		if "flash_size" not in self.CONFIG: return default
 		return self.CONFIG["flash_size"]
 
+	def SetFlashSize(self, size):
+		if "flash_size" not in self.CONFIG: return
+		self.CONFIG["flash_size"] = size
+
 	def GetBufferSize(self):
 		if "buffer_size" in self.CONFIG:
 			return self.CONFIG["buffer_size"]
@@ -450,11 +454,17 @@ class Flashcart:
 		else:
 			return self.CONFIG["sector_size"]
 	
+	def HasBanks(self):
+		return "flash_bank_select_type" in self.CONFIG
+
 	def SelectBankROM(self, index):
 		if "flash_bank_select_type" not in self.CONFIG: return False
+		dprint(f"Setting flash bank to {index:d}")
 		if self.CONFIG["flash_bank_select_type"] == 1:
-			dprint(self.GetName(), "|", index)
+			index = index & 0xF
 			self.CartWrite([[2, index << 4]], sram=True)
+			self.CartWrite([[3, 0x40]], sram=True)
+			self.CartWrite([[4, 0x00]], sram=True)
 			return True
 		elif self.CONFIG["flash_bank_select_type"] == 2: # Flash2Advance Ultra
 			bank1 = 0 if index < 4 else 0x10

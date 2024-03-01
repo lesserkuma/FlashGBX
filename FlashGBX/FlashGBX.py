@@ -129,7 +129,7 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--dmg-romsize", choices=["auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb"], type=str.lower, default="auto", help="set size of Game Boy cartridge ROM data")
 	ap_cli2.add_argument("--dmg-mbc", type=str.lower, default="auto", help="set memory bank controller type of Game Boy cartridge")
 	ap_cli2.add_argument("--dmg-savesize", choices=["auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m"], type=str.lower, default="auto", help="set size of Game Boy cartridge save data")
-	ap_cli2.add_argument("--agb-romsize", choices=["auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb"], type=str.lower, default="auto", help="set size of Game Boy Advance cartridge ROM data")
+	ap_cli2.add_argument("--agb-romsize", choices=["auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb", "512mb"], type=str.lower, default="auto", help="set size of Game Boy Advance cartridge ROM data")
 	ap_cli2.add_argument("--agb-savetype", choices=["auto", "eeprom4k", "eeprom64k", "sram256k", "flash512k", "flash1m", "dacs8m", "sram512k", "sram1m"], type=str.lower, default="auto", help="set type of Game Boy Advance cartridge save data")
 	ap_cli2.add_argument("--store-rtc", action="store_true", help="store RTC register values if supported")
 	ap_cli2.add_argument("--ignore-bad-header", action="store_true", help="don’t stop if invalid data found in cartridge header data")

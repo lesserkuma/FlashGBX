@@ -7,19 +7,19 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.36"
+VERSION_PEP440 = "3.37"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1705328830
+VERSION_TIMESTAMP = 1709318129
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
 CONFIG_PATH = ""
 
-AGB_Header_ROM_Sizes = [ "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB", "256 MiB" ]
-AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000 ]
+AGB_Header_ROM_Sizes = [ "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB", "256 MiB", "512 MiB" ]
+AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000 ]
 AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1 MiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)", "Unlicensed Batteryless SRAM" ]
 AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1048576, 65536, 131072, 0 ]
-AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS", 0xBF5B:"Unlicensed SST SST49LF080A", 0xFFFF:"Unlicensed 0xFFFF" }
+AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS", 0xBF5B:"Unlicensed SST49LF080A", 0xFFFF:"Unlicensed 0xFFFF" }
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000, 0x20000, 0x20000 ]
 
 DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x0F:'MBC3+RTC+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x110:'MBC30+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'MAC-GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
@@ -314,30 +314,27 @@ def formatProgressTimeShort(sec):
 	sec %= 60
 	return "{:02d}:{:02d}:{:02d}".format(int(hr), int(min), int(sec))
 
-def formatProgressTime(sec, asFloat=False):
-	if int(sec) == 1:
-		return "{:d} second".format(int(sec))
-	elif sec < 60:
-		if sec < 1 and asFloat:
-			return "{:.2f} seconds".format(sec)
-		else:
-			return "{:d} seconds".format(int(sec))
-	elif int(sec) == 60:
-		return "1 minute"
-	else:
-		min = int(sec / 60)
-		sec = int(sec % 60)
-		s = str(min) + " "
-		if min == 1:
-			s = s + "minute"
-		else:
-			s = s + "minutes"
-		s = s + ", " + str(sec) + " "
-		if sec == 1:
-			s = s + "second"
-		else:
-			s = s + "seconds"
-		return s
+def formatProgressTime(seconds, asFloat=False):
+	hr = int(seconds // 3600)
+	min = int((seconds // 60) - (60 * hr))
+	sec = seconds % 60
+	
+	if seconds < 1 and asFloat:
+		return "{:.2f} seconds".format(seconds)
+	s = ""
+	if hr > 0:
+		s += "{:d} hour".format(hr)
+		if hr != 1: s += "s"
+		s += ", "
+	if min > 0:
+		s += "{:d} minute".format(min)
+		if min != 1: s += "s"
+		s += ", "
+	if sec >= 1 or seconds < 60:
+		s += "{:d} second".format(int(sec))
+		if sec != 1: s += "s"
+		s += ", "
+	return s[:-2]
 
 def formatPathOS(path, end_sep=False):
 	if platform.system() == "Windows":

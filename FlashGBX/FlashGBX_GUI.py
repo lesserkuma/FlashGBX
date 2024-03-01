@@ -690,7 +690,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				dev.SetWriteDelay(enable=str(self.SETTINGS.value("WriteDelay", default="disabled")).lower() == "enabled")
 				qt_app.processEvents()
 				self.CONN = dev
-				self.CONN.SetTimeout(float(self.SETTINGS.value("SerialTimeout", default="0.5")))
+				self.CONN.SetTimeout(float(self.SETTINGS.value("SerialTimeout", default="1")))
 				self.optDMG.setAutoExclusive(False)
 				self.optAGB.setAutoExclusive(False)
 				if "DMG" in self.CONN.GetSupprtedModes():
@@ -1258,8 +1258,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			if os.path.getsize(path) == 0:
 				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "The selected ROM file is empty.", QtWidgets.QMessageBox.Ok)
 				return
-			if os.path.getsize(path) > 0x10000000: # reject too large files to avoid exploding RAM
-				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 256 MiB are not supported.", QtWidgets.QMessageBox.Ok)
+			if os.path.getsize(path) > 0x20000000: # reject too large files to avoid exploding RAM
+				QtWidgets.QMessageBox.critical(self, "{:s} {:s}".format(APPNAME, VERSION), "ROM files bigger than 512 MiB are not supported.", QtWidgets.QMessageBox.Ok)
 				return
 			
 			with open(path, "rb") as file:
@@ -2339,7 +2339,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 			self.DisconnectDevice()
 			cart_type = None
 		else:
-			(header, save_size, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, _, flash_id) = ret
+			(header, save_size, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, _, flash_id, detected_size) = ret
 			
 			# Save Type
 			if not canSkipMessage:
@@ -2436,7 +2436,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				msg_cart_type_s_detail = "<b>Compatible Cartridge Types:</b><br>{:s}<br>".format(msg_cart_type)
 				found_supported = True
 
-				if "flash_size" in supp_cart_types[1][cart_type_id]:
+				if detected_size > 0:
+					size = detected_size
+					msg_flash_size_s = "<b>ROM Size:</b> {:s}<br>".format(Util.formatFileSize(size=size, asInt=True))
+				elif "flash_size" in supp_cart_types[1][cart_type_id]:
 					size = supp_cart_types[1][cart_type_id]["flash_size"]
 					msg_flash_size_s = "<b>ROM Size:</b> {:s}<br>".format(Util.formatFileSize(size=size, asInt=True))
 				

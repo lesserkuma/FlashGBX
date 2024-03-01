@@ -489,8 +489,8 @@
   "gc": "A2YE",
   "rc": 3754462526,
   "rs": 4194304,
-  "st": 4,
-  "ss": 65536,
+  "st": 0,
+  "ss": 0,
   "lg": "En,Fr,De,Es,It",
   "rg": "USA"
  },
@@ -21226,11 +21226,11 @@
   "lg": "Ja",
   "rg": "Japan"
  },
- "f71e3df4bf5f4c9000b9e3c931696bf237e6cac6": {
+ "414992293e84502d31cbc612234fbb15427e9a81": {
   "gn": "Fear Factor - Unleashed",
   "ne": "(USA)",
   "gc": "BFUE",
-  "rc": 310993820,
+  "rc": 3214000765,
   "rs": 8388608,
   "st": 1,
   "ss": 512,
