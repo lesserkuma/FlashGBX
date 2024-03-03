@@ -78,7 +78,11 @@ def LoadConfig(args):
 class ArgParseCustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
 def main(portableMode=False):
 	if platform.system() == "Windows": os.system("color")
-	os.environ['QT_MAC_WANTS_LAYER'] = '1'
+	if platform.system() == "Darwin":
+		macos_version = tuple(map(int, platform.mac_ver()[0].split('.')))
+		# macOS above Big Sur don't need a compat layer fix in the environment
+		if macos_version < (12, 0):
+			os.environ['QT_MAC_WANTS_LAYER'] = '1'
 	
 	print("{:s} {:s} by Lesserkuma".format(Util.APPNAME, Util.VERSION))
 	print("https://github.com/lesserkuma/FlashGBX")
