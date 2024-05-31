@@ -19,7 +19,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: FlashGBX Remote Build
-          token: ${{ secrets.FLASHGBX_MACOS_PAT }}
+          token: ${{ secrets.FLASHGBX_MACOS_TOKEN }}
           repo: Cliffback/FlashGBX-macOS
           inputs: '{"create_release": "true", "latest_version": "${{ github.event.release.tag_name }}"}'
   trigger-manual:
@@ -30,6 +30,6 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: FlashGBX Remote Build
-          token: ${{ secrets.FLASHGBX_MACOS_PAT }}
+          token: ${{ secrets.FLASHGBX_MACOS_TOKEN }}
           repo: Cliffback/FlashGBX-macOS
           inputs: '{"create_release": "true", "latest_version": "${{ github.event.inputs.release_tag }}"}'
