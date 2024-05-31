@@ -21,6 +21,7 @@ jobs:
           workflow: FlashGBX Remote Build
           token: ${{ secrets.FLASHGBX_MACOS_TOKEN }}
           repo: Cliffback/FlashGBX-macOS
+          ref: main
           inputs: '{"create_release": "true", "latest_version": "${{ github.event.release.tag_name }}"}'
   trigger-manual:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
@@ -32,4 +33,5 @@ jobs:
           workflow: FlashGBX Remote Build
           token: ${{ secrets.FLASHGBX_MACOS_TOKEN }}
           repo: Cliffback/FlashGBX-macOS
+          ref: main
           inputs: '{"create_release": "true", "latest_version": "${{ github.event.inputs.release_tag }}"}'
