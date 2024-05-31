@@ -1,0 +1,35 @@
+name: Trigger Remote Build macOS on Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag'
+        required: true
+        type: string
+
+jobs:
+  trigger-release:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Remote Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Build FlashGBX Remotely
+          token: ${{ secrets.FLASHGBX_MACOS_PAT }}
+          repo: Cliffback/FlashGBX-macOS
+          inputs: '{"create_release": "true", "latest_version": "${{ github.event.release.tag_name }}"}'
+  trigger-manual:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Remote Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Build FlashGBX Remotely
+          token: ${{ secrets.PAT }}
+          repo: Cliffback/FlashGBX-macOS
+          inputs: '{"create_release": "true", "latest_version": "${{ github.event.inputs.release_tag }}"}'
