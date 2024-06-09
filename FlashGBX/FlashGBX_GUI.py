@@ -2286,11 +2286,12 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				self.cmbAGBSaveTypeResult.setCurrentIndex(0)
 			else:
 				self.lblAGBGameNameResult.setStyleSheet(self.lblDMGRomTitleResult.styleSheet())
-				if data['logo_correct'] and data['3d_memory'] is True:
+				if data['logo_correct']:
 					cart_types = self.CONN.GetSupportedCartridgesAGB()
 					for i in range(0, len(cart_types[0])):
-						if "3d_memory" in cart_types[1][i]:
-							self.cmbAGBCartridgeTypeResult.setCurrentIndex(i)
+						if ((data['3d_memory'] is True and "3d_memory" in cart_types[1][i]) or
+							(data['vast_fame'] is True and "vast_fame" in cart_types[1][i])):
+								self.cmbAGBCartridgeTypeResult.setCurrentIndex(i)
 			
 			if data["dacs_8m"] is True:
 				self.cmbAGBSaveTypeResult.setCurrentIndex(6)

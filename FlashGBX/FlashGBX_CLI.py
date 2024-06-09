@@ -807,12 +807,13 @@ class FlashGBX_CLI():
 				if "flash_type" in header:
 					print("Selected cartridge type: {:s}\n".format(cart_types[0][header["flash_type"]]))
 					cart_type = header["flash_type"]
-				elif header['logo_correct'] and header['3d_memory'] is True:
+				elif header['logo_correct']:
 					for i in range(0, len(cart_types[0])):
-						if "3d_memory" in cart_types[1][i]:
-							print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
-							cart_type = i
-							break
+						if ((header['3d_memory'] is True and "3d_memory" in cart_types[1][i]) or
+							(header['vast_fame'] is True and "vast_fame" in cart_types[1][i])):
+								print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
+								cart_type = i
+								break
 		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_size':rom_size, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 	
 	def FlashROM(self, args, header):

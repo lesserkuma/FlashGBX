@@ -85,6 +85,11 @@ class RomFileAGB:
 		data["save_type"] = None
 		data["save_size"] = 0
 
+		# Vast Fame (unlicensed protected carts)
+		data["vast_fame"] = False
+		if buffer[0x15C:0x16C] == bytearray([ 0xB4, 0x00, 0x9F, 0xE5, 0x99, 0x10, 0xA0, 0xE3, 0x00, 0x10, 0xC0, 0xE5, 0xAC, 0x00, 0x9F, 0xE5 ]): # Initialization code always present in Vast Fame carts
+			data["vast_fame"] = True
+
 		# 8M FLASH DACS
 		data["dacs_8m"] = False
 		if (data["game_title"] == "NGC-HIKARU3" and data["game_code"] == "GHTJ" and data["header_checksum"] == 0xB3):
@@ -105,7 +110,7 @@ class RomFileAGB:
 		data["3d_memory"] = False
 		if data["db"] is not None and "3d" in data["db"]:
 			data["3d_memory"] = data["db"]["3d"]
-		
+
 		return data
 
 	def GetDatabaseEntry(self):
