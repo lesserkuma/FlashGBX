@@ -2220,7 +2220,58 @@ class GbxDevice:
 				rom_bank_size = 0x2000000
 
 		is_3dmemory = (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "3DMEMORY")
-		is_vastfame = (self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "VASTFAME")
+
+		# Initialize Vast Fame ROM (if it was not autodetected) and determine SRAM address/value bit reordering (necessary for emulation)
+		if self.MODE == "AGB" and "command_set" in cart_type and cart_type["command_set"] == "VASTFAME":
+			addr_reorder = [[-1 for i in range(16)] for j in range(4)]
+			value_reorder = [[-1 for i in range(8)] for j in range(4)]
+			for mode in range(0, 16):
+				# Set SRAM mode
+				self._cart_write(0xFFF8, 0x99, sram=True)
+				self._cart_write(0xFFF9, 0x02, sram=True)
+				self._cart_write(0xFFFA, 0x05, sram=True)
+				self._cart_write(0xFFFB, 0x02, sram=True)
+				self._cart_write(0xFFFC, 0x03, sram=True)
+
+				self._cart_write(0xFFFD, 0x00, sram=True)
+				self._cart_write(0xFFFE, mode, sram=True)
+
+				self._cart_write(0xFFF8, 0x99, sram=True)
+				self._cart_write(0xFFF9, 0x03, sram=True)
+				self._cart_write(0xFFFA, 0x62, sram=True)
+				self._cart_write(0xFFFB, 0x02, sram=True)
+				self._cart_write(0xFFFC, 0x56, sram=True)
+
+				# Blank SRAM
+				for i in range(0, 16):
+					self._cart_write(1 << i, 0, sram=True)
+				self._cart_write(0x8000, 0, sram=True)
+
+				# Get address reordering for SRAM writes (repeats every 4 modes so only check first 4)
+				if mode < 4:
+					for i in range(0, 16):
+						self._cart_write(1 << i, 0xAA, sram=True)
+						for j in range(0, 16):
+							value = self._cart_read(1 << j, 1, True)[0]
+							if value != 0:
+								addr_reorder[mode][j] = i
+								break
+						self._cart_write(1 << i, 0, sram=True) # reblank SRAM
+					addr_reorder[mode].reverse()
+
+				# Get value reordering for SRAM writes/reads (assumes upper bit of address is never reordered)
+				if mode % 4 == 0:
+					for i in range(0, 8):
+						self._cart_write(0x8000, 1 << i, sram=True)
+						value = self._cart_read(0x8000, 1, True)[0]
+						for j in range(0, 8):
+							if (1 << j) == value:
+								value_reorder[mode // 4][j] = i
+								break
+					value_reorder[mode // 4].reverse()
+
+			self.INFO["dump_info"]["vf_addr_reorder"] = addr_reorder
+			self.INFO["dump_info"]["vf_value_reorder"] = value_reorder
 
 		if "verify_write" in args:
 			size = len(args["verify_write"])
@@ -2501,56 +2552,6 @@ class GbxDevice:
 					break
 
 		if file is not None: file.close()
-
-		if is_vastfame:
-			addr_reorder = [[-1 for i in range(16)] for j in range(4)]
-			value_reorder = [[-1 for i in range(8)] for j in range(4)]
-			for mode in range(0, 16):
-				# Set SRAM mode
-				self._cart_write(0xFFF8, 0x99, sram=True)
-				self._cart_write(0xFFF9, 0x02, sram=True)
-				self._cart_write(0xFFFA, 0x05, sram=True)
-				self._cart_write(0xFFFB, 0x02, sram=True)
-				self._cart_write(0xFFFC, 0x03, sram=True)
-
-				self._cart_write(0xFFFE, mode, sram=True)
-
-				self._cart_write(0xFFF8, 0x99, sram=True)
-				self._cart_write(0xFFF9, 0x03, sram=True)
-				self._cart_write(0xFFFA, 0x62, sram=True)
-				self._cart_write(0xFFFB, 0x02, sram=True)
-				self._cart_write(0xFFFC, 0x56, sram=True)
-
-				# Blank SRAM
-				for i in range(0, 16):
-					self._cart_write(1 << i, 0, sram=True)
-				self._cart_write(0x8000, 0, sram=True)
-
-				# Get address reordering for SRAM writes (repeats every 4 modes so only check first 4)
-				if mode < 4:
-					for i in range(0, 16):
-						self._cart_write(1 << i, 0xAA, sram=True)
-						for j in range(0, 16):
-							value = self._cart_read(1 << j, 1, True)[0]
-							if value != 0:
-								addr_reorder[mode][j] = i
-								break
-						self._cart_write(1 << i, 0, sram=True) # reblank SRAM
-					addr_reorder[mode].reverse()
-
-				# Get value reordering for SRAM writes/reads (assumes upper bit of address is never reordered)
-				if mode % 4 == 0:
-					for i in range(0, 8):
-						self._cart_write(0x8000, 1 << i, sram=True)
-						value = self._cart_read(0x8000, 1, True)[0]
-						for j in range(0, 8):
-							if (1 << j) == value:
-								value_reorder[mode // 4][j] = i
-								break
-					value_reorder[mode // 4].reverse()
-
-			self.INFO["dump_info"]["vf_addr_reorder"] = addr_reorder
-			self.INFO["dump_info"]["vf_value_reorder"] = value_reorder
 
 		# ↓↓↓ Switch to first ROM bank
 		if self.MODE == "DMG":
