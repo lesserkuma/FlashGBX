@@ -1,0 +1,10 @@
+{
+	"type":"AGB",
+	"names":[
+		"Vast Fame"
+	],
+	"voltage":3.3,
+	"vast_fame":true,
+	"command_set":"VASTFAME",
+	"commands":{}
+}

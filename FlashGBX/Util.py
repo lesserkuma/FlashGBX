@@ -734,6 +734,11 @@ def GetDumpReport(di, device):
 		if "eeprom_data" in di:
 			s += "* EEPROM area:     {:s}…\n".format(''.join(format(x, '02X') for x in di["eeprom_data"]))
 
+		if di["cart_type"] == "Vast Fame":
+			s += "\n== Vast Fame Protection Information ==\n"
+			s += "* Address Reordering: {:s}\n".format(str(di["vf_addr_reorder"]))
+			s += "* Value Reordering: {:s}\n".format(str(di["vf_value_reorder"]))
+
 		if header["db"] is not None and header["db"]["rc"] == di["hash_crc32"]:
 			db = header["db"]
 			s += "\n== Database Match ==\n"
