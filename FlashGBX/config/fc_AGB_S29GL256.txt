@@ -1,24 +1,22 @@
 {
-	"type":"DMG",
+	"type":"AGB",
 	"names":[
-		"DMG-DHCN-20 with MX29LV320ET",
-		"DMG-GBRW-20 with 29LV320ETMI-70G"
+		"insideGadgets 32 MiB (S29GL512N) + RTC",
+		"AGB-E20-30 with S29GL256N10TFI01",
+		"GBFlash 1M FLASH RTC (AGB-R1M-02V3)"
 	],
 	"flash_ids":[
-		[ 0xC2, 0xC2, 0xA7, 0xA7 ],
-		[ 0xC2, 0xC2, 0xA7, 0xA7 ]
+		[ 0x01, 0x00, 0x7E, 0x22 ],
+		[ 0x01, 0x00, 0x7E, 0x22 ],
+		[ 0x01, 0x00, 0x7E, 0x22 ]
 	],
 	"voltage":3.3,
-	"flash_size":0x200000,
-	"start_addr":0,
-	"first_bank":1,
-	"write_pin":"WR",
-	"enable_pullup_wr":true,
-	"sector_size":[
-		[0x10000, 31],
-		[0x2000, 8]
-	],
-	"chip_erase_timeout":60,
+	"flash_size":0x2000000,
+	"sector_size":0x20000,
+	"chip_erase_timeout":300,
+	"rtc":true,
+	"rumble":true,
+	"enable_pullups":true,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -29,21 +27,8 @@
 			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x90 ]
 		],
-		"chip_erase":[
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ 0xAAA, 0x80 ],
-			[ 0xAAA, 0xAA ],
-			[ 0x555, 0x55 ],
-			[ 0xAAA, 0x10 ]
-		],
-		"chip_erase_wait_for":[
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ null, null, null ],
-			[ 0, 0xFF, 0xFF ]
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
 		],
 		"sector_erase":[
 			[ 0xAAA, 0xAA ],
@@ -59,7 +44,39 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0xFF, 0xFF ]
+			[ "SA", 0xFFFF, 0xFFFF ]
+		],
+		"chip_erase":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x80 ],
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ 0xAAA, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFFFF, 0xFFFF ]
+		],
+		"buffer_write":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
+			[ "SA", 0x25 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0x29 ]
+		],
+		"buffer_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", "PD", 0xFFFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xAA ],

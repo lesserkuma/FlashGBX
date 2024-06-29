@@ -16,6 +16,7 @@
 	"start_addr":0x4000,
 	"first_bank":0,
 	"write_pin":"WR",
+	"enable_pullup_wr":true,
 	"sector_size_from_cfi":true,
 	"chip_erase_timeout":60,
 	"command_set":"AMD",

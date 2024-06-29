@@ -1,9 +1,38 @@
 # Release notes
+### v4.0 (released 2024-06-30)
+- Updated GBxCart RW firmware to version R42+L12 (improves flash cart compatibility)
+- Improved support for M5M29-39VF512 with M5M29HD528 *(thanks marv17)*
+- Improved writing speed for Game Boy Action Replay and GameShark with the Datel Orbit V2 mapper
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
+- Added the feature of displaying the Game Boy Advance bootlogo *(thanks Winter1760 for the huffman decompression algorithm)*
+- Added support for K5L2BX_32D_16D_V2 with K5L2833ATA *(thanks Warez Waldo)*
+- Fixed a problem with TAMA5 cartridges
+- Added the option of changing the internal Real Time Clock values in GUI mode
+- Added support for Development AGB Cartridge 64M Flash, E201629
+- Added support for SD008_512ND_4M with epoxy flash chip *(thanks gandalf1980)*
+- Changed the Analyze Flash Cart process, flash cartridges will now be auto-detected faster
+- Improved support for the DMG-MBC5-32M-FLASH Development Cartridge
+- Added support for Vast Fame bootlegs *(thanks RibShark)*
+- Added support for GBFlash RTC with MX29LV320EB *(thanks simonK)*
+- Added support for GBFlash 1M FLASH RTC (AGB-R1M-02V3)
+- Added support for GBA Movie Player v2 CF (SST39VF400A)
+- Added support for the GBflash v1.2 and v1.3 hardware device *(thanks simonK)*
+- Added support for M36XXX_32A_EARTH with M36L0R8060B *(thanks Herax)*
+- Added support for BUNG Doctor GB Card 4M *(thanks chobby)*
+- Added support for BUNG Doctor GB Card 16M *(thanks chobby)*
+- Added support for DIY cart with MX29F040 *(thanks Grender)*
+- Added support for the Joey Jr hardware device *(thanks BennVenn)*
+- Confirmed support for F0088_2G_BGA48 with F0088H0
+- Added support for DVP DRV with MX29LV320CB *(thanks Lu)*
+- The insideGadgets’ firmware protocol of older GBxCart RW devices (Mini, v1.2 and older) is no longer supported
+- Minor bug fixes and improvements *(thanks aronson, simonK, marv17)*
+
 ### v3.37 (released 2024-03-01)
-- Bundles GBxCart RW v1.4/v1.4a firmware version R42+L11 (improves flash cart compatibility)
+- Bundles GBxCart RW firmware version R42+L11 (improves flash cart compatibility)
 - Added support for F0095_4G_V1 with F0095H0 *(thanks Ausar)*
 - Improved support for 256M29EWH (no PCB text)
 - Confirmed and improved support for 512M29EWH (no PCB text)
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
 - Minor bug fixes and improvements
 
 ### v3.36 (released 2024-01-15)

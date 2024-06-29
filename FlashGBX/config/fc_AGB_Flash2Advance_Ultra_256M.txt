@@ -32,8 +32,8 @@
 			[ 2, 0xFF ]
 		],
 		"read_identifier":[
-			[ 0, 0x90 ],
-			[ 2, 0x90 ]
+			[ 2, 0x90 ],
+			[ 0, 0x90 ]
 		],
 		"sector_erase":[
 			[ "SA", 0x60 ],

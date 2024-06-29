@@ -207,15 +207,6 @@
   "lg": "En,Fr,De,Es,It",
   "rg": "Europe"
  },
- "70d6c1b7b0dab7f6dec9dbc4eae454a19a37d6cd": {
-  "gn": "Trip World DX",
-  "ne": "(USA) (Limited Run Games)",
-  "gc": "",
-  "rc": 2937566187,
-  "rs": 524288,
-  "lg": "En",
-  "rg": "USA"
- },
  "bdf78e28adb73b3bec1c232bb5102cd9cb6128c5": {
   "gn": "Tutty",
   "ne": "(Europe) (Demo)",
@@ -22201,7 +22192,7 @@
   "rg": "Japan"
  },
  "555002099f43e6d4772011f4e5f6376ff9296966": {
-  "gn": "GB Memory Multi Menu",
+  "gn": "GB-Memory Multi Menu",
   "ne": "(Japan) (SGB Enhanced, GB Compatible) (NP)",
   "gc": "DMG-MMSA",
   "rc": 3967958209,
@@ -24427,11 +24418,11 @@
  },
  "7c3226f1374b6dbe7a824ec70f76a3a98270acca": {
   "gn": "Soccer Boy",
-  "ne": "(Japan)",
+  "ne": "(Japan) (En)",
   "gc": "DMG-SBA",
   "rc": 603344514,
   "rs": 65536,
-  "lg": "Ja",
+  "lg": "En",
   "rg": "Japan"
  },
  "b47cf53770b471e6b8a3ee6d1dd1e803345bce08": {

@@ -8,6 +8,7 @@
 	],
 	"voltage":3.3,
 	"flash_size":0x2000000,
+	"buffer_size":256,
 	"sector_size":[
 		[0x4000, 8],
 		[0x20000, 255]
@@ -32,6 +33,16 @@
 			[ null, null, null ],
 			[ null, null, null ],
 			[ "SA", 0x80, 0xFFFF ]
+		],
+		"page_write":[
+			[ 0, 0x70 ],
+			[ 0, 0x41 ],
+			[ "PA", "PD" ]
+		],
+		"page_write_wait_for":[
+			[ 0, 0x80, 0x80 ],
+			[ null, null, null ],
+			[ null, null, null ]
 		],
 		"single_write":[
 			[ 0, 0x70 ],

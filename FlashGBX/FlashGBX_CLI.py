@@ -16,8 +16,8 @@ from .RomFileAGB import RomFileAGB
 from .PocketCamera import PocketCamera
 from .Util import APPNAME, ANSI
 from . import Util
-from . import hw_GBxCartRW, hw_GBxCartRW_ofw
-hw_devices = [hw_GBxCartRW, hw_GBxCartRW_ofw]
+from . import hw_GBxCartRW, hw_GBFlash, hw_JoeyJr
+hw_devices = [hw_GBxCartRW, hw_GBFlash, hw_JoeyJr]
 
 class FlashGBX_CLI():
 	ARGS = {}
@@ -34,7 +34,7 @@ class FlashGBX_CLI():
 		Util.APP_PATH = args['app_path']
 		Util.CONFIG_PATH = args['config_path']
 		self.FLASHCARTS = args["flashcarts"]
-		self.PROGRESS = Util.Progress(self.UpdateProgress)
+		self.PROGRESS = Util.Progress(self.UpdateProgress, self.WaitProgress)
 		
 		global prog_bar_part_char
 		if platform.system() == "Windows":
@@ -59,9 +59,9 @@ class FlashGBX_CLI():
 		# Ask interactively if no args set
 		if args.action is None:
 			self.ARGS["called_with_args"] = False
-			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "debug-test-save"]
-			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures From Existing Save Data Backup\n 8) Firmware Update (for GBxCart RW v1.4/v1.4a only)\n")
-			args.action = input("Enter number 1-8 [1]: ").lower().strip()
+			actions = ["info", "backup-rom", "flash-rom", "backup-save", "restore-save", "erase-save", "gbcamera-extract", "fwupdate-gbxcartrw", "fwupdate-gbflash", "fwupdate-joeyjr", "debug-test-save"]
+			print("Select Operation:\n 1) Read Cartridge Information\n 2) Backup ROM\n 3) Write ROM\n 4) Backup Save Data\n 5) Restore Save Data\n 6) Erase Save Data\n 7) Extract Game Boy Camera Pictures From Existing Save Data Backup\n 8) Firmware Update for GBxCart RW v1.4/v1.4a only\n 9) Firmware Update for GBFlash\n 10) Firmware Update for Joey Jr\n")
+			args.action = input("Enter number 1-10 [1]: ").lower().strip()
 			try:
 				if int(args.action) == 0:
 					print("Canceled.")
@@ -76,7 +76,7 @@ class FlashGBX_CLI():
 		else:
 			self.ARGS["called_with_args"] = True
 		
-		if args.action is None or args.action not in ("gbcamera-extract", "fwupdate-gbxcartrw"):
+		if args.action is None or args.action not in ("gbcamera-extract", "fwupdate-gbxcartrw", "fwupdate-gbflash", "fwupdate-joeyjr"):
 			if not self.FindDevices(port=args.device_port):
 				print("No devices found.")
 				return
@@ -86,11 +86,19 @@ class FlashGBX_CLI():
 					return
 				dev = self.DEVICE[1]
 				builddate = dev.GetFWBuildDate()
+
+				if dev.FirmwareUpdateAvailable() and dev.FW_UPDATE_REQ is True:
+					print("The current firmware version of your device is not supported.\nPlease update the a supported firmware version first.")
+					return
+
 				if builddate != "":
 					print("\nConnected to {:s}".format(dev.GetFullNameExtended(more=True)))
 				else:
 					print("\nConnected to {:s}".format(dev.GetFullNameExtended()))
-		
+
+				self.CONN.SetAutoPowerOff(value=1500)
+				self.CONN.SetAGBReadMethod(method=2)
+
 		if args.action == "gbcamera-extract":
 			if args.path == "auto":
 				args.path = input("Enter file path of Game Boy Camera save data file: ").strip().replace("\"", "")
@@ -119,6 +127,14 @@ class FlashGBX_CLI():
 		
 		if args.action == "fwupdate-gbxcartrw":
 			self.UpdateFirmwareGBxCartRW(pcb=5, port=args.device_port)
+			return 0
+		
+		if args.action == "fwupdate-gbflash":
+			self.UpdateFirmwareGBFlash(port=args.device_port)
+			return 0
+		
+		if args.action == "fwupdate-joeyjr":
+			self.UpdateFirmwareJoeyJr(port=args.device_port)
 			return 0
 		
 		elif args.mode is None:
@@ -201,6 +217,17 @@ class FlashGBX_CLI():
 		self.DisconnectDevice()
 		return 0
 	
+	def WaitProgress(self, args):
+		if args["user_action"] == "REINSERT_CART":
+			msg = "\n\n"
+			msg += args["msg"]
+			msg += "\n\nPress ENTER or RETURN to continue.\n"
+			answer = input(msg).strip().lower()
+			if len(answer.strip()) != 0:
+				self.CONN.USER_ANSWER = False
+			else:
+				self.CONN.USER_ANSWER = True
+
 	def UpdateProgress(self, args):
 		if args is None: return
 		
@@ -283,6 +310,10 @@ class FlashGBX_CLI():
 				print("{:s}The ROM was written and verified successfully!{:s}".format(ANSI.GREEN, ANSI.RESET))
 			else:
 				print("ROM writing complete!")
+
+		if "verified" in self.PROGRESS.PROGRESS and self.PROGRESS.PROGRESS["verified"] != True:
+			print(self.PROGRESS.PROGRESS)
+			input("An error occured.")
 		
 		elif self.CONN.INFO["last_action"] == 1: # Backup ROM
 			self.CONN.INFO["last_action"] = 0
@@ -377,7 +408,7 @@ class FlashGBX_CLI():
 		global hw_devices
 		for hw_device in hw_devices:
 			dev = hw_device.GbxDevice()
-			ret = dev.Initialize(self.FLASHCARTS, port=port, max_baud=1000000 if self.ARGS["argparsed"].device_limit_baudrate else 1700000)
+			ret = dev.Initialize(self.FLASHCARTS, port=port, max_baud=1000000 if self.ARGS["argparsed"].device_limit_baudrate else 2000000)
 			if ret is False:
 				self.CONN = None
 			elif isinstance(ret, list):
@@ -396,11 +427,11 @@ class FlashGBX_CLI():
 		
 		if self.DEVICE is None: return False
 		return True
-		
+	
 	def ConnectDevice(self):
 		dev = self.DEVICE[1]
 		port = dev.GetPort()
-		ret = dev.Initialize(self.FLASHCARTS, port=port, max_baud=1000000 if self.ARGS["argparsed"].device_limit_baudrate else 1700000)
+		ret = dev.Initialize(self.FLASHCARTS, port=port, max_baud=1000000 if self.ARGS["argparsed"].device_limit_baudrate else 2000000)
 
 		if ret is False:
 			print("\n{:s}An error occured while trying to connect to the device.{:s}".format(ANSI.RED, ANSI.RESET))
@@ -424,7 +455,7 @@ class FlashGBX_CLI():
 					return False
 		
 		if dev.FW_UPDATE_REQ:
-			print("{:s}A firmware update for your {:s} device is required to fully use this software.\nPlease visit the official website at {:s} for updates.\n{:s}Current firmware version: {:s}{:s}".format(ANSI.RED, dev.GetFullName(), dev.GetOfficialWebsite(), ANSI.YELLOW, dev.GetFirmwareVersion(), ANSI.RESET))
+			print("{:s}A firmware update for your {:s} device is required to fully use this software.\n{:s}Current firmware version: {:s}{:s}".format(ANSI.RED, dev.GetFullName(), ANSI.YELLOW, dev.GetFirmwareVersion(), ANSI.RESET))
 			time.sleep(5)
 	
 		self.CONN = dev
@@ -433,6 +464,7 @@ class FlashGBX_CLI():
 	def DisconnectDevice(self):
 		try:
 			devname = self.CONN.GetFullNameExtended()
+			self.CONN.SetAutoPowerOff(value=0)
 			self.CONN.Close(cartPowerOff=True)
 			print("Disconnected from {:s}".format(devname))
 		except:
@@ -575,9 +607,9 @@ class FlashGBX_CLI():
 			if data['logo_correct'] and isinstance(db_agb_entry, dict) and "rs" in db_agb_entry and db_agb_entry['rs'] == 0x4000000 and not self.CONN.IsSupported3dMemory():
 				print("{:s}\nWARNING: This cartridge uses a Memory Bank Controller that may not be completely supported yet. A future version of the {:s} device firmware may add support for it.{:s}".format(ANSI.YELLOW, self.CONN.GetFullName(), ANSI.RESET))
 		
-			if "has_rtc" in data and data["has_rtc"] is not True and "no_rtc_reason" in data:
-				if data["no_rtc_reason"] == 1:
-					print("{:s}NOTE: It seems that this cartridge’s Real Time Clock battery may no longer be functional and needs to be replaced.{:s}".format(ANSI.YELLOW, ANSI.RESET))
+			# if "has_rtc" in data and data["has_rtc"] is not True and "no_rtc_reason" in data:
+			# 	if data["no_rtc_reason"] == 1:
+			# 		print("{:s}NOTE: It seems that this cartridge’s Real Time Clock battery may no longer be functional and needs to be replaced.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 
 		return (bad_read, s, data)
 	
@@ -642,7 +674,6 @@ class FlashGBX_CLI():
 		msg_flash_size_s = ""
 		msg_flash_mapper_s = ""
 		if cart_type is not None:
-			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage, cart_type=supp_cart_types[1][cart_type])
 			msg_cart_type_s = "Cartridge Type: Supported flash cartridge – compatible with:\n{:s}\n".format(msg_cart_type)
 
 			if detected_size > 0:
@@ -662,9 +693,8 @@ class FlashGBX_CLI():
 					msg_flash_mapper_s = "Mapper Type: Default (MBC5)\n"
 
 		else:
-			(flash_id, cfi_s, _) = self.CONN.CheckFlashChip(limitVoltage=limitVoltage)
 			if (len(flash_id.split("\n")) > 2) and ((self.CONN.GetMode() == "DMG") or ("dacs_8m" in header and header["dacs_8m"] is not True)):
-				msg_cart_type_s = "<b>Cartridge Type:</b> Unknown flash cartridge – Please submit the displayed information along with a picture of the cartridge’s circuit board."
+				msg_cart_type_s = "Cartridge Type: Unknown flash cartridge."
 				if ("[     0/90]" in flash_id):
 					try_this = "Generic Flash Cartridge (0/90)"
 				elif ("[   AAA/AA]" in flash_id):
@@ -744,7 +774,7 @@ class FlashGBX_CLI():
 			if args.agb_romsize == "auto":
 				rom_size = header["rom_size"]
 			else:
-				sizes = [ "auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb", "512mb" ]
+				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb", "512mb" ]
 				rom_size = Util.AGB_Header_ROM_Sizes_Map[sizes.index(args.agb_romsize) - 1]
 		
 		if args.path != "auto":
@@ -811,9 +841,9 @@ class FlashGBX_CLI():
 					for i in range(0, len(cart_types[0])):
 						if ((header['3d_memory'] is True and "3d_memory" in cart_types[1][i]) or
 							(header['vast_fame'] is True and "vast_fame" in cart_types[1][i])):
-								print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
-								cart_type = i
-								break
+							print("Selected cartridge type: {:s}\n".format(cart_types[0][i]))
+							cart_type = i
+							break
 		self.CONN.TransferData(args={ 'mode':1, 'path':path, 'mbc':mbc, 'rom_size':rom_size, 'agb_rom_size':rom_size, 'start_addr':0, 'fast_read_mode':True, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 	
 	def FlashROM(self, args, header):
@@ -1070,6 +1100,7 @@ class FlashGBX_CLI():
 		
 		if (path == ""): return
 		
+		buffer = None
 		s_mbc = ""
 		if self.CONN.GetMode() == "DMG":
 			if mbc in Util.DMG_Header_Mapper:
@@ -1103,7 +1134,6 @@ class FlashGBX_CLI():
 		
 		if self.CONN.GetMode() == "AGB":
 			if args.action == "restore-save" or args.action == "erase-save":
-				buffer = None
 				if self.CONN.GetMode() == "AGB" and "ereader" in self.CONN.INFO and self.CONN.INFO["ereader"] is True:
 					if self.CONN.GetFWBuildDate() == "": # Legacy Mode
 						print("This cartridge is not supported in Legacy Mode.")
@@ -1228,7 +1258,7 @@ class FlashGBX_CLI():
 			except:
 				pass
 
-	def UpdateFirmwareGBxCartRW_PrintText(self, text, enableUI=False, setProgress=None):
+	def UpdateFirmware_PrintText(self, text, enableUI=False, setProgress=None):
 		if setProgress is not None:
 			self.FWUPD_R = True
 			print("\r{:s} ({:d}%)".format(text, int(setProgress)), flush=True, end="")
@@ -1285,7 +1315,7 @@ class FlashGBX_CLI():
 					print("Using port {:s}.\n".format(port))
 					FirmwareUpdater = fw_GBxCartRW_v1_4.FirmwareUpdater
 					FWUPD = FirmwareUpdater(port=port)
-					ret = FWUPD.WriteFirmware(file_name, self.UpdateFirmwareGBxCartRW_PrintText)
+					ret = FWUPD.WriteFirmware(file_name, self.UpdateFirmware_PrintText)
 					break
 				except serial.serialutil.SerialException:
 					port = input("Couldn’t access port {:s}.\nEnter new port: ".format(port)).strip()
@@ -1307,6 +1337,152 @@ class FlashGBX_CLI():
 			else:
 				return False
 		
+		except Exception as err:
+			traceback.print_exception(type(err), err, err.__traceback__)
+			print(err)
+			return False
+	
+	def UpdateFirmwareGBFlash(self, port=False):
+		print("\nFirmware Updater for GBFlash")
+		print("==============================")
+		print("Supported revisions: v1.0, v1.1, v1.2, v1.3\n")
+		file_name = Util.APP_PATH + "/res/fw_GBFlash.zip"
+		
+		with zipfile.ZipFile(file_name) as zf:
+			with zf.open("fw.ini") as f: ini_file = f.read()
+			ini_file = ini_file.decode(encoding="utf-8")
+			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
+			fw_ver = self.INI.GetValue("fw_ver")
+			fw_buildts = self.INI.GetValue("fw_buildts")
+		
+		print("Available firmware version:\n{:s}\n".format("{:s} ({:s})".format(fw_ver, datetime.datetime.fromtimestamp(int(fw_buildts)).astimezone().replace(microsecond=0).isoformat())))
+		print("Please follow these steps to proceed with the firmware update:\n1. Unplug your GBFlash device.\n2. On your GBFlash circuit board, push and hold the small button (U22) while plugging the USB cable back in.\n3. If done right, the blue LED labeled “ACT” should now keep blinking twice.\n4. Press ENTER or RETURN to continue.")
+		if len(input("").strip()) != 0:
+			print("Canceled.")
+			return False
+		
+		try:
+			ports = []
+			if port is None or port is False:
+				comports = serial.tools.list_ports.comports()
+				for i in range(0, len(comports)):
+					if comports[i].vid == 0x1A86 and comports[i].pid == 0x7523:
+						ports.append(comports[i].device)
+				if len(ports) == 0:
+					print("No device found.")
+					return False
+				port = ports[0]
+
+			from . import fw_GBFlash
+			while True:
+				try:
+					print("Using port {:s}.\n".format(port))
+					FirmwareUpdater = fw_GBFlash.FirmwareUpdater
+					FWUPD = FirmwareUpdater(port=port)
+					ret = FWUPD.WriteFirmware(file_name, self.UpdateFirmware_PrintText)
+					break
+				except serial.serialutil.SerialException:
+					port = input("Couldn’t access port {:s}.\nEnter new port: ".format(port)).strip()
+					if len(port) == 0:
+						print("Canceled.")
+						return False
+					continue
+				except Exception as err:
+					traceback.print_exception(type(err), err, err.__traceback__)
+					print(err)
+					return False
+			
+			if ret == 1:
+				print("The firmware update is complete!")
+				return True
+			elif ret == 3:
+				print("Please re-install the application.")
+				return False
+			else:
+				return False
+
+		except Exception as err:
+			traceback.print_exception(type(err), err, err.__traceback__)
+			print(err)
+			return False
+
+	def UpdateFirmwareJoeyJr(self, port=False):
+		print("\nFirmware Updater for Joey Jr")
+		print("==============================")
+		file_name = Util.APP_PATH + "/res/fw_JoeyJr.zip"
+		
+		with zipfile.ZipFile(file_name) as zf:
+			with zf.open("fw.ini") as f: ini_file = f.read()
+			ini_file = ini_file.decode(encoding="utf-8")
+			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
+			fw_ver = self.INI.GetValue("fw_ver")
+			fw_buildts = self.INI.GetValue("fw_buildts")
+		
+		print("Select the firmware to install:\n1) Lesserkuma’s FlashGBX firmware\n2) BennVenn’s Drag’n’Drop firmware\n3) BennVenn’s JoeyGUI firmware\n")
+		answer = input("Enter number 1-3: ").lower().strip()
+		print("")
+		if answer == "1":
+			fw_choice = 1
+		elif answer == "2":
+			fw_choice = 2
+		elif answer == "3":
+			fw_choice = 3
+		else:
+			fw_choice = 0
+
+		if fw_choice == 0:
+			print("Canceled.")
+			return False
+		
+		try:
+			ports = []
+			if port is None or port is False:
+				comports = serial.tools.list_ports.comports()
+				for i in range(0, len(comports)):
+					if comports[i].vid == 0x483 and comports[i].pid == 0x5740:
+						ports.append(comports[i].device)
+				if len(ports) == 0:
+					print("No device found. If you use the Drag’n’Drop firmware, please update to JoeyGUI first.")
+					return False
+				port = ports[0]
+
+			from . import fw_JoeyJr
+			while True:
+				try:
+					print("Using port {:s}.\n".format(port))
+					FirmwareUpdater = fw_JoeyJr.FirmwareUpdater
+					FWUPD = FirmwareUpdater(port=port)
+					file_name = Util.APP_PATH + "/res/fw_JoeyJr.zip"
+					with zipfile.ZipFile(file_name) as archive:
+						if fw_choice == 1:
+							with archive.open("FIRMWARE_LK.JR") as f: fw_data = bytearray(f.read())
+						elif fw_choice == 2:
+							with archive.open("FIRMWARE_MSC.JR") as f: fw_data = bytearray(f.read())
+						elif fw_choice == 3:
+							with archive.open("FIRMWARE_JOEYGUI.JR") as f: fw_data = bytearray(f.read())
+					
+					ret = FWUPD.WriteFirmware(fw_data, self.UpdateFirmware_PrintText)
+					break
+				except serial.serialutil.SerialException:
+					port = input("Couldn’t access port {:s}.\nEnter new port: ".format(port)).strip()
+					if len(port) == 0:
+						print("Canceled.")
+						return False
+					continue
+				except Exception as err:
+					traceback.print_exception(type(err), err, err.__traceback__)
+					print(err)
+					return False
+			
+			if ret == 1:
+				print("The firmware update is complete!")
+				return True
+			elif ret == 3:
+				print("Please re-install the application.")
+				return False
+			else:
+				return False
+
 		except Exception as err:
 			traceback.print_exception(type(err), err, err.__traceback__)
 			print(err)

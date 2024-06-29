@@ -10,11 +10,12 @@
 	"mbc":0x1B,
 	"flash_size":0x400000,
 	"start_addr":0x4000,
-	"first_bank":0,
+	"first_bank":1,
 	"write_pin":"AUDIO",
 	"chip_erase_timeout":100,
 	"sector_size":0x10000,
 	"wait_read_status_register":true,
+	"read_identifier_at":0x4000,
 	"command_set":"DMG-MBC5-32M-FLASH",
 	"commands":{
 		"unlock":[

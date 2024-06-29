@@ -99,6 +99,13 @@ class Flashcart:
 		else:
 			return ("buffer_write" in self.CONFIG["commands"])
 
+	def SupportsPageWrite(self):
+		buffer_size = self.GetBufferSize()
+		if buffer_size is False:
+			return False
+		else:
+			return ("page_write" in self.CONFIG["commands"])
+
 	def SupportsSingleWrite(self):
 		return ("single_write" in self.CONFIG["commands"])
 	
@@ -180,17 +187,17 @@ class Flashcart:
 		if full_reset and "power_cycle" in self.CONFIG:
 			self.CART_POWERCYCLE_FNCPTR()
 			time.sleep(0.001)
-			self.Unlock()
+			if self.Unlock() is False: return False
 		elif full_reset and "reset_every" in self.CONFIG and "flash_size" in self.CONFIG:
 			for j in range(0, self.CONFIG["flash_size"], self.CONFIG["reset_every"]):
 				if j >= max_address: break
 				dprint("reset_every @ 0x{:X}".format(j))
 				for command in self.CONFIG["commands"]["reset"]:
 					self.CartWrite([[j + command[0], command[1]]])
-					time.sleep(0.01)
+					#time.sleep(0.01)
 		elif "reset" in self.CONFIG["commands"]:
 			self.CartWrite(self.CONFIG["commands"]["reset"])
-			time.sleep(0.001)
+			#time.sleep(0.001)
 	
 	def _VerifyFlashID(self, config):
 		if "read_identifier" not in config["commands"]: return (False, [])
@@ -238,7 +245,7 @@ class Flashcart:
 		if self.CFI is not None: return self.CFI
 		if "read_cfi" not in self.CONFIG["commands"]:
 			if self.CONFIG["_command_set"] == "INTEL":
-				self.CONFIG["commands"]["read_cfi"] = self.CONFIG["commands"]["read_identifier"]
+				self.CONFIG["commands"]["read_cfi"] = [ [ 0, 0x98 ] ]
 			elif self.CONFIG["_command_set"] == "AMD":
 				self.CONFIG["commands"]["read_cfi"] = [ [ 0xAA, 0x98 ] ]
 		
@@ -365,82 +372,92 @@ class Flashcart:
 		self.Reset(full_reset=True)
 		return True
 
-	def SectorErase(self, pos=0, buffer_pos=0):
-		self.Reset(full_reset=False)
-		if "sector_erase" not in self.CONFIG["commands"]: return False
-		if "sector_size" not in self.CONFIG: return False
-		for i in range(0, len(self.CONFIG["commands"]["sector_erase"])):
-			addr = self.CONFIG["commands"]["sector_erase"][i][0]
-			data = self.CONFIG["commands"]["sector_erase"][i][1]
-			if len(self.CONFIG["commands"]["sector_erase"][i]) > 2:
-				we = self.CONFIG["commands"]["sector_erase"][i][2]
-			else:
-				we = None
-			
-			if addr == "SA": addr = pos
-			if addr == "SA+1": addr = pos + 1
-			if addr == "SA+2": addr = pos + 2
-			if addr == "SA+0x4000": addr = pos + 0x4000
-			if addr == "SA+0x7000": addr = pos + 0x7000
-			if not addr == None:
-				if we == "WR":
-					self.SET_WE_PIN_WR()
-				elif we == "AUDIO":
-					self.SET_WE_PIN_AUDIO()
-				self.CartWrite([[addr, data]])
-				if we is not None:
-					if self.DEFAULT_WE == "WR":
-						self.SET_WE_PIN_WR()
-					elif self.DEFAULT_WE == "AUDIO":
-						self.SET_WE_PIN_AUDIO()
-			
-			if self.CONFIG["commands"]["sector_erase_wait_for"][i][0] != None:
-				addr = self.CONFIG["commands"]["sector_erase_wait_for"][i][0]
-				data = self.CONFIG["commands"]["sector_erase_wait_for"][i][1]
+	def SectorErase(self, pos=0, buffer_pos=0, skip=False):
+		if not skip:
+			self.Reset(full_reset=False)
+			if "sector_erase" not in self.CONFIG["commands"]: return False
+			if "sector_size" not in self.CONFIG: return False
+			for i in range(0, len(self.CONFIG["commands"]["sector_erase"])):
+				addr = self.CONFIG["commands"]["sector_erase"][i][0]
+				data = self.CONFIG["commands"]["sector_erase"][i][1]
+				if len(self.CONFIG["commands"]["sector_erase"][i]) > 2:
+					we = self.CONFIG["commands"]["sector_erase"][i][2]
+				else:
+					we = None
+				
 				if addr == "SA": addr = pos
 				if addr == "SA+1": addr = pos + 1
 				if addr == "SA+2": addr = pos + 2
-				if addr == "SA+0x4000": addr = pos + 0x4000
-				if addr == "SA+0x7000": addr = pos + 0x7000
-				time.sleep(0.1)
-				timeout = 100
-				while True:
-					if "wait_read_status_register" in self.CONFIG and self.CONFIG["wait_read_status_register"] == True:
-						for j in range(0, len(self.CONFIG["commands"]["read_status_register"])):
-							sr_addr = self.CONFIG["commands"]["read_status_register"][j][0]
-							sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
+				if addr == "SA+16384": addr = pos + 0x4000
+				if addr == "SA+28672": addr = pos + 0x7000
+				if addr == "SA+66": addr = pos + 0x42
+				if addr == "SA+132": addr = pos + 0x84
+				if not addr == None:
+					if we == "WR":
+						self.SET_WE_PIN_WR()
+					elif we == "AUDIO":
+						self.SET_WE_PIN_AUDIO()
+					self.CartWrite([[addr, data]])
+					if we is not None:
+						if self.DEFAULT_WE == "WR":
+							self.SET_WE_PIN_WR()
+						elif self.DEFAULT_WE == "AUDIO":
+							self.SET_WE_PIN_AUDIO()
+				
+				if self.CONFIG["commands"]["sector_erase_wait_for"][i][0] != None:
+					addr = self.CONFIG["commands"]["sector_erase_wait_for"][i][0]
+					data = self.CONFIG["commands"]["sector_erase_wait_for"][i][1]
+					if addr == "SA": addr = pos
+					if addr == "SA+1": addr = pos + 1
+					if addr == "SA+2": addr = pos + 2
+					if addr == "SA+16384": addr = pos + 0x4000
+					if addr == "SA+28672": addr = pos + 0x7000
+					if addr == "SA+66": addr = pos + 0x42
+					if addr == "SA+132": addr = pos + 0x84
+					time.sleep(0.05)
+					timeout = 100
+					while True:
+						if "wait_read_status_register" in self.CONFIG and self.CONFIG["wait_read_status_register"] == True:
+							for j in range(0, len(self.CONFIG["commands"]["read_status_register"])):
+								sr_addr = self.CONFIG["commands"]["read_status_register"][j][0]
+								sr_data = self.CONFIG["commands"]["read_status_register"][j][1]
 
-							if we == "WR":
-								self.SET_WE_PIN_WR()
-							elif we == "AUDIO":
-								self.SET_WE_PIN_AUDIO()
-							self.CartWrite([[sr_addr, sr_data]])
-							if we is not None:
-								if self.DEFAULT_WE == "WR":
+								if we == "WR":
 									self.SET_WE_PIN_WR()
-								elif self.DEFAULT_WE == "AUDIO":
+								elif we == "AUDIO":
 									self.SET_WE_PIN_AUDIO()
-							
-					self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
-					temp = self.CartRead(addr, 2)
-					if len(temp) != 2:
-						dprint("Communication error in SectorErase():", temp)
-						return False
-					wait_for = struct.unpack("<H", self.CartRead(addr, 2))[0]
-					self.LAST_SR = wait_for
-					dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["sector_erase_wait_for"][i][2], data, str(wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2] == data)))
-					wait_for = wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2]
-					time.sleep(0.1)
-					timeout -= 1
-					if timeout < 1:
-						dprint("Timeout error in SectorErase():", self.LAST_SR)
-						#self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The sector erase attempt timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
-						return False
-					if wait_for == data: break
-					self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":buffer_pos, "time_start":time.time(), "abortable":True})
-				dprint("Done waiting!")
+								self.CartWrite([[sr_addr, sr_data]])
+								if we is not None:
+									if self.DEFAULT_WE == "WR":
+										self.SET_WE_PIN_WR()
+									elif self.DEFAULT_WE == "AUDIO":
+										self.SET_WE_PIN_AUDIO()
+						
+						self.CartRead(addr, 2) # dummy read (fixes some bootlegs)
+						temp = self.CartRead(addr, 2)
+						if len(temp) != 2:
+							dprint("Communication error 1 in SectorErase():", temp)
+							return False
+						wait_for = self.CartRead(addr, 2)
+						if len(wait_for) != 2:
+							dprint("Communication error 2 in SectorErase():", temp)
+							return False
+						wait_for = struct.unpack("<H", wait_for)[0]
+						self.LAST_SR = wait_for
+						dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(wait_for, self.CONFIG["commands"]["sector_erase_wait_for"][i][2], data, str(wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2] == data)))
+						wait_for = wait_for & self.CONFIG["commands"]["sector_erase_wait_for"][i][2]
+						time.sleep(0.05)
+						timeout -= 1
+						if timeout < 1:
+							dprint(f"Timeout error in SectorErase(): 0x{self.LAST_SR:X}")
+							#self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"The sector erase attempt timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
+							return False
+						if wait_for == data: break
+						self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":buffer_pos, "time_start":time.time(), "abortable":True})
+					dprint("Done waiting!")
 
-		self.Reset(full_reset=False)
+			self.Reset(full_reset=False)
+		
 		if isinstance(self.CONFIG["sector_size"], list):
 			self.CONFIG["sector_size"][self.SECTOR_POS][1] -= 1
 			if (self.CONFIG["sector_size"][self.SECTOR_POS][1] == 0) and (len(self.CONFIG["sector_size"]) > self.SECTOR_POS + 1):
@@ -488,16 +505,18 @@ class CFI:
 		magic = "{:s}{:s}{:s}".format(chr(buffer[0x20]), chr(buffer[0x22]), chr(buffer[0x24]))
 		info["d_swap"] = None
 		if magic == "QRY": # nothing swapped
-			info["d_swap"] = ( 0, 0 )
+			info["d_swap"] = [( 0, 0 )]
 		elif magic == "RQZ": # D0D1 swapped
-			info["d_swap"] = ( 0, 1 )
+			info["d_swap"] = [( 0, 1 )]
+		elif magic == "\x92\x91\x9A": # D0D1+D6D7 swapped
+			info["d_swap"] = [( 0, 1 ), ( 6, 7 )]
 		else:
 			return False
 		
 		if info["d_swap"] is not None:
-			for i in range(0, len(buffer)):
-				buffer[i] = bitswap(buffer[i], info["d_swap"])
-		
+			for j2 in range(0, len(info["d_swap"])):
+				for j in range(0, len(buffer)):
+					buffer[j] = bitswap(buffer[j], info["d_swap"][j2])
 		try:
 			info["flash_id"] = buffer[0:8]
 			info["magic"] = "{:s}{:s}{:s}".format(chr(buffer[0x20]), chr(buffer[0x22]), chr(buffer[0x24]))
@@ -586,7 +605,7 @@ class CFI:
 			return False
 		
 		s = ""
-		if info["d_swap"] is not None and info["d_swap"] != ( 0, 0 ): s += "Swapped pins: {:s}\n".format(str(info["d_swap"]))
+		if info["d_swap"] is not None and info["d_swap"] != [( 0, 0 )]: s += "Swapped pins: {:s}\n".format(str(info["d_swap"]))
 		s += "Device size: 0x{:07X} ({:.2f} MB)\n".format(info["device_size"], info["device_size"] / 1024 / 1024)
 		s += "Voltage: {:.1f}–{:.1f} V\n".format(info["vdd_min"], info["vdd_max"])
 		s += "Single write: {:s}\n".format(str(info["single_write"]))
@@ -612,6 +631,88 @@ class CFI:
 
 		return info
 
+class Flashcart_AGB_GBAMP(Flashcart):
+	def SectorErase(self, pos=0, buffer_pos=0, skip=False):
+		for i in range(0, 4):
+			sector = pos >> 13 << 16 | (pos & 0x1FFF) + (i * 4)
+			ret = super().SectorErase(sector, buffer_pos, skip)
+			if ret is False: break
+		return ret
+
+	def VerifyFlashID(self):
+		self.CART_POWERCYCLE_FNCPTR()
+		verified = False
+		self.Unlock()
+		rom = list(self.CartRead(0x1E8F << 1, 2) + self.CartRead(0x168F << 1, 2))
+		self.CartWrite(self.CONFIG["commands"]["read_identifier"], fast_write=True)
+		cart_flash_id = list(self.CartRead(0x1E8F << 1, 2) + self.CartRead(0x168F << 1, 2))
+		if rom != cart_flash_id and cart_flash_id == self.CONFIG["flash_ids"][0]:
+			self.CartWrite(self.CONFIG["commands"]["reset"], fast_write=True)
+			verified = True
+		dprint(verified, rom, cart_flash_id)
+		return (verified, cart_flash_id)
+
+class Flashcart_DMG_BUNG_16M(Flashcart):
+	def SupportsSectorErase(self):
+		return False
+	
+	def SupportsChipErase(self):
+		return True
+
+	def ChipErase(self, pos=0, buffer_pos=0, skip=False):
+		time_start = time.time()
+		if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "abortable":False})
+
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0xAA]], fast_write=True)
+		self.CartWrite([[0x2000, 0x01]], fast_write=False)
+		self.CartWrite([[0x5554, 0x55]], fast_write=True)
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0x80]], fast_write=True)
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0xAA]], fast_write=True)
+		self.CartWrite([[0x2000, 0x01]], fast_write=False)
+		self.CartWrite([[0x5554, 0x55]], fast_write=True)
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0x10]], fast_write=True)
+
+		lives = 10
+		while lives > 0:
+			sr = ord(self.CartRead(0))
+			self.LAST_SR = sr
+			dprint("Status Register Check: 0x{:X} & 0x{:X} == 0x{:X}? {:s}".format(sr, 0x80, 0x80, str((sr & 0x80) == 0x80)))
+			if (sr & 0x80) == 0x80: break
+			time.sleep(0.5)
+			lives -= 1
+		if lives == 0:
+			self.PROGRESS_FNCPTR({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"Erasing the flash chip timed out. The last status register value was 0x{:X}.\n\nPlease make sure that the cartridge contacts are clean, and that the selected cartridge type and settings are correct.".format(self.LAST_SR), "abortable":False})
+			return False
+		
+		self.Reset()
+		return True
+
+	def Reset(self, full_reset=None, max_address=None):
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0xAA]], fast_write=True)
+		self.CartWrite([[0x2000, 0x01]], fast_write=False)
+		self.CartWrite([[0x5554, 0x55]], fast_write=True)
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0xF0]], fast_write=True)
+
+	def VerifyFlashID(self):
+		rom = list(self.CartRead(0, 4))
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0xAA]], fast_write=True)
+		self.CartWrite([[0x2000, 0x01]], fast_write=False)
+		self.CartWrite([[0x5554, 0x55]], fast_write=True)
+		self.CartWrite([[0x2000, 0x02]], fast_write=False)
+		self.CartWrite([[0x6AAA, 0x90]], fast_write=True)
+		cart_flash_id = list(self.CartRead(0, 4))
+		if rom != cart_flash_id and cart_flash_id == self.CONFIG["flash_ids"][0]:
+			self.Reset()
+			verified = True
+		return (verified, cart_flash_id)
+
 class Flashcart_DMG_MMSA(Flashcart):
 	def ReadCFI(self):
 		return False
@@ -628,7 +729,7 @@ class Flashcart_DMG_MMSA(Flashcart):
 	def EraseHiddenSector(self, buffer):
 		if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"SECTOR_ERASE", "sector_pos":0, "time_start":time.time(), "abortable":False})
 		
-		self.UnlockForWriting()
+		if self.UnlockForWriting() is False: return False
 
 		cmds = [
 			[ 0x120, 0x0F ],
@@ -748,13 +849,13 @@ class Flashcart_DMG_MMSA(Flashcart):
 		# Disable writes to MBC registers
 		cmds = [
 			[ 0x120, 0x10 ],
-			[ 0x13F, 0xa5 ],
+			[ 0x13F, 0xA5 ],
 		]
 		self.CartWrite(cmds)
 		# Undo Wakeup
 		cmds = [
 			[ 0x120, 0x08 ],
-			[ 0x13F, 0xa5 ],
+			[ 0x13F, 0xA5 ],
 		]
 		self.CartWrite(cmds)
 		return True
@@ -763,7 +864,7 @@ class Flashcart_DMG_MMSA(Flashcart):
 		time_start = time.time()
 		if self.PROGRESS_FNCPTR is not None: self.PROGRESS_FNCPTR({"action":"ERASE", "time_start":time_start, "abortable":False})
 
-		self.UnlockForWriting()
+		if self.UnlockForWriting() is False: return False
 
 		# Erase Chip
 		cmds = [

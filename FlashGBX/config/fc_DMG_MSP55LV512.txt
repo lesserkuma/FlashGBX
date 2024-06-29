@@ -1,10 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"SD008-6810-512S with MSP55LV512"
+		"SD008-6810-512S with MSP55LV512",
+		"SD008_512ND_4M with epoxy flash chip"
 	],
 	"flash_ids":[
-		[ 0x02, 0x7D, 0x00, 0x08 ]
+		[ 0x02, 0x7D, 0x00, 0x08 ],
+		[ 0x02, 0x7D, 0x00, 0x98 ]
 	],
 	"voltage":3.3,
 	"voltage_variants":true,

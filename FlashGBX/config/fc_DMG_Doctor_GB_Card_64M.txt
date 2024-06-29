@@ -13,6 +13,7 @@
 	"sector_size":0x20000,
 	"start_addr":0,
 	"first_bank":1,
+	"mbc":0x1B,
 	"write_pin":"AUDIO",
 	"buffer_size":32,
 	"command_set":"INTEL",

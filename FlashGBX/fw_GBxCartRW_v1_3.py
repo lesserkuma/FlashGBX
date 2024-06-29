@@ -295,7 +295,7 @@ class FirmwareUpdaterWindow(QtWidgets.QDialog):
 		lives = 10
 		buffer = bytearray()
 
-		msgWarnBadResponse = "Failed to update your GBxCart RW {:s} ({:s})!\n\nThe firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ Note that FlashGBX is not designed to be used with feature-stripped clone hardware such as the license-violating “FLASH&nbsp;BOY” series devices. These will not work as intended and have a considerable risk of causing damage.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>")
+		msgWarnBadResponse = "Failed to update your GBxCart RW {:s} ({:s})!\n\nThe firmware update failed as the device is not responding correctly. Please ensure you use a <a href=\"https://www.gbxcart.com/\">genuine GBxCart RW</a>, re-connect using a different USB cable and try again.\n\n⚠️ Please note that FlashGBX does not work with the “FLASH&nbsp;BOY” series devices.".format(self.PCB_VER, self.FW_VER).replace("\n", "<br>")
 
 		fncSetStatus(text="Status: Waiting for bootloader...", setProgress=0)
 		if self.ResetAVR(delay) is False:

@@ -4,7 +4,8 @@
 		"insideGadgets 4 MiB, 32 KiB FRAM, MBC3+RTC",
 		"DIY cart with AM29F032 @ AUDIO",
 		"DIY cart with M29F032D @ AUDIO",
-		"DIY cart with MBM29F033C @ AUDIO"
+		"DIY cart with MBM29F033C @ AUDIO",
+		"DIY cart with MX29F040 @ AUDIO"
 	],
 	"flash_ids":[
 		[ 0x04, 0xD4 ],
@@ -12,7 +13,8 @@
 		[ 0x20, 0xAC ],
 		[ 0x04, 0xD4 ],
 		[ 0x01, 0x41 ],
-		[ 0x01, 0xD4 ]
+		[ 0x01, 0xD4 ],
+		[ 0xC2, 0xA4 ]
 	],
 	"voltage":5,
 	"flash_size":0x400000,
@@ -23,6 +25,7 @@
 	"sector_size":0x10000,
 	"mbc":"manual",
 	"command_set":"AMD",
+	"enable_pullup_wr":true,
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]

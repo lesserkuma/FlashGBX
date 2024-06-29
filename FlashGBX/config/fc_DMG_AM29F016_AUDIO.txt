@@ -16,6 +16,7 @@
 	"chip_erase_timeout":60,
 	"mbc":"manual",
 	"command_set":"AMD",
+	"enable_pullup_wr":true,
 	"commands":{
 		"reset":[
 			[ 0, 0xF0 ]

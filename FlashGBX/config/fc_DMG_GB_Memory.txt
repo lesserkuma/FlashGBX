@@ -16,6 +16,8 @@
 	"hidden_sector_size":128,
 	"chip_erase_timeout":10,
 	"dmg-mmsa-jpn":true,
+	"status_register_mask":0xB2,
+	"status_register_value":0x80,
 	"command_set":"GBMEMORY",
 	"commands":{
 		"reset":[

@@ -2,11 +2,13 @@
 	"type":"DMG",
 	"names":[
 		"DIY cart with AM29F032 @ WR",
-		"DIY cart with MBM29F033C @ WR"
+		"DIY cart with MBM29F033C @ WR",
+		"DIY cart with MX29F040 @ WR"
 	],
 	"flash_ids":[
 		[ 0x04, 0xD4 ],
-		[ 0x04, 0xD4 ]
+		[ 0x04, 0xD4 ],
+		[ 0xC2, 0xA4 ]
 	],
 	"voltage":5,
 	"flash_size":0x400000,

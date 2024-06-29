@@ -1,9 +1,11 @@
 {
 	"type":"AGB",
 	"names":[
-		"100BS6600_48BALL_V4 with 6600M0U0BE"
+		"100BS6600_48BALL_V4 with 6600M0U0BE",
+		"F0088_2G_BGA48 with F0088H0"
 	],
 	"flash_ids":[
+		[ 0x8A, 0x00, 0xB0, 0x88 ],
 		[ 0x8A, 0x00, 0xB0, 0x88 ]
 	],
 	"voltage":3.3,

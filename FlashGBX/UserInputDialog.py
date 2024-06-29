@@ -18,6 +18,8 @@ class UserInputDialog(QtWidgets.QDialog):
 
 		self.lblIntro = QtWidgets.QLabel(args["intro"])
 		self.lblIntro.setStyleSheet("margin-bottom: 4px")
+		self.lblIntro.setMaximumWidth(350)
+		self.lblIntro.setWordWrap(True)
 		self.btnOK = QtWidgets.QPushButton("&OK")
 		self.btnCancel = QtWidgets.QPushButton("&Cancel")
 		
@@ -42,6 +44,24 @@ class UserInputDialog(QtWidgets.QDialog):
 				grid_layout.addWidget(lbl, grid_rows, 0, 1, 1)
 				grid_layout.addWidget(cmb, grid_rows, 1, 1, 1)
 			
+			elif param[1] in ("spb"):
+				lbl = QtWidgets.QLabel(param[2])
+				spb = QtWidgets.QSpinBox()
+				spb.setRange(param[3][0], param[3][1])
+				spb.setValue(param[4])
+				self.paramWidgets[param[0]] = spb
+				grid_layout.addWidget(lbl, grid_rows, 0, 1, 1)
+				grid_layout.addWidget(spb, grid_rows, 1, 1, 1)
+
+			elif param[1] in ("chk"):
+				#lbl = QtWidgets.QLabel(param[2])
+				chk = QtWidgets.QCheckBox()
+				chk.setChecked(param[4])
+				chk.setText(param[2])
+				self.paramWidgets[param[0]] = chk
+				#grid_layout.addWidget(lbl, grid_rows, 0, 1, 1)
+				grid_layout.addWidget(chk, grid_rows, 0, 1, 2)
+
 			else:
 				continue
 			

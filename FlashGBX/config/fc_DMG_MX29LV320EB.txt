@@ -1,22 +1,22 @@
 {
 	"type":"DMG",
 	"names":[
-		"DMG-DHCN-20 with MX29LV320ET",
-		"DMG-GBRW-20 with 29LV320ETMI-70G"
+		"GBFlash RTC with MX29LV320EB",
+		"GBFlash RTC with MX29LV320EB"
 	],
 	"flash_ids":[
-		[ 0xC2, 0xC2, 0xA7, 0xA7 ],
-		[ 0xC2, 0xC2, 0xA7, 0xA7 ]
+		[ 0x01, 0x01, 0x7E, 0x7E ],
+		[ 0xC2, 0xC2, 0xA8, 0xA8 ]
 	],
-	"voltage":3.3,
-	"flash_size":0x200000,
+	"voltage":5,
+	"flash_size":0x400000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
 	"enable_pullup_wr":true,
 	"sector_size":[
-		[0x10000, 31],
-		[0x2000, 8]
+		[0x2000, 8],
+		[0x10000, 63]
 	],
 	"chip_erase_timeout":60,
 	"command_set":"AMD",

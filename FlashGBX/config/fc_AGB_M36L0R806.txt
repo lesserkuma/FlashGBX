@@ -33,6 +33,9 @@
 		"read_identifier":[
 			[ 0, 0x90 ]
 		],
+		"read_cfi":[
+			[ 0xAA, 0x98 ]
+		],
 		"sector_erase":[
 			[ "SA", 0x60 ],
 			[ "SA", 0xD0 ],

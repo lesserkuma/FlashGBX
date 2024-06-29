@@ -15,12 +15,13 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 - A flash chip query (including Common Flash Interface information) can be performed for flash cartridges
 - Decode and extract Game Boy Camera photos from save data
 - Generate ROM dump reports for game preservation purposes
-- Update firmware of most insideGadgets GBxCart RW devices
 - Delta flashing support, useful for development by writing only differences between two ROMs (if named `rom.gba` and `rom.delta.gba`)
 
 ### Compatible cartridge reader/writer hardware
 
-- [insideGadgets GBxCart RW](https://www.gbxcart.com/) (tested with v1.3 and v1.4)
+- [GBxCart RW](https://www.gbxcart.com/) (tested with v1.3, v1.4, v1.4a and v1.4c)
+- [GBFlash](https://github.com/simonkwng/GBFlash) (tested with v1.2 and v1.3)
+- [Joey Jr](https://bennvenn.myshopify.com/collections/game-cart-to-pc-interface/products/usb-gb-c-cart-dumper-the-joey-jr) (tested with V2++)
 
 ## Installing and running
 
@@ -37,7 +38,7 @@ These work for installing fresh and upgrading from an older version.
 
 #### Installing
 
-1. Download and install [Python](https://www.python.org/downloads/) (version 3.7 or newer)
+1. Download and install [Python](https://www.python.org/downloads/) (version 3.10.11 is recommended)
 2. Open a Terminal or Command Prompt window
 3. Install FlashGBX with this command:<br>`pip3 install "FlashGBX[qt6]"`
 * If installation fails, try this command instead:<br>`pip3 install "FlashGBX[qt5]"`
@@ -52,7 +53,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
 *FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) or [PySide6](https://pypi.org/project/PySide6/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages. To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
 
-*Note: On Linux systems, the `brltty` module may render GBxCart RW devices non-accessible. See the troubleshooting section for details.*
+*Note: On Linux systems, the `brltty` module may render serial communication devices non-accessible. See the troubleshooting section for details.*
 
 #### Upgrading from an older version
 
@@ -89,6 +90,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 8M FLASH DACS
   - 3D Memory (GBA Video)
   - Unlicensed 2G Mapper
+  - Unlicensed GBA Movie Player v2
 
 ### Currently supported flash cartridges
 
@@ -97,7 +99,9 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - 29LV Series Flash BOY with 29LV160DB
   - Action Replay
   - BennVenn MBC3000 RTC cart
-  - BLAZE Xploder GB
+  - BLAZE Xploder GB¹
+  - BUNG Doctor GB Card 4M
+  - BUNG Doctor GB Card 16M
   - BUNG Doctor GB Card 64M
   - Catskull 32k Gameboy Flash Cart
   - DIY cart with 28F016S5
@@ -110,6 +114,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with HY29F800
   - DIY cart with M29F032D
   - DIY cart with MBM29F033C
+  - DIY cart with MX29F040
   - DIY cart with MX29LV640
   - DIY cart with SST39SF040
   - DMG-MBC5-32M-FLASH Development Cartridge, E201264
@@ -121,6 +126,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - GameShark Pro
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
+  - GBFlash RTC with MX29LV320EB
   - HDR Game Boy Camera Flashcart
   - insideGadgets 32 KiB
   - insideGadgets 128 KiB
@@ -139,6 +145,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 - Game Boy Advance
 
   - Action Replay Ultimate Codes (with SST39VF800A)
+  - Development AGB Cartridge 64M Flash, E201629
   - Development AGB Cartridge 64M Flash S, E201843
   - Development AGB Cartridge 128M Flash S, E201850
   - Development AGB Cartridge 256M Flash S, E201868
@@ -152,11 +159,15 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Flash2Advance Ultra 256M (with 8× 3204C3B100)
   - Flash Advance Card 64M (with 28F640J3A120)
   - FunnyPlaying MidnightTrace 32 MiB Flash Cart
+  - GBA Movie Player v2 CF (with SST39VF400A)¹
+  - GBFlash 1M FLASH RTC (AGB-R1M-02V3)
   - insideGadgets 16 MiB, 64K EEPROM with Solar Sensor and RTC options
   - insideGadgets 32 MiB, 1M FLASH with RTC option
   - insideGadgets 32 MiB, 512K FLASH
   - insideGadgets 32 MiB, 4K/64K EEPROM
   - insideGadgets 32 MiB, 256K FRAM with Rumble option
+
+*¹ = Cannot always be auto-detected, select cartridge type manually*
 
 ### Currently supported and tested reproduction cartridges
 
@@ -171,6 +182,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DRV with 29LV320DB and ALTERA CPLD
   - DRV with AM29LV160DB and ALTERA CPLD
   - DRV with AM29LV160DT and ALTERA CPLD
+  - DVP DRV with MX29LV320CB
   - ES29LV160_DRV with 29DL32TF-70
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
@@ -279,9 +291,12 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - BX2006_TSOPBGA_6108 with M29W640
   - DV15 with MSP55LV100G
   - F864-3 with M36L0R7050B
+  - F0088_2G_BGA48 with F0088H0
   - F0095_4G_V1 with F0095H0
   - GA-07 with unlabeled flash chip
   - GE28F128W30 with 128W30B0
+  - K5L2BX_32D_16D_V2 with K5L2833ATA
+  - M36XXX_32A_EARTH with M36L0R8060B
   - M36XXX_T32_32D_16D with M36L0R806
   - M5M29-39VF512 with M5M29HD528
   - M5M29G130AN (no PCB text)
@@ -289,7 +304,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - MSP54LV512 (no PCB text)
   - MX29GL128EHT2I and ALTERA CPLD
   - SUN100S_MSP54XXX with MSP54LV100
-  - Unknown 29LV320 variant (no PCB text)"
+  - Unknown 29LV320 variant (no PCB text)
 
 Many different reproduction cartridges share their flash chip command set, so even if yours is not on this list, it may still work fine or even be auto-detected as another one. Support for more cartridges can also be added by creating external config files that include the necessary flash chip commands.
 
@@ -305,28 +320,32 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * Depending on your system configuration, you may have to use `pip` and `python` commands instead of `pip3` and `python3`.
 
-* On Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
+* On some Linux systems, you may run into a *Permission Error* problem when trying to connect to USB devices without *sudo* privileges. To grant yourself the necessary permissions temporarily, you can run `sudo chmod 0666 /dev/ttyUSB0` (replace with actual device path) before running the app. For a permanent solution, add yourself to the usergroup that has access to serial devices by default (e.g. *dialout* on Debian-based distros; `sudo adduser $USER dialout`) and then reboot the system.
 
 * On some Linux systems, you may need the *XCB Xinerama package* if you see an error regarding failed Qt platform plugin initialization. You can install it with `sudo apt install libxcb-xinerama0` etc. It was reported that this additional command is required on MX Linux: `sudo ln -s /usr/lib/x86_64-linux-gnu/libxcb-util.so.0.0.0 /usr/lib/x86_64-linux-gnu/libxcb-util.so.1`
 
 * On some Linux systems like Fedora, you may need to install the `python3-pillow-qt` package manually in order for the GUI mode to work.
 
-* On some Linux systems you may see the message “No devices found.” even though you’re using a USB cable capable of data transfers. This may be caused by a module called `brltty` (a driver for refreshable braille displays) that is erroneously interfering and taking over control of any connected USB device that uses the CH340/341 chipset. The solution would be to uninstall or blacklist the `brltty` driver and then reboot the system.
+* On some Linux systems you may see the message “No devices found.” with the GBxCart RW hardware device, even though you’re using a USB cable capable of data transfers. This may be caused by a module called `brltty` (a driver for refreshable braille displays) that is erroneously interfering and taking over control of any connected USB device that uses the CH340/341 chipset. The solution would be to uninstall or blacklist the `brltty` driver and then reboot the system.
 
-* If you’re using macOS version 10.13 or older, there may be no driver for the *insideGadgets GBxCart RW* device installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
+* If you’re using macOS version 10.13 or older, there may be no driver for serial communication devices installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
-* Note that FlashGBX is not designed to be used with feature-stripped clone hardware such as the license-violating “FLASH&nbsp;BOY” series devices. These will not work as intended and have a considerable risk of causing damage as seen [here](https://flashboycyclone.online/).
+* If you’re using macOS and get a “Segmentation Fault: 11.” error, try uninstalling Python, reinstalling Python version 3.10.11 and then try again.
 
 ## Miscellaneous
 
 * To use your own frame around extracted Game Boy Camera pictures, place a file called `pc_frame.png` (must be at least 160×144 pixels) into the configuration directory. (GUI mode only)
 
-## Thanks
+## Contributors
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, Ausar, bbsan, BennVenn, ccs21, ClassicOldSong, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, wickawack, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, aronson, Ausar, bbsan, BennVenn, ccs21, chobby, ClassicOldSong, Cliffback, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gandalf1980, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Lu, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, RibShark, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, simonK, Sithdown, skite2001, Smelly-Ghost, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, Warez Waldo, wickawack, Winter1760, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
+
+## Third Party Notices and Licenses
+
+Please view the <a href="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/Third Party Notices.md">Third Party Notices</a>.
 
 ## DISCLAIMER
 
-This software is being developed by Lesserkuma as a hobby project. There is no direct afflilation with insideGadgets or Nintendo. This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!
+This software is being developed by Lesserkuma as a hobby project. There is no direct affiliation with Nintendo or any other company. This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!

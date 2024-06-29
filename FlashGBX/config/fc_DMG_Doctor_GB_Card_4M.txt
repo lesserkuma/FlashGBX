@@ -1,0 +1,46 @@
+{
+	"type":"DMG",
+	"names":[
+		"BUNG Doctor GB Card 4M"
+	],
+	"flash_ids":[
+		[ 0xDA, 0x46 ]
+	],
+	"voltage":5,
+	"flash_size":0x80000,
+	"start_addr":0,
+	"first_bank":1,
+	"mbc":0x1B,
+	"flash_commands_on_bank_1":true,
+	"sector_size":0x4000,
+	"write_pin":"AUDIO",
+	"enable_pullup_wr":true,
+	"chip_erase_timeout":15,
+	"command_set":"EEPROM",
+	"commands":{
+		"reset":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x90 ]
+		],
+		"sector_erase":[],
+		"sector_erase_wait_for":[],
+		"single_write":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

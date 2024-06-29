@@ -18,7 +18,7 @@ class DMG_MBC:
 	RAM_BANK_SIZE = 0x2000
 	ROM_BANK_NUM = 0
 	CURRENT_ROM_BANK = 0
-	CURRENT_FLASH_BANK = 0
+	CURRENT_FLASH_BANK = -1
 	START_BANK = 0
 	RTC_BUFFER = None
 
@@ -195,6 +195,12 @@ class DMG_MBC:
 	def WriteRTC(self, buffer, advance=False):
 		pass
 
+	def GetRTCDict(self):
+		return {}
+
+	def WriteRTCDict(self, rtc_dict):
+		pass
+
 	def GetRTCString(self):
 		return "Not available"
 
@@ -294,12 +300,10 @@ class DMG_MBC3(DMG_MBC):
 		dprint("Latching RTC")
 		self.CLK_TOGGLE_FNCPTR(60)
 		self.CartWrite([ [ 0x0000, 0x0A ] ])
-		time.sleep(0.01)
 		self.CLK_TOGGLE_FNCPTR(60)
 		self.CartWrite([ [ 0x6000, 0x00 ] ])
 		self.CLK_TOGGLE_FNCPTR(60)
 		self.CartWrite([ [ 0x6000, 0x01 ] ])
-		time.sleep(0.01)
 
 	def ReadRTC(self):
 		dprint("Reading RTC")
@@ -320,7 +324,53 @@ class DMG_MBC3(DMG_MBC):
 		self.CartWrite([ [0x4000, 0] ])
 		self.RTC_BUFFER = buffer
 		return buffer
+	
+	def WriteRTCDict(self, rtc_dict):
+		dprint("Writing RTC:", rtc_dict)
+		self.EnableRAM(enable=True)
 
+		buffer = bytearray(5)
+		buffer[0] = rtc_dict["rtc_s"] % 60
+		buffer[1] = rtc_dict["rtc_m"] % 60
+		buffer[2] = rtc_dict["rtc_h"] % 24
+		buffer[3] = rtc_dict["rtc_d"] & 0xFF
+		buffer[4] = rtc_dict["rtc_d"] >> 8 & 1
+		
+		dprint("New values: RTC_S=0x{:02X}, RTC_M=0x{:02X}, RTC_H=0x{:02X}, RTC_DL=0x{:02X}, RTC_DH=0x{:02X}".format(buffer[0], buffer[1], buffer[2], buffer[3], buffer[4]))
+
+		# Unlock and latch RTC
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x0000, 0x0A ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x00 ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x01 ] ])
+
+		# Halt RTC
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x4000, 0x0C ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0xA000, 0x40 ] ], sram=True)
+		
+		# Write to registers
+		for i in range(0x08, 0x0D):
+			self.CLK_TOGGLE_FNCPTR(50)
+			self.CartWrite([ [ 0x4000, i ] ])
+			self.CLK_TOGGLE_FNCPTR(50)
+			data = buffer[i-8]
+			self.CartWrite([ [ 0xA000, data ] ], sram=True)
+
+		# Latch RTC
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x00 ] ])
+		self.CLK_TOGGLE_FNCPTR(50)
+		self.CartWrite([ [ 0x6000, 0x01 ] ])
+
+		self.CartWrite([ [0x4000, 0] ])
+		self.EnableRAM(enable=False)
+
+		return True
+	
 	def WriteRTC(self, buffer, advance=False):
 		dprint("Writing RTC:", buffer)
 		self.EnableRAM(enable=True)
@@ -363,55 +413,26 @@ class DMG_MBC3(DMG_MBC):
 							days = days % 512
 						dprint(seconds, minutes, hours, days, carry)
 
-				buffer[0x00] = seconds % 60
-				buffer[0x04] = minutes % 60
-				buffer[0x08] = hours % 24
-				buffer[0x0C] = days & 0xFF
-				buffer[0x10] = days >> 8 & 0x1
-				if carry:
-					buffer[0x10] |= 0x80
+				#buffer[0x00] = seconds % 60
+				#buffer[0x04] = minutes % 60
+				#buffer[0x08] = hours % 24
+				#buffer[0x0C] = days & 0xFF
+				#buffer[0x10] = days >> 8 & 0x1
+				#if carry:
+				#	buffer[0x10] |= 0x80
 			except Exception as e:
 				print("Couldn’t update the RTC register values\n", e)
 		
-		dprint("New values: RTC_S=0x{:02X}, RTC_M=0x{:02X}, RTC_H=0x{:02X}, RTC_DL=0x{:02X}, RTC_DH=0x{:02X}".format(buffer[0x00], buffer[0x04], buffer[0x08], buffer[0x0C], buffer[0x10]))
-
-		# Unlock and latch RTC
-		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0x0000, 0x0A ] ])
-		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0x6000, 0x00 ] ])
-		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0x6000, 0x01 ] ])
-		time.sleep(0.01)
-
-		# Halt RTC
-		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0x4000, 0x0C ] ])
-		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0xA000, 0x40 ] ], sram=True)
-		time.sleep(0.1)
-		
-		# Write to registers
-		for i in range(0x08, 0x0D):
-			self.CLK_TOGGLE_FNCPTR(50)
-			self.CartWrite([ [ 0x4000, i ] ])
-			self.CLK_TOGGLE_FNCPTR(50)
-			data = struct.unpack("<I", buffer[(i-8)*4:(i-8)*4+4])[0] & 0xFF
-			self.CartWrite([ [ 0xA000, data ] ], sram=True)
-		time.sleep(0.1)
-
-		# Latch RTC
-		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0x6000, 0x00 ] ])
-		self.CLK_TOGGLE_FNCPTR(50)
-		self.CartWrite([ [ 0x6000, 0x01 ] ])
-		time.sleep(0.1)
-
-		self.CartWrite([ [0x4000, 0] ])
+		d = {
+			"rtc_s":seconds % 60,
+			"rtc_m":minutes % 60,
+			"rtc_h":hours % 24,
+			"rtc_d":days % 512,
+		}
+		self.WriteRTCDict(d)
 		self.EnableRAM(enable=False)
 	
-	def GetRTCString(self):
-		s = ""
+	def GetRTCDict(self):
 		if self.RTC_BUFFER is None:
 			self.ReadRTC()
 		rtc_buffer = self.RTC_BUFFER
@@ -421,21 +442,37 @@ class DMG_MBC3(DMG_MBC):
 		rtc_h = rtc_buffer[0x08]
 		rtc_d = (rtc_buffer[0x0C] | rtc_buffer[0x10] << 8) & 0x1FF
 		rtc_carry = ((rtc_buffer[0x10] & 0x80) != 0)
-		if rtc_carry: rtc_d += 512
+		d = {
+			"rtc_d":rtc_d,
+			"rtc_h":rtc_h,
+			"rtc_m":rtc_m,
+			"rtc_s":rtc_s,
+			"rtc_carry":rtc_carry
+		}
+
+		#if rtc_carry: rtc_d += 256
 		if rtc_h > 24 or rtc_m > 60 or rtc_s > 60:
 			try:
 				dprint("Invalid RTC state: {:d} days, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s))
 			except:
 				pass
 			s = "Invalid state"
+			d["rtc_valid"] = False
 		elif rtc_h == 0 and rtc_m == 0 and rtc_s == 0 and rtc_d == 0 and rtc_carry == 0:
 			s = "Not available"
+			d["rtc_valid"] = False
 		else:
 			if rtc_d == 1:
 				s = "{:d} day, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s)
 			else:
 				s = "{:d} days, {:02d}:{:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m, rtc_s)
-		return s
+			d["rtc_valid"] = True
+		
+		d["string"] = s
+		return d
+	
+	def GetRTCString(self):
+		return self.GetRTCDict()["string"]
 
 	def GetMaxROMSize(self):
 		return 4*1024*1024
@@ -460,11 +497,13 @@ class DMG_MBC5(DMG_MBC):
 	
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
+
+		self.CURRENT_ROM_BANK = index
 		commands = [
 			[ 0x3000, ((index >> 8) & 0xFF) ],
 			[ 0x2100, index & 0xFF ],
 		]
-		
+
 		start_address = 0 if index == 0 else 0x4000
 
 		self.CartWrite(commands)
@@ -675,7 +714,7 @@ class DMG_GBD(DMG_MBC5):
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
 		commands = [
-			[ 0x2100, index & 0xFF ],
+			[ 0x2000, index & 0xFF ],
 		]
 		
 		start_address = 0 if index == 0 else 0x4000
@@ -690,43 +729,78 @@ class DMG_GMMC1(DMG_MBC5):
 	def GetName(self):
 		return "G-MMC1"
 
+	def lk_dmg_mmsa_flash_command(self, addr, data):
+		commands = [
+			[0x120, 0x0F],
+			[0x125, addr >> 8],
+			[0x126, addr & 0xFF],
+			[0x127, data],
+			[0x13F, 0xA5]
+		]
+		return commands
+	def lk_dmg_mmsa_access_mapper(self):
+		commands = [
+			[0x120, 0x09],
+			[0x121, 0xAA],
+			[0x122, 0x55],
+			[0x13F, 0xA5]
+		]
+		return commands
+	def lk_dmg_mmsa_access_rom(self):
+		commands = [
+			[0x120, 0x08],
+			[0x13F, 0xA5]
+		]
+		return commands
+	def lk_dmg_mmsa_access_mbc(self, enable):
+		if enable:
+			commands = [
+				[0x120, 0x11],
+				[0x13F, 0xA5]
+			]
+		else:
+			commands = [
+				[0x120, 0x10],
+				[0x13F, 0xA5]
+			]
+		return commands
+	def lk_dmg_mmsa_disable_flash_write_protect(self):
+		commands = [
+			[0x120, 0x0A],
+			[0x125, 0x62],
+			[0x126, 0x04],
+			[0x13F, 0xA5],
+
+			[0x120, 0x02],
+			[0x13F, 0xA5]
+		]
+		return commands
+	def lk_dmg_mmsa_map_full(self):
+		commands = [
+			[0x120, 0x04],
+			[0x13F, 0xA5]
+		]
+		return commands
+	def lk_dmg_mmsa_map_menu(self):
+		commands = [
+			[0x120, 0x05],
+			[0x13F, 0xA5]
+		]
+		return commands
+
 	def EnableMapper(self):
 		dprint(self.GetName())
-		commands = [
-			# Unlock
-			[ 0x120, 0x09, 1 ],
-			[ 0x121, 0xAA, 1 ],
-			[ 0x122, 0x55, 1 ],
-			[ 0x13F, 0xA5, 1 ],
-			
-			[ 0x120, 0x11, 1 ],
-			[ 0x13F, 0xA5, 1 ],
-
-			[ 0x2100, 0x01, 1 ],
-
-			[ 0x2100, 0x01 ],
-			[ 0x120, 0x02 ],
-			
-			# Reset
-			[ 0x120, 0x0F ],
-			[ 0x125, 0x40 ],
-			[ 0x126, 0x80 ],
-			[ 0x127, 0xF0 ],
-			[ 0x13F, 0xA5 ],
-			
-			[ 0x120, 0x04 ],
-			[ 0x13F, 0xA5 ],
-			
-			[ 0x120, 0x08 ],
-			[ 0x13F, 0xA5 ]
-		]
-		self.CartWrite(commands)
+		self.CartWrite(self.lk_dmg_mmsa_access_mapper())
+		self.CartWrite(self.lk_dmg_mmsa_access_mbc(enable=True))
+		self.CartWrite(self.lk_dmg_mmsa_map_full())
+		self.CartWrite(self.lk_dmg_mmsa_flash_command(0x0, 0xF0))
+		self.CartWrite(self.lk_dmg_mmsa_access_rom())
 		return True
 	
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
 		commands = [
-			[ 0x2100, index & 0xFF ],
+			[ 0x2000, index & 0xFF ],
 		]
 
 		start_address = 0 if index == 0 else 0x4000
@@ -738,63 +812,30 @@ class DMG_GMMC1(DMG_MBC5):
 		return True
 
 	def ReadHiddenSector(self):
-		self.EnableMapper()
-		commands = [
-			# Unlock
-			[ 0x120, 0x09, 1 ],
-			[ 0x121, 0xAA, 1 ],
-			[ 0x122, 0x55, 1 ],
-			[ 0x13F, 0xA5, 1 ],
-			
-			[ 0x120, 0x11, 1 ],
-			[ 0x13F, 0xA5, 1 ],
-
-			[ 0x2100, 0x01, 1 ],
-
-			[ 0x2100, 0x01 ],
-			[ 0x120, 0x02 ],
-			
-			# Request hidden sector
-			[ 0x2100, 0x01 ],
-			
-			[ 0x120, 0x0F ],
-			[ 0x125, 0x55 ],
-			[ 0x126, 0x55 ],
-			[ 0x127, 0xAA ],
-			[ 0x13F, 0xA5 ],
-
-			[ 0x120, 0x0F ],
-			[ 0x125, 0x2A ],
-			[ 0x126, 0xAA ],
-			[ 0x127, 0x55 ],
-			[ 0x13F, 0xA5 ],
-
-			[ 0x120, 0x0F ],
-			[ 0x125, 0x55 ],
-			[ 0x126, 0x55 ],
-			[ 0x127, 0x77 ],
-			[ 0x13F, 0xA5 ],
-
-			[ 0x120, 0x0F ],
-			[ 0x125, 0x55 ],
-			[ 0x126, 0x55 ],
-			[ 0x127, 0xAA ],
-			[ 0x13F, 0xA5 ],
-
-			[ 0x120, 0x0F ],
-			[ 0x125, 0x2A ],
-			[ 0x126, 0xAA ],
-			[ 0x127, 0x55 ],
-			[ 0x13F, 0xA5 ],
-
-			[ 0x120, 0x0F ],
-			[ 0x125, 0x55 ],
-			[ 0x126, 0x55 ],
-			[ 0x127, 0x77 ],
-			[ 0x13F, 0xA5 ]
-		]
-		self.CartWrite(commands)
-		return self.CartRead(0, 128)
+		hp = 5
+		while hp > 0:
+			self.EnableMapper()
+			rom = self.CartRead(0, 128)
+			self.CartWrite(self.lk_dmg_mmsa_access_mapper())
+			self.CartWrite(self.lk_dmg_mmsa_access_mbc(enable=True))
+			self.CartWrite([[0x2100, 0x1]])
+			self.CartWrite(self.lk_dmg_mmsa_flash_command(0x5555, 0xAA))
+			self.CartWrite(self.lk_dmg_mmsa_flash_command(0x2AAA, 0x55))
+			self.CartWrite(self.lk_dmg_mmsa_flash_command(0x5555, 0x77))
+			self.CartWrite(self.lk_dmg_mmsa_flash_command(0x5555, 0xAA))
+			self.CartWrite(self.lk_dmg_mmsa_flash_command(0x2AAA, 0x55))
+			self.CartWrite(self.lk_dmg_mmsa_flash_command(0x5555, 0x77))
+			self.CartWrite([[0x2100, 0x0]])
+			hs = self.CartRead(0, 128)
+			self.CartWrite(self.lk_dmg_mmsa_access_rom())
+			if hs != rom: break
+			hp -= 1
+			dprint("HP:", hp, hs)
+		
+		if hp > 0:
+			return hs
+		else:
+			return False
 
 	def CalcChecksum(self, buffer):
 		header = RomFileDMG(buffer[:0x180]).GetHeader()
@@ -927,52 +968,20 @@ class DMG_HuC3(DMG_MBC):
 		ts = int(time.time())
 		buffer.extend(struct.pack("<Q", ts))
 		
-		#dstr = ' '.join(format(x, '02X') for x in buffer)
-		#dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+		dstr = ' '.join(format(x, '02X') for x in buffer)
+		dprint("RTC: [{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
 		
 		self.RTC_BUFFER = buffer
 		return buffer
 
-	def WriteRTC(self, buffer, advance=False):
-		if advance:
-			try:
-				dt_now = datetime.datetime.fromtimestamp(time.time())
-				dprint(buffer)
-				if buffer == bytearray([0x00] * len(buffer)): # Reset
-					hours = 0
-					minutes = 0
-					days = 0
-				else:
-					data = struct.unpack("<I", buffer[0:4])[0]
-					hours = math.floor((data & 0xFFF) / 60)
-					minutes = (data & 0xFFF) % 60
-					days = (data >> 12) & 0xFFF
-					
-					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
-					timestamp_now = int(time.time())
-					dprint(hours, minutes, days)
-					if timestamp_then < timestamp_now:
-						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
-						dt_buffer1 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, 1, 1, 0, 0, 0), "%Y-%m-%d %H:%M:%S")
-						dt_buffer2 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, 1, 1, hours, minutes, 0), "%Y-%m-%d %H:%M:%S")
-						dt_buffer2 += datetime.timedelta(days=days)
-						rd = relativedelta(dt_now, dt_then)
-						dt_new = dt_buffer2 + rd
-						dprint(dt_then, dt_now, dt_buffer1, dt_buffer2, dt_new, sep="\n")
-						minutes = dt_new.minute
-						hours = dt_new.hour
-						#temp = dt_new - dt_buffer1
-						#days = temp.days
-						temp = datetime.date.fromtimestamp(timestamp_now) - datetime.date.fromtimestamp(timestamp_then)
-						days = temp.days + days
-						dprint(minutes, hours, days)
-				
-				total_minutes = 60 * hours + minutes
-				data = (total_minutes & 0xFFF) | ((days & 0xFFF) << 12)
-				buffer[0:4] = struct.pack("<I", data)
-			
-			except Exception as e:
-				print("Couldn’t update the RTC register values\n", e)
+	def WriteRTCDict(self, rtc_dict):
+		dprint("Writing RTC:", rtc_dict)
+		self.EnableRAM(enable=True)
+
+		total_minutes = 60 * rtc_dict["rtc_h"] + rtc_dict["rtc_m"]
+		data = (total_minutes & 0xFFF) | ((rtc_dict["rtc_d"] & 0xFFF) << 12)
+		buffer = bytearray(4)
+		buffer[0:4] = struct.pack("<I", data)
 
 		commands = [
 			[ 0x0000, 0x0B ],
@@ -1026,18 +1035,79 @@ class DMG_HuC3(DMG_MBC):
 		self.CartWrite(commands, delay=0.03)
 		dstr = ' '.join(format(x, '02X') for x in buffer)
 		dprint("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+		return True
+
+	def WriteRTC(self, buffer, advance=False):
+		if advance:
+			try:
+				dt_now = datetime.datetime.fromtimestamp(time.time())
+				dprint(buffer)
+				if buffer == bytearray([0x00] * len(buffer)): # Reset
+					hours = 0
+					minutes = 0
+					days = 0
+				else:
+					data = struct.unpack("<I", buffer[0:4])[0]
+					hours = math.floor((data & 0xFFF) / 60)
+					minutes = (data & 0xFFF) % 60
+					days = (data >> 12) & 0xFFF
+					
+					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
+					timestamp_now = int(time.time())
+					dprint(hours, minutes, days)
+					if timestamp_then < timestamp_now:
+						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
+						dt_buffer1 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, 1, 1, 0, 0, 0), "%Y-%m-%d %H:%M:%S")
+						dt_buffer2 = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(1, 1, 1, hours, minutes, 0), "%Y-%m-%d %H:%M:%S")
+						dt_buffer2 += datetime.timedelta(days=days)
+						rd = relativedelta(dt_now, dt_then)
+						dt_new = dt_buffer2 + rd
+						dprint(dt_then, dt_now, dt_buffer1, dt_buffer2, dt_new, sep="\n")
+						minutes = dt_new.minute
+						hours = dt_new.hour
+						#temp = dt_new - dt_buffer1
+						#days = temp.days
+						temp = datetime.date.fromtimestamp(timestamp_now) - datetime.date.fromtimestamp(timestamp_then)
+						days = temp.days + days
+						dprint(minutes, hours, days)
+				
+				#total_minutes = 60 * hours + minutes
+				#data = (total_minutes & 0xFFF) | ((days & 0xFFF) << 12)
+				#buffer[0:4] = struct.pack("<I", data)
+				d = {
+					"rtc_h":hours,
+					"rtc_m":minutes,
+					"rtc_d":days
+				}
+				self.WriteRTCDict(d)
+			
+			except Exception as e:
+				print("Couldn’t update the RTC register values\n", e)
 	
-	def GetRTCString(self):
+	def GetRTCDict(self):
 		if self.RTC_BUFFER is None:
 			self.ReadRTC()
 		rtc_buffer = struct.unpack("<I", self.RTC_BUFFER[0:4])[0]
 		rtc_h = math.floor((rtc_buffer & 0xFFF) / 60)
 		rtc_m = (rtc_buffer & 0xFFF) % 60
 		rtc_d = (rtc_buffer >> 12) & 0xFFF
+
+		d = {
+			"rtc_h":rtc_h,
+			"rtc_m":rtc_m,
+			"rtc_d":rtc_d,
+			"rtc_valid":True
+		}
+		
 		if rtc_d == 1:
-			return "{:d} day, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
+			d["string"] = "{:d} day, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
 		else:
-			return "{:d} days, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
+			d["string"] = "{:d} days, {:02d}:{:02d}".format(rtc_d, rtc_h, rtc_m)
+		
+		return d
+	
+	def GetRTCString(self):
+		return self.GetRTCDict()["string"]
 
 	def GetMaxROMSize(self):
 		return 2*1024*1024
@@ -1127,85 +1197,18 @@ class DMG_TAMA5(DMG_MBC):
 		self.RTC_BUFFER = buffer
 		return buffer
 
-	def WriteRTC(self, buffer, advance=False):
-		if advance:
-			try:
-				dt_now = datetime.datetime.fromtimestamp(time.time())
-				if buffer == bytearray([0x00] * len(buffer)): # Reset
-					seconds = 0
-					minutes = 0
-					hours = 0
-					weekday = 0
-					days = 1
-					months = 1
-					years = 0
-					leap_year_state = 0
-					z24h_flag = 1
-				else:
-					#dstr = ' '.join(format(x, '02X') for x in buffer)
-					#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+	def WriteRTCDict(self, rtc_dict):
+		buffer = rtc_dict["rtc_buffer"]
+		buffer[0x00] = Util.EncodeBCD(rtc_dict["rtc_s"])
+		buffer[0x01] = Util.EncodeBCD(rtc_dict["rtc_i"])
+		buffer[0x02] = Util.EncodeBCD(rtc_dict["rtc_h"])
+		buffer[0x03] = ((Util.EncodeBCD(rtc_dict["rtc_d"]) & 0xF) << 4) | 6 #weekday?
+		buffer[0x04] = (Util.EncodeBCD(rtc_dict["rtc_d"]) >> 4) | ((Util.EncodeBCD(rtc_dict["rtc_m"]) & 0xF) << 4)
+		buffer[0x05] = (Util.EncodeBCD(rtc_dict["rtc_m"]) >> 4) | ((Util.EncodeBCD(rtc_dict["rtc_y"]) & 0xF) << 4)
+		buffer[0x06] = (Util.EncodeBCD(rtc_dict["rtc_y"]) >> 4)
+		buffer[0x0D] = rtc_dict["rtc_leap_year_state"] << 4 | 1 #24h flag
 
-					seconds = Util.DecodeBCD(buffer[0x00])
-					minutes = Util.DecodeBCD(buffer[0x01])
-					hours = Util.DecodeBCD(buffer[0x02])
-					weekday = buffer[0x03] & 0xF
-					days = Util.DecodeBCD(buffer[0x03] >> 4 | (buffer[0x04] & 0xF) << 4)
-					months = Util.DecodeBCD(buffer[0x04] >> 4 | (buffer[0x05] & 0xF) << 4)
-					years = Util.DecodeBCD(buffer[0x05] >> 4 | (buffer[0x06] & 0xF) << 4)
-					leap_year_state = Util.DecodeBCD(buffer[0x0D] >> 4)
-					z24h_flag = Util.DecodeBCD(buffer[0x0D] & 0xF)
-					#print("Old:", seconds, minutes, hours, day_of_week, days, months, years, leap_year_state, z24h_flag)
-					
-					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
-					timestamp_now = int(time.time())
-					if timestamp_then < timestamp_now:
-						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
-						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(2000 + leap_year_state, months, days, hours % 24, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
-						rd = relativedelta(dt_now, dt_then)
-						dt_new = dt_buffer + rd
-						
-						# Weird cases
-						year_new = (dt_new.year - 2000 - leap_year_state) 
-						years += year_new
-						if years >= 160:
-							years -= 140
-						elif years >= 140:
-							years -= 100
-						elif years >= 120:
-							years -= 60
-						elif years >= 100 and (years - year_new) < 100:
-							years -= 100
-						
-						months = dt_new.month
-						days = dt_new.day
-						hours = dt_new.hour
-						minutes = dt_new.minute
-						seconds = dt_new.second
-						dt_buffer_notime = dt_buffer.replace(hour=0, minute=0, second=0)
-						dt_new_notime = dt_new.replace(hour=0, minute=0, second=0)
-						days_passed = int((dt_new_notime.timestamp() - dt_buffer_notime.timestamp()) / 60 / 60 / 24)
-						weekday += days_passed % 7
-						#print("leap_year_state#1", leap_year_state)
-						leap_year_state = (leap_year_state + year_new) % 4
-						#print("leap_year_state#2", leap_year_state)
-						#print("New:", seconds, minutes, hours, day_of_week, days, months, years, leap_year_state, z24h_flag)
-
-				buffer[0x00] = Util.EncodeBCD(seconds)
-				buffer[0x01] = Util.EncodeBCD(minutes)
-				buffer[0x02] = Util.EncodeBCD(hours)
-				buffer[0x03] = (weekday & 0xF) | ((Util.EncodeBCD(days) & 0xF) << 4)
-				buffer[0x04] = (Util.EncodeBCD(days) >> 4) | ((Util.EncodeBCD(months) & 0xF) << 4)
-				buffer[0x05] = (Util.EncodeBCD(months) >> 4) | ((Util.EncodeBCD(years) & 0xF) << 4)
-				buffer[0x06] = (Util.EncodeBCD(years) >> 4)
-				buffer[0x0D] = leap_year_state << 4 | z24h_flag
-				
-				#dstr = ' '.join(format(x, '02X') for x in buffer)
-				#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
-			
-			except Exception as e:
-				print("Couldn’t update the RTC register values\n", e)
-
-		for page in range(0, 4):
+		for page in range(0, 5):
 			if page == 0:
 				commands = [
 					# Select TAMA6
@@ -1258,8 +1261,101 @@ class DMG_TAMA5(DMG_MBC):
 				while value1 is None or value1 != value2:
 					value2 = value1
 					value1 = self.CartRead(0xA000)
+		
+		return True
+	
+	def WriteRTC(self, buffer, advance=False):
+		if advance:
+			try:
+				dt_now = datetime.datetime.fromtimestamp(time.time())
+				if buffer == bytearray([0x00] * len(buffer)): # Reset
+					seconds = 0
+					minutes = 0
+					hours = 0
+					weekday = 0
+					days = 1
+					months = 1
+					years = 0
+					leap_year_state = 0
+					#z24h_flag = 1
+				else:
+					#dstr = ' '.join(format(x, '02X') for x in buffer)
+					#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
 
-	def GetRTCString(self):
+					seconds = Util.DecodeBCD(buffer[0x00])
+					minutes = Util.DecodeBCD(buffer[0x01])
+					hours = Util.DecodeBCD(buffer[0x02])
+					weekday = buffer[0x03] & 0xF
+					days = Util.DecodeBCD(buffer[0x03] >> 4 | (buffer[0x04] & 0xF) << 4)
+					months = Util.DecodeBCD(buffer[0x04] >> 4 | (buffer[0x05] & 0xF) << 4)
+					years = Util.DecodeBCD(buffer[0x05] >> 4 | (buffer[0x06] & 0xF) << 4)
+					leap_year_state = Util.DecodeBCD(buffer[0x0D] >> 4)
+					#z24h_flag = Util.DecodeBCD(buffer[0x0D] & 0xF)
+					#print("Old:", seconds, minutes, hours, day_of_week, days, months, years, leap_year_state, z24h_flag)
+					
+					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
+					timestamp_now = int(time.time())
+					if timestamp_then < timestamp_now:
+						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
+						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(2000 + leap_year_state, months, days, hours % 24, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
+						rd = relativedelta(dt_now, dt_then)
+						dt_new = dt_buffer + rd
+						
+						# Weird cases
+						year_new = (dt_new.year - 2000 - leap_year_state) 
+						years += year_new
+						if years >= 160:
+							years -= 140
+						elif years >= 140:
+							years -= 100
+						elif years >= 120:
+							years -= 60
+						elif years >= 100 and (years - year_new) < 100:
+							years -= 100
+						
+						months = dt_new.month
+						days = dt_new.day
+						hours = dt_new.hour
+						minutes = dt_new.minute
+						seconds = dt_new.second
+						dt_buffer_notime = dt_buffer.replace(hour=0, minute=0, second=0)
+						dt_new_notime = dt_new.replace(hour=0, minute=0, second=0)
+						days_passed = int((dt_new_notime.timestamp() - dt_buffer_notime.timestamp()) / 60 / 60 / 24)
+						weekday += days_passed % 7
+						#print("leap_year_state#1", leap_year_state)
+						leap_year_state = (leap_year_state + year_new) % 4
+						#print("leap_year_state#2", leap_year_state)
+						#print("New:", seconds, minutes, hours, day_of_week, days, months, years, leap_year_state, z24h_flag)
+
+				# buffer[0x00] = Util.EncodeBCD(seconds)
+				# buffer[0x01] = Util.EncodeBCD(minutes)
+				# buffer[0x02] = Util.EncodeBCD(hours)
+				# buffer[0x03] = (weekday & 0xF) | ((Util.EncodeBCD(days) & 0xF) << 4)
+				# buffer[0x04] = (Util.EncodeBCD(days) >> 4) | ((Util.EncodeBCD(months) & 0xF) << 4)
+				# buffer[0x05] = (Util.EncodeBCD(months) >> 4) | ((Util.EncodeBCD(years) & 0xF) << 4)
+				# buffer[0x06] = (Util.EncodeBCD(years) >> 4)
+				# buffer[0x0D] = leap_year_state << 4 | z24h_flag
+				
+				#dstr = ' '.join(format(x, '02X') for x in buffer)
+				#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
+			
+			except Exception as e:
+				print("Couldn’t update the RTC register values\n", e)
+
+		d = {
+			"rtc_y":years,
+			"rtc_m":months,
+			"rtc_d":days,
+			"rtc_h":hours,
+			"rtc_i":minutes,
+			"rtc_s":seconds,
+			"rtc_leap_year_state":leap_year_state,
+			"rtc_buffer":buffer,
+			"rtc_valid":True
+		}
+		self.WriteRTCDict(d)
+
+	def GetRTCDict(self):
 		if self.RTC_BUFFER is None:
 			self.ReadRTC()
 		rtc_buffer = self.RTC_BUFFER
@@ -1271,11 +1367,28 @@ class DMG_TAMA5(DMG_MBC):
 		months = Util.DecodeBCD(rtc_buffer[0x04] >> 4 | (rtc_buffer[0x05] & 0xF) << 4)
 		years = Util.DecodeBCD(rtc_buffer[0x05] >> 4 | (rtc_buffer[0x06] & 0xF) << 4)
 		leap_year_state = Util.DecodeBCD(rtc_buffer[0x0D] >> 4)
+
+		d = {
+			"rtc_y":years,
+			"rtc_m":months,
+			"rtc_d":days,
+			#"rtc_w":weekday,
+			"rtc_h":hours,
+			"rtc_i":minutes,
+			"rtc_s":seconds,
+			"rtc_leap_year_state":leap_year_state,
+			"rtc_buffer":rtc_buffer,
+			"rtc_valid":True
+		}
+
 		if leap_year_state == 0:
-			return "Year {:d}*, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
+			d["string"] = "{:d} year(s)ᴸ, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years - 19, months, days, hours, minutes, seconds)
 		else:
-			return "Year {:d}, {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years, months, days, hours, minutes, seconds)
-	
+			d["string"] = "{:d} year(s), {:d}-{:d}, {:02d}:{:02d}:{:02d}".format(years - 19, months, days, hours, minutes, seconds)
+		return d
+
+	def GetRTCString(self):
+		return self.GetRTCDict()["string"]
 
 	def ReadWithCSPulse(self):
 		return False
@@ -1297,7 +1410,10 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 		flash_bank = math.floor(index / 512)
 		dprint(self.GetName(), "|SelectBankFlash()|", index, "->", flash_bank)
 
-		self.CART_POWERCYCLE_FNCPTR()
+		if self.CURRENT_FLASH_BANK != flash_bank:
+			dprint("Power cycling now")
+			self.CART_POWERCYCLE_FNCPTR()
+			self.CURRENT_FLASH_BANK = flash_bank
 		
 		commands = [
 			[ 0x7000, 0x00 ],
@@ -1308,7 +1424,7 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 		self.CartWrite(commands, delay=0.1)
 
 	def SelectBankROM(self, index):
-		dprint(self.GetName(), "|SelectBankROM()|", index)
+		dprint(self.GetName(), index)
 
 		if (index % 512 == 0) or (self.CURRENT_FLASH_BANK != math.floor(index / 512)):
 			self.SelectBankFlash(index)
@@ -1333,6 +1449,8 @@ class DMG_Unlicensed_256M(DMG_MBC5):
 		if index % 4 == 0:
 			self.EnableRAM(enable=False)
 			self.CART_POWERCYCLE_FNCPTR()
+			self.CURRENT_FLASH_BANK = flash_bank
+			
 			commands = [
 				[ 0x7000, (0x40 * math.floor(index / 4)) & 0xFF ],
 				[ 0x7001, 0xC0 ],
@@ -1385,15 +1503,18 @@ class DMG_Unlicensed_XploderGB(DMG_MBC):
 	def SelectBankROM(self, index):
 		dprint(self.GetName(), "|", index)
 		if index == 0:
+			self.CartRead(0x0102, 1)
 			self.CART_POWERCYCLE_FNCPTR()
 			self.CartRead(0x0102, 1)
 		self.CartWrite([[ 0x0006, index & 0xFF ]])
+		self.CURRENT_ROM_BANK = index
 		start_address = 0x4000
 		return (start_address, self.ROM_BANK_SIZE)
 
 	def SelectBankRAM(self, index):
 		dprint(self.GetName(), "|", index)
 		if index == 0:
+			self.CartRead(0x0102, 1)
 			self.CART_POWERCYCLE_FNCPTR()
 			self.CartRead(0x0102, 1)
 		return self.SelectBankROM(index + 8)
@@ -1479,8 +1600,8 @@ class AGB_GPIO:
 	
 	# Commands
 	RTC_RESET = 0x60
-	RTC_WRITE_STATS = 0x62
-	RTC_READ_STATS = 0x63
+	RTC_WRITE_STATUS = 0x62
+	RTC_READ_STATUS = 0x63
 	RTC_WRITE_DATE = 0x64
 	RTC_READ_DATE = 0x65
 	RTC_WRITE_TIME = 0x66
@@ -1502,10 +1623,10 @@ class AGB_GPIO:
 			data = self.CART_READ_FNCPTR(address)
 			data = struct.pack(">H", data)
 			data = struct.unpack("<H", data)[0]
-			dprint("0x{:X} is 0x{:X}".format(address, data))
+			#dprint("0x{:X} is 0x{:X}".format(address, data))
 		else:
 			data = self.CART_READ_FNCPTR(address, length)
-			dprint("0x{:X} is".format(address), data)
+			#dprint("0x{:X} is".format(address), data)
 		
 		return data
 
@@ -1513,7 +1634,7 @@ class AGB_GPIO:
 		for command in commands:
 			address = command[0]
 			value = command[1]
-			dprint("0x{:X} = 0x{:X}".format(address, value))
+			# dprint("0x{:X} = 0x{:X}".format(address, value))
 			self.CART_WRITE_FNCPTR(address, value)
 			if delay is not False: time.sleep(delay)
 
@@ -1538,9 +1659,10 @@ class AGB_GPIO:
 				[ self.GPIO_REG_DAT, 4 ],
 				[ self.GPIO_REG_DAT, 5 ]
 			])
-			bit = (self.CartRead(self.GPIO_REG_DAT) & 2) >> 1
+			temp = self.CartRead(self.GPIO_REG_DAT) & 0xFF
+			bit = (temp & 2) >> 1
 			data = (data >> 1) | (bit << 7)
-			dprint(bit, data)
+			# print("RTCReadData(): i={:d}/temp={:X}/bit={:x}/data={:x}".format(i, temp, bit, data))
 		return data
 	
 	def RTCWriteData(self, data):
@@ -1560,7 +1682,7 @@ class AGB_GPIO:
 			[ self.GPIO_REG_DAT, 5 ],
 			[ self.GPIO_REG_CNT, 7 ], # Write Enable
 		])
-		self.RTCCommand(self.RTC_READ_STATS)
+		self.RTCCommand(self.RTC_READ_STATUS)
 		self.CartWrite([
 			[ self.GPIO_REG_CNT, 5 ], # Read Enable
 		])
@@ -1579,7 +1701,7 @@ class AGB_GPIO:
 			[ self.GPIO_REG_DAT, 5 ],
 			[ self.GPIO_REG_CNT, 7 ], # Write Enable
 		])
-		self.RTCCommand(self.RTC_WRITE_STATS)
+		self.RTCCommand(self.RTC_WRITE_STATUS)
 		self.RTCWriteData(value)
 
 		self.CartWrite([
@@ -1588,11 +1710,15 @@ class AGB_GPIO:
 			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
 		])
 
-	def HasRTC(self):
+	def HasRTC(self, buffer=None):
 		if not self.RTC: return False
+		if buffer is not None: self.RTC_BUFFER = buffer[1:]
 
-		status = self.RTCReadStatus()
-		dprint(status)
+		if buffer is None:
+			status = self.RTCReadStatus()
+		else:
+			status = buffer[0]
+		
 		if (status >> 7) == 1:
 			dprint("No RTC because of set RTC Status Register Power Flag:", status >> 7 & 1)
 			return 1
@@ -1601,41 +1727,46 @@ class AGB_GPIO:
 			#return 2
 		
 		rom1 = self.CartRead(self.GPIO_REG_DAT, 6)
-		self.CartWrite([
-			[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
-		])
-		rom2 = self.CartRead(self.GPIO_REG_DAT, 6)
-		self.CartWrite([
-			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
-		])
-		#dprint(rom1, rom2)
+		if buffer is None:
+			self.CartWrite([
+				[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
+			])
+			rom2 = self.CartRead(self.GPIO_REG_DAT, 6)
+			self.CartWrite([
+				[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
+			])
+		else:
+			rom2 = buffer[1:7]
+
+		dprint(' '.join(format(x, '02X') for x in rom1), "/", ' '.join(format(x, '02X') for x in rom2))
 		if (rom1 == rom2):
 			dprint("No RTC because ROM data didn’t change:", rom1, rom2)
 			return 3
-		
+
 		return True
 	
-	def ReadRTC(self):
+	def ReadRTC(self, buffer=None):
 		if not self.RTC: return False
-		self.CartWrite([
-			[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
-			[ self.GPIO_REG_DAT, 1 ],
-			[ self.GPIO_REG_DAT, 5 ],
-			[ self.GPIO_REG_CNT, 7 ], # Write Enable
-		])
-		self.RTCCommand(self.RTC_READ_DATE)
-		self.CartWrite([
-			[ self.GPIO_REG_CNT, 5 ], # Read Enable
-		])
-		buffer = bytearray()
-		for _ in range(0, 7):
-			buffer.append(self.RTCReadData())
-		
-		self.CartWrite([
-			[ self.GPIO_REG_DAT, 1 ],
-			[ self.GPIO_REG_DAT, 1 ],
-			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
-		])
+		if buffer is None:
+			self.CartWrite([
+				[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
+				[ self.GPIO_REG_DAT, 1 ],
+				[ self.GPIO_REG_DAT, 5 ],
+				[ self.GPIO_REG_CNT, 7 ], # Write Enable
+			])
+			self.RTCCommand(self.RTC_READ_DATE)
+			self.CartWrite([
+				[ self.GPIO_REG_CNT, 5 ], # Read Enable
+			])
+			buffer = bytearray()
+			for _ in range(0, 7):
+				buffer.append(self.RTCReadData())
+			
+			self.CartWrite([
+				[ self.GPIO_REG_DAT, 1 ],
+				[ self.GPIO_REG_DAT, 1 ],
+				[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
+			])
 		
 		# Add timestamp of backup time
 		ts = int(time.time())
@@ -1653,48 +1784,80 @@ class AGB_GPIO:
 		self.RTC_BUFFER = buffer
 		return buffer
 	
+	def WriteRTCDict(self, rtc_dict):
+		buffer = bytearray(7)
+		try:
+			buffer[0] = Util.EncodeBCD(rtc_dict["rtc_y"])
+			buffer[1] = Util.EncodeBCD(rtc_dict["rtc_m"])
+			buffer[2] = Util.EncodeBCD(rtc_dict["rtc_d"])
+			buffer[3] = Util.EncodeBCD(rtc_dict["rtc_w"])
+			buffer[4] = Util.EncodeBCD(rtc_dict["rtc_h"])
+			if buffer[4] >= 12: buffer[4] |= 0x80
+			buffer[5] = Util.EncodeBCD(rtc_dict["rtc_i"])
+			buffer[6] = Util.EncodeBCD(rtc_dict["rtc_s"])
+			dprint("New values: RTC_Y=0x{:02X}, RTC_M=0x{:02X}, RTC_D=0x{:02X}, RTC_W=0x{:02X}, RTC_H=0x{:02X}, RTC_I=0x{:02X}, RTC_S=0x{:02X}".format(buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6]))
+		except ValueError as e:
+			print("Couldn’t update the RTC register values\n", e)
+
+		self.CartWrite([
+			[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
+			[ self.GPIO_REG_DAT, 1 ],
+			[ self.GPIO_REG_DAT, 5 ],
+			[ self.GPIO_REG_CNT, 7 ], # Write Enable
+		])
+		self.RTCCommand(self.RTC_WRITE_DATE)
+		for i in range(0, 7):
+			self.RTCWriteData(buffer[i])
+
+		self.CartWrite([
+			[ self.GPIO_REG_DAT, 1 ],
+			[ self.GPIO_REG_DAT, 1 ],
+			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
+		])
+		return True
+
 	def WriteRTC(self, buffer, advance=False):
 		rtc_status = None
+		if buffer == bytearray([0xFF] * len(buffer)): # Reset
+			years = 0
+			months = 1
+			days = 1
+			weekday = 0
+			hours = 0
+			minutes = 0
+			seconds = 0
+			rtc_status = 0x40 | 0x80
+		else:
+			years = Util.DecodeBCD(buffer[0x00])
+			months = Util.DecodeBCD(buffer[0x01])
+			days = Util.DecodeBCD(buffer[0x02])
+			weekday = Util.DecodeBCD(buffer[0x03])
+			hours = Util.DecodeBCD(buffer[0x04] & 0x7F)
+			minutes = Util.DecodeBCD(buffer[0x05])
+			seconds = Util.DecodeBCD(buffer[0x06])
+			rtc_status = buffer[0x07]
+			if rtc_status == 0x01: rtc_status = 0x40 # old dumps had this value
+
 		if advance:
 			try:
 				dt_now = datetime.datetime.fromtimestamp(time.time())
-				if buffer == bytearray([0xFF] * len(buffer)): # Reset
-					years = 0
-					months = 1
-					days = 1
-					weekday = 0
-					hours = 0
-					minutes = 0
-					seconds = 0
-					rtc_status = 0x40 | 0x80
-				else:
-					years = Util.DecodeBCD(buffer[0x00])
-					months = Util.DecodeBCD(buffer[0x01])
-					days = Util.DecodeBCD(buffer[0x02])
-					weekday = Util.DecodeBCD(buffer[0x03])
-					hours = Util.DecodeBCD(buffer[0x04] & 0x7F)
-					minutes = Util.DecodeBCD(buffer[0x05])
-					seconds = Util.DecodeBCD(buffer[0x06])
-					rtc_status = buffer[0x07]
-					if rtc_status == 0x01: rtc_status = 0x40 # old dumps had this value
-
-					timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
-					timestamp_now = int(time.time())
-					if timestamp_then < timestamp_now:
-						dt_then = datetime.datetime.fromtimestamp(timestamp_then)
-						dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(years + 2000, months % 13, days % 32, hours % 60, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
-						rd = relativedelta(dt_now, dt_then)
-						dt_new = dt_buffer + rd
-						years = dt_new.year - 2000
-						months = dt_new.month
-						days = dt_new.day
-						dt_buffer_notime = dt_buffer.replace(hour=0, minute=0, second=0)
-						dt_new_notime = dt_new.replace(hour=0, minute=0, second=0)
-						days_passed = int((dt_new_notime.timestamp() - dt_buffer_notime.timestamp()) / 60 / 60 / 24)
-						weekday += days_passed % 7
-						hours = dt_new.hour
-						minutes = dt_new.minute
-						seconds = dt_new.second
+				timestamp_then = struct.unpack("<Q", buffer[-8:])[0]
+				timestamp_now = int(time.time())
+				if timestamp_then < timestamp_now:
+					dt_then = datetime.datetime.fromtimestamp(timestamp_then)
+					dt_buffer = datetime.datetime.strptime("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(years + 2000, months % 13, days % 32, hours % 60, minutes % 60, seconds % 60), "%Y-%m-%d %H:%M:%S")
+					rd = relativedelta(dt_now, dt_then)
+					dt_new = dt_buffer + rd
+					years = dt_new.year - 2000
+					months = dt_new.month
+					days = dt_new.day
+					dt_buffer_notime = dt_buffer.replace(hour=0, minute=0, second=0)
+					dt_new_notime = dt_new.replace(hour=0, minute=0, second=0)
+					days_passed = int((dt_new_notime.timestamp() - dt_buffer_notime.timestamp()) / 60 / 60 / 24)
+					weekday += days_passed % 7
+					hours = dt_new.hour
+					minutes = dt_new.minute
+					seconds = dt_new.second
 				
 				#dprint(years, months, days, weekday, hours, minutes, seconds)
 				buffer[0x00] = Util.EncodeBCD(years)
@@ -1712,48 +1875,63 @@ class AGB_GPIO:
 			except Exception as e:
 				print("Couldn’t update the RTC register values\n", e)
 		
-		self.CartWrite([
-			[ self.GPIO_REG_RE, 1 ], # Enable RTC Mapping
-			[ self.GPIO_REG_DAT, 1 ],
-			[ self.GPIO_REG_DAT, 5 ],
-			[ self.GPIO_REG_CNT, 7 ], # Write Enable
-		])
-		self.RTCCommand(self.RTC_WRITE_DATE)
-		for i in range(0, 7):
-			self.RTCWriteData(buffer[i])
-
-		self.CartWrite([
-			[ self.GPIO_REG_DAT, 1 ],
-			[ self.GPIO_REG_DAT, 1 ],
-			[ self.GPIO_REG_RE, 0 ], # Disable RTC Mapping
-		])
+		d = {
+			"rtc_y":years,
+			"rtc_m":months,
+			"rtc_d":days,
+			"rtc_w":weekday,
+			"rtc_h":hours,
+			"rtc_i":minutes,
+			"rtc_s":seconds,
+		}
+		dprint(d)
+		self.WriteRTCDict(d)
 
 		if rtc_status is not None:
 			self.RTCWriteStatus(rtc_status)
 
-	def GetRTCString(self):
-		has_rtc = self.HasRTC()
+	def GetRTCDict(self, has_rtc=None):
+		if has_rtc is None:
+			has_rtc = self.HasRTC()
 		if has_rtc is not True:
-			if has_rtc is False:
-				return "Not available"
+			if has_rtc is False or has_rtc in (2, 3):
+				return {"string":"Not available"}
 			elif has_rtc == 1:
-				return "Not available / Battery dry"
-			elif has_rtc == 3:
-				return "Not available"
-		
+				return {"string":"Not available / Battery dry"}
+
 		if self.RTC_BUFFER is None:
 			self.ReadRTC()
 		rtc_buffer = self.RTC_BUFFER
+
 		#weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 		rtc_y = (rtc_buffer[0] & 0x0F) + ((rtc_buffer[0] >> 4) * 10)
 		rtc_m = (rtc_buffer[1] & 0x0F) + ((rtc_buffer[1] >> 4) * 10)
 		rtc_d = (rtc_buffer[2] & 0x0F) + ((rtc_buffer[2] >> 4) * 10)
-		#rtc_w = (rtc_buffer[3] & 0x0F) + ((rtc_buffer[3] >> 4) * 10)
+		rtc_w = (rtc_buffer[3] & 0x0F) + ((rtc_buffer[3] >> 4) * 10)
 		rtc_h = ((rtc_buffer[4] & 0x0F) + (((rtc_buffer[4] >> 4) & 0x7) * 10))
 		rtc_i = (rtc_buffer[5] & 0x0F) + ((rtc_buffer[5] >> 4) * 10)
 		rtc_s = (rtc_buffer[6] & 0x0F) + ((rtc_buffer[6] >> 4) * 10)
 
+		d = {
+			"rtc_y":rtc_y,
+			"rtc_m":rtc_m,
+			"rtc_d":rtc_d,
+			"rtc_w":rtc_w,
+			"rtc_h":rtc_h,
+			"rtc_i":rtc_i,
+			"rtc_s":rtc_s,
+			"rtc_24h":rtc_buffer[0] >> 6 & 1
+		}
+
 		if rtc_y == 0 and rtc_m == 0 and rtc_d == 0 and rtc_h == 0 and rtc_i == 0 and rtc_s == 0:
-			raise Exception("Invalid RTC data")
+			#raise ValueError("Invalid RTC data")
+			d["string"] = "Invalid RTC data"
+			d["rtc_valid"] = False
 		else:
-			return "20{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(rtc_y, rtc_m, rtc_d, rtc_h, rtc_i, rtc_s)
+			d["string"] = "20{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(rtc_y, rtc_m, rtc_d, rtc_h, rtc_i, rtc_s)
+			d["rtc_valid"] = True
+
+		return d
+
+	def GetRTCString(self, has_rtc=None):
+		return self.GetRTCDict(has_rtc=has_rtc)["string"]

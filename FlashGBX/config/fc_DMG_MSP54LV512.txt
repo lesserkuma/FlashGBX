@@ -6,7 +6,8 @@
 	"flash_ids":[
 		[ 0x02, 0x7D, 0x00, 0x09 ]
 	],
-	"voltage":5,
+	"voltage":3.3,
+	"voltage_variants":true,
 	"flash_size":0x2000000,
 	"start_addr":0,
 	"first_bank":1,

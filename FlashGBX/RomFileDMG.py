@@ -196,7 +196,7 @@ class RomFileDMG:
 				data["mapper_raw"] = 0x0B
 			
 			# Unlicensed 256M Mapper
-			elif (data["game_title"].upper() == "GB HICOL" and data["header_checksum"] in (0x4A, 0x49, 0xE9)) or \
+			elif (data["game_title"].upper() == "GB HICOL" and data["header_checksum"] in (0x4A, 0x49, 0xE8, 0xE9)) or \
 			(data["game_title"] == "BennVenn" and data["header_checksum"] == 0x48):
 				data["rom_size_raw"] = 0x0A
 				data["ram_size_raw"] = 0x201

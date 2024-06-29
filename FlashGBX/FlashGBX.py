@@ -2,7 +2,7 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import sys, os, glob, re, json, zlib, argparse, zipfile, traceback, platform, datetime
+import sys, os, glob, re, json, zlib, argparse, zipfile, traceback, platform, datetime, copy
 from . import Util
 
 def ReadConfigFiles(args):
@@ -33,7 +33,7 @@ def LoadConfig(args):
 	(config_version, fc_files) = ReadConfigFiles(args=args)
 	if config_version != Util.VERSION:
 		# Rename old files that have since been replaced/renamed/merged
-		deprecated_files = [ "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt", "fc_AGB_MX29LV640_AUDIO.txt", "fc_AGB_M36L0R7050T.txt", "fc_AGB_M36L0R8060B.txt", "fc_AGB_M36L0R8060T.txt", "fc_AGB_iG_32MB_S29GL512N.txt", "fc_DMG_SST39SF010_MBC1_AUDIO.txt", "fc_DMG_SST39SF040_MBC5_AUDIO.txt", "fc_DMG_AM29F010_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_WR.txt", "fc_DMG_AM29F080_MBC1_AUDIO.txt", "fc_DMG_AM29F080_MBC1_WR.txt", "fc_DMG_SST39SF040_MBC1_AUDIO.txt", "fc_DMG_SST39SF020_MBC1_AUDIO.txt", "fc_DMG_29LV016T.txt" ]
+		deprecated_files = [ "fc_AGB_TEST.txt", "fc_DMG_TEST.txt", "fc_AGB_Nintendo_E201850.txt", "fc_AGB_Nintendo_E201868.txt", "config.ini", "fc_DMG_MX29LV320ABTC.txt", "fc_DMG_iG_4MB_MBC3_RTC.txt", "fc_AGB_Flash2Advance.txt", "fc_AGB_MX29LV640_AUDIO.txt", "fc_AGB_M36L0R7050T.txt", "fc_AGB_M36L0R8060B.txt", "fc_AGB_M36L0R8060T.txt", "fc_AGB_iG_32MB_S29GL512N.txt", "fc_DMG_SST39SF010_MBC1_AUDIO.txt", "fc_DMG_SST39SF040_MBC5_AUDIO.txt", "fc_DMG_AM29F010_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_AUDIO.txt", "fc_DMG_AM29F040_MBC1_WR.txt", "fc_DMG_AM29F080_MBC1_AUDIO.txt", "fc_DMG_AM29F080_MBC1_WR.txt", "fc_DMG_SST39SF040_MBC1_AUDIO.txt", "fc_DMG_SST39SF020_MBC1_AUDIO.txt", "fc_DMG_29LV016T.txt", "fc_DMG_Retrostage.txt" ]
 		for file in deprecated_files:
 			if os.path.exists(config_path + "/" + file):
 				os.rename(config_path + "/" + file, config_path + "/" + file + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".bak")
@@ -71,14 +71,17 @@ def LoadConfig(args):
 				if "names" not in specs: continue
 				for name in specs["names"]:
 					if not specs["type"] in flashcarts: continue # only DMG and AGB are supported right now
-					flashcarts[specs["type"]][name] = specs
+					temp = copy.deepcopy(specs)
+					temp["names"] = [name]
+					flashcarts[specs["type"]][name] = temp
 	
 	return { "flashcarts":flashcarts, "config_ret":ret }
 
 class ArgParseCustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
 def main(portableMode=False):
-	if platform.system() == "Windows": os.system("color")
-	if platform.system() == "Darwin":
+	if platform.system() == "Windows":
+		os.system("color")
+	elif platform.system() == "Darwin":
 		macos_version = tuple(map(int, platform.mac_ver()[0].split('.')))
 		# macOS above Big Sur don't need a compat layer fix in the environment
 		if macos_version < (12, 0):
@@ -133,9 +136,9 @@ def main(portableMode=False):
 	ap_cli2.add_argument("--dmg-romsize", choices=["auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb"], type=str.lower, default="auto", help="set size of Game Boy cartridge ROM data")
 	ap_cli2.add_argument("--dmg-mbc", type=str.lower, default="auto", help="set memory bank controller type of Game Boy cartridge")
 	ap_cli2.add_argument("--dmg-savesize", choices=["auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m"], type=str.lower, default="auto", help="set size of Game Boy cartridge save data")
-	ap_cli2.add_argument("--agb-romsize", choices=["auto", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb", "512mb"], type=str.lower, default="auto", help="set size of Game Boy Advance cartridge ROM data")
+	ap_cli2.add_argument("--agb-romsize", choices=["auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb", "512mb"], type=str.lower, default="auto", help="set size of Game Boy Advance cartridge ROM data")
 	ap_cli2.add_argument("--agb-savetype", choices=["auto", "eeprom4k", "eeprom64k", "sram256k", "flash512k", "flash1m", "dacs8m", "sram512k", "sram1m"], type=str.lower, default="auto", help="set type of Game Boy Advance cartridge save data")
-	ap_cli2.add_argument("--store-rtc", action="store_true", help="store RTC register values if supported")
+	ap_cli2.add_argument("--store-rtc", action="store_true", default=False, help="store RTC register values if supported")
 	ap_cli2.add_argument("--ignore-bad-header", action="store_true", help="don’t stop if invalid data found in cartridge header data")
 	ap_cli2.add_argument("--flashcart-type", type=str, default="autodetect", help="name of flash cart; see txt files in config directory")
 	ap_cli2.add_argument("--prefer-chip-erase", action="store_true", help="prefer full chip erase over sector erase when both available")

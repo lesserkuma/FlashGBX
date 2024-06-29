@@ -2,21 +2,22 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import math, time, datetime, copy, configparser, threading, statistics, os, platform, traceback, io, struct, re
+import math, time, datetime, copy, configparser, threading, os, platform, traceback, io, struct, re, statistics, random
+from io import StringIO
 from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "3.37"
+VERSION_PEP440 = "4.0"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1709318129
+VERSION_TIMESTAMP = 1719702722
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
 CONFIG_PATH = ""
 
-AGB_Header_ROM_Sizes = [ "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB", "256 MiB", "512 MiB" ]
-AGB_Header_ROM_Sizes_Map = [ 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000 ]
+AGB_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB", "256 MiB", "512 MiB" ]
+AGB_Header_ROM_Sizes_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000 ]
 AGB_Header_Save_Types = [ "None", "4K EEPROM (512 Bytes)", "64K EEPROM (8 KiB)", "256K SRAM/FRAM (32 KiB)", "512K FLASH (64 KiB)", "1M FLASH (128 KiB)", "8M DACS (1 MiB)", "Unlicensed 512K SRAM (64 KiB)", "Unlicensed 1M SRAM (128 KiB)", "Unlicensed Batteryless SRAM" ]
 AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1048576, 65536, 131072, 0 ]
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS", 0xBF5B:"Unlicensed SST49LF080A", 0xFFFF:"Unlicensed 0xFFFF" }
@@ -110,21 +111,42 @@ class IniSettings():
 		if self.FILENAME is not False:
 			with open(self.FILENAME, "w", encoding="UTF-8") as f:
 				self.SETTINGS.write(f)
+	
+	def GetString(self):
+		output = StringIO()
+		self.SETTINGS.write(output)
+		return(output.getvalue())
 
 class Progress():
 	MUTEX = threading.Lock()
 	PROGRESS = {}
 	UPDATER = None
+	WAITER = None
 	
-	def __init__(self, updater):
+	def __init__(self, updater, waiter):
 		self.UPDATER = updater
+		self.WAITER = waiter
 	
+	def IsOutlier(self, speeds, new_number, threshold):
+		if not speeds: return False
+		mean = sum(speeds) / len(speeds)
+		std_deviation = (sum((x - mean) ** 2 for x in speeds) / len(speeds)) ** 0.5
+		lower_bound = mean - threshold * std_deviation
+		upper_bound = mean + threshold * std_deviation
+		if new_number < lower_bound or new_number > upper_bound:
+			return True
+		else:
+			return False
+
 	def SetProgress(self, args):
 		self.MUTEX.acquire(1)
 		try:
 			if not "method" in self.PROGRESS: self.PROGRESS = {}
 			now = time.time()
-			if args["action"] == "INITIALIZE":
+			if args["action"] == "USER_ACTION":
+				self.WAITER(args)
+
+			elif args["action"] == "INITIALIZE":
 				self.PROGRESS["action"] = args["action"]
 				self.PROGRESS["method"] = args["method"]
 				if "flash_offset" in args:
@@ -139,6 +161,10 @@ class Progress():
 					self.PROGRESS["pos"] = args["pos"] - self.PROGRESS["flash_offset"]
 				else:
 					self.PROGRESS["pos"] = 0
+				if "sector_count" in args:
+					self.PROGRESS["sector_count"] = args["sector_count"]
+				else:
+					self.PROGRESS["sector_count"] = 1
 				if "time_start" in args:
 					self.PROGRESS["time_start"] = args["time_start"]
 				else:
@@ -149,6 +175,7 @@ class Progress():
 				self.PROGRESS["speed"] = 0
 				self.PROGRESS["speeds"] = []
 				self.PROGRESS["bytes_last_update_speed"] = 0
+				self.PROGRESS["sector_erase_time"] = 0
 				self.UPDATER(self.PROGRESS)
 			
 			if args["action"] == "ABORT":
@@ -166,41 +193,51 @@ class Progress():
 			
 			elif self.PROGRESS == {}:
 				return
-			
-			elif args["action"] == "UPDATE_POS":
-				self.PROGRESS["pos"] = args["pos"] - self.PROGRESS["flash_offset"]
-				self.PROGRESS["action"] = "PROGRESS"
-				if "time_start" in self.PROGRESS:
-					self.PROGRESS["time_elapsed"] = now - self.PROGRESS["time_start"]
-				
-				try:
-					total_speed = statistics.mean(self.PROGRESS["speeds"])
-					self.PROGRESS["time_left"] = (self.PROGRESS["size"] - self.PROGRESS["pos"]) / 1024 / total_speed
-				except:
-					pass
-				if "abortable" in args: self.PROGRESS["abortable"] = args["abortable"]
-				self.UPDATER(self.PROGRESS)
-			
-			elif args["action"] in ("READ", "WRITE"):
+
+			elif args["action"] in ("READ", "WRITE", "UPDATE_POS"):
 				if "method" not in self.PROGRESS: return
-				elif args["action"] in ("READ") and self.PROGRESS["method"] in ("SAVE_WRITE", "ROM_WRITE"): return
-				elif args["action"] in ("WRITE") and self.PROGRESS["method"] in ("SAVE_READ", "ROM_READ", "ROM_WRITE_VERIFY"): return
-				if self.PROGRESS["pos"] >= self.PROGRESS["size"]: return
-				
+				elif args["action"] == "READ" and self.PROGRESS["method"] in ("SAVE_WRITE", "ROM_WRITE"): return
+				elif args["action"] == "WRITE" and self.PROGRESS["method"] in ("SAVE_READ", "ROM_READ", "ROM_WRITE_VERIFY"): return
+				if self.PROGRESS["pos"] > self.PROGRESS["size"]: return
+				skip_speed = False
 				self.PROGRESS["action"] = "PROGRESS"
-				self.PROGRESS["pos"] += args["bytes_added"]
-				if (now - self.PROGRESS["time_last_emit"]) > 0.05:
+				if args["action"] in ("READ", "WRITE"):
+					self.PROGRESS["pos"] += args["bytes_added"]
+				elif args["action"] == "UPDATE_POS":
+					# print(self.PROGRESS["pos"], args["pos"] - self.PROGRESS["flash_offset"])
+					if self.PROGRESS["pos"] == args["pos"] - self.PROGRESS["flash_offset"]:
+						skip_speed = True
+					self.PROGRESS["pos"] = args["pos"] - self.PROGRESS["flash_offset"]
+					if "sector_erase_time" in args:
+						if "sector_erase_time" in self.PROGRESS:
+							self.PROGRESS["sector_erase_time"] = (self.PROGRESS["sector_erase_time"] + args["sector_erase_time"]) / 2
+						else:
+							self.PROGRESS["sector_erase_time"] = args["sector_erase_time"]
+					if "sector_pos" in args:
+						if "sector_erase_time" not in args: self.PROGRESS["sector_erase_time"] = 0
+						self.PROGRESS["sector_pos"] = args["sector_pos"]
+					if "abortable" in args:
+						self.PROGRESS["abortable"] = args["abortable"]
+				
+				if ((now - self.PROGRESS["time_last_emit"]) > 0.06) or "force_update" in args and args["force_update"] is True:
 					self.PROGRESS["time_elapsed"] = now - self.PROGRESS["time_start"]
-					if (now - self.PROGRESS["time_last_update_speed"]) > 0.25:
-						time_delta = now - self.PROGRESS["time_last_update_speed"]
-						pos_delta = self.PROGRESS["pos"] - self.PROGRESS["bytes_last_update_speed"]
-						if time_delta > 0:
-							speed = (pos_delta / time_delta) / 1024
-							self.PROGRESS["speeds"].append(speed)
-							if len(self.PROGRESS["speeds"]) > 256: self.PROGRESS["speeds"].pop(0)
-							self.PROGRESS["speed"] = statistics.median(self.PROGRESS["speeds"])
-						self.PROGRESS["time_last_update_speed"] = now
-						self.PROGRESS["bytes_last_update_speed"] = self.PROGRESS["pos"]
+					time_delta = now - self.PROGRESS["time_last_update_speed"]
+					pos_delta = self.PROGRESS["pos"] - self.PROGRESS["bytes_last_update_speed"]
+					if time_delta > 0 and (time.time() - self.PROGRESS["time_start"] > 2) and "sector_erase_time" not in args:
+						speed = (pos_delta / time_delta) / 1024
+						if speed > 0 and not skip_speed:
+							if len(self.PROGRESS["speeds"]) < 40 or not self.IsOutlier(speeds=self.PROGRESS["speeds"], new_number=speed, threshold=25):
+								self.PROGRESS["speeds"].append(speed)
+							if len(self.PROGRESS["speeds"]) > 50: self.PROGRESS["speeds"].pop(0)
+							if len(self.PROGRESS["speeds"]) > 1 and random.randint(0, 10) == 0: self.PROGRESS["speeds"].pop(0)
+							# print(len(self.PROGRESS["speeds"]), pos_delta, end="  \r", flush=True)
+						if len(self.PROGRESS["speeds"]) > 0:
+							# print(self.PROGRESS["speeds"])
+							self.PROGRESS["speed"] = statistics.mean(self.PROGRESS["speeds"])
+						else:
+							self.PROGRESS["speed"] = 0
+					self.PROGRESS["time_last_update_speed"] = now
+					self.PROGRESS["bytes_last_update_speed"] = self.PROGRESS["pos"]
 					
 					if "skipping" in args and args["skipping"] is True:
 						self.PROGRESS["speed"] = 0
@@ -208,9 +245,11 @@ class Progress():
 					else:
 						self.PROGRESS["skipping"] = False
 					
-					if self.PROGRESS["speed"] > 0:
-						total_speed = statistics.mean(self.PROGRESS["speeds"])
+					if self.PROGRESS["speed"] > 0 and len(self.PROGRESS["speeds"]) > 0:
+						total_speed = self.PROGRESS["speed"] #statistics.mean(self.PROGRESS["speeds"])
 						self.PROGRESS["time_left"] = (self.PROGRESS["size"] - self.PROGRESS["pos"]) / 1024 / total_speed
+						if self.PROGRESS["sector_erase_time"] > 0:
+							self.PROGRESS["time_left"] += self.PROGRESS["sector_erase_time"] * (self.PROGRESS["sector_count"] - self.PROGRESS["sector_pos"])
 					
 					self.UPDATER(self.PROGRESS)
 					self.PROGRESS["time_last_emit"] = now
@@ -235,9 +274,10 @@ class Progress():
 				
 				self.UPDATER(self.PROGRESS)
 				del(self.PROGRESS["method"])
-		
+
 		finally:
 			self.MUTEX.release()
+
 	
 class TAMA5_CMD(Enum):
 	RAM_WRITE = 0x0
@@ -332,7 +372,7 @@ def formatProgressTime(seconds, asFloat=False):
 		s += ", "
 	if sec >= 1 or seconds < 60:
 		s += "{:d} second".format(int(sec))
-		if sec != 1: s += "s"
+		if int(sec) != 1: s += "s"
 		s += ", "
 	return s[:-2]
 
@@ -535,14 +575,16 @@ def GetDumpReport(di, device):
 			"* ROM Size:        {rom_size:s}\n" \
 			"* Mapper Type:     {mapper_type:s}\n" \
 			"* Cartridge Type:  {cart_type:s}\n" \
-		.format(system=di["system"], rom_size=di["rom_size"], mapper_type=di["mapper_type"], cart_type=di["cart_type"])
+			"* Read Method:     {read_method:s}\n" \
+		.format(system=di["system"], rom_size=di["rom_size"], mapper_type=di["mapper_type"], cart_type=di["cart_type"], read_method=di["dmg_read_method"])
 	elif mode == "AGB":
 		s += "" \
 			"\n== Dumping Settings ==\n" \
 			"* Mode:            {system:s}\n" \
 			"* ROM Size:        {rom_size:s}\n" \
 			"* Cartridge Type:  {cart_type:s}\n" \
-		.format(system=di["system"], rom_size=di["rom_size"], cart_type=di["cart_type"])
+			"* Read Method:     {read_method:s}\n" \
+		.format(system=di["system"], rom_size=di["rom_size"], cart_type=di["cart_type"], read_method=di["agb_read_method"])
 
 	di["hdr_logo"] = "OK" if header["logo_correct"] else "Invalid"
 	header["game_title_raw"] = header["game_title_raw"].replace("\0", "␀")
@@ -792,6 +834,7 @@ def GenerateFileName(mode, header, settings=None):
 			path = path.replace("%TITLE%", path_title.strip())
 			path = path.replace("%CODE%", path_code.strip())
 			path = path.replace("%REVISION%", path_revision)
+			path = path.replace("%MAPPER%", get_mbc_name(header["mapper_raw"]))
 			path = re.sub(r"[<>:\"/\\|\?\*]", "_", path)
 			if get_mbc_name(header["mapper_raw"]) == "G-MMC1":
 				if "gbmem_parsed" in header:
@@ -869,12 +912,12 @@ def find_size(data, max_size, min_size=0x20):
 	return offset
 
 def dprint(*args, **kwargs):
-	global DEBUG_LOG
 	stack = traceback.extract_stack()
 	stack = stack[len(stack)-2]
+
 	msg = "[{:s}] [{:s}:{:d}] {:s}(): {:s}".format(datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(), os.path.split(stack.filename)[1], stack.lineno, stack.name, " ".join(map(str, args)), **kwargs)
 	DEBUG_LOG.append(msg)
-	DEBUG_LOG = DEBUG_LOG[-32768:]
+	if len(DEBUG_LOG) > 64*1024: DEBUG_LOG.pop(0)
 	if DEBUG:
 		msg = "{:s}{:s}".format(ANSI.CLEAR_LINE, msg)
 		print(msg)

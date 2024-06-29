@@ -11,10 +11,9 @@ class GBMemoryMap:
 	IS_MENU = False
 	
 	def __init__(self, rom=None, oldmap=None):
+		self.MAP_DATA = bytearray([0xFF] * 0x80)
 		if rom is None: return
-		if rom == bytearray([0xFF] * len(rom)):
-			self.MAP_DATA = bytearray([0x00] * 0x80)
-		elif rom is not None:
+		if rom is not None:
 			self.ImportROM(rom)
 			if oldmap is not None:
 				self.MAP_DATA[0x70:0x78] = oldmap[0x70:0x78] # keep existing cart id
@@ -316,6 +315,6 @@ class GBMemoryMap:
 		return self.IS_MENU
 	
 	def GetMapData(self):
-		if self.MAP_DATA == bytearray([0xFF] * 0x80):
-			return False
+		#if self.MAP_DATA == bytearray([0xFF] * 0x80):
+		#	return False
 		return self.MAP_DATA

@@ -1,0 +1,22 @@
+{
+	"type":"DMG",
+	"names":[
+		"BUNG Doctor GB Card 16M"
+	],
+	"flash_ids":[
+		[ 0xC2, 0x00, 0xF1, 0x00 ]
+	],
+	"voltage":5,
+	"flash_size":0x200000,
+	"start_addr":0,
+	"first_bank":1,
+	"mbc":0x1B,
+	"flash_commands_on_bank_1":true,
+	"sector_size":0x4000,
+	"write_pin":"AUDIO",
+	"chip_erase_timeout":15,
+	"status_register_mask":0xFF,
+	"status_register_value":0x80,
+	"command_set":"BUNG_16M",
+	"commands":{}
+}
