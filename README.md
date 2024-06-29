@@ -44,7 +44,8 @@ These work for installing fresh and upgrading from an older version.
 * If installation fails, try this command instead:<br>`pip3 install "FlashGBX[qt5]"`
 * If installation still fails, you can install the minimal version (command line interface) with this command:<br>`pip3 install FlashGBX`
 
-* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
+* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest), contributed by JJ-Fox.
+* Pre-made macOS packages and instructions are available [here](https://github.com/Cliffback/FlashGBX-macOS) (in the “Releases” section), contributed by Cliffback.
 
 #### Running
 Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
