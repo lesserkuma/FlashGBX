@@ -24,7 +24,7 @@
 - Added support for the Joey Jr hardware device *(thanks BennVenn)*
 - Confirmed support for F0088_2G_BGA48 with F0088H0
 - Added support for DVP DRV with MX29LV320CB *(thanks Lu)*
-- The insideGadgets’ firmware protocol of older GBxCart RW devices (Mini, v1.2 and older) is no longer supported
+- The insideGadgets’ firmware protocol of older GBxCart RW devices (Mini, v1.2, v1.3 and older) is no longer supported
 - Minor bug fixes and improvements *(thanks aronson, simonK, marv17)*
 
 ### v3.37 (released 2024-03-01)

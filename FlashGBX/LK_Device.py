@@ -409,7 +409,7 @@ class LK_Device(ABC):
 
 	def _try_write(self, data, retries=5):
 		while retries > 0:
-			ack = self._write(data, wait=True)
+			ack = self._write(data, wait=self.FW["fw_ver"] >= 12)
 			if "from_user" in self.CANCEL_ARGS and self.CANCEL_ARGS["from_user"]:
 				return False
 			if ack is not False:
