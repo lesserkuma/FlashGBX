@@ -191,7 +191,7 @@ class GbxDevice(LK_Device):
 			if self.FW["fw_ver"] >= 12:
 				temp = bytearray([self.DEVICE_CMD["QUERY_CART_PWR"]])
 				self._get_fw_variable("CART_MODE")
-			else:
+			elif self.CanPowerCycleCart():
 				temp = bytearray([self.DEVICE_CMD["OFW_QUERY_CART_PWR"]])
 				self._write(temp)
 				self._read(1)

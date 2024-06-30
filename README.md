@@ -19,7 +19,7 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 
 ### Compatible cartridge reader/writer hardware
 
-- [GBxCart RW](https://www.gbxcart.com/) (tested with v1.4, v1.4a and v1.4c)
+- [GBxCart RW](https://www.gbxcart.com/) (tested with v1.3, v1.4, v1.4a and v1.4c)
 - [GBFlash](https://github.com/simonkwng/GBFlash) (tested with v1.2 and v1.3)
 - [Joey Jr](https://bennvenn.myshopify.com/collections/game-cart-to-pc-interface/products/usb-gb-c-cart-dumper-the-joey-jr) (tested with V2++)
 

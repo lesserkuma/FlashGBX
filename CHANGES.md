@@ -1,4 +1,7 @@
 # Release notes
+### v4.0.1 (released 2024-06-30)
+- Bug fixes *(thanks marv17, RibShark)*
+
 ### v4.0 (released 2024-06-30)
 - Updated GBxCart RW firmware to version R42+L12 (improves flash cart compatibility)
 - Improved support for M5M29-39VF512 with M5M29HD528 *(thanks marv17)*
@@ -16,7 +19,7 @@
 - Added support for GBFlash RTC with MX29LV320EB *(thanks simonK)*
 - Added support for GBFlash 1M FLASH RTC (AGB-R1M-02V3)
 - Added support for GBA Movie Player v2 CF (SST39VF400A)
-- Added support for the GBflash v1.2 and v1.3 hardware device *(thanks simonK)*
+- Added support for the GBflash hardware device *(thanks simonK)*
 - Added support for M36XXX_32A_EARTH with M36L0R8060B *(thanks Herax)*
 - Added support for BUNG Doctor GB Card 4M *(thanks chobby)*
 - Added support for BUNG Doctor GB Card 16M *(thanks chobby)*
@@ -24,7 +27,7 @@
 - Added support for the Joey Jr hardware device *(thanks BennVenn)*
 - Confirmed support for F0088_2G_BGA48 with F0088H0
 - Added support for DVP DRV with MX29LV320CB *(thanks Lu)*
-- The insideGadgets’ firmware protocol of older GBxCart RW devices (Mini, v1.2, v1.3 and older) is no longer supported
+- The insideGadgets’ firmware protocol of older GBxCart RW devices (Mini, v1.2 and older) is no longer supported
 - Minor bug fixes and improvements *(thanks aronson, simonK, marv17)*
 
 ### v3.37 (released 2024-03-01)

@@ -409,7 +409,7 @@ class LK_Device(ABC):
 
 	def _try_write(self, data, retries=5):
 		while retries > 0:
-			ack = self._write(data, wait=self.FW["fw_ver"] >= 12)
+			ack = self._write(data, wait=True)
 			if "from_user" in self.CANCEL_ARGS and self.CANCEL_ARGS["from_user"]:
 				return False
 			if ack is not False:
@@ -532,8 +532,11 @@ class LK_Device(ABC):
 		buffer.extend(struct.pack(">I", key))
 		buffer.extend(struct.pack(">I", value))
 
-		self._try_write(buffer)
-	
+		if self.FW["fw_ver"] >= 12:
+			self._try_write(buffer)
+		else:
+			self._write(buffer)
+		
 	def _cart_read(self, address, length=0, agb_save_flash=False):
 		if self.MODE == "DMG":
 			if length == 0:
@@ -595,7 +598,10 @@ class LK_Device(ABC):
 			buffer.extend(struct.pack(">I", address >> 1))
 			buffer.extend(struct.pack(">H", value & 0xFFFF))
 		
-		self._try_write(buffer)
+		if self.FW["fw_ver"] >= 12:
+			self._try_write(buffer)
+		else:
+			self._write(buffer)
 		
 		if self.MODE == "DMG" and sram: self._set_fw_variable("DMG_WRITE_CS_PULSE", 0)
 	
@@ -2523,6 +2529,7 @@ class LK_Device(ABC):
 
 				self.INFO["dump_info"]["vf_addr_reorder"] = addr_reorder
 				self.INFO["dump_info"]["vf_value_reorder"] = value_reorder
+				self.INFO["dump_info"]["agb_read_method"] = self.AGB_READ_METHODS[self.AGB_READ_METHOD]
 
 			else:
 				self.INFO["dump_info"]["agb_read_method"] = self.AGB_READ_METHODS[self.AGB_READ_METHOD]
