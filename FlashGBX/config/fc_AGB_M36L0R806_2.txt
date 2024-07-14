@@ -1,10 +1,12 @@
 {
 	"type":"AGB",
 	"names":[
-		"M36XXX_32A_EARTH with M36L0R8060B"
+		"M36XXX_32A_EARTH with M36L0R8060B",
+		"M36XXX_32A_EARTH with M36L0R8060T"
 	],
 	"flash_ids":[
-		[ 0x20, 0x00, 0x0D, 0x88 ]
+		[ 0x20, 0x00, 0x0D, 0x88 ],
+		[ 0x20, 0x00, 0x0E, 0x88 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x2000000,

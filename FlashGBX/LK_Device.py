@@ -420,14 +420,16 @@ class LK_Device(ABC):
 			retries -= 1
 			dprint("Retries left:", retries)
 			
-			hp = 10
+			hp = 20
 			temp = 0
 			while temp not in (1, 2) and hp > 0:
+				self.DEVICE.reset_output_buffer()
+				self.DEVICE.reset_input_buffer()
 				self.DEVICE.write(b'\x00')
 				temp = self._read(1)
-				dprint("Current response:", temp)
 				hp -= 1
-			if hp == 0: break
+				dprint("Current response:", temp, ", HP:", hp)
+			#if hp == 0: break
 		return False
 	
 	def _write(self, data, wait=False):
@@ -533,9 +535,9 @@ class LK_Device(ABC):
 		buffer.extend(struct.pack(">I", value))
 
 		if self.FW["fw_ver"] >= 12:
-			self._try_write(buffer)
+			return self._try_write(buffer)
 		else:
-			self._write(buffer)
+			return self._write(buffer)
 		
 	def _cart_read(self, address, length=0, agb_save_flash=False):
 		if self.MODE == "DMG":
@@ -870,7 +872,8 @@ class LK_Device(ABC):
 			self.SIGNAL = None
 	
 	def Debug(self):
-		# self.SetPin(["PIN_AUDIO"], True)
+		# for i in range(0, 0x100000):
+		# 	print(hex(i), self._set_fw_variable("ADDRESS", i), end="\r", flush=True)
 		return
 
 	def ReadInfo(self, setPinsAsInputs=False, checkRtc=True):
@@ -2194,7 +2197,8 @@ class LK_Device(ABC):
 							for j2 in range(0, len(d_swap)):
 								for j in range(0, len(cfi_buffer)):
 									cfi_buffer[j] = bitswap(cfi_buffer[j], d_swap[j2])
-							with open("debug_cfi_2.bin", "wb") as f: f.write(cfi_buffer)
+							if ".dev" in Util.VERSION_PEP440 or Util.DEBUG:
+								with open("debug_cfi_d0d1+d6d7.bin", "wb") as f: f.write(cfi_buffer)
 						else:
 							cfi_buffer = None
 
@@ -3333,6 +3337,8 @@ class LK_Device(ABC):
 						rtc_buffer = self._read(8)
 						if len(rtc_buffer) == 8 and _agb_gpio.HasRTC(rtc_buffer) is True:
 							rtc_buffer = rtc_buffer[1:]
+							rtc_buffer.append(_agb_gpio.RTCReadStatus()) # 24h mode = 0x40, reset flag = 0x80
+							rtc_buffer.extend(struct.pack("<Q", int(time.time())))
 						else:
 							rtc_buffer = None
 					else:

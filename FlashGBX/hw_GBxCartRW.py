@@ -320,3 +320,8 @@ class GbxDevice(LK_Device):
 		except SerialException:
 			pass
 		return super().Close(cartPowerOff)
+
+	def SetTimeout(self, seconds=1):
+		if seconds < 1: seconds = 1
+		self.DEVICE_TIMEOUT = seconds
+		self.DEVICE.timeout = self.DEVICE_TIMEOUT

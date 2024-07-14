@@ -1769,9 +1769,8 @@ class AGB_GPIO:
 			])
 		
 		# Add timestamp of backup time
-		ts = int(time.time())
 		buffer.append(self.RTCReadStatus()) # 24h mode = 0x40, reset flag = 0x80
-		buffer.extend(struct.pack("<Q", ts))
+		buffer.extend(struct.pack("<Q", int(time.time())))
 
 		dprint(' '.join(format(x, '02X') for x in buffer))
 		

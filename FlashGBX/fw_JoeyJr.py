@@ -32,7 +32,10 @@ class FirmwareUpdater():
 		
 		with open(file, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
 		if not temp.startswith("UPDATE"):
-			with open(file, "w", encoding="UTF-8") as f: f.write("UPDATE\r\n")
+			with open(file, "wb") as f:
+				temp = bytearray(b"UPDATE")
+				temp += bytearray([0] * (256 - len(temp)))
+				f.write(temp)
 			hp = 30
 			while hp > 0:
 				if os.path.exists(path + "FIRMWARE.JR"): break
@@ -42,7 +45,12 @@ class FirmwareUpdater():
 				fncSetStatus(text="Error: Couldn’t communicate with the Joey Jr device.")
 				return 2
 		
-		with open(file, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
+		try:
+			with open(file, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
+		except FileNotFoundError:
+			fncSetStatus(text="Error: Couldn’t open MODE.TXT file, please try again.")
+			return 2
+
 		if not temp.startswith("UPDATE"):
 			fncSetStatus(text="Error: Couldn’t enter UPDATE mode, please try again.")
 			return 2
@@ -69,9 +77,18 @@ class FirmwareUpdater():
 		except OSError:
 			pass
 
-		time.sleep(3)
+		if b"Joey Jr. Firmware" not in buffer:
+			hp = 5
+			while hp > 0:
+				if not os.path.exists(path + "FIRMWARE.JR"): break
+				time.sleep(1)
+				hp -= 1
+			if hp == 0:
+				fncSetStatus(text="Error: Couldn’t verify, please try again.")
+				return 2
+
 		fncSetStatus("Done.")
-		time.sleep(1)
+		time.sleep(2)
 
 		return True
 	
@@ -148,9 +165,9 @@ class FirmwareUpdater():
 			fncSetStatus(text="Updating firmware... Do not unplug the device!", setProgress=percent)
 
 		dev.close()
-		time.sleep(0.8)
-		fncSetStatus("Done.", setProgress=100)
 		time.sleep(1)
+		fncSetStatus("Done.", setProgress=100)
+		time.sleep(2)
 		return 1
 
 try:
@@ -302,9 +319,9 @@ try:
 			self.lblDeviceNameResult.setText(self.DEV_NAME + " " + self.PCB_VER)
 			self.lblDeviceFWVerResult.setText(self.FW_VER)
 
-			if platform.system() == 'Darwin':
-				self.optFW_MSC.setVisible(False)
-				self.lblFW_MSC_Blerb.setVisible(False)
+			# if platform.system() == 'Darwin':
+			# 	self.optFW_MSC.setVisible(False)
+			# 	self.lblFW_MSC_Blerb.setVisible(False)
 		
 		def run(self):
 			try:
@@ -446,8 +463,11 @@ try:
 				elif ret == 4:
 					if platform.system() == 'Darwin':
 						self.SetStatus("No device found.", enableUI=True)
+						text = "If your Joey Jr device is currently running the Drag'n'Drop firmware, please update the firmware on Windows or Linux, or use the standalone firmware updater."
+						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
+						answer = msgbox.exec()
 						return False
-					answer = QtWidgets.QMessageBox.information(self, "FlashGBX", "If your Joey Jr device is currently running a Drag'n'Drop firmware, please continue and choose its <b>MODE.TXT</b> file.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
+					answer = QtWidgets.QMessageBox.information(self, "FlashGBX", "If your Joey Jr device is currently running the Drag'n'Drop firmware, please continue and choose its <b>MODE.TXT</b> file.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 					if answer == QtWidgets.QMessageBox.Cancel:
 						self.SetStatus("No device found.", enableUI=True)
 						return False
