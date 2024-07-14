@@ -3,6 +3,7 @@
 - Added support for M36XXX_32A_EARTH with M36L0R8060T *(thanks inYourBackline)*
 - Fixed a bug with Game Boy Advance Real Time Clock register saving *(thanks Sonikks)*
 - Added support for Development AGB Cartridge 64M Flash, E201629 (128M, with 4× LH28F320BJE) *(thanks Squiddy)*
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
 - Minor bug fixes and improvements
 
 ### v4.0.1 (released 2024-06-30)
