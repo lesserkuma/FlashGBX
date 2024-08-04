@@ -42,29 +42,29 @@ class FirmwareUpdater():
 				time.sleep(1)
 				hp -= 1
 			if hp == 0:
-				fncSetStatus(text="Error: Couldn’t communicate with the Joey Jr device.")
+				fncSetStatus(text="Couldn’t communicate with the Joey Jr device.")
 				return 2
 		
 		try:
 			with open(file, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
 		except FileNotFoundError:
-			fncSetStatus(text="Error: Couldn’t open MODE.TXT file, please try again.")
+			fncSetStatus(text="Couldn’t access MODE.TXT. Remove cartridge and try again.")
 			return 2
 
 		if not temp.startswith("UPDATE"):
-			fncSetStatus(text="Error: Couldn’t enter UPDATE mode, please try again.")
+			fncSetStatus(text="Couldn’t enter UPDATE mode, please try again.")
 			return 2
 
 		fncSetStatus(text="Updating firmware... Do not unplug the device!", setProgress=0)
 		os.unlink(path + "FIRMWARE.JR")
 		if os.path.exists(path + "FIRMWARE.JR"):
-			fncSetStatus(text="Error: Couldn’t write new firmware, please try again.")
+			fncSetStatus(text="Couldn’t write new firmware, please try again.")
 			return 2
 
 		try:
 			f = open(path + "FIRMWARE.JR", "wb")
 		except OSError:
-			fncSetStatus(text="Error: Couldn’t write new firmware, please try again.")
+			fncSetStatus(text="Couldn’t write new firmware, please try again.")
 			return 2
 		
 		for i in range(0, len(buffer), 64):
@@ -84,7 +84,7 @@ class FirmwareUpdater():
 				time.sleep(1)
 				hp -= 1
 			if hp == 0:
-				fncSetStatus(text="Error: Couldn’t verify, please try again.")
+				fncSetStatus(text="Couldn’t verify, please try again.")
 				return 2
 
 		fncSetStatus("Done.")
@@ -158,7 +158,7 @@ class FirmwareUpdater():
 				pass
 			elif counter + 64 < size:
 				print("\nBad response at", counter)
-				fncSetStatus(text="Error: Bad response at 0x{:X}!".format(counter), setProgress=percent)
+				fncSetStatus(text="Error! Bad response at 0x{:X}!".format(counter), setProgress=percent)
 				return 2
 			
 			counter += 64

@@ -118,24 +118,27 @@ class GBMemoryMap:
 			else:
 				rom_size = 0b101
 
-			if info["rom_header"]["ram_size_raw"] not in Util.DMG_Header_RAM_Sizes_Map:
-				sram_size = 0
-				sram_type = 0b000
+			if mbc_type == 2:
+				sram_type = 0b010
 			else:
-				sram_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(info["rom_header"]["ram_size_raw"])]
-				if sram_size == 0:
+				if info["rom_header"]["ram_size_raw"] not in Util.DMG_Header_RAM_Sizes_Map:
+					sram_size = 0
 					sram_type = 0b000
-				elif sram_size == 0x2000:
-					sram_type = 0b010
-				elif sram_size == 0x8000:
-					sram_type = 0b011
-				elif sram_size == 0x10000:
-					sram_type = 0b100
-				elif sram_size == 0x20000:
-					sram_type = 0b101
 				else:
-					sram_type = 0b000
-			
+					sram_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(info["rom_header"]["ram_size_raw"])]
+					if sram_size == 0:
+						sram_type = 0b000
+					elif sram_size == 0x2000:
+						sram_type = 0b010
+					elif sram_size == 0x8000:
+						sram_type = 0b011
+					elif sram_size == 0x10000:
+						sram_type = 0b100
+					elif sram_size == 0x20000:
+						sram_type = 0b101
+					else:
+						sram_type = 0b000
+				
 			info["map"] = {
 				"mbc_type":mbc_type,
 				"rom_size":rom_size,
@@ -236,23 +239,26 @@ class GBMemoryMap:
 				else:
 					rom_size = 0b101
 
-				if info["rom_header"]["game_title"] == "NP M-MENU MENU" or info["rom_header"]["ram_size_raw"] not in Util.DMG_Header_RAM_Sizes_Map:
-					sram_size = 0
-					sram_type = 0b000
+				if mbc_type == 2:
+					sram_type = 0b010
 				else:
-					sram_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(info["rom_header"]["ram_size_raw"])]
-					if sram_size == 0:
+					if info["rom_header"]["game_title"] == "NP M-MENU MENU" or info["rom_header"]["ram_size_raw"] not in Util.DMG_Header_RAM_Sizes_Map:
+						sram_size = 0
 						sram_type = 0b000
-					elif sram_size == 0x2000:
-						sram_type = 0b010
-					elif sram_size == 0x8000:
-						sram_type = 0b011
-					elif sram_size == 0x10000:
-						sram_type = 0b100
-					elif sram_size == 0x20000:
-						sram_type = 0b101
 					else:
-						sram_type = 0b000
+						sram_size = Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(info["rom_header"]["ram_size_raw"])]
+						if sram_size == 0:
+							sram_type = 0b000
+						elif sram_size == 0x2000:
+							sram_type = 0b010
+						elif sram_size == 0x8000:
+							sram_type = 0b011
+						elif sram_size == 0x10000:
+							sram_type = 0b100
+						elif sram_size == 0x20000:
+							sram_type = 0b101
+						else:
+							sram_type = 0b000
 
 				info["map"] = {
 					"mbc_type":mbc_type,

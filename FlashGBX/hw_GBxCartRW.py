@@ -9,7 +9,7 @@ class GbxDevice(LK_Device):
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 1
-	DEVICE_LATEST_FW_TS = { 4:1709317610, 5:1719609931, 6:1719609931, 2:0, 90:0, 100:0 }
+	DEVICE_LATEST_FW_TS = { 4:1709317610, 5:1722774120, 6:1722774120, 2:0, 90:0, 100:0 }
 	PCB_VERSIONS = { 5:'v1.4', 6:'v1.4a/b/c', 2:'v1.1/v1.2', 4:'v1.3', 90:'XMAS v1.0', 100:'Mini v1.0' }
 	BAUDRATE = 1000000
 	MAX_BUFFER_READ = 0x1000
@@ -74,6 +74,8 @@ class GbxDevice(LK_Device):
 				self.MAX_BUFFER_WRITE = 0x100
 			
 			conn_msg.append([0, "For help with your GBxCart RW device, please visit the insideGadgets Discord: https://gbxcart.com/discord"])
+			if self.FW["pcb_ver"] == 4:
+				conn_msg.append([0, "Note: Your GBxCart RW hardware revision does not fully support the latest features due to technical limitations. Please consider upgrading to a newer device."])
 
 			self.PORT = ports[i]
 			self.DEVICE.timeout = self.DEVICE_TIMEOUT

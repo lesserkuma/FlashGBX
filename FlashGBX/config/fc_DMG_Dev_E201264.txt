@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"DMG-MBC5-32M-FLASH Development Cartridge"
+		"DMG-MBC5-32M-FLASH (G/A) Development Cartridge"
 	],
 	"flash_ids":[
 		[ 0xB0, 0x88 ]

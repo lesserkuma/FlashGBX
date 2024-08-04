@@ -404,8 +404,6 @@ class DMG_MBC3(DMG_MBC):
 						seconds = dt_new.second
 						minutes = dt_new.minute
 						hours = dt_new.hour
-						#temp = dt_new - dt_buffer1
-						#days = temp.days
 						temp = datetime.date.fromtimestamp(timestamp_now) - datetime.date.fromtimestamp(timestamp_then)
 						days = temp.days + days
 						if days >= 512:
@@ -413,13 +411,6 @@ class DMG_MBC3(DMG_MBC):
 							days = days % 512
 						dprint(seconds, minutes, hours, days, carry)
 
-				#buffer[0x00] = seconds % 60
-				#buffer[0x04] = minutes % 60
-				#buffer[0x08] = hours % 24
-				#buffer[0x0C] = days & 0xFF
-				#buffer[0x10] = days >> 8 & 0x1
-				#if carry:
-				#	buffer[0x10] |= 0x80
 			except Exception as e:
 				print("Couldn’t update the RTC register values\n", e)
 		
@@ -1065,15 +1056,10 @@ class DMG_HuC3(DMG_MBC):
 						dprint(dt_then, dt_now, dt_buffer1, dt_buffer2, dt_new, sep="\n")
 						minutes = dt_new.minute
 						hours = dt_new.hour
-						#temp = dt_new - dt_buffer1
-						#days = temp.days
 						temp = datetime.date.fromtimestamp(timestamp_now) - datetime.date.fromtimestamp(timestamp_then)
 						days = temp.days + days
 						dprint(minutes, hours, days)
 				
-				#total_minutes = 60 * hours + minutes
-				#data = (total_minutes & 0xFFF) | ((days & 0xFFF) << 12)
-				#buffer[0:4] = struct.pack("<I", data)
 				d = {
 					"rtc_h":hours,
 					"rtc_m":minutes,
@@ -1322,23 +1308,8 @@ class DMG_TAMA5(DMG_MBC):
 						dt_new_notime = dt_new.replace(hour=0, minute=0, second=0)
 						days_passed = int((dt_new_notime.timestamp() - dt_buffer_notime.timestamp()) / 60 / 60 / 24)
 						weekday += days_passed % 7
-						#print("leap_year_state#1", leap_year_state)
 						leap_year_state = (leap_year_state + year_new) % 4
-						#print("leap_year_state#2", leap_year_state)
-						#print("New:", seconds, minutes, hours, day_of_week, days, months, years, leap_year_state, z24h_flag)
 
-				# buffer[0x00] = Util.EncodeBCD(seconds)
-				# buffer[0x01] = Util.EncodeBCD(minutes)
-				# buffer[0x02] = Util.EncodeBCD(hours)
-				# buffer[0x03] = (weekday & 0xF) | ((Util.EncodeBCD(days) & 0xF) << 4)
-				# buffer[0x04] = (Util.EncodeBCD(days) >> 4) | ((Util.EncodeBCD(months) & 0xF) << 4)
-				# buffer[0x05] = (Util.EncodeBCD(months) >> 4) | ((Util.EncodeBCD(years) & 0xF) << 4)
-				# buffer[0x06] = (Util.EncodeBCD(years) >> 4)
-				# buffer[0x0D] = leap_year_state << 4 | z24h_flag
-				
-				#dstr = ' '.join(format(x, '02X') for x in buffer)
-				#print("[{:02X}] {:s}".format(int(len(dstr)/3) + 1, dstr))
-			
 			except Exception as e:
 				print("Couldn’t update the RTC register values\n", e)
 
@@ -1559,31 +1530,6 @@ class DMG_Unlicensed_DatelOrbitV2(DMG_MBC):
 
 	def GetMaxROMSize(self):
 		return 128*1024
-
-# class DMG_Unlicensed_DatelMegaMem(DMG_MBC):
-# 	def GetName(self):
-# 		return "Datel MegaMem"
-	
-# 	def __init__(self, args=None, cart_write_fncptr=None, cart_read_fncptr=None, cart_powercycle_fncptr=None, clk_toggle_fncptr=None):
-# 		if args is None: args = {}
-# 		super().__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=None)
-# 		self.ROM_BANK_SIZE = 0x4000
-# 		self.RAM_BANK_SIZE = 0x4000
-
-# 	def SelectBankROM(self, index):
-# 		dprint(self.GetName(), "|", index)
-# 		return (0, self.ROM_BANK_SIZE)
-
-# 	def SelectBankRAM(self, index):
-# 		dprint(self.GetName(), "|", index)
-# 		self.CartWrite([[ 0x2000, index & 0x20 ]])
-# 		return (0x4000, self.RAM_BANK_SIZE)
-
-# 	def GetROMBanks(self, rom_size):
-# 		return 1
-	
-# 	def GetMaxROMSize(self):
-# 		return 16*1024
 
 
 class AGB_GPIO:

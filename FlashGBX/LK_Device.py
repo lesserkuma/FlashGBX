@@ -2183,23 +2183,26 @@ class LK_Device(ABC):
 
 						if ".dev" in Util.VERSION_PEP440 or Util.DEBUG:
 							with open("debug_cfi.bin", "wb") as f: f.write(cfi_buffer)
-						magic = "{:s}{:s}{:s}".format(chr(cfi_buffer[0x20]), chr(cfi_buffer[0x22]), chr(cfi_buffer[0x24]))
-						d_swap = (0, 0)
-						if magic == "QRY": # D0D1 not swapped
-							pass
-						elif magic == "RQZ": # D0D1 swapped
-							d_swap = [(0, 1)]
-							for j2 in range(0, len(d_swap)):
-								for j in range(0, len(cfi_buffer)):
-									cfi_buffer[j] = bitswap(cfi_buffer[j], d_swap[j2])
-						elif magic == "\x92\x91\x9A": # D0D1+D6D7 swapped
-							d_swap = [( 0, 1 ), ( 6, 7 )]
-							for j2 in range(0, len(d_swap)):
-								for j in range(0, len(cfi_buffer)):
-									cfi_buffer[j] = bitswap(cfi_buffer[j], d_swap[j2])
-							if ".dev" in Util.VERSION_PEP440 or Util.DEBUG:
-								with open("debug_cfi_d0d1+d6d7.bin", "wb") as f: f.write(cfi_buffer)
-						else:
+						try:
+							magic = "{:s}{:s}{:s}".format(chr(cfi_buffer[0x20]), chr(cfi_buffer[0x22]), chr(cfi_buffer[0x24]))
+							d_swap = (0, 0)
+							if magic == "QRY": # D0D1 not swapped
+								pass
+							elif magic == "RQZ": # D0D1 swapped
+								d_swap = [(0, 1)]
+								for j2 in range(0, len(d_swap)):
+									for j in range(0, len(cfi_buffer)):
+										cfi_buffer[j] = bitswap(cfi_buffer[j], d_swap[j2])
+							elif magic == "\x92\x91\x9A": # D0D1+D6D7 swapped
+								d_swap = [( 0, 1 ), ( 6, 7 )]
+								for j2 in range(0, len(d_swap)):
+									for j in range(0, len(cfi_buffer)):
+										cfi_buffer[j] = bitswap(cfi_buffer[j], d_swap[j2])
+								if ".dev" in Util.VERSION_PEP440 or Util.DEBUG:
+									with open("debug_cfi_d0d1+d6d7.bin", "wb") as f: f.write(cfi_buffer)
+							else:
+								cfi_buffer = None
+						except:
 							cfi_buffer = None
 
 						if self.MODE == "DMG":
@@ -3553,6 +3556,9 @@ class LK_Device(ABC):
 		if (self.FW["fw_ver"] < 12 and "set_irq_high" in cart_type and cart_type["set_irq_high"] is True):
 			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type requires at least firmware version L12.", "abortable":False})
 			return False
+		if (self.FW["fw_ver"] < 12 and "status_register_mask" in cart_type):
+			self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type requires at least firmware version L12.", "abortable":False})
+			return False
 		# Firmware check L12
 
 		# Ensure cart is powered
@@ -3787,6 +3793,7 @@ class LK_Device(ABC):
 				self.SetProgress({"action":"ABORT", "info_type":"msgbox_critical", "info_msg":"This cartridge type is currently not supported for ROM writing.", "abortable":False})
 				return False
 			
+			we = 0x00
 			if flashcart.WEisWR():
 				we = 0x01 # FLASH_WE_PIN_WR
 				self._write(we)
@@ -3800,7 +3807,6 @@ class LK_Device(ABC):
 				self._write(we) # FLASH_WE_PIN_WR_RESET
 				dprint("Using WR+RESET as WE")
 			else:
-				we = 0x00
 				self._write(we) # unset
 			
 			for i in range(0, 6):
@@ -4113,7 +4119,7 @@ class LK_Device(ABC):
 							len_rest = end_address - pos
 							skip_se = False
 							ts_se_start = time.time()
-							if "compare_sectors" in args and args["compare_sectors"] is True and sector[1] <= len_rest and not (flashcart and cart_type["command_set"] == "GBAMP"):
+							if self.FW["fw_ver"] >= 12 and "compare_sectors" in args and args["compare_sectors"] is True and sector[1] <= len_rest and not (flashcart and cart_type["command_set"] == "GBAMP"):
 								verified = self.CompareCRC32(buffer=data_import, offset=sector[0], length=sector[1], address=start_address, flashcart=flashcart, reset=True)
 								if verified is True:
 									skip_se = True
@@ -4393,7 +4399,7 @@ class LK_Device(ABC):
 						dprint(f"Verifying ROM bank #{bank} at 0x{pos_from:x} (physical 0x{start_address:X}, 0x{verify_len:X} bytes)")
 						
 						verified = False
-						if sector[1] >= verify_len and crc32_errors < 5:
+						if self.FW["fw_ver"] >= 12 and sector[1] >= verify_len and crc32_errors < 5:
 							verified = self.CompareCRC32(buffer=data_import, offset=pos_from, length=verify_len, address=start_address, flashcart=flashcart, reset=False)
 							if verified is True:
 								dprint("CRC32 verification successful between 0x{:X} and 0x{:X}".format(pos_from, verify_len))

@@ -183,22 +183,11 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.layout_devices.addWidget(self.cmbDevice)
 		self.layout_devices.addStretch()
 
-		#btnText = "Too&ls"
-		#self.btnTools = QtWidgets.QPushButton(btnText)
-		#btnWidth = self.btnTools.fontMetrics().boundingRect(btnText).width() + 24
-		#if platform.system() == "Darwin": btnWidth += 12
-		#self.btnTools.setMaximumWidth(btnWidth)
 		self.mnuTools = QtWidgets.QMenu("&Tools")
 		self.mnuTools.addAction("Game Boy &Camera Album Viewer", self.ShowPocketCameraWindow)
 		self.mnuTools.addSeparator()
 		self.mnuTools.addAction("Firmware &Updater", self.ShowFirmwareUpdateWindow)
-		#self.btnTools.setMenu(self.mnuTools)
 
-		#btnText = "C&onfig"
-		#self.btnConfig = QtWidgets.QPushButton(btnText)
-		#btnWidth = self.btnConfig.fontMetrics().boundingRect(btnText).width() + 24
-		#if platform.system() == "Darwin": btnWidth += 12
-		#self.btnConfig.setMaximumWidth(btnWidth)
 		self.mnuConfig = QtWidgets.QMenu("&Settings")
 		self.mnuConfig.addAction("Check for &updates on application startup", lambda: [ self.EnableUpdateCheck() ])
 		self.mnuConfig.addAction("&Append date && time to filename of save data backups", lambda: self.SETTINGS.setValue("SaveFileNameAddDateTime", str(self.mnuConfig.actions()[1].isChecked()).lower().replace("true", "enabled").replace("false", "disabled")))
@@ -249,10 +238,10 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.mnuConfig.actions()[7].setChecked(self.SETTINGS.value("UseNoIntroFilenames", default="enabled") == "enabled")
 		self.mnuConfig.actions()[8].setChecked(self.SETTINGS.value("AutoPowerOff", default="350") != "0")
 		self.mnuConfig.actions()[9].setChecked(self.SETTINGS.value("CompareSectors", default="enabled") == "enabled")
-		#self.btnConfig.setMenu(self.mnuConfig)
 
 		self.mnuThirdParty = QtWidgets.QMenu("Third Party &Notices")
 		self.mnuThirdParty.addAction("About &Qt", lambda: [ QtWidgets.QMessageBox.aboutQt(None) ])
+		self.mnuThirdParty.addAction("About Game &Database", self.AboutGameDB)
 		self.mnuThirdParty.addAction("Licenses", lambda: [ self.OpenPath(Util.APP_PATH + "/res/Third Party Notices.md") ])
 
 		btnText = "&Options"
@@ -274,8 +263,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		self.btnConnect = QtWidgets.QPushButton("&Connect")
 		self.connect(self.btnConnect, QtCore.SIGNAL("clicked()"), self.ConnectDevice)
 		self.layout_devices.addWidget(self.btnMainMenu)
-		#self.layout_devices.addWidget(self.btnTools)
-		#self.layout_devices.addWidget(self.btnConfig)
 		self.layout_devices.addWidget(self.btnConnect)
 
 		self.layout.addLayout(self.layout_devices, 1, 0, 1, 0)
@@ -355,12 +342,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		lblDMGHeaderRtc.setContentsMargins(0, 1, 0, 1)
 		rowDMGHeaderRtc.addWidget(lblDMGHeaderRtc)
 		self.lblDMGHeaderRtcResult = QtWidgets.QLabel("")
-		#self.lblDMGHeaderRtcResult.setCursor(QtGui.QCursor(QtCore.Qt.WhatsThisCursor))
-		#self.lblDMGHeaderRtcResult.setToolTip("This shows the internal register values; in-game clock may use an offset")
-		#self.lblDMGHeaderRtcResult.setStyleSheet("QLabel {{ color: {:s}; text-decoration: underline; cursor: hand; }}".format(QApplication.palette().color(QtGui.QPalette.Link).name()))
-		#self.lblDMGHeaderRtcResult.setCursor(QtCore.Qt.PointingHandCursor)
-		#self.connect(self.lblDMGHeaderRtcResult, QtCore.SIGNAL("clicked()"), self.EditRTC)
-		#self.lblDMGHeaderRtcResult.clicked.connect(self.EditRTC)
 		self.lblDMGHeaderRtcResult.mousePressEvent = lambda event: [ self.EditRTC(event) ]
 		rowDMGHeaderRtc.addWidget(self.lblDMGHeaderRtcResult)
 		rowDMGHeaderRtc.setStretch(0, 9)
@@ -475,8 +456,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		lblAGBGpioRtc.setContentsMargins(0, 1, 0, 1)
 		rowAGBGpioRtc.addWidget(lblAGBGpioRtc)
 		self.lblAGBGpioRtcResult = QtWidgets.QLabel("")
-		#self.lblAGBGpioRtcResult.setCursor(QtGui.QCursor(QtCore.Qt.WhatsThisCursor))
-		#self.lblAGBGpioRtcResult.setToolTip(self.lblDMGHeaderRtcResult.toolTip())
 		self.lblAGBGpioRtcResult.mousePressEvent = lambda event: [ self.EditRTC(event) ]
 		rowAGBGpioRtc.addWidget(self.lblAGBGpioRtcResult)
 		rowAGBGpioRtc.setStretch(0, 9)
@@ -731,7 +710,13 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 		msg = "This software is being developed by Lesserkuma as a hobby project. There is no affiliation with Nintendo or any other company. This software is provided as-is and the developer is not responsible for any damage that is caused by the use of it. Use at your own risk!<br><br>"
 		msg += f"© 2020–{datetime.datetime.now().year} Lesserkuma<br>"
 		msg += "• Website: <a href=\"https://github.com/lesserkuma/FlashGBX\">https://github.com/lesserkuma/FlashGBX</a><br><br>"
-		msg += "Acknowledgments and Contributors:<br>2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, aronson, Ausar, bbsan, BennVenn, ccs21, chobby, ClassicOldSong, Cliffback, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gandalf1980, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, inYourBackline, Jayro, Jenetrix, JFox, joyrider3774, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Lu, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, RibShark, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, simonK, Sithdown, skite2001, Smelly-Ghost, Sonikks, Squiddy, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, Warez Waldo, wickawack, Winter1760, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr"
+		msg += "Acknowledgments and Contributors:<br>2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, aronson, Ausar, bbsan, BennVenn, ccs21, chobby, ClassicOldSong, Cliffback, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gandalf1980, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, inYourBackline, iyatemu, Jayro, Jenetrix, JFox, joyrider3774, jrharbort, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Lu, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, RibShark, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, simonK, Sithdown, skite2001, Smelly-Ghost, Sonikks, Squiddy, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, Warez Waldo, wickawack, Winter1760, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr"
+		QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok)
+
+	def AboutGameDB(self):
+		msg = f"{APPNAME} uses a game database that is based on the ongoing efforts of the No-Intro project. Visit <a href=\"https://no-intro.org/\">https://no-intro.org/</a> for more information.<br><br>"
+		msg += f"No-Intro databases referenced for this version of {APPNAME}:<br>"
+		msg += "• Nintendo - Game Boy (20240713-090345)<br>• Nintendo - Game Boy Advance (20240803-104002)<br>• Nintendo - Game Boy Advance (Video) (20240727-194101)<br>• Nintendo - Game Boy Color (20240801-100010)" # No-Intro DBs
 		QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), msg, QtWidgets.QMessageBox.Ok)
 
 	def OpenPath(self, path=None):
@@ -948,8 +933,8 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 						msg = ret[i][1]
 						if msg in messages: # don’t show the same message twice
 							continue
-						else:
-							last_msg = msg
+						#else:
+						#	last_msg = msg
 						if status == 3:
 							messages.append(msg)
 							self.CONN = None
@@ -961,7 +946,7 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 				if dev.IsConnected():
 					self.DEVICES[dev.GetFullNameExtended()] = dev
 					if dev.GetPort() in ports: break
-				
+		
 		for dev in self.DEVICES.values():
 			dev.Close()
 		

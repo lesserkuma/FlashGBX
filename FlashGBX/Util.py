@@ -8,9 +8,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "4.1"
+VERSION_PEP440 = "4.2"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1720972833
+VERSION_TIMESTAMP = 1722797669
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -410,7 +410,7 @@ def ParseCFI(buffer):
 		info["magic"] = "{:s}{:s}{:s}".format(chr(buffer[0x20]), chr(buffer[0x22]), chr(buffer[0x24]))
 		
 		if buffer[0x36] == 0xFF and buffer[0x48] == 0xFF:
-			print("FAIL: No information about the voltage range found in CFI data.")
+			print("Note: Invalid values found in Common Flash Interface data.")
 			try:
 				with open("./cfi_debug.bin", "wb") as f: f.write(buffer)
 			except:

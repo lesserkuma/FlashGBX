@@ -1,4 +1,10 @@
 # Release notes
+### v4.2 (released 2024-08-04)
+- Fixed an issue with MBC2 save data on Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN) *(thanks iyatemu)*
+- Updated LK firmware to version L13 (fixes an issue with some FRAM-modded Game Boy cartridges) *(thanks jrharbort)*
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
+- Minor bug fixes and improvements
+
 ### v4.1 (released 2024-07-14)
 - Added support for M36XXX_32A_EARTH with M36L0R8060T *(thanks inYourBackline)*
 - Fixed a bug with Game Boy Advance Real Time Clock register saving *(thanks Sonikks)*
