@@ -8,6 +8,15 @@
   "lg": "En",
   "rg": "Europe"
  },
+ "056d4da3873ab2324ace7b8830bc081996cf3131": {
+  "gn": "Amazing Penguin",
+  "ne": "(USA, Europe)",
+  "gc": "DMG-PNE",
+  "rc": 806475210,
+  "rs": 65536,
+  "lg": "En",
+  "rg": "USA, Europe"
+ },
  "c331c0bc8f7ea83fe6972524483f91d8be01f8b0": {
   "gn": "Back to Earth 3D",
   "ne": "(Europe) (Demo)",
@@ -25,6 +34,15 @@
   "rs": 131072,
   "lg": "En",
   "rg": "USA, Europe"
+ },
+ "aeecc966a0c91d3c3bc133aaaa5aa90fb7a71931": {
+  "gn": "David Crane's The Rescue of Princess Blobette",
+  "ne": "(USA)",
+  "gc": "DMG-RPE",
+  "rc": 2182127679,
+  "rs": 65536,
+  "lg": "En",
+  "rg": "USA"
  },
  "6a0ab660fd111c6b6ca75171f858d9570bf11e0c": {
   "gn": "Game Boy Aging Cartridge",
@@ -72,6 +90,15 @@
   "lg": "En",
   "rg": "USA"
  },
+ "416b7bca4177f71b42523d2471de03231c2b31bb": {
+  "gn": "Koudai Guaishou - Da Jihe",
+  "ne": "(Taiwan) (Ja) (Pirate)",
+  "gc": "",
+  "rc": 2842568388,
+  "rs": 2097152,
+  "lg": "Ja",
+  "rg": "Taiwan"
+ },
  "a8e6ef37e84a9190a7c23244f98379fd2488db5a": {
   "gn": "M&M's Minis Madness",
   "ne": "(USA) (Sample)",
@@ -116,6 +143,15 @@
   "lg": "Ja",
   "rg": "Japan"
  },
+ "efe83cc34e206204c1750a9b16b5f92bcb2a5ef0": {
+  "gn": "Pocket Monsters - Green Version - English Edition",
+  "ne": "(Taiwan) (En) (Pirate)",
+  "gc": "",
+  "rc": 1948473340,
+  "rs": 786432,
+  "lg": "En",
+  "rg": "Taiwan"
+ },
  "ed08371c977511b4953cff43f49a98c66fbed58c": {
   "gn": "Pocket Monsters Gin",
   "ne": "(Japan) (Demo) (Spaceworld 1997) (SGB Enhanced)",
@@ -133,6 +169,42 @@
   "rs": 1048576,
   "lg": "Ja",
   "rg": "Japan"
+ },
+ "7459148f3704eb6f2f9ca1dd702bc1c7d64efc8b": {
+  "gn": "Pocket Monsters Yellow",
+  "ne": "(Hong Kong) (SGB Enhanced) (Pirate)",
+  "gc": "",
+  "rc": 2350361318,
+  "rs": 1048576,
+  "lg": "Zh",
+  "rg": "Hong Kong"
+ },
+ "d9888f88ab9a88414e3adf09b73fd703452dbe0f": {
+  "gn": "Pokemon - Blue Version",
+  "ne": "(Hong Kong) (SGB Enhanced) (Pirate)",
+  "gc": "",
+  "rc": 3310821256,
+  "rs": 1048576,
+  "lg": "Zh",
+  "rg": "Hong Kong"
+ },
+ "46f0ea243f6fcf904dd2d4862c6a9f0755244503": {
+  "gn": "Pokemon - La Version Esmeralda - Special Pikachu Edition",
+  "ne": "(Spain) (Pirate)",
+  "gc": "",
+  "rc": 218141593,
+  "rs": 524288,
+  "lg": "Es",
+  "rg": "Spain"
+ },
+ "a1fa50abcec218ec13b766db68ea0d5d4e9b6171": {
+  "gn": "Pokemon - Red Version",
+  "ne": "(Hong Kong) (SGB Enhanced) (Pirate)",
+  "gc": "",
+  "rc": 3471427608,
+  "rs": 1048576,
+  "lg": "Zh",
+  "rg": "Hong Kong"
  },
  "423f3176f930ba2722c5b3834d9c6ca3849f6ed0": {
   "gn": "Populous",
@@ -198,6 +270,42 @@
   "lg": "Ja",
   "rg": "Japan"
  },
+ "dce835d67fef8a41d4c18a2578c4615391149326": {
+  "gn": "Sonic 6",
+  "ne": "(USA) (Pirate)",
+  "gc": "",
+  "rc": 2857276281,
+  "rs": 524288,
+  "lg": "En",
+  "rg": "USA"
+ },
+ "42e2c763173cc1e2aff25cdb914f44b060ad3097": {
+  "gn": "Super Mario 4",
+  "ne": "(Unknown) (Ja) (Pirate)",
+  "gc": "",
+  "rc": 3656641439,
+  "rs": 131072,
+  "lg": "Ja",
+  "rg": "Unknown"
+ },
+ "ebc8cfcbbcd0f1211ced12c4a403820e91b2a178": {
+  "gn": "Super Mario Land 4",
+  "ne": "(Unknown) (Ja) (Pirate)",
+  "gc": "",
+  "rc": 3913991799,
+  "rs": 131072,
+  "lg": "Ja",
+  "rg": "Unknown"
+ },
+ "4dc840e66c7b8981a04c6cb4979b5fbd17f98fe5": {
+  "gn": "Tail 'Gator",
+  "ne": "(USA, Europe)",
+  "gc": "DMG-TGE",
+  "rc": 3316436604,
+  "rs": 65536,
+  "lg": "En",
+  "rg": "USA, Europe"
+ },
  "781281969c4b98e4ebd7a4e54badb0258d2432e8": {
   "gn": "Test Drive 6",
   "ne": "(Europe) (En,Fr,De,Es,It) (Sample) (GB Compatible)",
@@ -207,6 +315,15 @@
   "lg": "En,Fr,De,Es,It",
   "rg": "Europe"
  },
+ "70d6c1b7b0dab7f6dec9dbc4eae454a19a37d6cd": {
+  "gn": "Trip World DX",
+  "ne": "(World) (Limited Run Games)",
+  "gc": "",
+  "rc": 2937566187,
+  "rs": 524288,
+  "lg": "En",
+  "rg": "World"
+ },
  "bdf78e28adb73b3bec1c232bb5102cd9cb6128c5": {
   "gn": "Tutty",
   "ne": "(Europe) (Demo)",
@@ -215,6 +332,24 @@
   "rs": 131072,
   "lg": "En",
   "rg": "Europe"
+ },
+ "3cf9545412f29a22fbf5dd09802b41fe733b9a90": {
+  "gn": "Xin Nushen Zhuansheng Waizhuan - Zuihou de Shengjing",
+  "ne": "(Taiwan) (Pirate)",
+  "gc": "",
+  "rc": 580409436,
+  "rs": 524288,
+  "lg": "Zh",
+  "rg": "Taiwan"
+ },
+ "07232496f571bd354d41a6309f49936642b86dc9": {
+  "gn": "Xin Shuma Baobei Huang",
+  "ne": "(China) (Pirate)",
+  "gc": "",
+  "rc": 2256966944,
+  "rs": 2097152,
+  "lg": "Zh",
+  "rg": "China"
  },
  "67144a8ca361bf230d79c66501cc13a42e8cf67d": {
   "gn": "Xtreme Sports",
@@ -244,6 +379,15 @@
   "rv": "Rev 1",
   "lg": "Ja",
   "rg": "Japan"
+ },
+ "ce6290d9385f401b4b413885e6284374ccad2d94": {
+  "gn": "Zhong Zhuang Ji Bing",
+  "ne": "(China) (Pirate)",
+  "gc": "",
+  "rc": 2908908624,
+  "rs": 2097152,
+  "lg": "Zh-Hant",
+  "rg": "China"
  },
  "49127b4b99e43568ae9d83089c57fc81068f9654": {
   "gn": "Mani 4 in 1 - Tetris + Alleyway + Yakuman + Tennis",
@@ -23340,15 +23484,6 @@
   "lg": "En",
   "rg": "USA"
  },
- "056d4da3873ab2324ace7b8830bc081996cf3131": {
-  "gn": "Amazing Penguin",
-  "ne": "(USA, Europe)",
-  "gc": "DMG-PNE",
-  "rc": 806475210,
-  "rs": 65536,
-  "lg": "En",
-  "rg": "USA, Europe"
- },
  "9d8568ec65cd8c0baf07f1dbfe56251eac96cff4": {
   "gn": "Osawagase! Penguin Boy",
   "ne": "(Japan)",
@@ -24116,15 +24251,6 @@
   "rs": 262144,
   "lg": "Ja",
   "rg": "Japan"
- },
- "aeecc966a0c91d3c3bc133aaaa5aa90fb7a71931": {
-  "gn": "David Crane's The Rescue of Princess Blobette",
-  "ne": "(USA)",
-  "gc": "DMG-RPE",
-  "rc": 2182127679,
-  "rs": 65536,
-  "lg": "En",
-  "rg": "USA"
  },
  "b3f2e20faaa2043445c8b3b55ffc3afbc3fe9ff5": {
   "gn": "David Crane's The Rescue of Princess Blobette",
@@ -25028,15 +25154,6 @@
   "rs": 131072,
   "lg": "Ja",
   "rg": "Japan"
- },
- "4dc840e66c7b8981a04c6cb4979b5fbd17f98fe5": {
-  "gn": "Tail 'Gator",
-  "ne": "(USA, Europe)",
-  "gc": "DMG-TGE",
-  "rc": 3316436604,
-  "rs": 65536,
-  "lg": "En",
-  "rg": "USA, Europe"
  },
  "d8babd33e137a01d2ebdedc6b7c33379862d920c": {
   "gn": "Shippo de Bun",
@@ -26023,7 +26140,7 @@
   "rg": "USA"
  },
  "157f5d98697e84723042654ceaf40a9ec3ab89dd": {
-  "gn": "RoboCop versus The Terminator",
+  "gn": "RoboCop Versus The Terminator",
   "ne": "(USA)",
   "gc": "DMG-VRE",
   "rc": 4163727907,
@@ -26059,7 +26176,7 @@
   "rg": "USA"
  },
  "1a6fce6039e15346bebce32abbf36c59b1e19fb2": {
-  "gn": "RoboCop versus The Terminator",
+  "gn": "RoboCop Versus The Terminator",
   "ne": "(Europe)",
   "gc": "DMG-VRX",
   "rc": 2654668228,
