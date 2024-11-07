@@ -624,7 +624,8 @@ class FlashGBX_CLI():
 		
 		header = self.CONN.ReadInfo()
 		self.ReadCartridge(header)
-		ret = self.CONN.DetectCartridge(limitVoltage=limitVoltage, checkSaveType=True)
+		self.CONN._DetectCartridge(args={"limitVoltage":limitVoltage, "checkSaveType":True})
+		ret = self.CONN.INFO["detect_cart"]
 		(header, _, save_type, save_chip, sram_unstable, cart_types, cart_type_id, cfi_s, _, flash_id, detected_size) = ret
 
 		# Save Type
@@ -638,6 +639,8 @@ class FlashGBX_CLI():
 			supp_cart_types = self.CONN.GetSupportedCartridgesDMG()
 		elif self.CONN.GetMode() == "AGB":
 			supp_cart_types = self.CONN.GetSupportedCartridgesAGB()
+		else:
+			raise NotImplementedError
 		
 		if len(cart_types) > 0:
 			cart_type = cart_type_id
@@ -654,6 +657,7 @@ class FlashGBX_CLI():
 
 		# Save Type
 		msg_save_type_s = ""
+		temp = ""
 		if save_chip is not None:
 			temp = "{:s} ({:s})".format(Util.AGB_Header_Save_Types[save_type], save_chip)
 		else:
@@ -695,6 +699,7 @@ class FlashGBX_CLI():
 		else:
 			if (len(flash_id.split("\n")) > 2) and ((self.CONN.GetMode() == "DMG") or ("dacs_8m" in header and header["dacs_8m"] is not True)):
 				msg_cart_type_s = "Cartridge Type: Unknown flash cartridge."
+				try_this = ""
 				if ("[     0/90]" in flash_id):
 					try_this = "Generic Flash Cartridge (0/90)"
 				elif ("[   AAA/AA]" in flash_id):
@@ -767,7 +772,7 @@ class FlashGBX_CLI():
 					print("{:s}Couldn’t determine ROM size, will use 8 MiB. It can also be manually set with the “--dmg-romsize” command line switch.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 					rom_size = 8 * 1024 * 1024
 			else:
-				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb" ]
+				sizes = [ "auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb" ]
 				rom_size = Util.DMG_Header_ROM_Sizes_Flasher_Map[sizes.index(args.dmg_romsize) - 1]
 		
 		elif self.CONN.GetMode() == "AGB":
@@ -820,6 +825,9 @@ class FlashGBX_CLI():
 				carts = self.CONN.GetSupportedCartridgesDMG()[1]
 			elif self.CONN.GetMode() == "AGB":
 				carts = self.CONN.GetSupportedCartridgesAGB()[1]
+			else:
+				raise NotImplementedError
+
 			cart_type = 0
 			for i in range(0, len(carts)):
 				if not "names" in carts[i]: continue
@@ -978,6 +986,9 @@ class FlashGBX_CLI():
 				s_mbc = " using Mapper Type 0x{:X}".format(mbc)
 		elif self.CONN.GetMode() == "AGB":
 			hdr = RomFileAGB(buffer).GetHeader()
+		else:
+			raise NotImplementedError
+
 		if not hdr["logo_correct"] and (self.CONN.GetMode() == "AGB" or (self.CONN.GetMode() == "DMG" and mbc not in (0x203, 0x205))):
 			print("{:s}Warning: The ROM file you selected will not boot on actual hardware due to invalid boot logo data.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 			bootlogo = None
@@ -1249,14 +1260,6 @@ class FlashGBX_CLI():
 					print("\n{:s}Done! The writable save data size is {:s} out of {:s} checked.{:s}".format(ANSI.GREEN, Util.formatFileSize(size=found_length), Util.formatFileSize(size=Util.DMG_Header_RAM_Sizes_Flasher_Map[Util.DMG_Header_RAM_Sizes_Map.index(save_type)]), ANSI.RESET))
 				elif self.CONN.GetMode() == "AGB":
 					print("\n{:s}Done! The writable save data size using save type “{:s}” is {:s}.{:s}".format(ANSI.GREEN, Util.AGB_Header_Save_Types[save_type], Util.formatFileSize(size=found_length), ANSI.RESET))
-			
-			try:
-				(_, _, cfi) = self.CONN.CheckFlashChip(limitVoltage=False)
-				if len(cfi["raw"]) > 0:
-					with open(Util.CONFIG_PATH + "/cfi.bin", "wb") as f: f.write(cfi["raw"])
-					print("CFI data was extracted to “cfi.bin”.")
-			except:
-				pass
 
 	def UpdateFirmware_PrintText(self, text, enableUI=False, setProgress=None):
 		if setProgress is not None:
@@ -1415,8 +1418,8 @@ class FlashGBX_CLI():
 			with zf.open("fw.ini") as f: ini_file = f.read()
 			ini_file = ini_file.decode(encoding="utf-8")
 			self.INI = Util.IniSettings(ini=ini_file, main_section="Firmware")
-			fw_ver = self.INI.GetValue("fw_ver")
-			fw_buildts = self.INI.GetValue("fw_buildts")
+			#fw_ver = self.INI.GetValue("fw_ver")
+			#fw_buildts = self.INI.GetValue("fw_buildts")
 		
 		print("Select the firmware to install:\n1) Lesserkuma’s FlashGBX firmware\n2) BennVenn’s Drag’n’Drop firmware\n3) BennVenn’s JoeyGUI firmware\n")
 		answer = input("Enter number 1-3: ").lower().strip()
@@ -1454,6 +1457,7 @@ class FlashGBX_CLI():
 					FWUPD = FirmwareUpdater(port=port)
 					file_name = Util.APP_PATH + "/res/fw_JoeyJr.zip"
 					with zipfile.ZipFile(file_name) as archive:
+						fw_data = None
 						if fw_choice == 1:
 							with archive.open("FIRMWARE_LK.JR") as f: fw_data = bytearray(f.read())
 						elif fw_choice == 2:

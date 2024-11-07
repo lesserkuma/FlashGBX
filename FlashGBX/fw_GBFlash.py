@@ -230,11 +230,6 @@ try:
 				self.DEVICE = device
 			else:
 				self.APP.QT_APP.processEvents()
-				text = "This Firmware Updater is for GBFlash devices only. Please only proceed if your device is a GBFlash."
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-				msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
-				answer = msgbox.exec()
-				if answer == QtWidgets.QMessageBox.Cancel: return
 				self.FWUPD = FirmwareUpdater(app_path, None)
 
 			self.layout = QtWidgets.QGridLayout()

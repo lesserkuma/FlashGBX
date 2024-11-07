@@ -431,6 +431,12 @@ class RomFileDMG:
 					temp = self.LogoToImage(buffer[0x104:0x104+0x30])
 					if temp is not False: data["logo_sachen"] = temp
 
+			# GBFlash MBCX
+			if data["game_title"] == "MBCX_MENU":
+				data["rom_size_raw"] = 0x0A
+				data["ram_size_raw"] = 0x03
+				data["mapper_raw"] = 0x206
+
 		if data["mapper_raw"] in Util.DMG_Header_Mapper:
 			data["mapper"] = Util.DMG_Header_Mapper[data["mapper_raw"]]
 		elif data["logo_correct"]:

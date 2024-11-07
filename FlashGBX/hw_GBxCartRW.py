@@ -15,7 +15,7 @@ class GbxDevice(LK_Device):
 	MAX_BUFFER_READ = 0x1000
 	MAX_BUFFER_WRITE = 0x400
 
-	def Initialize(self, flashcarts, port=None, max_baud=2000000):
+	def Initialize(self, flashcarts=None, port=None, max_baud=2000000):
 		if self.IsConnected(): self.DEVICE.close()
 		if platform.system() == "Darwin": max_baud = 1000000
 		
@@ -81,7 +81,8 @@ class GbxDevice(LK_Device):
 			self.DEVICE.timeout = self.DEVICE_TIMEOUT
 			
 			# Load Flash Cartridge Handlers
-			self.UpdateFlashCarts(flashcarts)
+			if flashcarts is not None:
+				self.UpdateFlashCarts(flashcarts)
 
 			# Stop after first found device
 			break
@@ -177,6 +178,7 @@ class GbxDevice(LK_Device):
 		elif baudrate == 1000000:
 			self._write(self.DEVICE_CMD["OFW_USART_1_0M_SPEED"])
 		self.BAUDRATE = baudrate
+		self.DEVICE.close()
 
 	def CheckActive(self):
 		if time.time() < self.LAST_CHECK_ACTIVE + 1: return True

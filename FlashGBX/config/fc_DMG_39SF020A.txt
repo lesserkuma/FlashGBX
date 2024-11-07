@@ -1,0 +1,53 @@
+{
+	"type":"DMG",
+	"names":[
+		"insideGadgets MegaDuck 32K"
+	],
+	"flash_ids":[
+		[ 0xBF, 0xB6 ]
+	],
+	"voltage":5,
+	"start_addr":0,
+	"first_bank":1,
+	"write_pin":"WR",
+	"chip_erase_timeout":30,
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x90 ]
+		],
+		"chip_erase":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x80 ],
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0x10 ]
+		],
+		"chip_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ 0, 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0x5555, 0xAA ],
+			[ 0x2AAA, 0x55 ],
+			[ 0x5555, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}

@@ -1,4 +1,14 @@
 # Release notes
+### v4.3 (released 2024-11-07)
+- Added support for DVP DRV with MX29LV320CT *(thanks Mufsta)*
+- Added support for insideGadgets’ MegaDuck 32K flash cart
+- Added support for GBFlash 1M FLASH RTC (AGB-R1M-02V4)
+- Added support for the unlicensed MBCX Mapper by Geeksimon
+- Added support for GBFlash MBCX (8 MiB)
+- Added support for GBFlash MBCX (32 MiB)
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
+- Minor bug fixes and improvements
+
 ### v4.2 (released 2024-08-04)
 - Fixed an issue with MBC2 save data on Nintendo Power GB-Memory Cartridges (DMG-MMSA-JPN) *(thanks iyatemu)*
 - Updated LK firmware to version L13 (fixes an issue with some FRAM-modded Game Boy cartridges) *(thanks jrharbort)*

@@ -13,6 +13,7 @@
 	"buffer_size":64,
 	"sector_size":0x20000,
 	"reset_every":0x400000,
+	"chip_erase_timeout":2000,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[

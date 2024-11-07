@@ -1,10 +1,12 @@
 {
 	"type":"DMG",
 	"names":[
-		"DVP DRV with MX29LV320CB"
+		"DVP DRV with MX29LV320CB",
+		"DVP DRV with MX29LV320CT"
 	],
 	"flash_ids":[
-		[ 0xC2, 0xC2, 0xA8, 0xA8 ]
+		[ 0xC2, 0xC2, 0xA8, 0xA8 ],
+		[ 0xC2, 0xC2, 0xA7, 0xA7 ]
 	],
 	"voltage":3.3,
 	"flash_size":0x400000,

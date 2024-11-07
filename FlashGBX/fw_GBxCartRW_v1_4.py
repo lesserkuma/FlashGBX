@@ -110,11 +110,6 @@ try:
 				self.DEVICE = device
 			else:
 				self.APP.QT_APP.processEvents()
-				text = "This Firmware Updater is for insideGadgets GBxCart RW v1.4 devices only. Please only proceed if your device matches this hardware revision.\n\nOlder GBxCart RW revisions can be updated only after connecting to them first."
-				msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Warning, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-				msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
-				answer = msgbox.exec()
-				if answer == QtWidgets.QMessageBox.Cancel: return
 				self.FWUPD = FirmwareUpdater(app_path, None)
 
 			self.layout = QtWidgets.QGridLayout()
@@ -217,8 +212,10 @@ try:
 			self.lblDeviceFWVerResult.setText(self.FW_VER)
 			if self.PCB_VER == "v1.4":
 				self.optDevicePCBVer14.setChecked(True)
+				self.optDevicePCBVer14a.setEnabled(False)
 			elif self.PCB_VER == "v1.4a/b/c":
 				self.optDevicePCBVer14a.setChecked(True)
+				self.optDevicePCBVer14.setEnabled(False)
 			self.SetPCBVersion()
 		
 		def SetPCBVersion(self):

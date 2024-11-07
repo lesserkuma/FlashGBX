@@ -110,7 +110,7 @@ class PocketCamera:
 			offset = 0x2000 + (index * 0x1000)
 		elif index == 30:
 			offset = 0x11FC
-		elif index == 31:
+		else:
 			offset = 0
 		imgbuffer = self.DATA[offset:offset+0x1000]
 		return self.ConvertPicture(imgbuffer)
@@ -138,7 +138,7 @@ class PocketCamera:
 				frame.paste(pic, (left, top))
 				pic = frame
 		
-		pic = pic.resize((pic.width * scale, pic.height * scale), Image.NEAREST)
+		pic = pic.resize((pic.width * scale, pic.height * scale), Image.Resampling.NEAREST)
 
 		ext = os.path.splitext(path)[1]
 		if ext == "" or ext.lower() == ".png":

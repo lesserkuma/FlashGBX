@@ -1,6 +1,6 @@
 # FlashGBX (by Lesserkuma)
 
-for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://github.com/lesserkuma/FlashGBX#run-using-python-linux-macos-windows), [macOS](https://github.com/lesserkuma/FlashGBX#run-using-python-linux-macos-windows)
+for Windows, Linux, macOS (→ [Download](https://github.com/lesserkuma/FlashGBX/releases))
 
 <img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/01.png" alt="FlashGBX on Windows 11" width="500"><br><img src="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/.github/02.png" alt="GB Camera Album Viewer" width="500">
 
@@ -15,37 +15,44 @@ for [Windows](https://github.com/lesserkuma/FlashGBX/releases), [Linux](https://
 - A flash chip query (including Common Flash Interface information) can be performed for flash cartridges
 - Decode and extract Game Boy Camera photos from save data
 - Generate ROM dump reports for game preservation purposes
-- Delta flashing support, useful for development by writing only differences between two ROMs (if named `rom.gba` and `rom.delta.gba`)
 
 ### Compatible cartridge reader/writer hardware
 
-- [GBxCart RW](https://www.gbxcart.com/) (tested with v1.3, v1.4, v1.4a and v1.4c)
+- [GBxCart RW](https://www.gbxcart.com/) (tested with v1.4, v1.4a and v1.4c)
 - [GBFlash](https://github.com/simonkwng/GBFlash) (tested with v1.2 and v1.3)
 - [Joey Jr](https://bennvenn.myshopify.com/collections/game-cart-to-pc-interface/products/usb-gb-c-cart-dumper-the-joey-jr) (tested with V2++)
 
 ## Installing and running
 
-### Windows Packages
+### Pre-compiled binaries and packages
 
-Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section:
+Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section are pre-compiled downloads available for:
 
-* Windows Setup: An installer that will add the application to the start menu and optionally create a desktop icon
-* Windows Portable: Have everything in one place including the config files
+* **Windows (64-bit)**
+  * Setup: An installer that will add the application to the start menu and optionally create a desktop icon
+  * Portable: Have everything in one place including the config files
+  
+  *(For users of Windows 7, legacy “Qt5” versions are provided as well.)*
 
-These work for installing fresh and upgrading from an older version.
+* **Linux**
+  * Ubuntu (.deb file): Install using `dpkg -i /path/to/FlashGBX_x.x_Ubuntu-all.deb`.<br>*(Based on a contribution by [JJ-Fox](https://github.com/JJ-Fox))*
+  * Other distributions: Pre-made packages are contributed by JJ-Fox [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
 
-### Run using Python (Linux, macOS, Windows)
+* **macOS**
+  * x86-64/arm64 (.dmg file): Install by opening the .dmg file and copying over the “FlashGBX” application to the desktop.<br>If it doesn’t run, it probably got quarantined during download. Run the following command in a Terminal window to unquarantine it: `xattr -d com.apple.quarantine /path/to/FlashGBX.app`.<br>*(Based on a contribution by [Cliffback](https://github.com/Cliffback))*
 
-#### Installing
+  *(If you have a Joey Jr and use macOS, please run the [Joey Jr Firmware Updater](https://github.com/lesserkuma/JoeyJr_FWUpdater) before using FlashGBX.)*
+
+### Run via Python
+
+FlashGBX can also be run in a Python environment like so:
 
 1. Download and install [Python](https://www.python.org/downloads/) (version 3.10.11 is recommended)
 2. Open a Terminal or Command Prompt window
 3. Install FlashGBX with this command:<br>`pip3 install "FlashGBX[qt6]"`
 * If installation fails, try this command instead:<br>`pip3 install "FlashGBX[qt5]"`
 * If installation still fails, you can install the minimal version (command line interface) with this command:<br>`pip3 install FlashGBX`
-
-* Pre-made Linux packages and instructions for select distributions are available [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest), contributed by JJ-Fox.
-* Pre-made macOS packages and instructions are available [here](https://github.com/Cliffback/FlashGBX-macOS) (in the “Releases” section), contributed by Cliffback.
+* Update to the latest version by replacing `install` with `install -U`.
 
 #### Running
 Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
@@ -55,11 +62,6 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 *FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) or [PySide6](https://pypi.org/project/PySide6/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages. To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
 
 *Note: On Linux systems, the `brltty` module may render serial communication devices non-accessible. See the troubleshooting section for details.*
-
-#### Upgrading from an older version
-
-1. Open a Terminal or Command Prompt window
-2. Enter this command:<br>`pip3 install -U FlashGBX`
 
 ## Cartridge Compatibility
 ### Supported cartridge memory mappers
@@ -85,6 +87,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - Unlicensed Xploder GB Mapper
   - Unlicensed Sachen Mapper
   - Unlicensed Datel Orbit V2 Mapper
+  - Unlicensed MBCX Mapper
 
 - Game Boy Advance
   - All cartridges without memory mapping
@@ -127,6 +130,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - GameShark Pro
   - GB-CART32K-A with SST39SF020A
   - GB Smart 32M
+  - GBFlash MBCX (8 MiB)
+  - GBFlash MBCX (32 MiB)
   - GBFlash RTC with MX29LV320EB
   - HDR Game Boy Camera Flashcart
   - insideGadgets 32 KiB
@@ -139,6 +144,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - insideGadgets 4 MiB, 128 KiB SRAM/FRAM
   - insideGadgets 4 MiB, 32 KiB FRAM, MBC3+RTC
   - insideGadgets 4 MiB (2× 2 MiB), 32 KiB FRAM, MBC5
+  - insideGadgets MegaDuck 32K
   - Mr Flash 64M
   - Sillyhatday MBC5-DUAL-FLASH-4/8MB
   - Squareboi 4 MiB (2× 2 MiB)
@@ -163,6 +169,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - FunnyPlaying MidnightTrace 32 MiB Flash Cart
   - GBA Movie Player v2 CF (with SST39VF400A)¹
   - GBFlash 1M FLASH RTC (AGB-R1M-02V3)
+  - GBFlash 1M FLASH RTC (AGB-R1M-02V4)
   - insideGadgets 16 MiB, 64K EEPROM with Solar Sensor and RTC options
   - insideGadgets 32 MiB, 1M FLASH with RTC option
   - insideGadgets 32 MiB, 512K FLASH
@@ -185,6 +192,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DRV with AM29LV160DB and ALTERA CPLD
   - DRV with AM29LV160DT and ALTERA CPLD
   - DVP DRV with MX29LV320CB
+  - DVP DRV with MX29LV320CT
   - ES29LV160_DRV with 29DL32TF-70
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
@@ -328,21 +336,23 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * On some Linux systems like Fedora, you may need to install the `python3-pillow-qt` package manually in order for the GUI mode to work.
 
-* On some Linux systems you may see the message “No devices found.” with the GBxCart RW hardware device, even though you’re using a USB cable capable of data transfers. This may be caused by a module called `brltty` (a driver for refreshable braille displays) that is erroneously interfering and taking over control of any connected USB device that uses the CH340/341 chipset. The solution would be to uninstall or blacklist the `brltty` driver and then reboot the system.
+* On some Linux systems you may see the message “No devices found.” with the GBxCart RW or GBFlash hardware device, even though you’re using a USB cable capable of data transfers. This may be caused by a module called `brltty` (a driver for refreshable braille displays) that is erroneously interfering and taking over control of any connected USB device that uses the CH340/341 chipset. The solution would be to uninstall or blacklist the `brltty` driver and then reboot the system. This is not an issue with Joey Jr devices.
 
 * If you’re using macOS version 10.13 or older, there may be no driver for serial communication devices installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
-* If you’re using macOS and get a “Segmentation Fault: 11.” error, try uninstalling Python, reinstalling Python version 3.10.11 and then try again.
+* If you’re using macOS and get a “Segmentation Fault: 11.” error, try the “Run using Python” method with Python version 3.10.11.
 
 ## Miscellaneous
 
 * To use your own frame around extracted Game Boy Camera pictures, place a file called `pc_frame.png` (must be at least 160×144 pixels) into the configuration directory. (GUI mode only)
 
+* To write only the differences between two ROMs, name the original one `<name>.gba` and the edited one `<name>.delta.gba`.
+
 ## Contributors
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, aronson, Ausar, bbsan, BennVenn, ccs21, chobby, ClassicOldSong, Cliffback, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gandalf1980, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, inYourBackline, iyatemu, Jayro, Jenetrix, JFox, joyrider3774, jrharbort, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Lu, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, RibShark, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, simonK, Sithdown, skite2001, Smelly-Ghost, Sonikks, Squiddy, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, Warez Waldo, wickawack, Winter1760, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, aronson, Ausar, bbsan, BennVenn, ccs21, chobby, ClassicOldSong, Cliffback, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gandalf1980, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, inYourBackline, iyatemu, Jayro, Jenetrix, JFox, joyrider3774, jrharbort, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Lu, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, Mufsta, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, RibShark, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, simonK, Sithdown, skite2001, Smelly-Ghost, Sonikks, Squiddy, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, Warez Waldo, wickawack, Winter1760, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
 
 ## Third Party Notices and Licenses
 

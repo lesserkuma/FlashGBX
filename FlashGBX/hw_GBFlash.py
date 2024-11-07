@@ -9,7 +9,7 @@ class GbxDevice(LK_Device):
 	DEVICE_NAME = "GBFlash"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 12
-	DEVICE_LATEST_FW_TS = { 5:1722774120, 10:1722774120, 11:1722774120, 12:1722774120, 13:1722774120 }
+	DEVICE_LATEST_FW_TS = { 5:1730731680, 10:1730731680, 11:1730731680, 12:1730731680, 13:1730731680 }
 	PCB_VERSIONS = { 5:'', 12:'v1.2', 13:'v1.3' }
 	
 	def __init__(self):
@@ -111,8 +111,10 @@ class GbxDevice(LK_Device):
 				self.FW["cart_power_ctrl"] = True if self._read(1) == 1 else False
 
 				# Reset to bootloader support
-				self.FW["bootloader_reset"] = True if self._read(1) == 1 else False
-
+				temp = self._read(1)
+				self.FW["bootloader_reset"] = True if temp & 1 == 1 else False
+				self.FW["unregistered"] = True if temp >> 7 == 1 else False
+			
 			return True
 		
 		except Exception as e:
@@ -192,7 +194,7 @@ class GbxDevice(LK_Device):
 		return True
 	
 	def FirmwareUpdateAvailable(self):
-		if self.FW["pcb_ver"] == 5: # unofficial firmware
+		if self.FW["pcb_ver"] == 5 or self.FW["fw_ts"] < 1730592000: # unofficial firmware
 			self.FW_UPDATE_REQ = True
 			return True
 		if self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
@@ -239,6 +241,13 @@ class GbxDevice(LK_Device):
 
 	def GetFullName(self):
 		if self.FW["pcb_ver"] < 13 and self.CanPowerCycleCart():
-			return "{:s} {:s} + PLUGIN 01".format(self.GetName(), self.GetPCBVersion())
+			s = "{:s} {:s} + PLUGIN 01".format(self.GetName(), self.GetPCBVersion())
 		else:
-			return "{:s} {:s}".format(self.GetName(), self.GetPCBVersion())
+			s = "{:s} {:s}".format(self.GetName(), self.GetPCBVersion())
+		if self.IsUnregistered():
+			s += " (unregistered)"
+		return s
+
+	def GetRegisterInformation(self):
+		text = f"Your GBFlash device reported a registration error, which means it may be an illegitimate clone.\n\nThe device’s integrated piracy detection may limit the device in performance and functionality until proper registration. The {Util.APPNAME:s} software has no control over this.\n\nPlease visit <a href=\"https://gbflash.geeksimon.com/\">https://gbflash.geeksimon.com/</a> for more information.".replace("\n", "<br>")
+		return text

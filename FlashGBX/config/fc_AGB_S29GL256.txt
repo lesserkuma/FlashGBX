@@ -3,7 +3,8 @@
 	"names":[
 		"insideGadgets 32 MiB (S29GL512N) + RTC",
 		"AGB-E20-30 with S29GL256N10TFI01",
-		"GBFlash 1M FLASH RTC (AGB-R1M-02V3)"
+		"GBFlash 1M FLASH RTC (AGB-R1M-02V3)",
+		"GBFlash 1M FLASH RTC (AGB-R1M-02V4)"
 	],
 	"flash_ids":[
 		[ 0x01, 0x00, 0x7E, 0x22 ],

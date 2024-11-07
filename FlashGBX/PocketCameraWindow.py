@@ -309,13 +309,13 @@ class PocketCameraWindow(QtWidgets.QDialog):
 				draw.line([0, 112, 128, 0], fill=(255, 0, 0, 192), width=8)
 				pic.paste(draw_bg, mask=draw_bg)
 				self.lblPhoto[i].setToolTip("This picture was marked as “deleted” and may be overwritten when you take new pictures.")
-			self.CUR_THUMBS[i] = ImageQt(pic.resize((47, 41), Image.HAMMING))
+			self.CUR_THUMBS[i] = ImageQt(pic.resize((47, 41), Image.Resampling.HAMMING))
 			qpixmap = QtGui.QPixmap.fromImage(self.CUR_THUMBS[i])
 			self.lblPhoto[i].setPixmap(qpixmap)
 	
 	def UpdateViewer(self, index):
-		resampler = Image.NEAREST
-		if self.CUR_BICUBIC: resampler = Image.BICUBIC
+		resampler = Image.Resampling.NEAREST
+		if self.CUR_BICUBIC: resampler = Image.Resampling.BICUBIC
 		cam = self.CUR_PC
 		if cam is None: return
 		
@@ -323,7 +323,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			self.lblPhoto[i].setStyleSheet("border-top: 1px solid #adadad; border-left: 1px solid #adadad; border-bottom: 1px solid #ffffff; border-right: 1px solid #ffffff;")
 		
 		if index >= 30:
-			self.CUR_PIC = ImageQt(cam.GetPicture(index).convert("RGBA").resize((256, 224), Image.BICUBIC if index == 31 else resampler))
+			self.CUR_PIC = ImageQt(cam.GetPicture(index).convert("RGBA").resize((256, 224), Image.Resampling.BICUBIC if index == 31 else resampler))
 		else:
 			self.CUR_PIC = ImageQt(cam.GetPicture(index).convert("RGBA").resize((256, 224), resampler))
 			self.lblPhoto[index].setStyleSheet("border: 3px solid green; padding: 1px;")

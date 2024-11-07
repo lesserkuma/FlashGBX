@@ -708,6 +708,7 @@ class Flashcart_DMG_BUNG_16M(Flashcart):
 		self.CartWrite([[0x2000, 0x02]], fast_write=False)
 		self.CartWrite([[0x6AAA, 0x90]], fast_write=True)
 		cart_flash_id = list(self.CartRead(0, 4))
+		verified = False
 		if rom != cart_flash_id and cart_flash_id == self.CONFIG["flash_ids"][0]:
 			self.Reset()
 			verified = True

@@ -2,15 +2,15 @@
 # FlashGBX
 # Author: Lesserkuma (github.com/lesserkuma)
 
-import math, time, datetime, copy, configparser, threading, os, platform, traceback, io, struct, re, statistics, random
+import math, time, datetime, copy, configparser, threading, os, platform, traceback, io, struct, re, statistics, random, sys
 from io import StringIO
 from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "4.2"
+VERSION_PEP440 = "4.3"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1722797669
+VERSION_TIMESTAMP = 1731015769
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -23,11 +23,11 @@ AGB_Header_Save_Sizes = [ 0, 512, 8192, 32768, 65536, 131072, 1048576, 65536, 13
 AGB_Flash_Save_Chips = { 0xBFD4:"SST 39VF512", 0x1F3D:"Atmel AT29LV512", 0xC21C:"Macronix MX29L512", 0x321B:"Panasonic MN63F805MNP", 0xC209:"Macronix MX29L010", 0x6213:"SANYO LE26FV10N1TS", 0xBF5B:"Unlicensed SST49LF080A", 0xFFFF:"Unlicensed 0xFFFF" }
 AGB_Flash_Save_Chips_Sizes = [ 0x10000, 0x10000, 0x10000, 0x10000, 0x20000, 0x20000, 0x20000, 0x20000 ]
 
-DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x0F:'MBC3+RTC+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x110:'MBC30+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'MAC-GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper' }
-DMG_Mapper_Types = { "None":[ 0x00, 0x08, 0x09 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x05, 0x06 ], "MBC3":[ 0x0F, 0x10, 0x11, 0x12, 0x13 ], "MBC30":[ 0x110 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "MAC-GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "Unlicensed 256M Multi Cart Mapper":[ 0x201 ], "Unlicensed Wisdom Tree Mapper":[ 0x202 ], "Unlicensed Xploder GB Mapper":[ 0x203 ], "Unlicensed Sachen Mapper":[ 0x204 ], "Unlicensed Datel Orbit V2 Mapper":[ 0x205 ] }
-DMG_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB" ]
-DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A ]
-DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000 ]
+DMG_Header_Mapper = { 0x00:'None', 0x01:'MBC1', 0x02:'MBC1+SRAM', 0x03:'MBC1+SRAM+BATTERY', 0x06:'MBC2+SRAM+BATTERY', 0x0F:'MBC3+RTC+BATTERY', 0x10:'MBC3+RTC+SRAM+BATTERY', 0x110:'MBC30+RTC+SRAM+BATTERY', 0x12:'MBC3+SRAM', 0x13:'MBC3+SRAM+BATTERY', 0x19:'MBC5', 0x1A:'MBC5+SRAM', 0x1B:'MBC5+SRAM+BATTERY', 0x1C:'MBC5+RUMBLE', 0x1E:'MBC5+RUMBLE+SRAM+BATTERY', 0x20:'MBC6+SRAM+FLASH+BATTERY', 0x22:'MBC7+ACCELEROMETER+EEPROM', 0x101:'MBC1M', 0x103:'MBC1M+SRAM+BATTERY', 0x0B:'MMM01',  0x0D:'MMM01+SRAM+BATTERY', 0xFC:'MAC-GBD+SRAM+BATTERY', 0x105:'G-MMC1+SRAM+BATTERY', 0x104:'M161', 0xFF:'HuC-1+IR+SRAM+BATTERY', 0xFE:'HuC-3+RTC+SRAM+BATTERY', 0xFD:'TAMA5+RTC+EEPROM', 0x201:'Unlicensed 256M Mapper', 0x202:'Unlicensed Wisdom Tree Mapper', 0x203:'Unlicensed Xploder GB Mapper', 0x204:'Unlicensed Sachen Mapper', 0x205:'Unlicensed Datel Orbit V2 Mapper', 0x206:'Unlicensed MBCX Mapper' }
+DMG_Mapper_Types = { "None":[ 0x00, 0x08, 0x09 ], "MBC1":[ 0x01, 0x02, 0x03 ], "MBC2":[ 0x05, 0x06 ], "MBC3":[ 0x0F, 0x10, 0x11, 0x12, 0x13 ], "MBC30":[ 0x110 ], "MBC5":[ 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E ], "MBC6":[ 0x20 ], "MBC7":[ 0x22 ], "MBC1M":[ 0x101, 0x103 ], "MMM01":[ 0x0B, 0x0D ], "MAC-GBD":[ 0xFC ], "G-MMC1":[ 0x105 ], "M161":[ 0x104 ], "HuC-1":[ 0xFF ], "HuC-3":[ 0xFE ], "TAMA5":[ 0xFD ], "Unlicensed 256M Multi Cart Mapper":[ 0x201 ], "Unlicensed Wisdom Tree Mapper":[ 0x202 ], "Unlicensed Xploder GB Mapper":[ 0x203 ], "Unlicensed Sachen Mapper":[ 0x204 ], "Unlicensed Datel Orbit V2 Mapper":[ 0x205 ], "Unlicensed MBCX Mapper":[ 0x206 ] }
+DMG_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB" ]
+DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C ]
+DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000 ]
 DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KiB)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)" ]
 DMG_Header_RAM_Sizes_Map = [ 0x00, 0x100, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203, 0x204 ]
 DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000, 0x80000 ] # RAM size in bytes
@@ -169,6 +169,10 @@ class Progress():
 					self.PROGRESS["time_start"] = args["time_start"]
 				else:
 					self.PROGRESS["time_start"] = now
+				if "abortable" in args:
+					self.PROGRESS["abortable"] = args["abortable"]
+				else:
+					self.PROGRESS["abortable"] = True
 				self.PROGRESS["time_last_emit"] = now
 				self.PROGRESS["time_last_update_speed"] = now
 				self.PROGRESS["time_left"] = 0
@@ -218,7 +222,7 @@ class Progress():
 						self.PROGRESS["sector_pos"] = args["sector_pos"]
 					if "abortable" in args:
 						self.PROGRESS["abortable"] = args["abortable"]
-				
+
 				if ((now - self.PROGRESS["time_last_emit"]) > 0.06) or "force_update" in args and args["force_update"] is True:
 					self.PROGRESS["time_elapsed"] = now - self.PROGRESS["time_start"]
 					time_delta = now - self.PROGRESS["time_last_update_speed"]
@@ -254,6 +258,11 @@ class Progress():
 					self.UPDATER(self.PROGRESS)
 					self.PROGRESS["time_last_emit"] = now
 			
+			elif args["action"] == "UPDATE_INFO":
+				self.PROGRESS["text"] = args["text"]
+				self.PROGRESS["action"] = args["action"]
+				self.UPDATER(self.PROGRESS)
+
 			elif args["action"] == "FINISHED":
 				self.PROGRESS["pos"] = self.PROGRESS["size"]
 				self.UPDATER(self.PROGRESS)
@@ -535,6 +544,8 @@ def GetDumpReport(di, device):
 			di["rom_size"] = "{:s}".format(AGB_Header_ROM_Sizes[AGB_Header_ROM_Sizes_Map.index(di["rom_size"])])
 		else:
 			di["rom_size"] = "{:,} bytes".format(di["rom_size"])
+	else:
+		raise NotImplementedError
 	
 	di["cart_type"] = list(device.SUPPORTED_CARTS[mode].keys())[di["cart_type"]]
 	if di["file_name"] is None:
@@ -795,7 +806,10 @@ def GetDumpReport(di, device):
 			if "st" in db: s += "* Save Type:       {:s}\n".format(AGB_Header_Save_Types[db["st"]])
 			#if "ss" in db: s += "* Save Size:       {:s}\n".format(formatFileSize(size=db["ss"], asInt=True))
 
-	return s
+	if platform.system() == "Windows":
+		return s.replace("\n", "\r\n")
+	else:
+		return s
 
 def GenerateFileName(mode, header, settings=None):
 	fe_ni = True
@@ -921,3 +935,37 @@ def dprint(*args, **kwargs):
 	if DEBUG:
 		msg = "{:s}{:s}".format(ANSI.CLEAR_LINE, msg)
 		print(msg)
+
+def write_debug_log(device=False):
+	dprint("{:s} version: {:s} ({:d})".format(APPNAME, VERSION_PEP440, VERSION_TIMESTAMP))
+	dprint("Platform: {:s}".format(platform.platform()))
+	if device is not False:
+		if device is not None:
+			dprint("Connected device: {:s}".format(device))
+		else:
+			dprint("No device connected")
+	dprint("Now writing debug log file")
+	try:
+		fn = CONFIG_PATH + "/debug.log"
+		with open(fn, "wb") as f:
+			if platform.system() == "Windows":
+				f.write("\r\n".join(DEBUG_LOG).encode("UTF-8-SIG"))
+			else:
+				f.write("\n".join(DEBUG_LOG).encode("UTF-8-SIG"))
+			print("debug.log written")
+		return True
+	except:
+		return False
+
+def exception_hook(exc_type, exc_value, exc_traceback):
+	if issubclass(exc_type, KeyboardInterrupt):
+		sys.__excepthook__(exc_type, exc_value, exc_traceback)
+		return
+	
+	s = "⚠️ EXCEPTION OCCURED ⚠️\n"
+	lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+	for line in lines:
+		s += f"{line:s}"
+	print(s)
+	dprint(s)
+	write_debug_log()

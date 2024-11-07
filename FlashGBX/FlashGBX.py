@@ -133,7 +133,7 @@ def main(portableMode=False):
 	ap_cli1.add_argument("path", nargs="?", default="auto", help="target or source file path (optional when reading, required when writing)")
 	
 	ap_cli2 = parser.add_argument_group('optional command line interface arguments')
-	ap_cli2.add_argument("--dmg-romsize", choices=["auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb"], type=str.lower, default="auto", help="set size of Game Boy cartridge ROM data")
+	ap_cli2.add_argument("--dmg-romsize", choices=["auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb"], type=str.lower, default="auto", help="set size of Game Boy cartridge ROM data")
 	ap_cli2.add_argument("--dmg-mbc", type=str.lower, default="auto", help="set memory bank controller type of Game Boy cartridge")
 	ap_cli2.add_argument("--dmg-savesize", choices=["auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m"], type=str.lower, default="auto", help="set size of Game Boy cartridge save data")
 	ap_cli2.add_argument("--agb-romsize", choices=["auto", "32kb", "64kb", "128kb", "256kb", "512kb", "1mb", "2mb", "4mb", "8mb", "16mb", "32mb", "64mb", "128mb", "256mb", "512mb"], type=str.lower, default="auto", help="set size of Game Boy Advance cartridge ROM data")

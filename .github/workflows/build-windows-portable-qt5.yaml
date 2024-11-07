@@ -1,0 +1,59 @@
+name: Windows Portable (Qt5)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ github.event.release.tag_name || '0.0' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy files to temporary directory
+        run: |
+          $tempPath = "$env:RUNNER_TEMP\Temp"
+          mkdir "$tempPath" | Out-Null
+
+          & "C:\Program Files\7-Zip\7z.exe" x .\.github\build\Windows\PySide2\Python_3.8.10.7z -o"$env:RUNNER_TEMP\Temp"
+          xcopy ".\FlashGBX" "$tempPath\FlashGBX\" /s /i /y
+
+          $filesToCopy = @("CHANGES.md", "README.md", "LICENSE", "Third Party Notices.md")
+          foreach ($file in $filesToCopy) {
+              Copy-Item "$env:GITHUB_WORKSPACE\$file" "$env:RUNNER_TEMP\Temp\" -Force
+          }
+
+          if (Test-Path "$tempPath\FlashGBX\config") {
+              Remove-Item "$tempPath\FlashGBX\config\*" -Recurse -Force
+          }
+
+      - name: Create zip archive
+        run: |
+          $zipFileName = "FlashGBX_${{ env.VERSION }}_Windows_Portable_Qt5.zip"
+          & "C:\Program Files\7-Zip\7z.exe" a -tzip -mx=9 "$env:RUNNER_TEMP\$zipFileName" "$env:RUNNER_TEMP\Temp\*"
+          echo "Created zip file: $zipFileName"
+
+      - name: Create artifact
+        if: env.VERSION == '0.0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlashGBX_Windows_Portable_Qt5
+          path: "${{ runner.temp }}\\FlashGBX_${{ env.VERSION }}_Windows_Portable_Qt5.zip"
+
+      - name: Upload release asset
+        if: env.VERSION != '0.0'
+        uses: softprops/action-gh-release@v2.0.8
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: "${{ runner.temp }}\\FlashGBX_${{ env.VERSION }}_Windows_Portable_Qt5.zip"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -30,7 +30,9 @@ class FirmwareUpdater():
 		path = os.path.dirname(path) + "/"
 		fncSetStatus(text="Connecting... This may take a moment.")
 		
-		with open(file, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
+		filename = os.path.split(file)[1]
+		filepath = os.path.split(file)[0]
+		with open(filepath + "/" + filename, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
 		if not temp.startswith("UPDATE"):
 			with open(file, "wb") as f:
 				temp = bytearray(b"UPDATE")
@@ -46,10 +48,16 @@ class FirmwareUpdater():
 				return 2
 		
 		try:
-			with open(file, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
-		except FileNotFoundError:
-			fncSetStatus(text="Couldn’t access MODE.TXT. Remove cartridge and try again.")
-			return 2
+			with open(filepath + "/" + filename, "rb") as f: temp = f.read().decode("UTF-8", "ignore")
+		except FileNotFoundError as e:
+			try:
+				if filename == "MODE.TXT":
+					with open(filepath + "/" + "MODE!.TXT", "rb") as f: temp = f.read().decode("UTF-8", "ignore")
+				else:
+					raise FileNotFoundError from e
+			except FileNotFoundError:
+				fncSetStatus(text="Couldn’t access MODE.TXT. Remove cartridge and try again.")
+				return 2
 
 		if not temp.startswith("UPDATE"):
 			fncSetStatus(text="Couldn’t enter UPDATE mode, please try again.")
@@ -272,7 +280,7 @@ try:
 			self.rowUpdate.addStretch()
 
 			self.rowUpdate2 = QtWidgets.QHBoxLayout()
-			self.lblUpdateDisclaimer = QtWidgets.QLabel("Please note that FlashGBX is not officially supported by BennVenn, so please use this firmware updater at your own risk.")
+			self.lblUpdateDisclaimer = QtWidgets.QLabel("Please note that FlashGBX is not officially supported by BennVenn.")
 			self.lblUpdateDisclaimer.setWordWrap(True)
 			self.lblUpdateDisclaimer.setAlignment(QtGui.Qt.AlignmentFlag.AlignCenter)
 			self.rowUpdate2.addWidget(self.lblUpdateDisclaimer)
@@ -467,7 +475,7 @@ try:
 						msgbox = QtWidgets.QMessageBox(parent=self, icon=QtWidgets.QMessageBox.Critical, windowTitle="FlashGBX", text=text, standardButtons=QtWidgets.QMessageBox.Ok)
 						answer = msgbox.exec()
 						return False
-					answer = QtWidgets.QMessageBox.information(self, "FlashGBX", "If your Joey Jr device is currently running the Drag'n'Drop firmware, please continue and choose its <b>MODE.TXT</b> file.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
+					answer = QtWidgets.QMessageBox.information(self, "FlashGBX", "If your Joey Jr device is currently running the Drag'n'Drop firmware, please continue and choose its <b>MODE.TXT</b> (or <b>MODE!.TXT</b>) file.", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, QtWidgets.QMessageBox.Ok)
 					if answer == QtWidgets.QMessageBox.Cancel:
 						self.SetStatus("No device found.", enableUI=True)
 						return False

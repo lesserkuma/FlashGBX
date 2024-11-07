@@ -1,0 +1,56 @@
+name: Ubuntu
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ github.event.release.tag_name || '0.0' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract build data
+        run: |
+          mkdir -p "${{ github.workspace }}/dist/deb"
+          tar xzf ".github/build/Ubuntu/builddata.tar.gz" -C "${{ github.workspace }}/dist/deb"
+          sed -i 's/<APP_VERSION>/${{ env.VERSION }}/g' "${{ github.workspace }}/dist/deb/DEBIAN/control"
+
+      - name: Move FlashGBX files into deb build folder
+        run: |
+          rm -r "${{ github.workspace }}/FlashGBX/config"
+          mv "${{ github.workspace }}/FlashGBX" "${{ github.workspace }}/dist/deb"
+
+      - name: Install tools
+        run: |
+          sudo apt install devscripts dh-make debhelper
+
+      - name: Create DEB file
+        run: |
+          cd "${{ github.workspace }}/dist/deb"
+          dpkg-deb --build . "../FlashGBX_${{ env.VERSION }}_Ubuntu-all.deb"
+
+      - name: Create artifact
+        if: env.VERSION == '0.0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlashGBX_Ubuntu-all
+          path: ${{ github.workspace }}/dist/FlashGBX_${{ env.VERSION }}_Ubuntu-all.deb
+
+      - name: Upload release asset
+        if: env.VERSION != '0.0'
+        uses: softprops/action-gh-release@v2.0.8
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: ${{ github.workspace }}/dist/FlashGBX_${{ env.VERSION }}_Ubuntu-all.deb
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

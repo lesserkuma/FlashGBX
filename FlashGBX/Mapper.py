@@ -75,8 +75,8 @@ class DMG_MBC:
 			return DMG_Unlicensed_Sachen(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		elif mbc_id == 0x205:									# 0x205:'Datel Orbit V2',
 			return DMG_Unlicensed_DatelOrbitV2(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
-		# elif mbc_id == 0x206:									# 0x206:'Datel MegaMem',
-		# 	return DMG_Unlicensed_DatelMegaMem(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
+		elif mbc_id == 0x206:									# 0x206:'MBCX',
+			return DMG_Unlicensed_MBCX(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 		else:
 			self.__init__(args=args, cart_write_fncptr=cart_write_fncptr, cart_read_fncptr=cart_read_fncptr, cart_powercycle_fncptr=cart_powercycle_fncptr, clk_toggle_fncptr=clk_toggle_fncptr)
 			return self
@@ -269,7 +269,7 @@ class DMG_MBC3(DMG_MBC):
 	
 	def HasRTC(self):
 		dprint("Checking for RTC")
-		if self.MBC_ID not in (0x0F, 0x10, 0x110):
+		if self.MBC_ID not in (0x0F, 0x10, 0x110, 0x206):
 			dprint("No RTC because mapper value is not used for RTC:", self.MBC_ID)
 			return False
 		self.EnableRAM(enable=False)
@@ -831,6 +831,7 @@ class DMG_GMMC1(DMG_MBC5):
 	def CalcChecksum(self, buffer):
 		header = RomFileDMG(buffer[:0x180]).GetHeader()
 		target_chk_value = 0
+		target_sha1_value = 0
 		if header["game_title"] == "NP M-MENU MENU":
 			target_sha1_value = "15f5d445c0b2fdf4221cf2a986a4a5cb8dfda131"
 			target_chk_value = 0x19E8
@@ -1530,6 +1531,44 @@ class DMG_Unlicensed_DatelOrbitV2(DMG_MBC):
 
 	def GetMaxROMSize(self):
 		return 128*1024
+
+class DMG_Unlicensed_MBCX(DMG_MBC3):
+	def GetName(self):
+		return "MBCX"
+	
+	def HasFlashBanks(self):
+		return True
+
+	def SelectBankFlash(self, index):
+		dprint(self.GetName(), "|SelectBankFlash()|", index)
+
+		commands = [
+			[ 0x0000, 0x05 ],
+			[ 0x4000, 0x82 ],
+			[ 0xA000, index ],
+			[ 0x0000, 0x00 ]
+		]
+		self.CURRENT_FLASH_BANK = index
+		self.CartWrite(commands, delay=0.1)
+
+	def SelectBankROM(self, index):
+		dprint(self.GetName(), index)
+
+		if (index % 512 == 0) or (self.CURRENT_FLASH_BANK != math.floor(index / 512)):
+			self.SelectBankFlash(math.floor(index / 512))
+		self.CURRENT_ROM_BANK = index
+		index = index % 512
+
+		commands = [
+			[ 0x3000, ((index >> 8) & 0xFF) ],
+			[ 0x2100, index & 0xFF ],
+		]
+		
+		self.CartWrite(commands)
+		return (0x4000, self.ROM_BANK_SIZE)
+
+	def GetMaxROMSize(self):
+		return 32*1024*1024
 
 
 class AGB_GPIO:

@@ -1,0 +1,118 @@
+name: macOS
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ github.event.release.tag_name || '0.0' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            arch: arm64
+          - os: macos-13
+            arch: x86_64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create directory for Python packages
+        run: |
+          mkdir -p ${{ github.workspace }}/venv
+
+      - name: Cache Python packages
+        id: cache-pip
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/venv
+          key: flashgbx-macos-${{ matrix.arch }}-python-dependencies-2024110401
+          restore-keys: |
+            flashgbx-macos-${{ matrix.arch }}-python-dependencies-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install Python packages
+        if: steps.cache-pip.outputs.cache-hit != 'true'
+        run: |
+          python -m venv ${{ github.workspace }}/venv
+          source ${{ github.workspace }}/venv/bin/activate
+          python -m pip install pyinstaller==6.11.0 Pillow==10.3.0 PySide6==6.7.2 pyserial==3.5 python-dateutil==2.9.0.post0 requests==2.32.3
+
+      - name: Build FlashGBX
+        run: |
+          cd "${{ github.workspace }}"
+          cp ".github/build/macOS/FlashGBX.spec" .
+          sed -i '' 's/<APP_VERSION>/${{ env.VERSION }}/g' "./FlashGBX.spec"
+          rm -r FlashGBX/config
+          source ${{ github.workspace }}/venv/bin/activate
+          pyinstaller FlashGBX.spec
+          mkdir dist/FlashGBX.app/Contents/MacOS/config
+          mkdir dist/FlashGBX.app/Contents/MacOS/res
+          cp -r FlashGBX/res/* dist/FlashGBX.app/Contents/MacOS/res
+
+      - name: Create DMG
+        run: |
+          brew install create-dmg
+          mkdir -p "${{ github.workspace }}/dist/dmg"
+          cp -r "${{ github.workspace }}/dist/FlashGBX.app" "${{ github.workspace }}/dist/dmg"
+
+          dmg_path="${{ github.workspace }}/dist/FlashGBX_${{ env.VERSION }}_macOS-${{ matrix.arch }}.dmg"
+          
+          max_retries=5
+          retry_delay=10
+      
+          for attempt in $(seq 1 $max_retries); do
+            if create-dmg \
+                --volname "FlashGBX" \
+                --volicon "${{ github.workspace }}/FlashGBX/res/icon.ico" \
+                --window-pos 200 120 \
+                --window-size 600 300 \
+                --icon-size 100 \
+                --icon "FlashGBX.app" 175 120 \
+                --hide-extension "FlashGBX.app" \
+                --app-drop-link 425 120 \
+                "$dmg_path" \
+                "${{ github.workspace }}/dist/dmg/"; then
+              echo "Successfully created image of FlashGBX v${{ env.VERSION }}."
+              break
+            else
+              echo "Failed to create DMG (attempt $attempt/$max_retries). Retrying in $retry_delay seconds..."
+              sleep $retry_delay
+            fi
+      
+            if [[ $attempt -eq $max_retries ]]; then
+              echo "Error: Failed to create DMG after $max_retries attempts."
+              exit 1
+            fi
+          done
+
+      - name: Create artifact
+        if: env.VERSION == '0.0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlashGBX_macOS-${{ matrix.arch }}
+          path: ${{ github.workspace }}/dist/FlashGBX_${{ env.VERSION }}_macOS-${{ matrix.arch }}.dmg
+
+      - name: Upload release asset
+        if: env.VERSION != '0.0'
+        uses: softprops/action-gh-release@v2.0.8
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: ${{ github.workspace }}/dist/FlashGBX_${{ env.VERSION }}_macOS-${{ matrix.arch }}.dmg
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
