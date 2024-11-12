@@ -255,13 +255,13 @@ def make_ram_read_cycle_command(addr=0, times=1, postfunc=command2bytes) -> byte
     ]) for i in range(times)])
     return postfunc(cmd)
 
-__len_of_write = len(make_v16bit_data_write_command(data=0, postfunc=echo_all))
-__len_of_read = len(make_gba_rom_addr_read_command(postfunc=echo_all))
+__len_of_v16bit_write = len(make_v16bit_data_write_command(data=0, postfunc=echo_all))
+__len_of_v8bit_write = len(make_gba_rom_addr_read_command(postfunc=echo_all))
 def extract_ram_read_cycle_data(data: bytes, times=1):
     command = bytes2command(data)
     ret = []
-    for i in range(0, len(command), __len_of_write + __len_of_read + 2):
-        one = command[i + __len_of_write + 1: i + __len_of_write + 1 + __len_of_read + 1]
+    for i in range(0, len(command), __len_of_v16bit_write + __len_of_v8bit_write + 2):
+        one = command[i + __len_of_v16bit_write + 1: i + __len_of_v16bit_write + 1 + __len_of_v8bit_write + 1]
         ret.append(extract_gba_rom_addr_read_data(command2bytes(one, endclk=False)))
         if len(ret) >= times:
             break

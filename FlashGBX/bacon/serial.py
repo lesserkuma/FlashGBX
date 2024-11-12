@@ -294,12 +294,15 @@ class BaconFakeSerialDevice:
             cmds = []
             for i in range(num):
                 addr = int.from_bytes(cmd[3+i*6:7+i*6], byteorder='big')
-                #if self.MODE == "AGB" and flashcart:
-                addr = MappingAddressToReal(addr<<1)
+                if self.MODE == "AGB" and flashcart:
+                    addr = MappingAddressToReal(addr<<1)
                 data = int.from_bytes(cmd[7+i*6:9+i*6], byteorder='big')
                 dprint("[BaconFakeSerialDevice] CART_WRITE_FLASH_CMD:0x%08X Value:%s" % (addr, hex(data)))
                 cmds.append((addr, data))
-            self.bacon_dev.AGBWriteROMWithAddress(commands=cmds).Flush()
+            if self.MODE == "AGB" and flashcart:
+                self.bacon_dev.AGBWriteROMWithAddress(commands=cmds).Flush()
+            else:
+                self.bacon_dev.AGBWriteRAMWithAddress(commands=cmds)
             self._push_ack()
         elif cmdname == "FLASH_PROGRAM":
             self.FLASH_PROGRAMMING = True
