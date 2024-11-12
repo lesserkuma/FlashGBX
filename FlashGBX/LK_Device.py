@@ -626,7 +626,7 @@ class LK_Device(ABC):
 			buffer.extend(struct.pack("B", 1 if flashcart else 0))
 		buffer.extend(struct.pack("B", num))
 		for i in range(0, num):
-			dprint("Writing to cartridge: 0x{:X} = 0x{:X} ({:d} of {:d})".format(commands[i][0], commands[i][1], i+1, num))
+			dprint("Writing to cartridge: 0x{:X} = 0x{:X} ({:d} of {:d}) flashcart={:s}".format(commands[i][0], commands[i][1], i+1, num, str(flashcart)))
 			if self.MODE == "AGB" and flashcart:
 				buffer.extend(struct.pack(">I", commands[i][0] >> 1))
 			else:
@@ -919,6 +919,7 @@ class LK_Device(ABC):
 			print("{:s}Error: No mode was set.{:s}".format(ANSI.RED, ANSI.RESET))
 			return False
 
+		dprint("Reading ROM header")
 		header = self.ReadROM(0, 0x180)
 
 		if ".dev" in Util.VERSION_PEP440 or Util.DEBUG:
@@ -1424,6 +1425,8 @@ class LK_Device(ABC):
 		return (agb_flash_chip, agb_flash_chip_name)
 	
 	def ReadROM(self, address, length, skip_init=False, max_length=64):
+		if self.DEVICE_NAME == "Bacon" and max_length < 0x10000:
+			max_length = 0x10000
 		num = math.ceil(length / max_length)
 		dprint("Reading 0x{:X} bytes from cartridge ROM at 0x{:X} in {:d} iteration(s)".format(length, address, num))
 		if length > max_length: length = max_length
@@ -1491,6 +1494,8 @@ class LK_Device(ABC):
 		return self.ReadROM(address=addr, length=length, max_length=max_length)
 
 	def ReadRAM(self, address, length, command=None, max_length=64):
+		if self.DEVICE_NAME == "Bacon" and max_length < 0x10000:
+			max_length = 0x10000
 		num = math.ceil(length / max_length)
 		dprint("Reading 0x{:X} bytes from cartridge RAM in {:d} iteration(s)".format(length, num))
 		if length > max_length: length = max_length
@@ -1703,7 +1708,7 @@ class LK_Device(ABC):
 	def WriteROM(self, address, buffer, flash_buffer_size=False, skip_init=False, rumble_stop=False, max_length=MAX_BUFFER_WRITE):
 		length = len(buffer)
 		num = math.ceil(length / max_length)
-		dprint("Writing 0x{:X} bytes to Flash ROM in {:d} iteration(s)".format(length, num))
+		dprint("Writing 0x{:X} bytes to Flash ROM in {:d} iteration(s) flash_buffer_size=0x{:X} skip_init={:s}".format(length, num, flash_buffer_size, str(skip_init)))
 		if length == 0:
 			dprint("Length is zero?")
 			return False
