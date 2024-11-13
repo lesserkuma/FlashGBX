@@ -87,10 +87,13 @@ class BaconFakeSerialDevice:
         self.FLASH_CMD_WE = 0x00
         self.FLASH_CUSTOM_CMDS = [0x00]*6
 
+        self.BAK_FLASH_TYPE = 0x00
+
         self.FW_VARS = {}
         self.MODE = "AGB" # or DMG
         self.POWER = 0
         self.AGB_SRAM_WRITING = False
+        self.AGB_BAK_FLASH_WRITING = False
         self.CALC_CRC32_WAITING = False
         self.FLASH_PROGRAMMING = False
         self.SET_FLASH_CMD_WAITING = 0
@@ -131,14 +134,22 @@ class BaconFakeSerialDevice:
     
     def _cmd_parse(self, cmd):
         if self.AGB_SRAM_WRITING:
-            if self.in_waiting > 0:
-                dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_SRAM:0x%08X Value:%s" % (self.FW_VARS["ADDRESS"], cmd.hex()))
-                addr = MappingAddressToReal(self.FW_VARS["ADDRESS"])
-                self.bacon_dev.AGBWriteRAM(addr, cmd)
-                self.FW_VARS["ADDRESS"] += self.FW_VARS["TRANSFER_SIZE"]
-                return
-            else:
-                self.AGB_SRAM_WRITING = False
+            dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_SRAM:0x%08X Value:%s" % (self.FW_VARS["ADDRESS"], cmd.hex()))
+            addr = MappingAddressToReal(self.FW_VARS["ADDRESS"])
+            self.bacon_dev.AGBWriteRAM(addr, cmd)
+            self.FW_VARS["ADDRESS"] += self.FW_VARS["TRANSFER_SIZE"]
+            self.AGB_SRAM_WRITING = False
+            self._push_ack()
+            return
+        if self.AGB_BAK_FLASH_WRITING:
+            dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_FLASH_DATA:0x%08X Value:%s" % (self.FW_VARS["ADDRESS"], cmd.hex()))
+            addr = MappingAddressToReal(self.FW_VARS["ADDRESS"])
+            # prepare unlock cmds and write
+            # self.bacon_dev.AGBWriteROM(addr, cmd)
+            self.FW_VARS["ADDRESS"] += self.FW_VARS["TRANSFER_SIZE"]
+            self.AGB_BAK_FLASH_WRITING = False
+            self._push_ack()
+            return
         if self.CALC_CRC32_WAITING:
             chunk_size = int.from_bytes(cmd, byteorder='big')
             addr = MappingAddressToReal(self.FW_VARS["ADDRESS"]<<1)
@@ -184,7 +195,7 @@ class BaconFakeSerialDevice:
                     #TODO 校验
                     addr += buffer_size
             else:
-                # write with cmd
+                #TODO write with cmd
                 pass
             self._push_ack()
             self.FLASH_PROGRAMMING = False
@@ -256,11 +267,11 @@ class BaconFakeSerialDevice:
             self.FW_VARS["ADDRESS"] += self.FW_VARS["TRANSFER_SIZE"]
         elif cmdname == "AGB_CART_WRITE_SRAM":
             self.AGB_SRAM_WRITING = True
-            self._push_ack()
         elif cmdname == "AGB_CART_WRITE_FLASH_DATA":
-            # serious????
-            self.AGB_SRAM_WRITING = True
-            self._push_ack()
+            dprint("[BaconFakeSerialDevice] !!!! AGB_CART_WRITE_FLASH_DATA is not implemented !!!!")
+            dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_FLASH_DATA CMD:%s" % cmd.hex())
+            self.AGB_BAK_FLASH_WRITING = True
+            self.BAK_FLASH_TYPE = int(cmd[1])
         elif cmdname == "CALC_CRC32": # 读取一段数据，计算CRC32
             # 0: cmd
             # 1~4: chunk_size
