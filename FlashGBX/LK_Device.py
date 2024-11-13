@@ -1037,7 +1037,7 @@ class LK_Device(ABC):
 			data["rtc_string"] = "Not available"
 			if checkRtc and data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
 				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycleOrAskReconnect, clk_toggle_fncptr=self._clk_toggle)
-				if self.FW["fw_ver"] >= 12:
+				if self.FW["fw_ver"] >= 12 and self.DEVICE_NAME != "Bacon": # Bacon has a different RTC implementation
 					self._write(self.DEVICE_CMD["AGB_READ_GPIO_RTC"])
 					temp = self._read(8)
 					data["has_rtc"] = _agb_gpio.HasRTC(temp) is True
@@ -3410,7 +3410,7 @@ class LK_Device(ABC):
 				elif self.MODE == "AGB":
 					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycleOrAskReconnect, clk_toggle_fncptr=self._clk_toggle)
 					rtc_buffer = None
-					if self.FW["fw_ver"] >= 12:
+					if self.FW["fw_ver"] >= 12 and self.DEVICE_NAME != "Bacon": # Bacon has a different RTC implementation
 						self._write(self.DEVICE_CMD["AGB_READ_GPIO_RTC"])
 						rtc_buffer = self._read(8)
 						if len(rtc_buffer) == 8 and _agb_gpio.HasRTC(rtc_buffer) is True:

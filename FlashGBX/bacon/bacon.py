@@ -59,6 +59,10 @@ class BaconWritePipeline:
 
 
 class BaconDevice:
+    GPIO_REG_DAT = 0xC4 # Data low 4bit
+    GPIO_REG_CNT = 0xC6 # IO Select 1:Write to GPIO Device 0:Read from GPIO Device
+    GPIO_REG_RE  = 0xC8 # Read Enable Flag Register 1:Enable 0:Disable
+    
     def __init__(self, hid_device=None, ch347_device=None):
         self.hid_device = hid_device
         self.ch347_device = ch347_device
@@ -367,7 +371,7 @@ class BaconDevice:
             if callback is not None and cnt != len(commands):
                 callback(cnt, readbytes)
             if cycle_times == MAX_TIMES or i == len(commands) - 1 and cycle_times > 0:
-                ret = self.WriteRead(make_ram_write_cycle_with_addr(addrdatalist=commands[i-cycle_times+1:i+1]))
+                self.WriteRead(make_ram_write_cycle_with_addr(addrdatalist=commands[i-cycle_times+1:i+1]))
                 readbytes = readbytes + ([0]*cycle_times)
                 cycle_times = 0
         if callback is not None:
@@ -382,3 +386,18 @@ class BaconDevice:
     
     def AGBCustomWriteCommands(self, commands: list, callback=None) -> bool:
         pass
+
+    def AGBGPIOEnable(self) -> BaconWritePipeline:
+        if self.power != 3:
+            raise ValueError("Power must be 3.3v")
+        return self.AGBWriteROMSequential(self.GPIO_REG_RE, b"\x01")
+    
+    def AGBGPIOSetDirection(self, direction: int) -> BaconWritePipeline:
+        if self.power != 3:
+            raise ValueError("Power must be 3.3v")
+        return self.AGBWriteROMSequential(self.GPIO_REG_CNT, bytes([direction]))
+    
+    def AGBGPIORead(self) -> int:
+        if self.power != 3:
+            raise ValueError("Power must be 3.3v")
+        return self.AGBReadROM(self.GPIO_REG_DAT, 1)[0]

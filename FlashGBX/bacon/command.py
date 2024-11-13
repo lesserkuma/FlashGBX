@@ -233,7 +233,7 @@ def make_ram_write_cycle_with_addr(addrdatalist: list, postfunc=command2bytes) -
                 wr=True, rd=True, 
                 cs1=True, cs2=False,
                 v16bit=bytes([addr & 0xFF, (addr >> 8) & 0xFF]), v8bit=bytes([data]), postfunc=echo_all),
-            make_gba_wr_rd_write_command(wr=True, rd=False, postfunc=echo_all)])
+            make_gba_wr_rd_write_command(wr=False, rd=True, postfunc=echo_all)])
         for addr, data in addrdatalist])
     return postfunc(writeram)
 
