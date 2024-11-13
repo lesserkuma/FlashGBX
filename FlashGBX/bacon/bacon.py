@@ -49,7 +49,10 @@ class BaconWritePipeline:
             self.cmds += "0"
         self.cmds += cmd
         return self
-
+    
+    def IsEmpty(self):
+        return len(self.cmds) == 0
+    
     def Flush(self):
         if self.cmds:
             self.flush_func(command2bytes(self.cmds))
@@ -117,10 +120,16 @@ class BaconDevice:
     def PiplelineFlush(self):
         return self.pipeline.Flush()
 
-    def DelayWithClock8(self, clock8: int) -> BaconWritePipeline:
-        return self.pipeline.Write(
-            "0".join([make_power_read_command(postfunc=echo_all)]*clock8)
-        )
+    def ResetAndDelayNS(self, ns: int, v16bit=b"\x00\x00", v8bit=b"\x00", phi=False, req=False, wr=True, rd=True, cs1=True, cs2=True) -> BaconWritePipeline:
+        # 1clk=16.67ns
+        # 1reset=35clk
+        for i in range(ns//int(16.6*35)+1):
+            if self.pipeline.Write(make_cart_30bit_write_command(
+                phi=phi, req=req, wr=wr, rd=rd, cs1=cs1, cs2=cs2,
+                v16bit=v16bit, v8bit=v8bit, postfunc=echo_all
+            )).IsEmpty():
+                return self.pipeline
+        return self.pipeline
 
     def PowerControl(self, v3_3v: bool, v5v: bool) -> BaconWritePipeline:
         if v3_3v and v5v:

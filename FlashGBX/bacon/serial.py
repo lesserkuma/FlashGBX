@@ -143,23 +143,20 @@ class BaconFakeSerialDevice:
             self._push_ack()
             return
         if self.AGB_BAK_FLASH_WRITING:
-            dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_FLASH_DATA:0x%08X Value:%s" % (self.FW_VARS["ADDRESS"], cmd.hex()))
+            dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_FLASH_DATA:0x%08X" % (self.FW_VARS["ADDRESS"], ))
             addr = MappingAddressToReal(self.FW_VARS["ADDRESS"])
             # prepare unlock cmds and write
             # TODO: other flash type
-            flash_cmds = []
-            if self.BAK_FLASH_TYPE == FLASH_TYPES["AMD"]:
-                flash_cmds = [
-                    (0x5555, 0xAA),
-                    (0x2AAA, 0x55),
-                    (0x5555, 0xA0),
-                ]
-            else:
+            flash_cmds = [
+                (0x5555, 0xAA),
+                (0x2AAA, 0x55),
+                (0x5555, 0xA0),
+            ]
+            flash_exit = (0, 0xF0)
+            if self.BAK_FLASH_TYPE != FLASH_TYPES["AMD"]:
                 raise Exception("Unsupported Backup Flash Type")
             for i, data in enumerate(cmd):
-                self.bacon_dev.AGBWriteRAMWithAddress(commands = flash_cmds + [(addr+i, data)], reset=False)
-                self.bacon_dev.DelayWithClock8(2048//8)
-            self.bacon_dev.PiplelineFlush()
+                self.bacon_dev.AGBWriteRAMWithAddress(commands = flash_cmds+[(addr+i, data), flash_exit], reset=False).Flush()
             self.FW_VARS["ADDRESS"] += self.FW_VARS["TRANSFER_SIZE"]
             self.AGB_BAK_FLASH_WRITING = False
             self._push_ack()
@@ -291,8 +288,6 @@ class BaconFakeSerialDevice:
         elif cmdname == "AGB_CART_WRITE_SRAM":
             self.AGB_SRAM_WRITING = True
         elif cmdname == "AGB_CART_WRITE_FLASH_DATA":
-            dprint("[BaconFakeSerialDevice] !!!! AGB_CART_WRITE_FLASH_DATA is not implemented !!!!")
-            dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_FLASH_DATA CMD:%s" % cmd.hex())
             self.AGB_BAK_FLASH_WRITING = True
             self.BAK_FLASH_TYPE = int(cmd[1])
         elif cmdname == "CALC_CRC32": # 读取一段数据，计算CRC32
