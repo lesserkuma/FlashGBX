@@ -16,7 +16,7 @@
 # -- | 01000                 | GBA_ROM_ADDR_READ | 读取GBA R高8位地址 | -          | 无输入 | 8          | 8位数据 |
 # -- | 01001                 | GBA_ROM_DATA_WRITE | GBA ROM写16位数据 | 16         | 16位数据 | -           | 无返回 |
 # -- | 01010                 | GBA_ROM_DATA_READ | 读取GBA ROM数据 | -          | 无输入 | 16          | 16位数据 |
-# -- -- | 01011                 | GBA_ROM_ADDR_WRITE | GBA ROM写高8位地址 | 8          | 8位地址 | -           | 无返回 |
+# -- | 01011                 | GBA_ROM_DATA_READ_FLIP | 读取GBA ROM数据 | -          | 无输入 | 16          | 16位数据 |
 # -- | 10000 - 11111         | RESERVED     | 预留命令     | -          | -                 | -           | -                  |
 import traceback
 from bitarray import bitarray
@@ -149,12 +149,12 @@ def extract_read_cycle_data_30bit(data: bytes, times=1):
             break
     return ret
 
-def make_gba_rom_data_read_command(postfunc=command2bytes) -> bytes:
-    command = "01010" + "0" * 16
+def make_gba_rom_data_read_command(flip=False, postfunc=command2bytes) -> bytes:
+    command = "0101" + ("1" if flip else "0") + "0" * 16
     return postfunc(command)
     
 def extract_gba_rom_read_data(data: bytes) -> int:
-    if len(data) != 3:
+    if len(data) < 3:
         raise ValueError("data must be 3 bytes, but got %d" % len(data))
     # 6bit无效数据
     #ret = (reverse_bits(data[0] << 6 | data[1] >> 2) << 8) | reverse_bits(data[1] << 6 | data[2] >> 2)
@@ -163,8 +163,9 @@ def extract_gba_rom_read_data(data: bytes) -> int:
 
 __readcyclecmd = "0".join([
     make_gba_wr_rd_write_command(wr=True, rd=False, postfunc=echo_all),
-    make_gba_rom_data_read_command(postfunc=echo_all),
-    make_gba_wr_rd_write_command(wr=True, rd=True, postfunc=echo_all)])
+    make_gba_rom_data_read_command(flip=True, postfunc=echo_all),
+    #make_gba_wr_rd_write_command(wr=True, rd=True, postfunc=echo_all),
+    ])
 def make_rom_read_cycle_command(times=1, postfunc=command2bytes) -> bytes:
     # 1. pull down RD
     # 2. read data
@@ -178,8 +179,8 @@ def extract_read_cycle_data(data: bytes, times=1):
     bytesstr = bytes2command(data)
     # 每隔len(__readcyclecmd)+1bit取一次数据
     for i in range(0, len(bytesstr), len(__readcyclecmd) + 1):
-        one = command2bytes(bytesstr[i + 8: i + len(__readcyclecmd)], endclk=False)
-        ret.append(extract_gba_rom_read_data(one[:len(one)-1]))
+        one = command2bytes(bytesstr[i + 8: i + len(__readcyclecmd) + 1], endclk=False)
+        ret.append(extract_gba_rom_read_data(one[:len(one)]))
         if len(ret) >= times:
             break
     return ret
