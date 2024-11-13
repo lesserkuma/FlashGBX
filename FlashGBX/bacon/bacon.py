@@ -34,14 +34,15 @@ class BaconWritePipeline:
         self.cmds = ""
         self.dev = dev
         self.flush_func = flush_func
+        self.MAX_LEN = 0x1000
 
     def WillFlush(self, cmd: str):
-        if (len(self.cmds) + 1 + len(cmd))//8 >= 0x1000:
+        if (len(self.cmds) + 1 + len(cmd))//8 >= self.MAX_LEN:
             return True
         return False
 
     def Write(self, cmd: str):
-        if (len(self.cmds) + 1 + len(cmd))//8 >= 0x1000:
+        if (len(self.cmds) + 1 + len(cmd))//8 >= self.MAX_LEN:
             self.flush_func(command2bytes(self.cmds))
             self.cmds = ""
         if self.cmds:
@@ -67,6 +68,7 @@ class BaconDevice:
         self.hid_device = hid_device
         self.ch347_device = ch347_device
         self.power = 0
+        self.MAX_LEN = 0x1000
         # if all device is None, find a device
         ## check if windows
         if self.ch347_device is None and self.hid_device is None:
@@ -83,6 +85,7 @@ class BaconDevice:
         if self.ch347_device is None and self.hid_device is None:
             raise ValueError("No device found")
         self.pipeline = BaconWritePipeline(self, self.WriteRead)
+        self.pipeline.MAX_LEN = self.MAX_LEN
 
 ######## Low Level API ########
     def Close(self):
@@ -94,8 +97,8 @@ class BaconDevice:
         self.hid_device = None
 
     def Write(self, data: bytes) -> bool:
-        if len(data) > 0x1000:
-            raise ValueError("Data length must be less than 0x1000")
+        if len(data) > self.MAX_LEN:
+            raise ValueError("Data length must be less than 0x%04X" % self.MAX_LEN)
         if self.ch347_device is not None:
             return self.ch347_device.spi_write(0x80, data)
         if self.hid_device is not None:
@@ -103,8 +106,8 @@ class BaconDevice:
         raise ValueError("No device found")
 
     def WriteRead(self, data: bytes) -> bytes:
-        if len(data) > 0x1000:
-            raise ValueError("Data length must be less than 0x1000")
+        if len(data) > self.MAX_LEN:
+            raise ValueError("Data length must be less than 0x%04X" % self.MAX_LEN)
         if self.ch347_device is not None:
             return bytes(self.ch347_device.spi_write_read(0x80, data))
         if self.hid_device is not None:
@@ -133,8 +136,7 @@ class BaconDevice:
 
 ######## High Level API ########
 
-    def AGBReadROM(self, addr: int, size: int, callback=None) -> bytes:
-        self.PiplelineFlush()
+    def AGBReadROM(self, addr: int, size: int, reset=True, callback=None) -> bytes:
         if size % 2 != 0:
             raise ValueError("Size must be a multiple of 2")
         if addr % 2 != 0:
@@ -148,20 +150,20 @@ class BaconDevice:
         ## to halfword
         addr = addr // 2
         size = size // 2
-        self.WriteRead(make_cart_30bit_write_command(
+        self.pipeline.Write(make_cart_30bit_write_command(
             phi=False, req=False, 
             wr=True, rd=True, 
             cs1=True, cs2=True, 
-            v16bit=bytes([addr & 0xFF, (addr >> 8) & 0xFF]), v8bit=bytes([(addr >> 16) & 0xFF])
+            v16bit=bytes([addr & 0xFF, (addr >> 8) & 0xFF]), v8bit=bytes([(addr >> 16) & 0xFF]), postfunc=echo_all
         ))
-        self.WriteRead(make_gba_rom_cs_write(cs=False))
+        self.pipeline.Write(make_gba_rom_cs_write(cs=False, postfunc=echo_all)).Flush()
         lowaddr = addr & 0xFFFF
         highaddr = (addr >> 16) & 0xFF
         # if lowaddr+1 == 0x10000, highaddr+1, and reset lowaddr
         # prepare WriteRead stream
         readbytes = []
         cycle_times = 0
-        MAX_TIMES = 0x1000//(len(make_rom_read_cycle_command(times=1))+1)
+        MAX_TIMES = self.MAX_LEN//(len(make_rom_read_cycle_command(times=1))+1)
         cnt = 0
         for i in range(size):
             cycle_times += 1
@@ -197,15 +199,26 @@ class BaconDevice:
         if callback is not None:
             callback(cnt, readbytes)
         # reset chip
-        self.WriteRead(make_cart_30bit_write_command(
+        if reset:
+            self.WriteRead(make_cart_30bit_write_command(
+                phi=False, req=False, 
+                wr=True, rd=True, 
+                cs1=True, cs2=True, 
+                v16bit=b"\x00\x00", v8bit=b"\x00"
+            ))
+        return bytes(readbytes)
+
+    def ResetChip(self) -> BaconWritePipeline:
+        if self.power != 3:
+            raise ValueError("Power must be 3.3v")
+        return self.pipeline.Write(make_cart_30bit_write_command(
             phi=False, req=False, 
             wr=True, rd=True, 
             cs1=True, cs2=True, 
-            v16bit=b"\x00\x00", v8bit=b"\x00"
+            v16bit=b"\x00\x00", v8bit=b"\x00", postfunc=echo_all
         ))
-        return bytes(readbytes)
-
-    def AGBWriteROMSequential(self, addr, data: bytes, flash_prepare=None, flash_confirm=None, callback=None) -> BaconWritePipeline:
+    
+    def AGBWriteROMSequential(self, addr, data: bytes, reset=True, callback=None) -> BaconWritePipeline:
         if addr % 2 != 0:
             raise ValueError("Address must be a multiple of 2")
         if len(data) % 2 != 0:
@@ -247,12 +260,13 @@ class BaconDevice:
         if callback is not None:
             callback(cnt, None)
         # reset chip. is necessary?
-        self.pipeline.Write(make_cart_30bit_write_command(
-            phi=False, req=False, 
-            wr=True, rd=True, 
-            cs1=True, cs2=True, 
-            v16bit=b"\x00\x00", v8bit=b"\x00", postfunc=echo_all
-        ))
+        if reset:
+            self.pipeline.Write(make_cart_30bit_write_command(
+                phi=False, req=False, 
+                wr=True, rd=True, 
+                cs1=True, cs2=True, 
+                v16bit=b"\x00\x00", v8bit=b"\x00", postfunc=echo_all
+            ))
         return self.pipeline
 
     def AGBWriteROMWithAddress(self, commands: list, callback=None) -> BaconWritePipeline:
@@ -290,15 +304,15 @@ class BaconDevice:
         if self.power != 3:
             raise ValueError("Power must be 3.3v")
         # prepare chip
-        self.WriteRead(make_cart_30bit_write_command(
+        self.pipeline.Write(make_cart_30bit_write_command(
             phi=False, req=False, 
             wr=True, rd=False, 
             cs1=True, cs2=False,
-            v16bit=bytes([addr & 0xFF, (addr >> 8) & 0xFF]), v8bit=b"\x00"
-        ))
+            v16bit=bytes([addr & 0xFF, (addr >> 8) & 0xFF]), v8bit=b"\x00", postfunc=echo_all
+        )).Flush()
         readbytes = []
         cycle_times = 0
-        MAX_TIMES = 0x1000//(len(make_ram_read_cycle_command(addr=0, times=1))+1)
+        MAX_TIMES = self.MAX_LEN//(len(make_ram_read_cycle_command(addr=0, times=1))+1)
         cnt = 0
         start_addr = addr
         for i in range(size):
@@ -334,7 +348,7 @@ class BaconDevice:
             raise ValueError("Power must be 3.3v")
         readbytes = []
         cycle_times = 0
-        MAX_TIMES = 0x1000//(len(make_ram_write_cycle_command(addr=0, data=b"\00"))+1)
+        MAX_TIMES = self.MAX_LEN//(len(make_ram_write_cycle_command(addr=0, data=b"\00"))+1)
         cnt = 0
         start_addr = addr
         for i in range(size):
@@ -358,31 +372,26 @@ class BaconDevice:
         ))
         return bytes(readbytes)
 
-    def AGBWriteRAMWithAddress(self, commands: list, callback=None) -> bool:
+    def AGBWriteRAMWithAddress(self, commands: list, reset=True, callback=None) -> BaconWritePipeline:
         if self.power != 3:
             raise ValueError("Power must be 3.3v")
-        readbytes = []
-        cycle_times = 0
-        MAX_TIMES = 0x1000//(len(make_ram_write_cycle_with_addr(addrdatalist=[(0, 0)]))+1)
         cnt = 0
         for i in range(len(commands)):
-            cycle_times += 1
+            self.pipeline.Write(make_ram_write_cycle_with_addr(addrdatalist=[commands[i]], postfunc=echo_all))
             cnt += 1
             if callback is not None and cnt != len(commands):
-                callback(cnt, readbytes)
-            if cycle_times == MAX_TIMES or i == len(commands) - 1 and cycle_times > 0:
-                self.WriteRead(make_ram_write_cycle_with_addr(addrdatalist=commands[i-cycle_times+1:i+1]))
-                readbytes = readbytes + ([0]*cycle_times)
-                cycle_times = 0
+                callback(cnt, None)
         if callback is not None:
-            callback(cnt, readbytes)
+            callback(cnt, None)
         # reset chip
-        self.WriteRead(make_cart_30bit_write_command(
-            phi=False, req=False, 
-            wr=True, rd=True, 
-            cs1=True, cs2=True, 
-            v16bit=b"\x00\x00", v8bit=b"\x00"
-        ))
+        if reset:
+            self.pipeline.Write(make_cart_30bit_write_command(
+                phi=False, req=False, 
+                wr=True, rd=True, 
+                cs1=True, cs2=True, 
+                v16bit=b"\x00\x00", v8bit=b"\x00", postfunc=echo_all
+            ))
+        return self.pipeline
     
     def AGBCustomWriteCommands(self, commands: list, callback=None) -> bool:
         pass

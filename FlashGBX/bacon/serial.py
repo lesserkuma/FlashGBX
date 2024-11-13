@@ -2,6 +2,7 @@
 # bacon
 # Author: ChisBread (github.com/ChisBread)
 import zlib
+import time
 from .bacon import BaconDevice
 DEBUG = False
 DEVICE_CMD = {}
@@ -145,7 +146,20 @@ class BaconFakeSerialDevice:
             dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_FLASH_DATA:0x%08X Value:%s" % (self.FW_VARS["ADDRESS"], cmd.hex()))
             addr = MappingAddressToReal(self.FW_VARS["ADDRESS"])
             # prepare unlock cmds and write
-            # self.bacon_dev.AGBWriteROM(addr, cmd)
+            # TODO: other flash type
+            flash_cmds = []
+            if self.BAK_FLASH_TYPE == FLASH_TYPES["AMD"]:
+                flash_cmds = [
+                    (0x5555, 0xAA),
+                    (0x2AAA, 0x55),
+                    (0x5555, 0xA0),
+                ]
+            else:
+                raise Exception("Unsupported Backup Flash Type")
+            for i, data in enumerate(cmd):
+                self.bacon_dev.AGBWriteRAMWithAddress(commands = flash_cmds + [(addr+i, data)], reset=False)
+                self.bacon_dev.DelayWithClock8(2048//8)
+            self.bacon_dev.PiplelineFlush()
             self.FW_VARS["ADDRESS"] += self.FW_VARS["TRANSFER_SIZE"]
             self.AGB_BAK_FLASH_WRITING = False
             self._push_ack()
@@ -154,7 +168,7 @@ class BaconFakeSerialDevice:
             chunk_size = int.from_bytes(cmd, byteorder='big')
             addr = MappingAddressToReal(self.FW_VARS["ADDRESS"]<<1)
             dprint("[BaconFakeSerialDevice] CALC_CRC32:0x%08X Size:0x%08X" % (self.FW_VARS["ADDRESS"], chunk_size))
-            ret = self.bacon_dev.AGBReadROM(addr, chunk_size)
+            ret = self.bacon_dev.AGBReadROM(addr, chunk_size, reset=False)
             crc32 = zlib.crc32(ret)
             # push crc32 4byte big-endian
             self.push_to_input_buffer(crc32.to_bytes(4, byteorder='big'))
@@ -168,6 +182,7 @@ class BaconFakeSerialDevice:
             dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING:0x%08X ValueSize:%s TransferSize:%s BufferSize:%s" % (self.FW_VARS["ADDRESS"], len(cmd), size, buffer_size))
             if self.FLASH_CMD_MOD == FLASH_MODS["FLASH_METHOD_BUFFERED"] and buffer_size > 0:
                 # per buffer Seq
+                start_time = time.time()
                 for i in range(0, size, buffer_size):
                     # make flash cmds
                     flash_prepare = []
@@ -190,10 +205,18 @@ class BaconFakeSerialDevice:
                             flash_prepare[-1] = (addr, flash_prepare[-1][1])
                     #dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING Prepare:%s Commit:%s" % ([(hex(i[0]), hex(i[1])) for i in flash_prepare], [(hex(i[0]), hex(i[1])) for i in flash_commit]))
                     self.bacon_dev.AGBWriteROMWithAddress(commands=flash_prepare)
-                    self.bacon_dev.AGBWriteROMSequential(addr=addr, data=cmd[i:i+buffer_size])
-                    self.bacon_dev.AGBWriteROMWithAddress(commands=flash_commit).Flush() #这里有200us的延迟, 怎么也够了
-                    #TODO 校验
+                    self.bacon_dev.AGBWriteROMSequential(addr=addr, data=cmd[i:i+buffer_size], reset=False)
+                    self.bacon_dev.AGBWriteROMWithAddress(commands=flash_commit).Flush()
+                    # S29GL256:
+                    # 2-byte[33] 125 750 µs
+                    # 32-byte[33] 160 750
+                    # 64-byte[33] 175 750
+                    # 128-byte[33] 198 750
+                    # 256-byte[33] 239 750
+                    # 512-byte 340 750
+                    # Don't need verify if time is enough
                     addr += buffer_size
+                dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING PerBufferTime:%s(us)" % ((time.time()-start_time)/(size//buffer_size)*1000000))
             else:
                 #TODO write with cmd
                 pass
@@ -279,7 +302,7 @@ class BaconFakeSerialDevice:
         elif cmdname == "AGB_CART_READ":
             addr = MappingAddressToReal(self.FW_VARS["ADDRESS"]<<1)
             dprint("[BaconFakeSerialDevice] AGB_CART_READ:0x%08X(0x%08X) Size:%d" % (self.FW_VARS["ADDRESS"], addr, self.FW_VARS["TRANSFER_SIZE"]))
-            ret = self.bacon_dev.AGBReadROM(addr, self.FW_VARS["TRANSFER_SIZE"])
+            ret = self.bacon_dev.AGBReadROM(addr, self.FW_VARS["TRANSFER_SIZE"], reset=False)
             if ret is not False:
                 self.push_to_input_buffer(ret)
             if self.MODE == "AGB":
@@ -313,7 +336,7 @@ class BaconFakeSerialDevice:
             if self.MODE == "AGB" and flashcart:
                 self.bacon_dev.AGBWriteROMWithAddress(commands=cmds).Flush()
             else:
-                self.bacon_dev.AGBWriteRAMWithAddress(commands=cmds)
+                self.bacon_dev.AGBWriteRAMWithAddress(commands=cmds).Flush()
             self._push_ack()
         elif cmdname == "FLASH_PROGRAM":
             self.FLASH_PROGRAMMING = True
