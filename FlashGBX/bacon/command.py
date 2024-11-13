@@ -17,6 +17,7 @@
 # -- | 01001                 | GBA_ROM_DATA_WRITE | GBA ROM写16位数据 | 16         | 16位数据 | -           | 无返回 |
 # -- | 01010                 | GBA_ROM_DATA_READ | 读取GBA ROM数据 | -          | 无输入 | 16          | 16位数据 |
 # -- | 01011                 | GBA_ROM_DATA_READ_FLIP | 读取GBA ROM数据 | -          | 无输入 | 16          | 16位数据 |
+# -- | 01100                 | GBA_ROM_DATA_WRITE_FLIP | GBA ROM写16位数据 | 16         | 16位数据 | -           | 无返回 |
 # -- | 10000 - 11111         | RESERVED     | 预留命令     | -          | -                 | -           | -                  |
 import traceback
 from bitarray import bitarray
@@ -117,14 +118,14 @@ def extract_cart_30bit_read_data(data: bytes) -> dict:
     return ret
 
 
-def make_v16bit_data_write_command(data: int, postfunc=command2bytes) -> bytes:
+def make_v16bit_data_write_command(data: int, flip=False, postfunc=command2bytes) -> bytes:
     if data > 0xFFFF:
         raise ValueError("data must be less than 0xFFFF")
-    command = "01001" + bin(data)[2:].rjust(16, "0")
+    command = ("01100" if flip else "01001") + bin(data)[2:].rjust(16, "0")
     return postfunc(command)
 
-def make_gba_rom_data_write_command(data: int, postfunc=command2bytes) -> bytes:
-    return make_v16bit_data_write_command(data, postfunc)
+def make_gba_rom_data_write_command(data: int, flip=False, postfunc=command2bytes) -> bytes:
+    return make_v16bit_data_write_command(data, flip, postfunc)
 
 __readcyclecmd_30bit = "0".join([
     make_gba_wr_rd_write_command(wr=True, rd=False, postfunc=echo_all),
@@ -185,7 +186,7 @@ def extract_read_cycle_data(data: bytes, times=1):
             break
     return ret
 
-def make_rom_write_cycle_command_with_addr(addrdatalist: list, postfunc=command2bytes) -> bytes:
+def make_rom_write_cycle_command_with_addr(addrdatalist: list, flip=True, postfunc=command2bytes) -> bytes:
     readram = "0".join(["0".join([
         # 1. write addr, reset cs1 and wr
         make_cart_30bit_write_command(
@@ -196,21 +197,21 @@ def make_rom_write_cycle_command_with_addr(addrdatalist: list, postfunc=command2
         # 2. pull down cs1
         make_gba_rom_cs_write(cs=False, postfunc=echo_all),
         # 3. write data
-        make_gba_rom_data_write_command(data, postfunc=echo_all),
+        make_gba_rom_data_write_command(data, flip=flip, postfunc=echo_all),
         # 4. pull down wr
-        make_gba_wr_rd_write_command(wr=False, rd=True, postfunc=echo_all),
-    ]) for addr, data in addrdatalist])
+        # make_gba_wr_rd_write_command(wr=False, rd=True, postfunc=echo_all),
+    ]) + ("0"+make_gba_wr_rd_write_command(wr=False, rd=True, postfunc=echo_all) if not flip else "") for addr, data in addrdatalist])
     return postfunc(readram)
 
-def make_rom_write_cycle_command_sequential(datalist: list, postfunc=command2bytes) -> bytes:
+def make_rom_write_cycle_command_sequential(datalist: list, flip=True, postfunc=command2bytes) -> bytes:
     readram = "0".join(["0".join([
         # 1. reset wr
         make_gba_wr_rd_write_command(wr=True, rd=True, postfunc=echo_all),
         # 2. write data
-        make_gba_rom_data_write_command(data, postfunc=echo_all),
+        make_gba_rom_data_write_command(data, flip=flip, postfunc=echo_all),
         # 3. pull down wr
-        make_gba_wr_rd_write_command(wr=False, rd=True, postfunc=echo_all),
-    ]) for data in datalist])
+        # make_gba_wr_rd_write_command(wr=False, rd=True, postfunc=echo_all),
+    ]) + ("0"+make_gba_wr_rd_write_command(wr=False, rd=True, postfunc=echo_all) if not flip else "") for data in datalist])
     return postfunc(readram)
 
 def make_gba_rom_cs_write(cs: bool = True, postfunc=command2bytes) -> bytes:

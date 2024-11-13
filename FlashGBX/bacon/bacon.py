@@ -268,7 +268,7 @@ class BaconDevice:
                     ))
         if callback is not None:
             callback(cnt, None)
-        # reset chip. is necessary?
+        # reset chip.
         if reset:
             self.pipeline.Write(make_cart_30bit_write_command(
                 phi=False, req=False, 
