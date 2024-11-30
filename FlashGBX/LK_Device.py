@@ -4296,6 +4296,8 @@ class LK_Device(ABC):
 								sector_size = se_ret
 								dprint("Next sector size: 0x{:X}".format(sector_size))
 							skip_init = False
+					if "Bacon" in self.DEVICE_NAME:
+						self.DEVICE.cache_rom(pos, [0xFF]*buffer_len)
 					# ↑↑↑ Sector erase
 					
 					if se_ret is not False:
@@ -4655,7 +4657,12 @@ class LK_Device(ABC):
 				if args['mode'] == 1: ret = self._BackupROM(args)
 				elif args['mode'] == 2: ret = self._BackupRestoreRAM(args)
 				elif args['mode'] == 3: ret = self._BackupRestoreRAM(args)
-				elif args['mode'] == 4: ret = self._FlashROM(args)
+				elif args['mode'] == 4: 
+					if "Bacon" in self.DEVICE_NAME:
+						self.DEVICE.cache_rom_reset()
+					ret = self._FlashROM(args)
+					if "Bacon" in self.DEVICE_NAME:
+						self.DEVICE.cache_rom_reset()
 				elif args['mode'] == 5: ret = self._DetectCartridge(args)
 				elif args['mode'] == 0xFF: self.Debug()
 				if self.FW is None: return False
