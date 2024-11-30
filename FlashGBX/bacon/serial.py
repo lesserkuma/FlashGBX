@@ -99,6 +99,27 @@ class BaconFakeSerialDevice:
         self.FLASH_PROGRAMMING = False
         self.SET_FLASH_CMD_WAITING = 0
 
+        # ROM cache 32MB
+        self.ROM_CACHE = [0x00]*0x2000000
+        self.ROM_CACHED = [False]*0x2000000
+    
+    def cache_rom(self, addr, data):
+        for i in range(len(data)):
+            self.ROM_CACHE[addr+i] = data[i]
+            self.ROM_CACHED[addr+i] = True
+
+    def cache_rom_reset(self, addr=0, size=0x2000000):
+        for i in range(size):
+            self.ROM_CACHED[addr+i] = False
+
+    def read_rom(self, addr, size):
+        if self.ROM_CACHED[addr:addr+size].count(False) > 0:
+            dprint("[BaconFakeSerialDevice] ReadROM:0x%08X Size:%s" % (addr, size))
+            self.cache_rom(addr, self.bacon_dev.AGBReadROM(addr, size))
+        else:
+            dprint("[BaconFakeSerialDevice] ReadROMCached:0x%08X Size:%s" % (addr, size))
+        return bytes(self.ROM_CACHE[addr:addr+size])
+
     def isOpen(self):
         return self.bacon_dev is not None
 
@@ -132,7 +153,29 @@ class BaconFakeSerialDevice:
     def write(self, data):
         self._cmd_parse(data)
         return len(data)
-    
+
+    def _make_flash_cmds(self, addr, buffer_size):
+        flash_prepare = []
+        flash_commit = []
+        for j in range(6):
+            tcmd = (self.FLASH_CUSTOM_CMDS[j][0]<<1, self.FLASH_CUSTOM_CMDS[j][1])
+            flash_prepare.append(tcmd)
+
+            if flash_prepare[-1] == (0x00, 0x00): # write buffer size?
+                flash_prepare[-1] = (addr, buffer_size//2-1)
+                for k in range(j+1, 6):
+                    # commit
+                    if not (self.FLASH_CUSTOM_CMDS[k] == (0x00, 0x00)):
+                        tcmd = (self.FLASH_CUSTOM_CMDS[k][0]<<1, self.FLASH_CUSTOM_CMDS[k][1])
+                        flash_commit.append(tcmd)
+                        if flash_commit[-1][0] == 0x00:
+                            flash_commit[-1] = (addr, flash_commit[-1][1])
+                break
+            elif flash_prepare[-1][0] == 0x00:
+                flash_prepare[-1] = (addr, flash_prepare[-1][1])
+        return flash_prepare, flash_commit
+
+
     def _cmd_parse(self, cmd):
         if self.AGB_SRAM_WRITING:
             dprint("[BaconFakeSerialDevice] AGB_CART_WRITE_SRAM:0x%08X Value:%s" % (self.FW_VARS["ADDRESS"], cmd.hex()))
@@ -165,7 +208,7 @@ class BaconFakeSerialDevice:
             chunk_size = int.from_bytes(cmd, byteorder='big')
             addr = MappingAddressToReal(self.FW_VARS["ADDRESS"]<<1)
             dprint("[BaconFakeSerialDevice] CALC_CRC32:0x%08X Size:0x%08X" % (self.FW_VARS["ADDRESS"], chunk_size))
-            ret = self.bacon_dev.AGBReadROM(addr, chunk_size, reset=False)
+            ret = self.read_rom(addr, chunk_size)
             crc32 = zlib.crc32(ret)
             # push crc32 4byte big-endian
             self.push_to_input_buffer(crc32.to_bytes(4, byteorder='big'))
@@ -173,33 +216,18 @@ class BaconFakeSerialDevice:
             return
         if self.FLASH_PROGRAMMING:
             #TODO: More AGB Flash Type, And DMG Flash
-            addr = MappingAddressToReal(self.FW_VARS["ADDRESS"]<<1)
+            raw_addr = MappingAddressToReal(self.FW_VARS["ADDRESS"]<<1)
+            addr = raw_addr
             size = self.FW_VARS["TRANSFER_SIZE"]
             buffer_size = self.FW_VARS["BUFFER_SIZE"]
             dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING:0x%08X ValueSize:%s TransferSize:%s BufferSize:%s" % (self.FW_VARS["ADDRESS"], len(cmd), size, buffer_size))
             if self.FLASH_CMD_MOD == FLASH_MODS["FLASH_METHOD_BUFFERED"] and buffer_size > 0:
                 # per buffer Seq
                 start_time = time.time()
+                self.cache_rom_reset(raw_addr, size)
                 for i in range(0, size, buffer_size):
                     # make flash cmds
-                    flash_prepare = []
-                    flash_commit = []
-                    for j in range(6):
-                        tcmd = (self.FLASH_CUSTOM_CMDS[j][0]<<1, self.FLASH_CUSTOM_CMDS[j][1])
-                        flash_prepare.append(tcmd)
-
-                        if flash_prepare[-1] == (0x00, 0x00): # write buffer size?
-                            flash_prepare[-1] = (addr, buffer_size//2-1)
-                            for k in range(j+1, 6):
-                                # commit
-                                if not (self.FLASH_CUSTOM_CMDS[k] == (0x00, 0x00)):
-                                    tcmd = (self.FLASH_CUSTOM_CMDS[k][0]<<1, self.FLASH_CUSTOM_CMDS[k][1])
-                                    flash_commit.append(tcmd)
-                                    if flash_commit[-1][0] == 0x00:
-                                        flash_commit[-1] = (addr, flash_commit[-1][1])
-                            break
-                        elif flash_prepare[-1][0] == 0x00:
-                            flash_prepare[-1] = (addr, flash_prepare[-1][1])
+                    flash_prepare, flash_commit = self._make_flash_cmds(addr, buffer_size)
                     #dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING Prepare:%s Commit:%s" % ([(hex(i[0]), hex(i[1])) for i in flash_prepare], [(hex(i[0]), hex(i[1])) for i in flash_commit]))
                     self.bacon_dev.AGBWriteROMWithAddress(commands=flash_prepare)
                     self.bacon_dev.AGBWriteROMSequential(addr=addr, data=cmd[i:i+buffer_size], reset=False)
@@ -213,7 +241,27 @@ class BaconFakeSerialDevice:
                     # 512-byte 340 750
                     # Don't need verify if time is enough
                     addr += buffer_size
+                # retry
+                ret = self.read_rom(raw_addr, size)
                 dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING PerBufferTime:%s(us)" % ((time.time()-start_time)/(size//buffer_size)*1000000))
+                addr = raw_addr
+                for i in range(0, size, buffer_size):
+                    j = 1
+                    while ret[i:i+buffer_size] != cmd[i:i+buffer_size]:
+                        if j > 10:
+                            dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING Retry Failed!")
+                            break
+                        flash_prepare, flash_commit = self._make_flash_cmds(addr, buffer_size)
+                        self.bacon_dev.AGBWriteROMWithAddress(commands=flash_prepare)
+                        self.bacon_dev.AGBWriteROMSequential(addr=addr, data=cmd[i:i+buffer_size], reset=False)
+                        self.bacon_dev.AGBWriteROMWithAddress(commands=flash_commit).Flush()
+                        # 等待Nms
+                        time.sleep(0.001*j)
+                        dprint("[BaconFakeSerialDevice] FLASH_PROGRAMMING Retry:%s" % j)
+                        ret = ret[:i] + self.read_rom(addr, buffer_size) + ret[i+buffer_size:]
+                        j += 1
+                    addr += buffer_size
+
             else:
                 #TODO write with cmd
                 pass
