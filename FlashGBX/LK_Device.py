@@ -626,7 +626,7 @@ class LK_Device(ABC):
 			buffer.extend(struct.pack("B", 1 if flashcart else 0))
 		buffer.extend(struct.pack("B", num))
 		for i in range(0, num):
-			dprint("Writing to cartridge: 0x{:X} = 0x{:X} ({:d} of {:d})".format(commands[i][0], commands[i][1], i+1, num))
+			dprint("Writing to cartridge: 0x{:X} = 0x{:X} ({:d} of {:d}) flashcart={:s}".format(commands[i][0], commands[i][1], i+1, num, str(flashcart)))
 			if self.MODE == "AGB" and flashcart:
 				buffer.extend(struct.pack(">I", commands[i][0] >> 1))
 			else:
@@ -919,6 +919,7 @@ class LK_Device(ABC):
 			print("{:s}Error: No mode was set.{:s}".format(ANSI.RED, ANSI.RESET))
 			return False
 
+		dprint("Reading ROM header")
 		header = self.ReadROM(0, 0x180)
 
 		if ".dev" in Util.VERSION_PEP440 or Util.DEBUG:
@@ -1036,7 +1037,7 @@ class LK_Device(ABC):
 			data["rtc_string"] = "Not available"
 			if checkRtc and data["logo_correct"] is True and header[0xC5] == 0 and header[0xC7] == 0 and header[0xC9] == 0:
 				_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycleOrAskReconnect, clk_toggle_fncptr=self._clk_toggle)
-				if self.FW["fw_ver"] >= 12:
+				if self.FW["fw_ver"] >= 12 and self.DEVICE_NAME != "Bacon": # Bacon has a different RTC implementation
 					self._write(self.DEVICE_CMD["AGB_READ_GPIO_RTC"])
 					temp = self._read(8)
 					data["has_rtc"] = _agb_gpio.HasRTC(temp) is True
@@ -1424,6 +1425,8 @@ class LK_Device(ABC):
 		return (agb_flash_chip, agb_flash_chip_name)
 	
 	def ReadROM(self, address, length, skip_init=False, max_length=64):
+		if self.DEVICE_NAME == "Bacon":
+			max_length = length
 		num = math.ceil(length / max_length)
 		dprint("Reading 0x{:X} bytes from cartridge ROM at 0x{:X} in {:d} iteration(s)".format(length, address, num))
 		if length > max_length: length = max_length
@@ -1491,6 +1494,8 @@ class LK_Device(ABC):
 		return self.ReadROM(address=addr, length=length, max_length=max_length)
 
 	def ReadRAM(self, address, length, command=None, max_length=64):
+		if self.DEVICE_NAME == "Bacon":
+			max_length = length
 		num = math.ceil(length / max_length)
 		dprint("Reading 0x{:X} bytes from cartridge RAM in {:d} iteration(s)".format(length, num))
 		if length > max_length: length = max_length
@@ -1577,6 +1582,8 @@ class LK_Device(ABC):
 	
 	def WriteRAM(self, address, buffer, command=None, max_length=256):
 		length = len(buffer)
+		if self.DEVICE_NAME == "Bacon":
+			max_length = length
 		num = math.ceil(length / max_length)
 		dprint("Writing 0x{:X} bytes to cartridge RAM in {:d} iteration(s)".format(length, num))
 		if length > max_length: length = max_length
@@ -1702,8 +1709,10 @@ class LK_Device(ABC):
 
 	def WriteROM(self, address, buffer, flash_buffer_size=False, skip_init=False, rumble_stop=False, max_length=MAX_BUFFER_WRITE):
 		length = len(buffer)
+		if self.DEVICE_NAME == "Bacon":
+			max_length = length
 		num = math.ceil(length / max_length)
-		dprint("Writing 0x{:X} bytes to Flash ROM in {:d} iteration(s)".format(length, num))
+		dprint("Writing 0x{:X} bytes to Flash ROM in {:d} iteration(s) flash_buffer_size=0x{:X} skip_init={:s}".format(length, num, flash_buffer_size, str(skip_init)))
 		if length == 0:
 			dprint("Length is zero?")
 			return False
@@ -3401,7 +3410,7 @@ class LK_Device(ABC):
 				elif self.MODE == "AGB":
 					_agb_gpio = AGB_GPIO(args={"rtc":True}, cart_write_fncptr=self._cart_write, cart_read_fncptr=self._cart_read, cart_powercycle_fncptr=self.CartPowerCycleOrAskReconnect, clk_toggle_fncptr=self._clk_toggle)
 					rtc_buffer = None
-					if self.FW["fw_ver"] >= 12:
+					if self.FW["fw_ver"] >= 12 and self.DEVICE_NAME != "Bacon": # Bacon has a different RTC implementation
 						self._write(self.DEVICE_CMD["AGB_READ_GPIO_RTC"])
 						rtc_buffer = self._read(8)
 						if len(rtc_buffer) == 8 and _agb_gpio.HasRTC(rtc_buffer) is True:
@@ -4287,6 +4296,8 @@ class LK_Device(ABC):
 								sector_size = se_ret
 								dprint("Next sector size: 0x{:X}".format(sector_size))
 							skip_init = False
+					if "Bacon" in self.DEVICE_NAME:
+						self.DEVICE.cache_rom(pos, [0xFF]*buffer_len)
 					# ↑↑↑ Sector erase
 					
 					if se_ret is not False:
@@ -4646,7 +4657,12 @@ class LK_Device(ABC):
 				if args['mode'] == 1: ret = self._BackupROM(args)
 				elif args['mode'] == 2: ret = self._BackupRestoreRAM(args)
 				elif args['mode'] == 3: ret = self._BackupRestoreRAM(args)
-				elif args['mode'] == 4: ret = self._FlashROM(args)
+				elif args['mode'] == 4: 
+					if "Bacon" in self.DEVICE_NAME:
+						self.DEVICE.cache_rom_reset()
+					ret = self._FlashROM(args)
+					if "Bacon" in self.DEVICE_NAME:
+						self.DEVICE.cache_rom_reset()
 				elif args['mode'] == 5: ret = self._DetectCartridge(args)
 				elif args['mode'] == 0xFF: self.Debug()
 				if self.FW is None: return False
