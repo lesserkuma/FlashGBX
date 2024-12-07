@@ -374,7 +374,7 @@ class SPI(object):
             delay: Optional delay in usecs between sending the last bit and
                 deselecting the chip select line. 0 (default) for no delay.
         """
-        data = array.array('B', data).tostring()
+        data = array.array('B', data).tobytes()
         length = len(data)
         transmit_buffer = ctypes.create_string_buffer(data)
         spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
@@ -404,7 +404,7 @@ class SPI(object):
                                        length, speed, delay, bits_per_word, 0,
                                        0, 0, 0)
         fcntl.ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
-        return [ord(byte) for byte in ctypes.string_at(receive_buffer, length)]
+        return [byte for byte in ctypes.string_at(receive_buffer, length)]
 
     def transfer(self, data, speed=0, bits_per_word=0, delay=0):
         """Perform full-duplex SPI transfer
@@ -421,7 +421,7 @@ class SPI(object):
         Returns:
             List of words read from SPI bus during transfer
         """
-        data = array.array('B', data).tostring()
+        data = array.array('B', data).tobytes()
         length = len(data)
         transmit_buffer = ctypes.create_string_buffer(data)
         receive_buffer = ctypes.create_string_buffer(length)
@@ -431,7 +431,7 @@ class SPI(object):
                                        length, speed, delay, bits_per_word, 0,
                                        0, 0, 0)
         fcntl.ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
-        return [ord(byte) for byte in ctypes.string_at(receive_buffer, length)]
+        return [byte for byte in ctypes.string_at(receive_buffer, length)]
     def close(self):
         """Close the spidev device"""
         self.handle.close()

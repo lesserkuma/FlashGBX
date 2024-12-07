@@ -90,10 +90,12 @@ class BaconDevice:
                     self.hid_device = SPIDevice(clock_freq_level=SPIClockFreq.f_60M, is_16bits=False, mode=3, is_MSB=True)
             elif platform.system() == "Linux" and os.path.exists("/dev/spidev3.0"):
                 try:
-                    spi = SPI("/dev/spidev3.0") # TODO. Auto find spi device
-                    spi.mode = SPI.MODE_3
-                    spi.bits_per_word = 8
-                    spi.speed = 60000000
+                    spi = SPI("/dev/spidev3.0", speed=60000000, phase=True, polarity=True, bits_per_word=8, lsb_first=False, cs_high=False) # TODO. Auto find spi device
+                    # spi.mode = SPI.MODE_3
+                    # spi.bits_per_word = 8
+                    # spi.speed = 60000000
+                    # spi.cs_high = True
+                    # spi.lsb_first = False
                     self.gpio_device = spi
                 except Exception as e:
                     print(e)
