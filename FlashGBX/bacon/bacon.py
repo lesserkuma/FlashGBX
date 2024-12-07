@@ -12,6 +12,8 @@ from .command import *
 from ch347api import CH347HIDDev, I2CDevice, SPIDevice, UARTDevice, SPIClockFreq, I2CClockFreq
 #WCHAPI
 from .ch347 import SPIConfig, CH347
+from .linuxspi import SPI
+
 spi_config = SPIConfig(
     Mode=3,
     Clock=0,
@@ -67,14 +69,15 @@ class BaconDevice:
     GPIO_REG_CNT = 0xC6 # IO Select 1:Write to GPIO Device 0:Read from GPIO Device
     GPIO_REG_RE  = 0xC8 # Read Enable Flag Register 1:Enable 0:Disable
     
-    def __init__(self, hid_device=None, ch347_device=None):
+    def __init__(self, hid_device=None, ch347_device=None, gpio_device=None):
         self.hid_device = hid_device
         self.ch347_device = ch347_device
+        self.gpio_device = gpio_device
         self.power = 0
         self.MAX_LEN = 0x1000
         # if all device is None, find a device
         ## check if windows
-        if self.ch347_device is None and self.hid_device is None:
+        if self.ch347_device is None and self.hid_device is None and self.gpio_device is None:
             if platform.system() == "Windows":
                 if self.ch347_device is None:
                     ch347 = CH347(device_index=0, dll_path=os.path.join(os.path.dirname(__file__), "lib/CH347DLLA64.DLL"))
@@ -82,26 +85,43 @@ class BaconDevice:
                     ch347.open_device()
                     if ch347.spi_init(spi_config): # True if successful, False otherwise.
                         self.ch347_device = ch347
-            # cannot find wch device, try hid device
-            if self.ch347_device is None:
-                self.hid_device = SPIDevice(clock_freq_level=SPIClockFreq.f_60M, is_16bits=False, mode=3, is_MSB=True)
-        if self.ch347_device is None and self.hid_device is None:
+                # cannot find wch device, try hid device
+                if self.ch347_device is None:
+                    self.hid_device = SPIDevice(clock_freq_level=SPIClockFreq.f_60M, is_16bits=False, mode=3, is_MSB=True)
+            elif platform.system() == "Linux" and os.path.exists("/dev/spidev3.0"):
+                try:
+                    spi = SPI("/dev/spidev3.0") # TODO. Auto find spi device
+                    spi.mode = SPI.MODE_3
+                    spi.bits_per_word = 8
+                    spi.speed = 60000000
+                    self.gpio_device = spi
+                except Exception as e:
+                    print(e)
+
+                
+        if self.ch347_device is None and self.hid_device is None and self.gpio_device is None:
             raise ValueError("No device found")
         self.pipeline = BaconWritePipeline(self, self.WriteRead)
         self.pipeline.MAX_LEN = self.MAX_LEN
 
 ######## Low Level API ########
     def Close(self):
+        if self.gpio_device is not None:
+            self.gpio_device.close()
         if self.ch347_device is not None:
             self.ch347_device.close_device()
         if self.hid_device is not None:
             self.hid_device.dev.close()
         self.ch347_device = None
         self.hid_device = None
+        self.gpio_device = None
 
     def Write(self, data: bytes) -> bool:
         if len(data) > self.MAX_LEN:
             raise ValueError("Data length must be less than 0x%04X" % self.MAX_LEN)
+        if self.gpio_device is not None:
+            self.gpio_device.write(data)
+            return True
         if self.ch347_device is not None:
             return self.ch347_device.spi_write(0x80, data)
         if self.hid_device is not None:
@@ -111,6 +131,8 @@ class BaconDevice:
     def WriteRead(self, data: bytes) -> bytes:
         if len(data) > self.MAX_LEN:
             raise ValueError("Data length must be less than 0x%04X" % self.MAX_LEN)
+        if self.gpio_device is not None:
+            return bytes(self.gpio_device.transfer(data))
         if self.ch347_device is not None:
             return bytes(self.ch347_device.spi_write_read(0x80, data))
         if self.hid_device is not None:
