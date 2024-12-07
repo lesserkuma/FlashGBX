@@ -134,7 +134,7 @@ class SPI(object):
         if not os.path.exists(device):
             raise IOError("{} does not exist".format(device))
 
-        self.handle = open(device, "w+")
+        self.handle = open(device, "w+b", buffering=0)
 
         if speed is not None:
             self.speed = speed
