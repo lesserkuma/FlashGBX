@@ -53,4 +53,3 @@ from .ch347 import *
 from .bacon import *
 from .command import *
 from .serial import *
-from .linuxspi import *
