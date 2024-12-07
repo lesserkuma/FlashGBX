@@ -8,25 +8,7 @@ import time
 import os
 
 from .command import *
-#HIDAPI
-from ch347api import CH347HIDDev, I2CDevice, SPIDevice, UARTDevice, SPIClockFreq, I2CClockFreq
-#WCHAPI
-from .ch347 import SPIConfig, CH347
-from .linuxspi import SPI
 
-spi_config = SPIConfig(
-    Mode=3,
-    Clock=0,
-    ByteOrder=1,
-    SpiWriteReadInterval=0,
-    SpiOutDefaultData=0xFF,
-    ChipSelect=0x80,
-    CS1Polarity=0,
-    CS2Polarity=0,
-    IsAutoDeative=1,
-    ActiveDelay=0,
-    DelayDeactive=0,
-)
 
 ROM_MAX_SIZE = 0x2000000 # 32MB
 RAM_MAX_SIZE = 0x20000 # 128KB (with bank)
@@ -80,22 +62,44 @@ class BaconDevice:
         if self.ch347_device is None and self.hid_device is None and self.gpio_device is None:
             if platform.system() == "Windows":
                 if self.ch347_device is None:
+                    #WCHAPI
+                    from .ch347 import SPIConfig, CH347
                     ch347 = CH347(device_index=0, dll_path=os.path.join(os.path.dirname(__file__), "lib/CH347DLLA64.DLL"))
                     ch347.close_device()
                     ch347.open_device()
+                    spi_config = SPIConfig(
+                        Mode=3,
+                        Clock=0,
+                        ByteOrder=1,
+                        SpiWriteReadInterval=0,
+                        SpiOutDefaultData=0xFF,
+                        ChipSelect=0x80,
+                        CS1Polarity=0,
+                        CS2Polarity=0,
+                        IsAutoDeative=1,
+                        ActiveDelay=0,
+                        DelayDeactive=0,
+                    )
                     if ch347.spi_init(spi_config): # True if successful, False otherwise.
                         self.ch347_device = ch347
                 # cannot find wch device, try hid device
                 if self.ch347_device is None:
-                    self.hid_device = SPIDevice(clock_freq_level=SPIClockFreq.f_60M, is_16bits=False, mode=3, is_MSB=True)
+                    try:
+                        #HIDAPI
+                        from ch347api import SPIDevice, SPIClockFreq
+                        self.hid_device = SPIDevice(clock_freq_level=SPIClockFreq.f_60M, is_16bits=False, mode=3, is_MSB=True)
+                    except Exception as e:
+                        print(e)
             elif platform.system() == "Linux" and os.path.exists("/dev/spidev3.0"):
                 try:
-                    spi = SPI("/dev/spidev3.0", speed=60000000, phase=True, polarity=True, bits_per_word=8, lsb_first=False, cs_high=False) # TODO. Auto find spi device
-                    # spi.mode = SPI.MODE_3
-                    # spi.bits_per_word = 8
-                    # spi.speed = 60000000
-                    # spi.cs_high = True
-                    # spi.lsb_first = False
+                    import spidev
+                    spi = spidev.SpiDev()
+                    spi.open(3, 0) # bus 3, device 0
+                    spi.max_speed_hz = 60000000
+                    spi.mode = 0b11
+                    spi.bits_per_word = 8
+                    spi.lsbfirst = False
+                    spi.cshigh = False
                     self.gpio_device = spi
                 except Exception as e:
                     print(e)
@@ -122,7 +126,7 @@ class BaconDevice:
         if len(data) > self.MAX_LEN:
             raise ValueError("Data length must be less than 0x%04X" % self.MAX_LEN)
         if self.gpio_device is not None:
-            self.gpio_device.write(data)
+            self.gpio_device.xfer(data)
             return True
         if self.ch347_device is not None:
             return self.ch347_device.spi_write(0x80, data)
@@ -134,7 +138,7 @@ class BaconDevice:
         if len(data) > self.MAX_LEN:
             raise ValueError("Data length must be less than 0x%04X" % self.MAX_LEN)
         if self.gpio_device is not None:
-            return bytes(self.gpio_device.transfer(data))
+            return bytes(self.gpio_device.xfer(data))
         if self.ch347_device is not None:
             return bytes(self.ch347_device.spi_write_read(0x80, data))
         if self.hid_device is not None:
