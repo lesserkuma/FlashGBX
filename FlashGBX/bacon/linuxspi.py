@@ -379,7 +379,7 @@ class SPI(object):
         transmit_buffer = ctypes.create_string_buffer(data)
         spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
                                        ctypes.addressof(transmit_buffer), 0,
-                                       length, speed, delay, bits_per_word, 0,
+                                       length, speed, delay, bits_per_word, 1,
                                        0, 0, 0)
         fcntl.ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
 
@@ -401,7 +401,7 @@ class SPI(object):
         receive_buffer = ctypes.create_string_buffer(length)
         spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT, 0,
                                        ctypes.addressof(receive_buffer),
-                                       length, speed, delay, bits_per_word, 0,
+                                       length, speed, delay, bits_per_word, 1,
                                        0, 0, 0)
         fcntl.ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
         return [byte for byte in ctypes.string_at(receive_buffer, length)]
@@ -428,7 +428,7 @@ class SPI(object):
         spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
                                        ctypes.addressof(transmit_buffer),
                                        ctypes.addressof(receive_buffer),
-                                       length, speed, delay, bits_per_word, 0,
+                                       length, speed, delay, bits_per_word, 1,
                                        0, 0, 0)
         fcntl.ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
         return [byte for byte in ctypes.string_at(receive_buffer, length)]
