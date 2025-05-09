@@ -447,3 +447,6 @@ class BaconDevice:
         if self.power != 3:
             raise ValueError("Power must be 3.3v")
         return self.AGBReadROM(self.GPIO_REG_DAT, 1)[0]
+
+    def DMGReadROM(self, addr: int, size: int, reset=True, callback=None) -> bytes:
+        pass

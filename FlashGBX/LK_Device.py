@@ -807,8 +807,14 @@ class LK_Device(ABC):
 		self._write(self.DEVICE_CMD["SET_VAR_STATE"])
 		time.sleep(0.2)
 		self.DEVICE.write(var_state)
-
+	
 	def GetMode(self):
+		mode = self._getMode()
+		if mode is None:
+			return self._getMode()
+		return mode
+
+	def _getMode(self):
 		if time.time() < self.LAST_CHECK_ACTIVE + 1: return self.MODE
 		if self.CheckActive() is False: return None
 		if self.MODE is None: return None
