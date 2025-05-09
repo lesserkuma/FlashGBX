@@ -104,14 +104,10 @@ class BaconFakeSerialDevice:
         self.ROM_CACHED = [False]*0x2000000
     
     def cache_rom(self, addr, data):
-        for i in range(len(data)):
-            self.ROM_CACHE[addr+i] = data[i]
-            self.ROM_CACHED[addr+i] = True
-
+        self.ROM_CACHE[addr:addr+len(data)] = data
+        self.ROM_CACHED[addr:addr+len(data)] = [True]*len(data)
     def cache_rom_reset(self, addr=0, size=0x2000000):
-        for i in range(size):
-            self.ROM_CACHED[addr+i] = False
-
+        self.ROM_CACHED[addr:addr+size] = [False]*size
     def read_rom(self, addr, size):
         if self.ROM_CACHED[addr:addr+size].count(False) > 0:
             dprint("[BaconFakeSerialDevice] ReadROM:0x%08X Size:%s" % (addr, size))
@@ -312,8 +308,14 @@ class BaconFakeSerialDevice:
         elif cmdname == "SET_MODE_AGB":
             self.MODE = "AGB"
             self._push_ack()
+        elif cmdname == "SET_MODE_DMG":
+            self.MODE = "DMG"
+            self._push_ack()
         elif cmdname == "SET_VOLTAGE_3_3V":
             self.POWER = 3
+            self._push_ack()
+        elif cmdname == "SET_VOLTAGE_5V":
+            self.POWER = 5
             self._push_ack()
         elif cmdname == "CART_PWR_ON":
             if self.POWER == 3:
