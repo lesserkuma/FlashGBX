@@ -657,10 +657,6 @@ class FlashGBX_GUI(QtWidgets.QWidget):
 					print("Error: Failed to check for updates (too many API requests). Try again later.")
 				else:
 					print("Error: Failed to check for updates (HTTP status {:d}).".format(ret.status_code))
-		else:
-			update_check = self.SETTINGS.value("UpdateCheck")
-			if update_check is None or (time.time() > (Util.VERSION_TIMESTAMP + (6*30*24*60*60))):
-				QtWidgets.QMessageBox.information(self, "{:s} {:s}".format(APPNAME, VERSION), "Welcome to {:s} {:s} by Lesserkuma!<br><br>".format(APPNAME, VERSION) + "The version update check has been disabled in the options menu and this version is now older than {:d} days. Please regularily check the <a href=\"https://github.com/lesserkuma/FlashGBX/releases/latest\">FlashGBX GitHub page</a> for the latest release notes and updates.".format(int((time.time() - Util.VERSION_TIMESTAMP)/60/60/24)), QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Ok)
 
 	def DisconnectDevice(self):
 		try:
