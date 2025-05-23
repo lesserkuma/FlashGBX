@@ -7,6 +7,7 @@ from PIL.ImageQt import ImageQt
 from PIL import Image, ImageDraw
 from .pyside import QtCore, QtWidgets, QtGui, QDesktopWidget
 from .PocketCamera import PocketCamera
+from .UserInputDialog import UserInputDialog
 
 class PocketCameraWindow(QtWidgets.QDialog):
 	CUR_PIC = None
@@ -20,6 +21,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 	APP_PATH = "."
 	CONFIG_PATH = "."
 	APP = None
+	FORCE_EXIT = False
 	PALETTES = [
 		[ 255, 255, 255,   176, 176, 176,   104, 104, 104,   0, 0, 0 ], # Grayscale
 		[ 208, 217, 60,   120, 164, 106,   84, 88, 84,   36, 70, 36 ], # Game Boy
@@ -33,6 +35,8 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		QtWidgets.QDialog.__init__(self)
 		self.setAcceptDrops(True)
 		if icon is not None: self.setWindowIcon(QtGui.QIcon(icon))
+
+		self.FORCE_EXIT = False
 		self.CUR_FILE = file
 		self.CONFIG_PATH = config_path
 		self.APP_PATH = app_path
@@ -188,7 +192,9 @@ class PocketCameraWindow(QtWidgets.QDialog):
 			self.CUR_PALETTE = len(self.PALETTES) - 1
 		
 		if self.CUR_FILE is not None:
-			self.OpenFile(self.CUR_FILE)
+			if self.OpenFile(self.CUR_FILE) is False:
+				self.FORCE_EXIT = True
+				return
 
 		self.CUR_EXPORT_PATH = self.APP.SETTINGS.value("LastDirPocketCamera")
 		if self.CUR_EXPORT_PATH is None:
@@ -201,6 +207,9 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.btnSaveAll.setFocus()
 	
 	def run(self):
+		if self.FORCE_EXIT:
+			self.reject()
+			return
 		self.layout.update()
 		self.layout.activate()
 		screenGeometry = QDesktopWidget().screenGeometry(self)
@@ -217,6 +226,26 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.UpdateViewer(self.CUR_INDEX)
 	
 	def OpenFile(self, file):
+		if isinstance(file, bytearray) and len(file) == 0x100000 or isinstance(file, str) and os.path.getsize(file) == 0x100000:
+			dlg_args = {
+				"title":"Photo!",
+				"intro":"A Photo! save file was detected.\n\nPlease select the roll of pictures that you would like to load.",
+				"params": [
+					[ "index", "cmb", "Roll:", [ "Current Save Data" ] + [ "Flash Directory Slot {:d}".format(l) for l in range(1, 8) ], 0 ],
+				]
+			}
+			dlg = UserInputDialog(self, icon=self.windowIcon(), args=dlg_args)
+			if dlg.exec_() == 1:
+				result = dlg.GetResult()
+				index = result["index"].currentIndex()
+				if isinstance(file, str):
+					with open(file, "rb") as f:
+						file = bytearray(f.read())
+				file = file[0x20000 * index:][:0x20000]
+			else:
+				self.CUR_PC = None
+				return False
+
 		try:
 			self.CUR_PC = PocketCamera()
 			if self.CUR_PC.LoadFile(file) == False:
@@ -285,6 +314,7 @@ class PocketCameraWindow(QtWidgets.QDialog):
 		self.SavePicture(self.CUR_INDEX)
 	
 	def btnClose_Clicked(self, event):
+		self.FORCE_EXIT = True
 		self.reject()
 	
 	def hideEvent(self, event):

@@ -117,6 +117,15 @@
   "lg": "En",
   "rg": "USA"
  },
+ "6275c41b1be86e0755fdf56f8b0e8b9134835c50": {
+  "gn": "Metal Masters",
+  "ne": "(World) (Limited Run Games)",
+  "gc": "",
+  "rc": 2112381690,
+  "rs": 131072,
+  "lg": "En",
+  "rg": "World"
+ },
  "0b6c999591622a30783a779cd2d642a368a1af5d": {
   "gn": "Ninja JaJaMaru - The Great World Adventure DX",
   "ne": "(USA, Europe) (Ninja JaJaMaru Retro Collection) (Switch)",
@@ -224,6 +233,24 @@
   "lg": "En",
   "rg": "Unknown"
  },
+ "49e7cb98ba2932652d506652ed6c218f0e6e8fb0": {
+  "gn": "Return of the Ninja",
+  "ne": "(Europe)",
+  "gc": "CGB-BNJP",
+  "rc": 2382660762,
+  "rs": 1048576,
+  "lg": "En",
+  "rg": "Europe"
+ },
+ "7f7a56ce1af588fd3fb986d56b9b97a6f966f7b2": {
+  "gn": "Rod Land",
+  "ne": "(World) (Retro-Bit)",
+  "gc": "",
+  "rc": 2784381432,
+  "rs": 65536,
+  "lg": "En",
+  "rg": "World"
+ },
  "9207cec9760d074afdf9eacf50f87267d51d04be": {
   "gn": "Rumble & Tumble",
   "ne": "(USA) (Demo) (E3 2001)",
@@ -279,6 +306,33 @@
   "lg": "En",
   "rg": "USA"
  },
+ "f54f7d5b6f58a97258a54f98cabce7ab3af4de7b": {
+  "gn": "Star Wars",
+  "ne": "(World) (Limited Run Games)",
+  "gc": "",
+  "rc": 142836631,
+  "rs": 131072,
+  "lg": "En",
+  "rg": "World"
+ },
+ "f2c752bf25b2648dd0cd221d30a0099a36a8f37d": {
+  "gn": "Star Wars - The Empire Strikes Back",
+  "ne": "(World) (Limited Run Games)",
+  "gc": "",
+  "rc": 2040417000,
+  "rs": 131072,
+  "lg": "En",
+  "rg": "World"
+ },
+ "8224fa986412287c6d002a65ae5d465fb6220425": {
+  "gn": "StarHawk",
+  "ne": "(World) (Limited Run Games)",
+  "gc": "",
+  "rc": 14307554,
+  "rs": 131072,
+  "lg": "En",
+  "rg": "World"
+ },
  "42e2c763173cc1e2aff25cdb914f44b060ad3097": {
   "gn": "Super Mario 4",
   "ne": "(Unknown) (Ja) (Pirate)",
@@ -315,6 +369,15 @@
   "lg": "En,Fr,De,Es,It",
   "rg": "Europe"
  },
+ "c903c536b978c90fad801456a2e28b7a9ac74c05": {
+  "gn": "Trip World",
+  "ne": "(Europe)",
+  "gc": "DMG-T4X",
+  "rc": 2245595321,
+  "rs": 262144,
+  "lg": "En",
+  "rg": "Europe"
+ },
  "70d6c1b7b0dab7f6dec9dbc4eae454a19a37d6cd": {
   "gn": "Trip World DX",
   "ne": "(World) (Limited Run Games)",
@@ -332,6 +395,15 @@
   "rs": 131072,
   "lg": "En",
   "rg": "Europe"
+ },
+ "81fee8f52638e66f87c94cf53a50af0e7fed1396": {
+  "gn": "Worms Armageddon",
+  "ne": "(World) (Limited Run Games)",
+  "gc": "",
+  "rc": 1651374811,
+  "rs": 1048576,
+  "lg": "En",
+  "rg": "World"
  },
  "3cf9545412f29a22fbf5dd09802b41fe733b9a90": {
   "gn": "Xin Nushen Zhuansheng Waizhuan - Zuihou de Shengjing",
@@ -15223,15 +15295,6 @@
   "lg": "En",
   "rg": "USA"
  },
- "49e7cb98ba2932652d506652ed6c218f0e6e8fb0": {
-  "gn": "Return of the Ninja",
-  "ne": "(Europe)",
-  "gc": "CGB-BNJP",
-  "rc": 2382660762,
-  "rs": 1048576,
-  "lg": "En",
-  "rg": "Europe"
- },
  "79aaa38c7d84395aea746b27de12b1892e8976fe": {
   "gn": "Nations, The - Land of Legends",
   "ne": "(Europe) (En,De)",
@@ -19789,11 +19852,11 @@
  },
  "9119bd5128bd461324fe0a74365c507ab26701fd": {
   "gn": "Funny Field",
-  "ne": "(Japan)",
+  "ne": "(Japan) (En)",
   "gc": "DMG-FUA",
   "rc": 3218635428,
   "rs": 65536,
-  "lg": "Ja",
+  "lg": "En",
   "rg": "Japan"
  },
  "b6405dd0bd27cb5a709cc051259ea43562feff3b": {
@@ -25001,15 +25064,6 @@
   "rs": 262144,
   "lg": "Ja",
   "rg": "Japan"
- },
- "c903c536b978c90fad801456a2e28b7a9ac74c05": {
-  "gn": "Trip World",
-  "ne": "(Europe)",
-  "gc": "DMG-T4X",
-  "rc": 2245595321,
-  "rs": 262144,
-  "lg": "En",
-  "rg": "Europe"
  },
  "18346faa2cbf69be9ffbbbfa6455dbfcb37db65d": {
   "gn": "Captain Tsubasa VS",

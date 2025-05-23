@@ -1,19 +1,17 @@
 {
 	"type":"DMG",
 	"names":[
-		"BennVenn MBC3000 v4 RTC cart (ROM2)"
+		"ModRetro Chromatic Cartridge with 39VF1681"
 	],
 	"flash_ids":[
-		[ 0xC2, 0xC2, 0xCB, 0xCB ],
-		[ 0xC2, 0xC2, 0x7E, 0x7E ]
+		[ 0xBF, 0xC8 ]
 	],
-	"voltage":5,
-	"flash_size":0x400000,
+	"flash_size":0x200000,
+	"voltage":3.3,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"sector_size":0x10000,
-	"mbc":"manual",
+	"chip_erase_timeout":30,
 	"command_set":"AMD",
 	"commands":{
 		"reset":[
@@ -25,23 +23,25 @@
 			[ 0xAAA, 0x90 ]
 		],
 		"read_cfi":[
+			[ 0xAAA, 0xAA ],
+			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x98 ]
 		],
-		"sector_erase":[
+		"chip_erase":[
 			[ 0xAAA, 0xAA ],
 			[ 0x555, 0x55 ],
 			[ 0xAAA, 0x80 ],
 			[ 0xAAA, 0xAA ],
 			[ 0x555, 0x55 ],
-			[ "SA", 0x30 ]
+			[ 0xAAA, 0x10 ]
 		],
-		"sector_erase_wait_for":[
+		"chip_erase_wait_for":[
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
 			[ null, null, null ],
-			[ "SA", 0xFF, 0xFF ]
+			[ 0, 0xFFFF, 0xFFFF ]
 		],
 		"single_write":[
 			[ 0xAAA, 0xAA ],

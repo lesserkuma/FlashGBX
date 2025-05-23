@@ -9,7 +9,7 @@ class GbxDevice(LK_Device):
 	DEVICE_NAME = "Joey Jr"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 12
-	DEVICE_LATEST_FW_TS = 1722774120
+	DEVICE_LATEST_FW_TS = 1747991884
 	PCB_VERSIONS = { -1:"", 0x01:"V2", 0x81:"V2", 0x02:"V2C", 0x82:"V2C", 0x03:"V2CC", 0x83:"V2CC/V2++" }
 	
 	def __init__(self):
@@ -256,7 +256,7 @@ class GbxDevice(LK_Device):
 		if self.FW["cfw_id"] == "G":
 			self.FW_UPDATE_REQ = True
 			return True
-		if self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS:
+		if self.FW["fw_ts"] != self.DEVICE_LATEST_FW_TS:
 			return True
 		self.FW_UPDATE_REQ = False
 		return False

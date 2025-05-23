@@ -121,6 +121,7 @@ class RomFileAGB:
 	def GetHeader(self, unchanged=False):
 		buffer = bytearray(self.ROMFILE)
 		data = {}
+		if len(buffer) < 0x180: return {}
 		hash = hashlib.sha1(buffer[0:0x180]).digest()
 		nocart_hashes = []
 		nocart_hashes.append(bytearray([ 0x4F, 0xE9, 0x3E, 0xEE, 0xBC, 0x55, 0x93, 0xFE, 0x2E, 0x23, 0x1A, 0x39, 0x86, 0xCE, 0x86, 0xC9, 0x5C, 0x11, 0x00, 0xDD ])) # Method 0
@@ -187,7 +188,9 @@ class RomFileAGB:
 		(data["game_title"] == "CARDE READER" and data["game_code"] == "PSAE" and data["header_checksum"] == 0x95):
 			data["ereader"] = True
 
-		data["unchanged"] = copy.copy(data)
+		if unchanged:
+			data["unchanged"] = copy.copy(data)
+		
 		self.DATA = data
 		data["db"] = self.GetDatabaseEntry()
 

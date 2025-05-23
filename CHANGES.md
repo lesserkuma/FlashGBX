@@ -1,4 +1,18 @@
 # Release notes
+### v4.4 (released 2025-05-23)
+- Added a few workarounds for instabilities with some GBxCart RW devices
+- Fixed save data access for “Korokoro Puzzle - Happy Panecchu!” (AGB-KHPJ-JPN)
+- Updated the LK firmware to version L14 (fixes the save data problem for the above game title and adds support for new cartridges)
+- Added support for the 7 extra flash slots of the PHOTO! homebrew
+- Now experimentally supports Batteryless SRAM save data backup and restore for Game Boy reproduction cartridges (GUI-mode only), but mostly requires manual configuration
+- Added support for DMG-MBC5-32M-FLASH (G/A-I) Development Cartridge, E201264 *(thanks infinest)*
+- Added support for ModRetro Chromatic Cartridge with 39VF1681 *(thanks infinest)*
+- Added support for Gamebank-web DMG-29W-04 with M29W320EB *(thanks marv17)*
+- Added support for BennVenn MBC3000 v5 RTC cart *(thanks Gahr)*
+- Updated the Game Boy and Game Boy Advance lookup databases for save types, ROM sizes and checksums
+- Discontinued the Windows 7 binary builds; if needed, please follow the “Run via Python” instructions using old Python version 3.8.10
+- Bug fixes and improvements *(thanks delibird_deals, luxkiller65, marv17, xukkorz)*
+
 ### v4.3 (released 2024-11-07)
 - Added support for DVP DRV with MX29LV320CT *(thanks Mufsta)*
 - Added support for insideGadgets’ MegaDuck 32K flash cart

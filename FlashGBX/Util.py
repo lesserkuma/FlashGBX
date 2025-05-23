@@ -8,9 +8,9 @@ from enum import Enum
 
 # Common constants
 APPNAME = "FlashGBX"
-VERSION_PEP440 = "4.3"
+VERSION_PEP440 = "4.4"
 VERSION = "v{:s}".format(VERSION_PEP440)
-VERSION_TIMESTAMP = 1731015769
+VERSION_TIMESTAMP = 1748007939
 DEBUG = False
 DEBUG_LOG = []
 APP_PATH = ""
@@ -28,9 +28,9 @@ DMG_Mapper_Types = { "None":[ 0x00, 0x08, 0x09 ], "MBC1":[ 0x01, 0x02, 0x03 ], "
 DMG_Header_ROM_Sizes = [ "32 KiB", "64 KiB", "128 KiB", "256 KiB", "512 KiB", "1 MiB", "2 MiB", "4 MiB", "8 MiB", "16 MiB", "32 MiB", "64 MiB", "128 MiB" ]
 DMG_Header_ROM_Sizes_Map = [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C ]
 DMG_Header_ROM_Sizes_Flasher_Map = [ 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000 ]
-DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KiB)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)" ]
-DMG_Header_RAM_Sizes_Map = [ 0x00, 0x100, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203, 0x204 ]
-DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000, 0x80000 ] # RAM size in bytes
+DMG_Header_RAM_Sizes = [ "None", "4K SRAM (512 Bytes)", "16K SRAM (2 KiB)", "64K SRAM (8 KiB)", "256K SRAM (32 KiB)", "512K SRAM (64 KiB)", "1M SRAM (128 KiB)", "MBC6 SRAM+FLASH (1.03 MiB)", "MBC7 2K EEPROM (256 Bytes)", "MBC7 4K EEPROM (512 Bytes)", "TAMA5 EEPROM (32 Bytes)", "Unlicensed 4M SRAM (512 KiB)", "Unlicensed 1M EEPROM (128 KiB)", "Unlicensed Photo! Directory (1 MiB)", "Unlicensed Batteryless SRAM" ]
+DMG_Header_RAM_Sizes_Map = [ 0x00, 0x100, 0x01, 0x02, 0x03, 0x05, 0x04, 0x104, 0x101, 0x102, 0x103, 0x201, 0x203, 0x204, 0x205 ]
+DMG_Header_RAM_Sizes_Flasher_Map = [ 0, 0x200, 0x800, 0x2000, 0x8000, 0x10000, 0x20000, 0x108000, 0x100, 0x200, 0x20, 0x80000, 0x20000, 0x100000, 0x80000 ] # RAM size in bytes
 DMG_Header_SGB = { 0x00:'No support', 0x03:'Supported' }
 DMG_Header_CGB = { 0x00:'No support', 0x80:'Supported', 0xC0:'Required' }
 
@@ -410,8 +410,14 @@ def EncodeBCD(value):
 def ParseCFI(buffer):
 	buffer = copy.copy(buffer)
 	info = {}
-	magic = "{:s}{:s}{:s}".format(chr(buffer[0x20]), chr(buffer[0x22]), chr(buffer[0x24]))
-	if magic != "QRY": # nothing swapped
+	magic_8bit = "{:s}{:s}{:s}".format(chr(buffer[0x10]), chr(buffer[0x11]), chr(buffer[0x12]))
+	magic_16bit = "{:s}{:s}{:s}".format(chr(buffer[0x20]), chr(buffer[0x22]), chr(buffer[0x24]))
+	buffer_conv = bytearray()
+	if magic_8bit == "QRY":
+		buffer_conv = bytearray(b for x in buffer for b in (x, x))
+		buffer = buffer_conv
+
+	if magic_8bit != "QRY" and magic_16bit != "QRY": # nothing swapped
 		return False
 	
 	try:
@@ -522,7 +528,10 @@ def ConvertMapperTypeToMapper(mapper_type):
 	return 0
 
 def GetDumpReport(di, device):
-	header = di["header"]["unchanged"]
+	header = di["header"]
+	if "unchanged" in di["header"]:
+		header = di["header"]["unchanged"]
+	
 	if "db" in di["header"]: header["db"] = di["header"]["db"]
 	if di["system"] == "DMG":
 		mode = "DMG"
@@ -924,6 +933,19 @@ def find_size(data, max_size, min_size=0x20):
 			offset = offset * 2
 			break
 	return offset
+
+def bitmap2pixmap(data, scale_factor=4):
+	try:
+		from .pyside import QtGui
+		from PIL.ImageQt import ImageQt
+		from PIL import Image
+		data_converted = data.convert("RGBA")
+		pixmap = QtGui.QPixmap.fromImage(ImageQt(data_converted.resize((data_converted.width * scale_factor, data_converted.height * scale_factor), Image.NEAREST)))
+		pixmap.setDevicePixelRatio(scale_factor)
+		return pixmap
+	except:
+		print("Couldn’t convert bitmap to pixmap.")
+		return False
 
 def dprint(*args, **kwargs):
 	stack = traceback.extract_stack()

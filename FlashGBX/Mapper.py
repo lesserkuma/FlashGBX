@@ -1647,7 +1647,7 @@ class AGB_GPIO:
 			temp = self.CartRead(self.GPIO_REG_DAT) & 0xFF
 			bit = (temp & 2) >> 1
 			data = (data >> 1) | (bit << 7)
-			# print("RTCReadData(): i={:d}/temp={:X}/bit={:x}/data={:x}".format(i, temp, bit, data))
+			# dprint("RTCReadData(): i={:d}/temp={:X}/bit={:x}/data={:x}".format(i, temp, bit, data))
 		return data
 	
 	def RTCWriteData(self, data):
@@ -1703,7 +1703,8 @@ class AGB_GPIO:
 			status = self.RTCReadStatus()
 		else:
 			status = buffer[0]
-		
+
+		dprint("Status:", bin(status))
 		if (status >> 7) == 1:
 			dprint("No RTC because of set RTC Status Register Power Flag:", status >> 7 & 1)
 			return 1
@@ -1723,7 +1724,7 @@ class AGB_GPIO:
 		else:
 			rom2 = buffer[1:7]
 
-		dprint(' '.join(format(x, '02X') for x in rom1), "/", ' '.join(format(x, '02X') for x in rom2))
+		dprint("RTC Data:", ' '.join(format(x, '02X') for x in rom1), "/", ' '.join(format(x, '02X') for x in rom2))
 		if (rom1 == rom2):
 			dprint("No RTC because ROM data didn’t change:", rom1, rom2)
 			return 3
@@ -1908,7 +1909,6 @@ class AGB_GPIO:
 		}
 
 		if rtc_y == 0 and rtc_m == 0 and rtc_d == 0 and rtc_h == 0 and rtc_i == 0 and rtc_s == 0:
-			#raise ValueError("Invalid RTC data")
 			d["string"] = "Invalid RTC data"
 			d["rtc_valid"] = False
 		else:

@@ -140,8 +140,9 @@ class RomFileDMG:
 		data["rom_checksum_calc"] = self.CalcChecksumGlobal()
 		data["rom_checksum_correct"] = data["rom_checksum"] == data["rom_checksum_calc"]
 		
-		data["unchanged"] = copy.copy(data)
-		if not unchanged:
+		if unchanged:
+			data["unchanged"] = copy.copy(data)
+		else:
 			# MBC2
 			if data["mapper_raw"] == 0x06:
 				data["ram_size_raw"] = 0x100
@@ -436,6 +437,10 @@ class RomFileDMG:
 				data["rom_size_raw"] = 0x0A
 				data["ram_size_raw"] = 0x03
 				data["mapper_raw"] = 0x206
+
+			# Photo!
+			if data["game_title"] == "PHOTO":
+				data["ram_size_raw"] = 0x204
 
 		if data["mapper_raw"] in Util.DMG_Header_Mapper:
 			data["mapper"] = Util.DMG_Header_Mapper[data["mapper_raw"]]

@@ -1,12 +1,10 @@
 {
 	"type":"DMG",
 	"names":[
-		"insideGadgets 4 MiB (S29JL032J)",
-		"Gamebank-web DMG-29W-04 with M29W320ET"
+		"insideGadgets 4 MiB (S29JL032J)"
 	],
 	"flash_ids":[
-		[ 0x01, 0x01, 0x56, 0x56 ],
-		[ 0x20, 0x20, 0x56, 0x56 ]
+		[ 0x01, 0x01, 0x56, 0x56 ]
 	],
 	"voltage":5,
 	"flash_size":0x400000,

@@ -1,7 +1,7 @@
 {
 	"type":"DMG",
 	"names":[
-		"BennVenn MBC3000 RTC cart"
+		"BennVenn MBC3000 v4 RTC cart"
 	],
 	"flash_ids":[
 		[ 0xC2, 0xC2, 0xCB, 0xCB ],

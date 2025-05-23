@@ -2,20 +2,24 @@
 	"type":"DMG",
 	"names":[
 		"DMG-DHCN-20 with MX29LV320ET",
-		"DMG-GBRW-20 with 29LV320ETMI-70G"
+		"DMG-GBRW-20 with 29LV320ETMI-70G",
+		"DMG-GBRW-50 with MX29LV320ET",
+		"BennVenn MBC3000 v5 RTC cart"
 	],
 	"flash_ids":[
+		[ 0xC2, 0xC2, 0xA7, 0xA7 ],
+		[ 0xC2, 0xC2, 0xA7, 0xA7 ],
 		[ 0xC2, 0xC2, 0xA7, 0xA7 ],
 		[ 0xC2, 0xC2, 0xA7, 0xA7 ]
 	],
 	"voltage":3.3,
-	"flash_size":0x200000,
+	"flash_size":0x400000,
 	"start_addr":0,
 	"first_bank":1,
 	"write_pin":"WR",
-	"enable_pullup_wr":true,
+	"_enable_pullup_wr":true,
 	"sector_size":[
-		[0x10000, 31],
+		[0x10000, 63],
 		[0x2000, 8]
 	],
 	"chip_erase_timeout":60,

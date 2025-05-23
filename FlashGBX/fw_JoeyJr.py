@@ -3,6 +3,7 @@
 # Author: Lesserkuma (github.com/lesserkuma)
 
 import zipfile, time, os, struct, serial, platform
+from serial import SerialException
 try:
 	from . import Util
 except ImportError:
@@ -120,8 +121,14 @@ class FirmwareUpdater():
 			fncSetStatus(text="Connecting...")
 			try:
 				dev = serial.Serial(port, 2000000, timeout=0.2)
+			except SerialException as e:
+				if "Errno 13" in str(e) and platform.system() == "Linux":
+					fncSetStatus(text="No permission to use device! See README file.", enableUI=True)
+				else:
+					fncSetStatus(text="Device not accessible.", enableUI=True)
+				return 2
 			except:
-				fncSetStatus(text="Device not accessible.", enableUI=True)
+				fncSetStatus(text="Unknown error while accessing the device.", enableUI=True)
 				return 2
 			dev.reset_input_buffer()
 

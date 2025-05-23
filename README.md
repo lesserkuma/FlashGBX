@@ -22,47 +22,6 @@ for Windows, Linux, macOS (→ [Download](https://github.com/lesserkuma/FlashGBX
 - [GBFlash](https://github.com/simonkwng/GBFlash) (tested with v1.2 and v1.3)
 - [Joey Jr](https://bennvenn.myshopify.com/collections/game-cart-to-pc-interface/products/usb-gb-c-cart-dumper-the-joey-jr) (tested with V2++)
 
-## Installing and running
-
-### Pre-compiled binaries and packages
-
-Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section are pre-compiled downloads available for:
-
-* **Windows (64-bit)**
-  * Setup: An installer that will add the application to the start menu and optionally create a desktop icon
-  * Portable: Have everything in one place including the config files
-  
-  *(For users of Windows 7, legacy “Qt5” versions are provided as well.)*
-
-* **Linux**
-  * Ubuntu (.deb file): Install using `dpkg -i /path/to/FlashGBX_x.x_Ubuntu-all.deb`.<br>*(Based on a contribution by [JJ-Fox](https://github.com/JJ-Fox))*
-  * Other distributions: Pre-made packages are contributed by JJ-Fox [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
-
-* **macOS**
-  * x86-64/arm64 (.dmg file): Install by opening the .dmg file and copying over the “FlashGBX” application to the desktop.<br>If it doesn’t run, it probably got quarantined during download. Run the following command in a Terminal window to unquarantine it: `xattr -d com.apple.quarantine /path/to/FlashGBX.app`.<br>*(Based on a contribution by [Cliffback](https://github.com/Cliffback))*
-
-  *(If you have a Joey Jr and use macOS, please run the [Joey Jr Firmware Updater](https://github.com/lesserkuma/JoeyJr_FWUpdater) before using FlashGBX.)*
-
-### Run via Python
-
-FlashGBX can also be run in a Python environment like so:
-
-1. Download and install [Python](https://www.python.org/downloads/) (version 3.10.11 is recommended)
-2. Open a Terminal or Command Prompt window
-3. Install FlashGBX with this command:<br>`pip3 install "FlashGBX[qt6]"`
-* If installation fails, try this command instead:<br>`pip3 install "FlashGBX[qt5]"`
-* If installation still fails, you can install the minimal version (command line interface) with this command:<br>`pip3 install FlashGBX`
-* Update to the latest version by replacing `install` with `install -U`.
-
-#### Running
-Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
-
-`python3 -m FlashGBX`
-
-*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) or [PySide6](https://pypi.org/project/PySide6/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages. To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
-
-*Note: On Linux systems, the `brltty` module may render serial communication devices non-accessible. See the troubleshooting section for details.*
-
 ## Cartridge Compatibility
 ### Supported cartridge memory mappers
 - Game Boy
@@ -102,7 +61,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
 
   - 29LV Series Flash BOY with 29LV160DB
   - Action Replay
-  - BennVenn MBC3000 RTC cart
+  - BennVenn MBC3000 v4 RTC cart
+  - BennVenn MBC3000 v5 RTC cart
   - BLAZE Xploder GB¹
   - BUNG Doctor GB Card 4M
   - BUNG Doctor GB Card 16M
@@ -122,10 +82,12 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DIY cart with MX29LV640
   - DIY cart with SST39SF040
   - DMG-MBC5-32M-FLASH (G/A) Development Cartridge, E201264
+  - DMG-MBC5-32M-FLASH (G/A-I) Development Cartridge, E201264
   - Ferrante Crafts cart 32 KB
   - Ferrante Crafts cart 64 KB
   - Ferrante Crafts cart 512 KB
   - FunnyPlaying MidnightTrace 4 MiB Flash Cart
+  - Gamebank-web DMG-29W-04 with M29W320EB
   - Gamebank-web DMG-29W-04 with M29W320ET
   - GameShark Pro
   - GB-CART32K-A with SST39SF020A
@@ -145,6 +107,7 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - insideGadgets 4 MiB, 32 KiB FRAM, MBC3+RTC
   - insideGadgets 4 MiB (2× 2 MiB), 32 KiB FRAM, MBC5
   - insideGadgets MegaDuck 32K
+  - ModRetro Chromatic Cartridge with 39VF1681
   - Mr Flash 64M
   - Sillyhatday MBC5-DUAL-FLASH-4/8MB
   - Squareboi 4 MiB (2× 2 MiB)
@@ -191,8 +154,8 @@ Use this command in a Terminal or Command Prompt window to launch the installed 
   - DRV with 29LV320DB and ALTERA CPLD
   - DRV with AM29LV160DB and ALTERA CPLD
   - DRV with AM29LV160DT and ALTERA CPLD
-  - DVP DRV with MX29LV320CB
-  - DVP DRV with MX29LV320CT
+  - DVP DRV with MX29LV320CB¹
+  - DVP DRV with MX29LV320CT¹
   - ES29LV160_DRV with 29DL32TF-70
   - GB-M968 with 29LV160DB
   - GB-M968 with M29W160EB
@@ -320,6 +283,68 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 *¹ = Cannot always be auto-detected, select cartridge type manually*
 
+## Installing and running
+
+### Pre-compiled binaries and packages
+
+Available in the GitHub [Releases](https://github.com/lesserkuma/FlashGBX/releases) section are pre-compiled downloads available for:
+
+* **Windows (64-bit)** *(Windows 8 or newer)*
+  * Setup: An installer that will add the application to the start menu and optionally create a desktop icon
+  * Portable: Have everything in one place including the config files
+
+* **Linux**
+  * Pre-made packages are contributed by JJ-Fox [here](https://github.com/JJ-Fox/FlashGBX-Linux-builds/releases/latest).
+
+* **macOS** *(Monterey 12 or newer)*
+  * x86-64/arm64 (.dmg file): Install by opening the .dmg file and copying over the “FlashGBX” application to the desktop.<br>If it doesn’t run, it probably got quarantined during download. Run the following command in a Terminal window to unquarantine it: `xattr -d com.apple.quarantine /path/to/FlashGBX.app`.<br>*(Based on a contribution by [Cliffback](https://github.com/Cliffback))*
+
+  *(If you have a Joey Jr and use macOS, please run the [Joey Jr Firmware Updater](https://github.com/lesserkuma/JoeyJr_FWUpdater) before using FlashGBX.)*
+
+### Run via Python
+
+FlashGBX can also be run in a Python environment like so:
+
+1. Download and install [Python](https://www.python.org/downloads/) (version 3.10.11 is recommended)
+2. Open a Terminal or Command Prompt window
+3. Install FlashGBX with this command:<br>`pip3 install "FlashGBX[qt6]"`
+* If installation fails, try this command instead:<br>`pip3 install "FlashGBX[qt5]"`
+* If installation still fails, you can install the minimal version (command line interface) with this command:<br>`pip3 install FlashGBX`
+* Update to the latest version by replacing `install` with `install -U`.
+
+#### Running
+Use this command in a Terminal or Command Prompt window to launch the installed FlashGBX application:
+
+`python3 -m FlashGBX`
+
+*FlashGBX should work on pretty much any operating system that supports Qt-GUI applications built using [Python](https://www.python.org/downloads/) with [PySide2](https://pypi.org/project/PySide2/) or [PySide6](https://pypi.org/project/PySide6/), [pyserial](https://pypi.org/project/pyserial/), [Pillow](https://pypi.org/project/Pillow/), [setuptools](https://pypi.org/project/setuptools/), [requests](https://pypi.org/project/requests/) and [python-dateutil](https://pypi.org/project/python-dateutil/) packages. To run FlashGBX in portable mode without installing, you can also download the source code archive and call `python3 run.py` after installing the prerequisites yourself.*
+
+*Note: When using GBxCart RW or GBFlash on some Linux systems, the `brltty` module may render serial communication devices non-accessible. See the troubleshooting section for details.*
+
+### Steam Deck
+#### Installation
+1. Boot your Steam Deck in Desktop Mode.
+2. Open System Settings → Users.
+3. Set a password for your user account (“deck”), if you do not have one set yet. (Make sure you do not forget this password in the future.)
+4. Create a new folder where you want to install FlashGBX.
+5. Right click the folder and select “Open Terminal Here”.
+6. Enter the following commands in order:<br>
+`python3 -m venv FlashGBX_venv`<br>
+`source FlashGBX_venv/bin/activate`<br>
+`wget https://bootstrap.pypa.io/get-pip.py`<br>
+`python3 get-pip.py`<br>
+`python3 -m pip install "FlashGBX[qt6]"`<br>
+`deactivate`<br>
+`sudo usermod -a -G uucp $USER`<br>
+(You may need to enter the password you set earlier.)
+7. Restart your Steam Deck.
+
+#### Running
+1. In Desktop Mode, right click your FlashGBX folder and select “Open Terminal Here”.
+2. Use these commands to launch the installed FlashGBX application:<br>
+`source FlashGBX_venv/bin/activate`<br>
+`python3 -m FlashGBX`<br>
+
 ### Troubleshooting
 
 * If something doesn’t work as expected, first try to clean the game cartridge contacts (best with IPA 99.9%+ on a cotton swab) and reconnect the device. An unstable cartridge connection is the most common reason for read or write errors.
@@ -340,7 +365,9 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 * If you’re using macOS version 10.13 or older, there may be no driver for serial communication devices installed on your system. You can either upgrade your macOS version to 10.14+ or manually install a driver which is available [here](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver).
 
-* If you’re using macOS and get a “Segmentation Fault: 11.” error, try the “Run using Python” method with Python version 3.10.11.
+* If you’re using macOS and get a “Segmentation Fault: 11.” error, try the “Run via Python” method with Python version 3.10.11 and install FlashGBX with `pip3 install "FlashGBX[qt5]"`.
+
+* If the save data detection says “512K FLASH (64 KiB) or 1M FLASH (128 KiB)”, that means the size can not be determined until actual save data is written to the cartridge.
 
 ## Miscellaneous
 
@@ -352,11 +379,13 @@ Many different reproduction cartridges share their flash chip command set, so ev
 
 The author would like to thank the following very kind people for their help, contributions or documentation (in alphabetical order):
 
-2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, aronson, Ausar, bbsan, BennVenn, ccs21, chobby, ClassicOldSong, Cliffback, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, gandalf1980, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, inYourBackline, iyatemu, Jayro, Jenetrix, JFox, joyrider3774, jrharbort, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Lu, Luca DS, LucentW, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, Mufsta, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, RibShark, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, simonK, Sithdown, skite2001, Smelly-Ghost, Sonikks, Squiddy, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, Warez Waldo, wickawack, Winter1760, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
+2358, 90sFlav, AcoVanConis, AdmirtheSableye, AlexiG, ALXCO-Hardware, AndehX, antPL, aronson, Ausar, bbsan, BennVenn, ccs21, chobby, ClassicOldSong, Cliffback, CodyWick13, Corborg, Cristóbal, crizzlycruz, Crystal, Därk, Davidish, delibird_deals, DevDavisNunez, Diddy_Kong, djedditt, Dr-InSide, dyf2007, easthighNerd, EchelonPrime, edo999, Eldram, Ell, EmperorOfTigers, endrift, Erba Verde, ethanstrax, eveningmoose, Falknör, FerrantePescara, frarees, Frost Clock, Gahr, gandalf1980, gboh, gekkio, Godan, Grender, HDR, Herax, Hiccup, hiks, howie0210, iamevn, Icesythe7, ide, infinest, inYourBackline, iyatemu, Jayro, Jenetrix, JFox, joyrider3774, jrharbort, JS7457, julgr, Kaede, kane159, KOOORAY, kscheel, kyokohunter, Leitplanke, litlemoran, LovelyA72, Lu, Luca DS, LucentW, luxkiller65, manuelcm1, marv17, Merkin, metroid-maniac, Mr_V, Mufsta, olDirdey, orangeglo, paarongiroux, Paradoxical, Rairch, Raphaël BOICHOT, redalchemy, RetroGorek, RevZ, RibShark, s1cp, Satumox, Sgt.DoudouMiel, SH, Shinichi999, Sillyhatday, simonK, Sithdown, skite2001, Smelly-Ghost, Sonikks, Squiddy, Stitch, Super Maker, t5b6_de, Tauwasser, TheNFCookie, Timville, twitnic, velipso, Veund, voltagex, Voultar, Warez Waldo, wickawack, Winter1760, Wkr, x7l7j8cc, xactoes, xukkorz, yosoo, Zeii, Zelante, zipplet, Zoo, zvxr
+
+Thanks to the No-Intro project for their game databases which FlashGBX’s databases are partly based on.
 
 ## Third Party Notices and Licenses
 
-Please view the <a href="https://raw.githubusercontent.com/lesserkuma/FlashGBX/master/Third Party Notices.md">Third Party Notices</a>.
+Please view the <a href="https://github.com/lesserkuma/FlashGBX/blob/master/Third%20Party%20Notices.md">Third Party Notices</a>.
 
 ## DISCLAIMER
 

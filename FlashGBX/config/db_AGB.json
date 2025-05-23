@@ -1,4 +1,15 @@
 {
+ "4add627997b011f78e3f88b92f1bf236c78df73b": {
+  "gn": "Shantae Advance - Risky Revolution",
+  "ne": "(World) (Limited Run Games)",
+  "gc": "####",
+  "rc": 824597597,
+  "rs": 16777216,
+  "st": 3,
+  "ss": 32768,
+  "lg": "En",
+  "rg": "World"
+ },
  "5a24e63f6d1ef11912f9947649ed13800e3253a4": {
   "gn": "EZ-Talk - Shokyuu Hen 1",
   "ne": "(Japan)",
@@ -7758,14 +7769,14 @@
  },
  "c6f7939776e66abaf1c539b62f1ddf6a86f65058": {
   "gn": "Jonny Moseley Mad Trix",
-  "ne": "(USA, Europe) (En,Fr,De,Es,It)",
+  "ne": "(USA) (En,Fr,De,Es,It)",
   "gc": "AJME",
   "rc": 2521335346,
   "rs": 8388608,
   "st": 1,
   "ss": 512,
   "lg": "En,Fr,De,Es,It",
-  "rg": "USA, Europe"
+  "rg": "USA"
  },
  "f927203ff9a82fcd04bb4b4028b9e5886c65db0c": {
   "gn": "Jimmy Neutron - Boy Genius",
@@ -16380,7 +16391,7 @@
   "rg": "Japan"
  },
  "c6f9b60b95889d8e9b5647d313b25b6e4f06497b": {
-  "gn": "Cinnamon Game Series 2 - Yume no Daibouken",
+  "gn": "Cinnamon - Yume no Daibouken",
   "ne": "(Japan)",
   "gc": "B2SJ",
   "rc": 1512877473,
@@ -16977,7 +16988,7 @@
   "rg": "Japan"
  },
  "95c954544fda5fb8eb0790b0564d90e40ffe4d0b": {
-  "gn": "Cinnamon Game Series 3 - Fuwafuwa Daisakusen",
+  "gn": "Cinnamon - Fuwafuwa Daisakusen",
   "ne": "(Japan)",
   "gc": "B43J",
   "rc": 2714476869,

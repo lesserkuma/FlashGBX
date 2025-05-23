@@ -9,13 +9,13 @@ class GbxDevice(LK_Device):
 	DEVICE_NAME = "GBxCart RW"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 1
-	DEVICE_LATEST_FW_TS = { 4:1709317610, 5:1722774120, 6:1722774120, 2:0, 90:0, 100:0 }
+	DEVICE_LATEST_FW_TS = { 4:1709317610, 5:1747991884, 6:1747991884, 2:0, 90:0, 100:0 }
 	PCB_VERSIONS = { 5:'v1.4', 6:'v1.4a/b/c', 2:'v1.1/v1.2', 4:'v1.3', 90:'XMAS v1.0', 100:'Mini v1.0' }
 	BAUDRATE = 1000000
 	MAX_BUFFER_READ = 0x1000
 	MAX_BUFFER_WRITE = 0x400
 
-	def Initialize(self, flashcarts=None, port=None, max_baud=2000000):
+	def Initialize(self, flashcarts=None, port=None, max_baud=1500000):
 		if self.IsConnected(): self.DEVICE.close()
 		if platform.system() == "Darwin": max_baud = 1000000
 		
@@ -31,7 +31,7 @@ class GbxDevice(LK_Device):
 			if len(ports) == 0: return False
 		
 		for i in range(0, len(ports)):
-			for baudrate in (1000000, 1700000, 2000000):
+			for baudrate in (1000000, 1500000):
 				if max_baud < baudrate: continue
 				try:
 					if self.TryConnect(ports[i], baudrate):
@@ -49,8 +49,8 @@ class GbxDevice(LK_Device):
 					continue
 			
 			if self.FW is None or self.FW == {}: continue
-			if max_baud >= 1700000 and self.FW is not None and "pcb_ver" in self.FW and self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE < 1700000:
-				self.ChangeBaudRate(baudrate=1700000)
+			if max_baud >= 1500000 and self.FW is not None and "pcb_ver" in self.FW and self.FW["pcb_ver"] in (5, 6, 101) and self.BAUDRATE < 1500000:
+				self.ChangeBaudRate(baudrate=1500000)
 				self.DEVICE.close()
 				dev = serial.Serial(ports[i], self.BAUDRATE, timeout=0.1)
 				self.DEVICE = dev
@@ -74,8 +74,8 @@ class GbxDevice(LK_Device):
 				self.MAX_BUFFER_WRITE = 0x100
 			
 			conn_msg.append([0, "For help with your GBxCart RW device, please visit the insideGadgets Discord: https://gbxcart.com/discord"])
-			if self.FW["pcb_ver"] == 4:
-				conn_msg.append([0, "Note: Your GBxCart RW hardware revision does not fully support the latest features due to technical limitations. Please consider upgrading to a newer device."])
+			#if self.FW["pcb_ver"] == 4:
+			#	conn_msg.append([0, "Note: Your GBxCart RW hardware revision does not fully support the latest features due to technical limitations. Please consider upgrading to a newer device."])
 
 			self.PORT = ports[i]
 			self.DEVICE.timeout = self.DEVICE_TIMEOUT
@@ -173,8 +173,8 @@ class GbxDevice(LK_Device):
 	def ChangeBaudRate(self, baudrate):
 		if not self.IsConnected(): return
 		dprint("Changing baud rate to", baudrate)
-		if baudrate == 1700000:
-			self._write(self.DEVICE_CMD["OFW_USART_1_7M_SPEED"])
+		if baudrate == 1500000:
+			self._write(self.DEVICE_CMD["OFW_USART_1_5M_SPEED"])
 		elif baudrate == 1000000:
 			self._write(self.DEVICE_CMD["OFW_USART_1_0M_SPEED"])
 		self.BAUDRATE = baudrate
@@ -253,10 +253,10 @@ class GbxDevice(LK_Device):
 			return ["DMG"]
 		else:
 			return ["DMG", "AGB"]
-		
+
 	def IsSupported3dMemory(self):
 		return True
-	
+
 	def IsClkConnected(self):
 		return self.FW["pcb_ver"] in (5, 6, 101)
 
@@ -270,7 +270,7 @@ class GbxDevice(LK_Device):
 			dprint("LinkNLoad detected:", is_lnl)
 			if is_lnl: return False
 		return self.FW["pcb_ver"] in (2, 4, 5, 6, 90, 100, 101)
-	
+
 	def FirmwareUpdateAvailable(self):
 		if self.FW["fw_ver"] == 0 and self.FW["pcb_ver"] in (2, 4, 90, 100, 101):
 			if self.FW["pcb_ver"] == 4:
@@ -279,12 +279,12 @@ class GbxDevice(LK_Device):
 				self.FW_UPDATE_REQ = 2
 			return True
 		if self.FW["pcb_ver"] not in (4, 5, 6): return False
-		if self.FW["pcb_ver"] in (5, 6) and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
+		if self.FW["pcb_ver"] in (5, 6) and self.FW["fw_ts"] != self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
 			return True
-		if self.FW["pcb_ver"] == 4 and self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
+		if self.FW["pcb_ver"] == 4 and self.FW["fw_ts"] != self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
 			self.FW_UPDATE_REQ = True
 			return True
-	
+
 	def GetFirmwareUpdaterClass(self):
 		if self is None or self.FW["pcb_ver"] in (5, 6): # v1.4 / v1.4a/b/c
 			try:

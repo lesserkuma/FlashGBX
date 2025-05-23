@@ -9,7 +9,7 @@ class GbxDevice(LK_Device):
 	DEVICE_NAME = "GBFlash"
 	DEVICE_MIN_FW = 1
 	DEVICE_MAX_FW = 12
-	DEVICE_LATEST_FW_TS = { 5:1730731680, 10:1730731680, 11:1730731680, 12:1730731680, 13:1730731680 }
+	DEVICE_LATEST_FW_TS = { 5:1747991884, 10:1747991884, 11:1747991884, 12:1747991884, 13:1747991884 }
 	PCB_VERSIONS = { 5:'', 12:'v1.2', 13:'v1.3' }
 	
 	def __init__(self):
@@ -197,7 +197,7 @@ class GbxDevice(LK_Device):
 		if self.FW["pcb_ver"] == 5 or self.FW["fw_ts"] < 1730592000: # unofficial firmware
 			self.FW_UPDATE_REQ = True
 			return True
-		if self.FW["fw_ts"] < self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
+		if self.FW["fw_ts"] != self.DEVICE_LATEST_FW_TS[self.FW["pcb_ver"]]:
 			return True
 		self.FW_UPDATE_REQ = False
 		return False

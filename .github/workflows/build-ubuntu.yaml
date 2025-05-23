@@ -30,11 +30,25 @@ jobs:
 
       - name: Install tools
         run: |
+          sudo apt update
           sudo apt install devscripts dh-make debhelper
 
       - name: Create DEB file
         run: |
           cd "${{ github.workspace }}/dist/deb"
+          mkdir -p ./opt/flashgbx
+          mv FlashGBX ./opt/flashgbx
+          mv flashgbx_wrapper ./opt/flashgbx/flashgbx
+          chmod +x ./opt/flashgbx/flashgbx
+          mkdir -p ./usr/bin
+          ln -sf /opt/flashgbx/flashgbx ./usr/bin/flashgbx
+          mkdir -p ./etc/udev/rules.d
+          mv 50-flashgbx.rules ./etc/udev/rules.d
+          mkdir -p ./usr/share/applications
+          mv flashgbx.desktop ./usr/share/applications
+          mkdir -p ./usr/share/pixmaps
+          mv flashgbx.png ./usr/share/pixmaps
+          sudo chown -R root:root *
           dpkg-deb --build . "../FlashGBX_${{ env.VERSION }}_Ubuntu-all.deb"
 
       - name: Create artifact

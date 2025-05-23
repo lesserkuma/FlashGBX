@@ -299,7 +299,9 @@ class GBMemoryMap:
 		elif mbc in (0x19, 0x1A, 0x1B, 0x1C, 0x1E, 0x105): # MBC5
 			mbc_type = 5
 		else:
-			mbc_type = False
+			#mbc_type = False
+			print("NOTE: The ROM is using a mapper type that may be incompatible with GB-Memory Cartridges. (0x{:02X})".format(mbc))
+			mbc_type = 5
 		return mbc_type
 	
 	def GetBlockSizeBackup(self, b_size=None):

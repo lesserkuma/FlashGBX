@@ -371,11 +371,21 @@ class FlashGBX_CLI():
 
 		elif self.CONN.INFO["last_action"] == 2: # Backup RAM
 			self.CONN.INFO["last_action"] = 0
-			if not "debug" in self.ARGS and self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 131072: # Pocket Camera / 128 KiB: # 128 KiB
+			if not "debug" in self.ARGS and self.CONN.GetMode() == "DMG" and self.CONN.INFO["mapper_raw"] == 252 and self.CONN.INFO["transferred"] == 0x20000 or (self.CONN.INFO["transferred"] == 0x100000 and self.CONN.INFO["dump_info"]["header"]["ram_size_raw"] == 0x204):
 				answer = input("Would you like to extract Game Boy Camera pictures to “{:s}” now? [Y/n]: ".format(Util.formatPathOS(os.path.abspath(os.path.splitext(self.CONN.INFO["last_path"])[0]), end_sep=True) + "IMG_PC**.{:s}".format(self.ARGS["argparsed"].gbcamera_outfile_format))).strip().lower()
 				if answer != "n":
+					if self.CONN.INFO["transferred"] == 0x100000:
+						answer = int(input("A Photo! save file was detected. Please select the roll of pictures that you would like to load.\n- 1:   Current Save Data\n- 2-8: Flash Directory Slots\nLoad Roll [1-8]: "))
+						if answer == 0:
+							return
+						with open(self.CONN.INFO["last_path"], "rb") as f:
+							f.seek(0x20000 * (answer - 1))
+							file = bytearray(f.read(0x20000))
+					else:
+						file = self.CONN.INFO["last_path"]
+
 					pc = PocketCamera()
-					if pc.LoadFile(self.CONN.INFO["last_path"]) != False:
+					if pc.LoadFile(file) != False:
 						palettes = [ "grayscale", "dmg", "sgb", "cgb1", "cgb2", "cgb3" ]
 						pc.SetPalette(palettes.index(self.ARGS["argparsed"].gbcamera_palette))
 						file = os.path.splitext(self.CONN.INFO["last_path"])[0] + "/IMG_PC00.png"
@@ -571,12 +581,10 @@ class FlashGBX_CLI():
 				bad_read = True
 			
 			s += "ROM Checksum:         "
-			#Util.AGB_Global_CRC32 = 0
 			db_agb_entry = data["db"]
 			if db_agb_entry != None:
 				if data["rom_size_calc"] < 0x400000:
 					s += "In database (0x{:06X})\n".format(db_agb_entry['rc'])
-					#Util.AGB_Global_CRC32 = db_agb_entry['rc']
 				s += "ROM Size:             {:d} MiB\n".format(int(db_agb_entry['rs']/1024/1024))
 				data['rom_size'] = db_agb_entry['rs']
 			elif data["rom_size"] != 0:
@@ -606,10 +614,6 @@ class FlashGBX_CLI():
 			
 			if data['logo_correct'] and isinstance(db_agb_entry, dict) and "rs" in db_agb_entry and db_agb_entry['rs'] == 0x4000000 and not self.CONN.IsSupported3dMemory():
 				print("{:s}\nWARNING: This cartridge uses a Memory Bank Controller that may not be completely supported yet. A future version of the {:s} device firmware may add support for it.{:s}".format(ANSI.YELLOW, self.CONN.GetFullName(), ANSI.RESET))
-		
-			# if "has_rtc" in data and data["has_rtc"] is not True and "no_rtc_reason" in data:
-			# 	if data["no_rtc_reason"] == 1:
-			# 		print("{:s}NOTE: It seems that this cartridge’s Real Time Clock battery may no longer be functional and needs to be replaced.{:s}".format(ANSI.YELLOW, ANSI.RESET))
 
 		return (bad_read, s, data)
 	
@@ -903,7 +907,6 @@ class FlashGBX_CLI():
 			elif os.path.getsize(path) < 0x400:
 				print("{:s}ROM files smaller than 1 KiB are not supported.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
-			#with open(path, "rb") as file: buffer = bytearray(file.read())
 
 			with open(path, "rb") as file:
 				ext = os.path.splitext(path)[1]
@@ -1032,6 +1035,7 @@ class FlashGBX_CLI():
 	def BackupRestoreRAM(self, args, header):
 		add_date_time = args.save_filename_add_datetime is True
 		rtc = args.store_rtc is True
+		cart_type = 0
 		
 		path_datetime = ""
 		if add_date_time:
@@ -1064,7 +1068,7 @@ class FlashGBX_CLI():
 				else:
 					mbc = 0x19
 
-			if args.dmg_savesize == "auto":
+			if args.dmg_savetype == "auto":
 				try:
 					if header['mapper_raw'] == 0x06: # MBC2
 						save_type = 1
@@ -1074,19 +1078,22 @@ class FlashGBX_CLI():
 						save_type = 0x102
 					elif header['mapper_raw'] == 0xFD: # TAMA5
 						save_type = 0x103
-					elif header['mapper_raw'] == 0x20: # TAMA5
+					elif header['mapper_raw'] == 0x20: # MBC6
 						save_type = 0x104
 					else:
 						save_type = header['ram_size_raw']
 				except:
-					save_type = 0x20000
+					save_type = 0
 			else:
-				sizes = [ "auto", "4k", "16k", "64k", "256k", "512k", "1m", "eeprom2k", "eeprom4k", "tama5", "4m" ]
-				save_type = args.dmg_savesize
+				sizes = [ "auto", "4k", "16k", "64k", "256k", "512k", "1m", "mbc6", "mbc7_2k", "mbc7_4k", "tama5", "sram4m", "eeprom1m", "photo" ]
+				save_type = Util.DMG_Header_RAM_Sizes_Map[sizes.index(args.dmg_savetype)]
 
 			if save_type == 0:
-				print("{:s}Unable to auto-detect the save size. Please use the “--dmg-savesize” command line switch to manually select it.{:s}".format(ANSI.RED, ANSI.RESET))
+				print("{:s}Unable to auto-detect the save size. Please use the “--dmg-savetype” command line switch to manually select it.{:s}".format(ANSI.RED, ANSI.RESET))
 				return
+
+			if save_type == 0x204:
+				cart_type = self.DetectCartridge()
 		
 		elif self.CONN.GetMode() == "AGB":
 			if args.agb_savetype == "auto":
@@ -1185,13 +1192,13 @@ class FlashGBX_CLI():
 			self.CONN.TransferData(args={ 'mode':2, 'path':path, 'mbc':mbc, 'save_type':save_type, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "restore-save":
 			verify_write = args.no_verify_write is False
-			targs = { 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc, 'verify_write':verify_write }
+			targs = { 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':False, 'rtc':rtc, 'verify_write':verify_write, 'cart_type':cart_type }
 			if buffer is not None:
 				targs["buffer"] = buffer
 				targs["path"] = None
 			self.CONN.TransferData(args=targs, signal=self.PROGRESS.SetProgress)
 		elif args.action == "erase-save":
-			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':True, 'rtc':rtc }, signal=self.PROGRESS.SetProgress)
+			self.CONN.TransferData(args={ 'mode':3, 'path':path, 'mbc':mbc, 'save_type':save_type, 'erase':True, 'rtc':rtc, 'cart_type':cart_type }, signal=self.PROGRESS.SetProgress)
 		elif args.action == "debug-test-save": # debug
 			self.ARGS["debug"] = True
 

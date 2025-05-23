@@ -4,7 +4,7 @@
 		"DVP DRV with MX29LV320CB",
 		"DVP DRV with MX29LV320CT"
 	],
-	"flash_ids":[
+	"_flash_ids":[
 		[ 0xC2, 0xC2, 0xA8, 0xA8 ],
 		[ 0xC2, 0xC2, 0xA7, 0xA7 ]
 	],
@@ -13,6 +13,7 @@
 	"start_addr":0x4000,
 	"first_bank":0,
 	"write_pin":"WR",
+	"read_identifier_at":0x4000,
 	"enable_pullup_wr":true,
 	"sector_size_from_cfi":true,
 	"chip_erase_timeout":60,

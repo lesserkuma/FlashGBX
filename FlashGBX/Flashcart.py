@@ -284,10 +284,11 @@ class Flashcart:
 					pos += size
 		else:
 			while pos < rom_size:
+				dprint("Adding extra sector:", pos, regions)
 				offsets.append([ pos, regions ])
 				pos += regions
 		return offsets
-	
+
 	def GetSectorMap(self):
 		if self.SECTOR_MAP is not None:
 			return self.SECTOR_MAP

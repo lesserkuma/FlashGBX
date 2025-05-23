@@ -70,10 +70,10 @@ jobs:
           cp -r "${{ github.workspace }}/dist/FlashGBX.app" "${{ github.workspace }}/dist/dmg"
 
           dmg_path="${{ github.workspace }}/dist/FlashGBX_${{ env.VERSION }}_macOS-${{ matrix.arch }}.dmg"
-          
+
           max_retries=5
           retry_delay=10
-      
+
           for attempt in $(seq 1 $max_retries); do
             if create-dmg \
                 --volname "FlashGBX" \
@@ -92,7 +92,7 @@ jobs:
               echo "Failed to create DMG (attempt $attempt/$max_retries). Retrying in $retry_delay seconds..."
               sleep $retry_delay
             fi
-      
+
             if [[ $attempt -eq $max_retries ]]; then
               echo "Error: Failed to create DMG after $max_retries attempts."
               exit 1

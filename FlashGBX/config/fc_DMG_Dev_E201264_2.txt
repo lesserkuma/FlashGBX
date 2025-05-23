@@ -1,10 +1,10 @@
 {
 	"type":"DMG",
 	"names":[
-		"DMG-MBC5-32M-FLASH (G/A) Development Cartridge"
+		"DMG-MBC5-32M-FLASH (G/A-I) Development Cartridge"
 	],
 	"flash_ids":[
-		[ 0xB0, 0x88 ]
+		[ 0x89, 0x89, 0x14, 0x14 ]
 	],
 	"voltage":5,
 	"mbc":0x1B,
@@ -13,12 +13,11 @@
 	"first_bank":1,
 	"write_pin":"WR",
 	"chip_erase_timeout":100,
-	"sector_size":0x10000,
-	"wait_read_status_register":true,
-	"read_identifier_at":0x4000,
+	"sector_size":0x20000,
 	"dmg-mbc5-32m-flash":true,
 	"set_audio_high":true,
-	"command_set":"DMG-MBC5-32M-FLASH",
+	"buffer_size":32,
+	"command_set":"INTEL",
 	"commands":{
 		"unlock":[
 			[ 0x2000, 0x00, 1 ],
@@ -33,15 +32,34 @@
 		"read_identifier":[
 			[ 0x4000, 0x90 ]
 		],
+		"read_cfi":[
+			[ 0x4000, 0x98 ]
+		],
 		"sector_erase":[
-			[ "SA", 0x20 ],
+			[ "SA", 0x60 ],
 			[ "SA", 0xD0 ],
-			[ "SA", 0x70 ]
+			[ "SA", 0x20 ],
+			[ "SA", 0xD0 ]
 		],
 		"sector_erase_wait_for":[
 			[ null, null, null ],
+			[ "SA", 0x80, 0xFF ],
 			[ null, null, null ],
-			[ "SA", 0x80, 0x80 ]
+			[ "SA", 0x80, 0xFF ]
+		],
+		"buffer_write":[
+			[ "SA", 0xE8 ],
+			[ "SA", "BS" ],
+			[ "PA", "PD" ],
+			[ "SA", 0xD0 ],
+			[ "SA", 0xFF ]
+		],
+		"buffer_write_wait_for":[
+			[ "SA", 0x80, 0xFF ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0x80, 0xFF ],
+			[ null, null, null ]
 		]
 	}
 }
