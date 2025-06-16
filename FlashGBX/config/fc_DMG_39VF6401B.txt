@@ -1,0 +1,59 @@
+{
+	"type":"DMG",
+	"names":[
+		"SD007_T40_6401B*CD_71_TS28 with 39VF6401B"
+	],
+	"flash_ids":[
+		[ 0xBF, 0x6E ]
+	],
+	"voltage":3.3,
+	"flash_size":0x200000,
+	"start_addr":0x4000,
+	"first_bank":0,
+	"sector_size":0x8000,
+	"write_pin":"WR",
+	"command_set":"AMD",
+	"commands":{
+		"reset":[
+			[ 0x4000, 0xF0 ]
+		],
+		"read_identifier":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x90 ]
+		],
+		"read_cfi":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x98 ]
+		],
+		"sector_erase":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0x80 ],
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ "SA", 0x30 ]
+		],
+		"sector_erase_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ "SA", 0xFF, 0xFF ]
+		],
+		"single_write":[
+			[ 0x555, 0xA9 ],
+			[ 0x2AA, 0x56 ],
+			[ 0x555, 0xA0 ],
+			[ "PA", "PD" ]
+		],
+		"single_write_wait_for":[
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ],
+			[ null, null, null ]
+		]
+	}
+}
