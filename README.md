@@ -118,6 +118,8 @@ for Windows, Linux, macOS (→ [Download](#downloads))
   - insideGadgets MegaDuck 32K
   - ModRetro Chromatic Cartridge with 39VF1681
   - ModRetro Chromatic Cartridge with IS29GL032
+  - ModRetro Chromatic Cartridge with S29JL032
+  - ModRetro Chromatic Cartridge with S29JL032 (top boot)
   - Mr Flash 64M
   - Sillyhatday MBC5-DUAL-FLASH-4/8MB
   - Squareboi 4 MiB (2× 2 MiB)
