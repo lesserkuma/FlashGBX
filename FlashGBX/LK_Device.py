@@ -2576,14 +2576,17 @@ class LK_Device(ABC):
 					self._cart_write_flash(flash_id_cmds[i]["reset"], flashcart=True)
 					self._cart_write_flash(flash_id_cmds[i]["read_identifier"], flashcart=True)
 					cmp = self._cart_read(0, 8)
+					cmp_id = list(cmp)
+					if self.MODE == "DMG":
+						cmp_id = Flashcart.ExtendFlashID(cmp, rom, self._cart_read)
 					self._cart_write_flash(flash_id_cmds[i]["reset"], flashcart=True)
 
 					if rom != cmp:  # ROM data changed
-						flash_id_methods.append([we - 1, i, list(cmp), cfi_buffer, flash_id_cmds[i]["read_identifier"]])
+						flash_id_methods.append([we - 1, i, cmp_id, cfi_buffer, flash_id_cmds[i]["read_identifier"]])
 						if self.MODE == "DMG":
-							flash_id_s += "[{:s}/{:4X}/{:2X}] {:s}\n".format(we_pins[we-1].ljust(5), flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp))
+							flash_id_s += "[{:s}/{:4X}/{:2X}] {:s}\n".format(we_pins[we-1].ljust(5), flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp_id))
 						else:
-							flash_id_s += "[{:6X}/{:4X}] {:s}\n".format(flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp))
+							flash_id_s += "[{:6X}/{:4X}] {:s}\n".format(flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp_id))
 						flash_id_cmds[i]["read_cfi"] = [ flash_id_cmds[i]["read_identifier"][0][0], 0x98 ]
 						read_cfi_cmds.append(flash_id_cmds[i]["read_cfi"])
 
@@ -2591,6 +2594,8 @@ class LK_Device(ABC):
 			self._cart_write_flash([[0, 0xFF]], True)
 			self._cart_write_flash([[0, 0xF0]], True)
 
+		flash_id_match_lengths = {}
+		flash_id_reads = {}
 		for f in range(1, len(supported_carts)):
 			cart_type = supported_carts[f]
 			flashcart = Flashcart(config=cart_type, fncptr=fc_fncptr)
@@ -2603,20 +2608,29 @@ class LK_Device(ABC):
 					if (cmd_rfi != cart_type["commands"]["read_identifier"]): continue
 					if self.MODE == "DMG" and "write_pin" in cart_type and cart_type["write_pin"] != we_pins[we]: continue
 					fcm_flash_ids = list(map(list, {tuple(sublist) for sublist in cart_type["flash_ids"]}))
-					for fcm_flash_id in fcm_flash_ids:
-						if fcm_flash_id == flash_id[:len(fcm_flash_id)]:
-							if self.MODE == "DMG":
-								dprint("“{:s}” matches with Flash ID “{:s}” ({:s}/{:X}/{:X})".format(cart_type["names"][0], " ".join(format(x, '02X') for x in fcm_flash_id), we_pins[we], flash_id_cmds[type]["read_identifier"][0][0], flash_id_cmds[type]["read_identifier"][0][1]))
-							elif self.MODE == "AGB":
-								dprint("“{:s}” matches with Flash ID “{:s}” ({:X})/{:X}".format(cart_type["names"][0], " ".join(format(x, '02X') for x in fcm_flash_id), flash_id_cmds[type]["read_identifier"][0][0], flash_id_cmds[type]["read_identifier"][0][1]))
-							found = True
-							flash_type = f
-							flash_types.append(flash_type)
-							if "commands" in cart_type and "reset" in cart_type["commands"]:
-								self._cart_write_flash(cart_type["commands"]["reset"], flashcart=True)
-							break
-					if found is True: break
+					# A profile can list the same chip at more than one length, and the longest match is the one that counts
+					fcm_flash_ids = [ fcm_flash_id for fcm_flash_id in fcm_flash_ids if fcm_flash_id == flash_id[:len(fcm_flash_id)] ]
+					if len(fcm_flash_ids) == 0: continue
+					fcm_flash_id = max(fcm_flash_ids, key=len)
+					if self.MODE == "DMG":
+						dprint("“{:s}” matches with Flash ID “{:s}” ({:s}/{:X}/{:X})".format(cart_type["names"][0], " ".join(format(x, '02X') for x in fcm_flash_id), we_pins[we], flash_id_cmds[type]["read_identifier"][0][0], flash_id_cmds[type]["read_identifier"][0][1]))
+					elif self.MODE == "AGB":
+						dprint("“{:s}” matches with Flash ID “{:s}” ({:X})/{:X}".format(cart_type["names"][0], " ".join(format(x, '02X') for x in fcm_flash_id), flash_id_cmds[type]["read_identifier"][0][0], flash_id_cmds[type]["read_identifier"][0][1]))
+					found = True
+					flash_type = f
+					flash_types.append(flash_type)
+					flash_id_match_lengths[flash_type] = len(fcm_flash_id)
+					flash_id_reads[flash_type] = flash_id
+					if "commands" in cart_type and "reset" in cart_type["commands"]:
+						self._cart_write_flash(cart_type["commands"]["reset"], flashcart=True)
+					break
 			if found is False: continue
+
+		# Several chips share the first four Flash ID bytes (every Spansion S29GL and S29JL part answers 01 7E), so the profile
+		# that matched with more bytes is tried first. The sort is stable, so ties keep the list order. Every entry has a match
+		# length because the Flash ID lookup above only runs when nothing was found before it.
+		if len(flash_id_match_lengths) > 1:
+			flash_types.sort(key=lambda index: -flash_id_match_lengths[index])
 
 		dprint("Compatible flash types:", [(index, supported_carts[index]["names"][0]) for index in flash_types])
 
@@ -2735,6 +2749,23 @@ class LK_Device(ABC):
 									flash_type_id = flash_types[i]
 									size_undetected = False
 									break
+
+		# A profile file that lists one name per Flash ID names the cartridge each ID belongs to, so report a name listed beside
+		# the ID that was read; where several names share that ID, list order still decides. Every entry from one file is the
+		# same profile under another name, so only the name changes.
+		if flash_type_id in flash_id_reads:
+			profile_names = supported_carts[flash_type_id].get("_profile_names", [])
+			fcm_flash_ids = supported_carts[flash_type_id]["flash_ids"]
+			if len(profile_names) > 1 and len(profile_names) == len(fcm_flash_ids):
+				flash_id = flash_id_reads[flash_type_id]
+				match_length = flash_id_match_lengths[flash_type_id]
+				paired_names = [ profile_names[i] for i in range(0, len(fcm_flash_ids)) if len(fcm_flash_ids[i]) == match_length and fcm_flash_ids[i] == flash_id[:match_length] ]
+				if len(paired_names) > 0 and supported_carts[flash_type_id]["names"][0] not in paired_names:
+					for index in flash_types:
+						if supported_carts[index]["names"][0] in paired_names and supported_carts[index].get("_profile_names") == profile_names:
+							dprint("Reporting “{:s}”, the name listed beside this Flash ID, instead of “{:s}”".format(supported_carts[index]["names"][0], supported_carts[flash_type_id]["names"][0]))
+							flash_type_id = index
+							break
 
 		if self.MODE == "DMG":
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"], wait=self.FW["fw_ver"] >= 12)
