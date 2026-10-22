@@ -2595,6 +2595,7 @@ class LK_Device(ABC):
 			self._cart_write_flash([[0, 0xF0]], True)
 
 		flash_id_match_lengths = {}
+		flash_id_reads = {}
 		for f in range(1, len(supported_carts)):
 			cart_type = supported_carts[f]
 			flashcart = Flashcart(config=cart_type, fncptr=fc_fncptr)
@@ -2619,6 +2620,7 @@ class LK_Device(ABC):
 					flash_type = f
 					flash_types.append(flash_type)
 					flash_id_match_lengths[flash_type] = len(fcm_flash_id)
+					flash_id_reads[flash_type] = flash_id
 					if "commands" in cart_type and "reset" in cart_type["commands"]:
 						self._cart_write_flash(cart_type["commands"]["reset"], flashcart=True)
 					break
@@ -2747,6 +2749,23 @@ class LK_Device(ABC):
 									flash_type_id = flash_types[i]
 									size_undetected = False
 									break
+
+		# A profile file that lists one name per Flash ID names the cartridge each ID belongs to, so report a name listed beside
+		# the ID that was read; where several names share that ID, list order still decides. Every entry from one file is the
+		# same profile under another name, so only the name changes.
+		if flash_type_id in flash_id_reads:
+			profile_names = supported_carts[flash_type_id].get("_profile_names", [])
+			fcm_flash_ids = supported_carts[flash_type_id]["flash_ids"]
+			if len(profile_names) > 1 and len(profile_names) == len(fcm_flash_ids):
+				flash_id = flash_id_reads[flash_type_id]
+				match_length = flash_id_match_lengths[flash_type_id]
+				paired_names = [ profile_names[i] for i in range(0, len(fcm_flash_ids)) if len(fcm_flash_ids[i]) == match_length and fcm_flash_ids[i] == flash_id[:match_length] ]
+				if len(paired_names) > 0 and supported_carts[flash_type_id]["names"][0] not in paired_names:
+					for index in flash_types:
+						if supported_carts[index]["names"][0] in paired_names and supported_carts[index].get("_profile_names") == profile_names:
+							dprint("Reporting “{:s}”, the name listed beside this Flash ID, instead of “{:s}”".format(supported_carts[index]["names"][0], supported_carts[flash_type_id]["names"][0]))
+							flash_type_id = index
+							break
 
 		if self.MODE == "DMG":
 			self._write(self.DEVICE_CMD["SET_VOLTAGE_5V"], wait=self.FW["fw_ver"] >= 12)
