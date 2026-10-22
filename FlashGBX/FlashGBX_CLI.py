@@ -91,6 +91,7 @@ class FlashGBX_CLI():
 
 		menu_items = [
 			("info",             __("Read Cartridge Information")),
+			("flash-info",       __("Read Flash Chip Information")),
 			("backup-rom",       __("Backup ROM")),
 			("flash-rom",        __("Write ROM")),
 			("backup-save",      __("Backup Save Data")),
@@ -303,8 +304,11 @@ class FlashGBX_CLI():
 						self.DisconnectDevice()
 						return 0
 				self.FlashROM(args, header)
+				
+			elif args.action == "flash-info":
+				self.DetectCartridge()
 
-			if args.action != "info":
+			if args.action != "info" and args.action != "flash-info":
 				print("")
 
 		except KeyboardInterrupt:

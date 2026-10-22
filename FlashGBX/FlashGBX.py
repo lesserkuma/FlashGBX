@@ -11,7 +11,7 @@ from .Flashcart import empty_flashcarts_map
 from .Logging import ANSI
 from .PocketCamera import PocketCamera
 
-STATIC_ACTIONS = ["info", "backup-rom", "flash-rom", "backup-save",
+STATIC_ACTIONS = ["info", "flash-info", "backup-rom", "flash-rom", "backup-save",
                   "restore-save", "erase-save", "gbcamera-extract",
                   "interactive", "debug-test-save"]
 FWUPDATE_ACTIONS = []
