@@ -2576,14 +2576,17 @@ class LK_Device(ABC):
 					self._cart_write_flash(flash_id_cmds[i]["reset"], flashcart=True)
 					self._cart_write_flash(flash_id_cmds[i]["read_identifier"], flashcart=True)
 					cmp = self._cart_read(0, 8)
+					cmp_id = list(cmp)
+					if self.MODE == "DMG":
+						cmp_id = Flashcart.ExtendFlashID(cmp, rom, self._cart_read)
 					self._cart_write_flash(flash_id_cmds[i]["reset"], flashcart=True)
 
 					if rom != cmp:  # ROM data changed
-						flash_id_methods.append([we - 1, i, list(cmp), cfi_buffer, flash_id_cmds[i]["read_identifier"]])
+						flash_id_methods.append([we - 1, i, cmp_id, cfi_buffer, flash_id_cmds[i]["read_identifier"]])
 						if self.MODE == "DMG":
-							flash_id_s += "[{:s}/{:4X}/{:2X}] {:s}\n".format(we_pins[we-1].ljust(5), flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp))
+							flash_id_s += "[{:s}/{:4X}/{:2X}] {:s}\n".format(we_pins[we-1].ljust(5), flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp_id))
 						else:
-							flash_id_s += "[{:6X}/{:4X}] {:s}\n".format(flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp))
+							flash_id_s += "[{:6X}/{:4X}] {:s}\n".format(flash_id_cmds[i]["read_identifier"][0][0], flash_id_cmds[i]["read_identifier"][0][1], ' '.join(format(x, '02X') for x in cmp_id))
 						flash_id_cmds[i]["read_cfi"] = [ flash_id_cmds[i]["read_identifier"][0][0], 0x98 ]
 						read_cfi_cmds.append(flash_id_cmds[i]["read_cfi"])
 

@@ -83,6 +83,21 @@ class Flashcart:
 		return flash_ids
 
 	@staticmethod
+	def ExtendFlashID(flash_id, rom, cart_read, address=0):
+		# A chip answering 7E as its device ID has two more device ID cycles, at byte addresses 0x1C and 0x1E on the 8-bit
+		# DMG bus, and needs them to be told apart from others answering 7E (every Spansion S29GL and S29JL part answers
+		# 01 7E). They take the place of bytes 4 to 7, which only report sector protection and indicator bits. 7D is 7E on a
+		# cartridge with D0 and D1 swapped. Call it while the chip is still in autoselect mode; a read that did not leave ROM
+		# data, or a failed read of the extra cycles, leaves the Flash ID as it is.
+		flash_id = list(flash_id)
+		compared = min(4, len(rom))
+		if len(flash_id) >= 8 and flash_id[2] == flash_id[3] and flash_id[2] in (0x7E, 0x7D) and flash_id[:compared] != list(rom[:compared]):
+			cycles = list(cart_read(address + 0x1C, 4))
+			if len(cycles) == 4:
+				flash_id[4:8] = cycles
+		return flash_id
+
+	@staticmethod
 	def GetROMAccessParameters(config, offset):
 		if config["type"].upper() != "DMG": return ([], offset)
 		bank, address = divmod(offset, 0x4000)
@@ -274,7 +289,10 @@ class Flashcart:
 
 				self.CartWrite(read_identifier)
 				time.sleep(0.001)
-				cart_flash_id = list(self.CartRead(address, length))
+				if config["type"].upper() == "DMG" and length > 4:
+					cart_flash_id = self.ExtendFlashID(self.CartRead(address, max(length, 8)), rom, self.CartRead, address)
+				else:
+					cart_flash_id = list(self.CartRead(address, length))
 				observations[offset] = (rom, cart_flash_id)
 				if reset:
 					self.CartWrite(reset)
